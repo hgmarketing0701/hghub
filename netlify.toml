@@ -6,8 +6,11 @@
 [build]
   publish = "."
 
-# Serve hub.html at the root URL (rewrite, status 200 — URL stays "/")
+# Serve hub.html at the root URL (rewrite, status 200 — URL stays "/").
+# force = true is REQUIRED: without it Netlify serves the real index.html at "/"
+# and skips this rule. force makes the rewrite win over the existing file.
 [[redirects]]
   from = "/"
   to = "/hub.html"
   status = 200
+  force = true
