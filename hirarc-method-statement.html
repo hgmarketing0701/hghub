@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HG Services — HIRARC & Method Statement (Hoarding, Ombak KLCC)</title>
+<style>
+  :root {
+    --bg: #0a0e1a; --surface: #141926; --border: #2a3245;
+    --text: #ffffff; --text-dim: #a0a8b8; --accent: #f59e0b; --accent-hover: #d97706; --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; min-height: 100vh;
+  }
+  .container { max-width: 1080px; margin: 0 auto; padding: 24px 18px 60px; }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 14px; padding-bottom: 18px; border-bottom: 1px solid var(--border); margin-bottom: 22px;
+  }
+  .brand-name { font-size: 1.15rem; font-weight: 800; }
+  .brand-sub { font-size: 0.82rem; color: var(--text-dim); margin-top: 3px; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    background: var(--accent); border: 1px solid var(--accent); color: #0a0e1a;
+    padding: 10px 16px; border-radius: 8px; font: inherit; font-size: 0.88rem; font-weight: 700;
+    cursor: pointer; transition: 0.15s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .btn.ghost { background: transparent; color: var(--text-dim); border-color: var(--border); }
+  .btn.ghost:hover { color: var(--text); border-color: var(--accent); }
+  .hint { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 18px; }
+
+  .preview-wrap { background: #fff; color: #111; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+  .hg-doc {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif; color: #111;
+    max-width: 1000px; margin: 0 auto; padding: 34px 40px 50px; font-size: 10pt; line-height: 1.5;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;
+  }
+  .hg-head { display: flex; align-items: flex-start; gap: 18px; padding-bottom: 14px; border-bottom: 2px solid #2d2d2d; }
+  .hg-head .logo { width: 70px; flex-shrink: 0; }
+  .hg-head .logo img { width: 100%; height: auto; display: block; }
+  .hg-head .logo .fallback {
+    width: 70px; height: 70px; background: #2d2d2d; color: #fff; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 22pt; letter-spacing: 1px;
+  }
+  .hg-head .titles { flex: 1; min-width: 0; }
+  .hg-head .company { font-size: 13pt; font-weight: 700; color: #111; margin-bottom: 2px; }
+  .hg-head .tagline { font-size: 9.5pt; color: #555; }
+  .hg-head .reg { font-size: 8.5pt; color: #777; margin-top: 3px; }
+
+  .hg-banner { padding: 8px 0 14px; border-bottom: 1px solid #ccc; margin-bottom: 6px; }
+  .hg-banner .b-title { font-size: 19pt; font-weight: 700; color: #111; margin-bottom: 4px; }
+  .hg-banner .b-sub { font-size: 11pt; color: #555; }
+  .hg-banner .b-meta { font-size: 10pt; color: #555; margin-top: 2px; }
+
+  .hg-section { font-size: 11pt; font-weight: 700; color: #111; margin: 20px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #222; }
+  .hg-doc p { margin-bottom: 8px; }
+  .hg-doc ul, .hg-doc ol { margin: 4px 0 10px 20px; }
+  .hg-doc li { margin-bottom: 4px; }
+
+  .hg-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 9.5pt; }
+  .hg-table th, .hg-table td { border: 1px solid #ccc; padding: 5px 8px; vertical-align: top; text-align: left; }
+  .hg-table th { background: #2d2d2d; color: #fff; font-weight: 700; font-size: 9pt; }
+  .hg-table td.k { background: #f5f5f5; font-weight: 700; color: #444; width: 32%; }
+  .hg-table td.v { color: #222; }
+  .hg-table.tight th, .hg-table.tight td { padding: 4px 6px; font-size: 8.6pt; }
+  .hg-table td.c { text-align: center; font-weight: 700; }
+
+  /* risk colour cells */
+  .r-low  { background: #d8f5d8; color: #1c6b1c; }
+  .r-med  { background: #fff2cc; color: #8a6100; }
+  .r-high { background: #ffd6d6; color: #a11; }
+
+  .callout { background: #fff7e6; border: 1px solid #f0c674; border-left: 4px solid #f59e0b; padding: 10px 14px; margin: 10px 0 12px; font-size: 9.6pt; color: #5c4400; }
+
+  .matrix { width: auto; border-collapse: collapse; font-size: 9pt; margin-bottom: 6px; }
+  .matrix th, .matrix td { border: 1px solid #999; padding: 5px 9px; text-align: center; }
+  .matrix th { background: #2d2d2d; color: #fff; }
+  .matrix .axis { background: #f0f0f0; font-weight: 700; color:#333; }
+
+  .legend-grid { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 8px; }
+  .legend-col { flex: 1; min-width: 240px; }
+
+  .sign-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; margin-top: 26px; }
+  .sign-box { font-size: 9.8pt; }
+  .sign-line { border-bottom: 1px solid #333; height: 40px; margin-bottom: 6px; }
+  .sign-box .lbl { color: #555; }
+  .sign-box .nm { font-weight: 700; color: #111; }
+
+  .hg-foot { margin-top: 30px; padding-top: 10px; border-top: 1px solid #ccc; font-size: 8.5pt; color: #777; text-align: center; }
+
+  @media print {
+    body { background: #fff; }
+    .topbar, .hint { display: none !important; }
+    .container { max-width: 100%; padding: 0; }
+    .preview-wrap { border: none; border-radius: 0; }
+    .hg-doc { max-width: 100%; padding: 0 4mm; }
+    @page { size: A4 landscape; margin: 12mm 10mm; }
+    .hg-section, .sign-grid, .callout, .matrix { page-break-inside: avoid; break-inside: avoid; }
+    .hg-table.tight tr { page-break-inside: avoid; break-inside: avoid; }
+    h1, h2 { page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topbar">
+    <div>
+      <div class="brand-name">HG Services — HIRARC &amp; Method Statement</div>
+      <div class="brand-sub">Hoarding Works · Ombak KLCC Mall (pre-opening)</div>
+    </div>
+    <div class="actions">
+      <a class="btn ghost" href="hse-policy.html">← HSE Policy</a>
+      <button class="btn" onclick="window.print()">🖨 Print / Save as PDF</button>
+    </div>
+  </div>
+  <div class="hint">Prints to <strong>A4 landscape</strong> (the HIRARC table is wide). Click <strong>Print / Save as PDF</strong> → choose <strong>Save as PDF</strong>. Sign at the bottom before submitting.</div>
+
+  <div class="preview-wrap">
+    <div class="hg-doc">
+
+      <!-- HEADER -->
+      <div class="hg-head">
+        <div class="logo">
+          <img src="hg-logo.png" alt="HG" onerror="this.outerHTML='&lt;div class=&quot;fallback&quot;&gt;HG&lt;/div&gt;'" />
+        </div>
+        <div class="titles">
+          <div class="company">HG SERVICES (M) SDN BHD</div>
+          <div class="tagline">Facilities Management &amp; Fit-Out Contractor Support</div>
+          <div class="reg">Hoarding · Visual Print &amp; Install · Scaffold · Temporary Storage · Reinstatement · Fit-Out</div>
+        </div>
+      </div>
+
+      <!-- BANNER -->
+      <div class="hg-banner">
+        <div class="b-title">HIRARC &amp; Safe Work Method Statement</div>
+        <div class="b-sub">Hoarding Installation, Modification &amp; Dismantling — Ombak KLCC Mall (Pre-Opening)</div>
+        <div class="b-meta">Document Ref: HG-MS-2026-001 &nbsp;·&nbsp; Issued: 18 June 2026 &nbsp;·&nbsp; Revision: 01</div>
+      </div>
+
+      <!-- 1. DOC CONTROL -->
+      <div class="hg-section">1. Document Control</div>
+      <table class="hg-table">
+        <tr><td class="k">Company</td><td class="v">HG Services (M) Sdn Bhd</td></tr>
+        <tr><td class="k">Submitted To</td><td class="v">Ombak KLCC Mall — HSE Department / Main Contractor</td></tr>
+        <tr><td class="k">Project Stage</td><td class="v">Pre-opening / fit-out (mall not yet open to public)</td></tr>
+        <tr><td class="k">Scope of Works</td><td class="v">Installation, modification, rectification &amp; dismantling of hoarding around tenant lots, incl. counterweight, skirting &amp; visual install</td></tr>
+        <tr><td class="k">Document Ref</td><td class="v">HG-MS-2026-001 · Rev 01</td></tr>
+        <tr><td class="k">Read In Conjunction With</td><td class="v">HG HSE Policy (HG-HSE-2026-001)</td></tr>
+        <tr><td class="k">Prepared / Approved By</td><td class="v">Lee Chun Hui (Black) — Managing Director</td></tr>
+      </table>
+
+      <!-- 2. PERSONNEL -->
+      <div class="hg-section">2. Key Personnel &amp; Responsibilities</div>
+      <table class="hg-table">
+        <tr><th style="width:26%">Name</th><th style="width:24%">Role</th><th style="width:16%">Contact</th><th>Responsibility</th></tr>
+        <tr><td>Lee Chun Hui (Black)</td><td>Managing Director</td><td>016-273 3524</td><td>Overall accountability; provides resources, PPE &amp; training.</td></tr>
+        <tr><td>Chong Wai Choong (Calvin)</td><td>Project Manager</td><td>016-221 3316</td><td>Plans works, liaises with mall HSE / main contractor, secures permits.</td></tr>
+        <tr><td>Lee Khum Tick</td><td>Site Supervisor</td><td>012-366 9849</td><td>Daily toolbox briefing, enforces PPE &amp; this method, stop-work authority.</td></tr>
+        <tr><td>Tham Yoke Wai</td><td>Site Supervisor</td><td>017-395 3788</td><td>Daily toolbox briefing, enforces PPE &amp; this method, stop-work authority.</td></tr>
+      </table>
+
+      <!-- 3. TOOLS / MATERIALS -->
+      <div class="hg-section">3. Plant, Tools &amp; Materials</div>
+      <table class="hg-table">
+        <tr><td class="k">Materials</td><td class="v">Hoarding panels (MDF / plywood / metal), timber/metal posts, doors &amp; ironmongery, counterweights, skirting, fixings, visual sticker / tarpaulin</td></tr>
+        <tr><td class="k">Hand &amp; Power Tools</td><td class="v">Cordless drill / driver, circular saw / jigsaw, hand saw, screwdrivers, hammer, spirit level, measuring tape, utility knife</td></tr>
+        <tr><td class="k">Access Equipment</td><td class="v">A-frame ladder &amp; mobile scaffold / podium (inspected, tagged)</td></tr>
+        <tr><td class="k">Transport</td><td class="v">HG lorry for delivery; trolley / pallet jack for moving panels on site</td></tr>
+        <tr><td class="k">Safety Equipment</td><td class="v">Barricades / safety tape, signage, fire extinguisher, first-aid kit, RCD/ELCB on power supply</td></tr>
+      </table>
+
+      <!-- 4. PPE -->
+      <div class="hg-section">4. Minimum PPE</div>
+      <p>Safety helmet · safety shoes · hi-vis vest · gloves (cut-resistant for cutting/handling) · safety glasses &amp; dust mask (cutting/drilling) · ear protection (noisy work) · full body harness (work above 2m).</p>
+
+      <!-- 5. METHOD STATEMENT -->
+      <div class="hg-section">5. Method Statement — Sequence of Work</div>
+      <table class="hg-table">
+        <tr><th style="width:8%">Step</th><th style="width:30%">Activity</th><th>Safe Work Procedure</th></tr>
+        <tr><td class="c">1</td><td>Site induction &amp; permit</td><td>Attend mall / main-contractor induction. Obtain work permit &amp; approved area. Confirm access routes, power points &amp; emergency exits.</td></tr>
+        <tr><td class="c">2</td><td>Daily toolbox briefing</td><td>Supervisor briefs the day's scope, hazards, PPE &amp; emergency plan. All workers sign attendance.</td></tr>
+        <tr><td class="c">3</td><td>Delivery &amp; offloading</td><td>Offload panels &amp; posts at agreed point. Team-lift heavy/long items. Stack stable &amp; clear of walkways. No overloading trolley.</td></tr>
+        <tr><td class="c">4</td><td>Demarcate work zone</td><td>Barricade the lot perimeter with tape / barriers &amp; signage before any work. Keep shared corridors clear for other trades.</td></tr>
+        <tr><td class="c">5</td><td>Setting out &amp; marking</td><td>Measure &amp; mark hoarding line per drawing. Confirm no clash with services / fire equipment / escape routes.</td></tr>
+        <tr><td class="c">6</td><td>Cutting panels / timber</td><td>Cut only in designated area with dust sheeting. Guards on tools, glasses, mask &amp; gloves on. Inspect power tools &amp; cables first.</td></tr>
+        <tr><td class="c">7</td><td>Erect posts &amp; frame</td><td>Set posts plumb &amp; braced. Use ladder / podium for high fixings — no climbing on the hoarding. Tether tools when at height.</td></tr>
+        <tr><td class="c">8</td><td>Install &amp; fix panels</td><td>Two persons handle each panel. Fix securely with drill/driver. Keep fingers clear of fixing line.</td></tr>
+        <tr><td class="c">9</td><td>Install door &amp; ironmongery</td><td>Hang door, fit lock/handle, check swing clearance. Door must open to safe side &amp; not block escape.</td></tr>
+        <tr><td class="c">10</td><td>Place counterweight</td><td>Team-lift / trolley counterweights into position. Keep feet clear. Position so hoarding is stable &amp; cannot topple.</td></tr>
+        <tr><td class="c">11</td><td>Skirting &amp; finishing</td><td>Fit skirting &amp; seal base. Use knee protection / good posture. Clear offcuts as you go.</td></tr>
+        <tr><td class="c">12</td><td>Visual / sticker install</td><td>Apply sticker / tarpaulin. Use ladder / podium for high areas with a spotter. Tools tethered.</td></tr>
+        <tr><td class="c">13</td><td>Inspection &amp; handover</td><td>Supervisor checks stability, door, fixings &amp; that escape routes / fire equipment are clear. Record &amp; photograph.</td></tr>
+        <tr><td class="c">14</td><td>Housekeeping</td><td>Remove all waste &amp; offcuts daily. Leave area &amp; corridors clean. Make tools safe &amp; store.</td></tr>
+        <tr><td class="c">15</td><td>Dismantling (when applicable)</td><td>Reverse order. Control panels as removed — do not let them fall. Remove/flatten nails. Bundle &amp; remove material safely.</td></tr>
+      </table>
+
+      <!-- 6. RISK MATRIX -->
+      <div class="hg-section">6. Risk Assessment Method (HIRARC Matrix)</div>
+      <p style="font-size:9.5pt;">Risk Rating = Likelihood (L) × Severity (S), per DOSH HIRARC guidelines.</p>
+      <div class="legend-grid">
+        <div class="legend-col">
+          <table class="matrix">
+            <tr><th>L</th><th>Likelihood</th></tr>
+            <tr><td class="axis">5</td><td>Almost certain</td></tr>
+            <tr><td class="axis">4</td><td>Likely</td></tr>
+            <tr><td class="axis">3</td><td>Possible</td></tr>
+            <tr><td class="axis">2</td><td>Unlikely</td></tr>
+            <tr><td class="axis">1</td><td>Rare</td></tr>
+          </table>
+        </div>
+        <div class="legend-col">
+          <table class="matrix">
+            <tr><th>S</th><th>Severity</th></tr>
+            <tr><td class="axis">5</td><td>Fatality</td></tr>
+            <tr><td class="axis">4</td><td>Major injury / hospitalised</td></tr>
+            <tr><td class="axis">3</td><td>Medical treatment / MC</td></tr>
+            <tr><td class="axis">2</td><td>First aid</td></tr>
+            <tr><td class="axis">1</td><td>Negligible</td></tr>
+          </table>
+        </div>
+        <div class="legend-col">
+          <table class="matrix">
+            <tr><th>Rating</th><th>Band</th><th>Action</th></tr>
+            <tr><td class="r-low">1 – 4</td><td>Low</td><td>Maintain controls</td></tr>
+            <tr><td class="r-med">5 – 12</td><td>Medium</td><td>Controls + monitor</td></tr>
+            <tr><td class="r-high">15 – 25</td><td>High</td><td>Stop / add controls before work</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- 7. HIRARC TABLE -->
+      <div class="hg-section">7. HIRARC — Hazard Identification, Risk Assessment &amp; Risk Control</div>
+      <table class="hg-table tight">
+        <tr>
+          <th style="width:13%">Activity</th>
+          <th style="width:15%">Hazard / Effect</th>
+          <th style="width:34%">Control Measures</th>
+          <th>L</th><th>S</th><th>Risk</th>
+          <th style="width:11%">PIC</th>
+        </tr>
+        <tr><td>Delivery &amp; offloading panels</td><td>Manual handling — back/muscle injury; struck by falling material</td><td>Team lift; trolley; correct posture; stable stacking clear of walkways; no overloading</td><td class="c">3</td><td class="c">3</td><td class="c r-med">9</td><td>Supervisor</td></tr>
+        <tr><td>Lorry movement at offload</td><td>Struck by vehicle</td><td>Banksman guides reversing; segregate workers from vehicle path; hi-vis vests</td><td class="c">2</td><td class="c">4</td><td class="c r-med">8</td><td>Supervisor</td></tr>
+        <tr><td>Cutting panels / timber (power tools)</td><td>Cut / laceration; flying debris to eyes</td><td>Tool guards; cut-resistant gloves; safety glasses; trained operator; designated cutting area</td><td class="c">3</td><td class="c">3</td><td class="c r-med">9</td><td>Worker</td></tr>
+        <tr><td>Cutting / drilling</td><td>Dust inhalation &amp; noise</td><td>Dust sheeting / low-dust method; dust mask; ear protection; schedule per site rules</td><td class="c">3</td><td class="c">2</td><td class="c r-med">6</td><td>Worker</td></tr>
+        <tr><td>Erecting posts / fixing at height</td><td>Fall from height (&gt;2m)</td><td>Inspected ladder / mobile podium; no climbing on hoarding; harness above 2m; spotter</td><td class="c">2</td><td class="c">5</td><td class="c r-med">10</td><td>Supervisor</td></tr>
+        <tr><td>Work at height</td><td>Falling tools / objects onto persons below</td><td>Tether tools; barricade below; no one beneath overhead work; helmet</td><td class="c">2</td><td class="c">4</td><td class="c r-med">8</td><td>Worker</td></tr>
+        <tr><td>Panel install &amp; drilling</td><td>Hand / finger injury; electric shock</td><td>Two-person handling; keep fingers clear; inspect tools &amp; cables; RCD/ELCB protection</td><td class="c">3</td><td class="c">3</td><td class="c r-med">9</td><td>Worker</td></tr>
+        <tr><td>Counterweight placement</td><td>Heavy lift — back injury; crushed / trapped foot</td><td>Team lift / trolley; safety shoes; keep feet clear; never lift beyond capacity</td><td class="c">3</td><td class="c">3</td><td class="c r-med">9</td><td>Supervisor</td></tr>
+        <tr><td>Completed hoarding</td><td>Hoarding topples / collapses</td><td>Adequate counterweight &amp; bracing; supervisor stability check before handover</td><td class="c">2</td><td class="c">4</td><td class="c r-med">8</td><td>Supervisor</td></tr>
+        <tr><td>Temporary electrical supply</td><td>Electric shock; fire; trip over cables</td><td>Mall-approved supply; RCD/ELCB; no damaged cables; route cables off walkways</td><td class="c">2</td><td class="c">4</td><td class="c r-med">8</td><td>Supervisor</td></tr>
+        <tr><td>Working alongside other trades</td><td>Struck by / interference in shared corridors</td><td>Barricade &amp; sign work zone; coordinate with main contractor; keep access clear</td><td class="c">3</td><td class="c">3</td><td class="c r-med">9</td><td>Supervisor</td></tr>
+        <tr><td>General site</td><td>Slips, trips &amp; falls (offcuts, debris)</td><td>Continuous housekeeping; clear walkways; daily waste removal</td><td class="c">3</td><td class="c">2</td><td class="c r-med">6</td><td>Worker</td></tr>
+        <tr><td>Hot / spark work (if any)</td><td>Fire</td><td>Hot-work permit; extinguisher on hand; clear combustibles; do not block fire equipment / exits</td><td class="c">2</td><td class="c">4</td><td class="c r-med">8</td><td>Supervisor</td></tr>
+        <tr><td>Dismantling hoarding</td><td>Falling panels; nails / sharp edges; manual handling</td><td>Controlled removal top-down; remove/flatten nails; gloves; team handling; bundle safely</td><td class="c">3</td><td class="c">3</td><td class="c r-med">9</td><td>Supervisor</td></tr>
+        <tr><td>Emergency (fire / injury)</td><td>Delayed evacuation / response</td><td>Brief escape routes &amp; assembly point daily; first-aid kit on site; emergency contacts posted</td><td class="c">2</td><td class="c">4</td><td class="c r-med">8</td><td>Supervisor</td></tr>
+      </table>
+      <div class="callout">All activities above are controlled to <strong>Medium or Low</strong> residual risk. No work proceeds while any item sits in the <strong>High</strong> band — work stops and additional controls are applied first. PIC = Person In Charge.</div>
+
+      <!-- 8. EMERGENCY -->
+      <div class="hg-section">8. Emergency Arrangements</div>
+      <table class="hg-table">
+        <tr><td class="k">On alarm</td><td class="v">Stop work, make tools safe, evacuate via nearest exit, proceed to assembly point, supervisor takes headcount.</td></tr>
+        <tr><td class="k">HG Project Manager</td><td class="v">Chong Wai Choong (Calvin) — 016-221 3316</td></tr>
+        <tr><td class="k">HG Site Supervisors</td><td class="v">Lee Khum Tick — 012-366 9849 &nbsp;/&nbsp; Tham Yoke Wai — 017-395 3788</td></tr>
+        <tr><td class="k">Ambulance / Fire (Malaysia)</td><td class="v">999 / 994</td></tr>
+        <tr><td class="k">Mall / Site Security</td><td class="v">To be confirmed on induction</td></tr>
+      </table>
+
+      <!-- 9. SIGN OFF -->
+      <div class="hg-section">9. Authorisation &amp; Acknowledgement</div>
+      <p>This HIRARC &amp; Method Statement is issued and authorised on behalf of HG Services (M) Sdn Bhd. All workers are briefed on its contents before work begins.</p>
+      <div class="sign-grid">
+        <div class="sign-box">
+          <div class="sign-line"></div>
+          <div class="nm">Lee Chun Hui (Black)</div>
+          <div class="lbl">Managing Director · HG Services (M) Sdn Bhd</div>
+          <div class="lbl">Date: 18 June 2026</div>
+        </div>
+        <div class="sign-box">
+          <div class="sign-line"></div>
+          <div class="nm">Chong Wai Choong (Calvin)</div>
+          <div class="lbl">Project Manager · Prepared / Reviewed</div>
+          <div class="lbl">Date: ______________</div>
+        </div>
+      </div>
+
+      <div class="hg-foot">
+        HG SERVICES (M) SDN BHD · HIRARC &amp; Safe Work Method Statement — Hoarding Works · HG-MS-2026-001 · Rev 01 · 18 June 2026<br/>
+        Submitted to Ombak KLCC Mall (pre-opening) for HSE compliance. To be read with HG HSE Policy HG-HSE-2026-001. Controlled copy.
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

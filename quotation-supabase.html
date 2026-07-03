@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HG Smart Quotation — Supabase</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335; --border:#2a3245;
+    --text:#ffffff; --text-dim:#a0a8b8; --accent:#f59e0b; --accent-hover:#d97706;
+    --accent-soft:rgba(245,158,11,0.12); --green:#22c55e; --green-soft:rgba(34,197,94,0.15);
+    --red:#ef4444; --red-soft:rgba(239,68,68,0.15); --blue:#3b82f6; --blue-soft:rgba(59,130,246,0.15);
+    --radius:14px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+         background:var(--bg); color:var(--text); line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+            padding:16px 22px; border-bottom:1px solid var(--border); }
+  .brand-block { display:flex; align-items:center; gap:13px; }
+  .brand-logo { width:44px; height:44px; background:linear-gradient(135deg,var(--accent),var(--accent-hover));
+                border-radius:11px; display:flex; align-items:center; justify-content:center; color:#0a0e1a; font-weight:900; }
+  .brand-name { font-weight:800; font-size:1.15rem; letter-spacing:-0.01em; }
+  .brand-sub { font-size:0.78rem; color:var(--text-dim); }
+  .user-pill { background:var(--surface); border:1px solid var(--border); border-radius:999px;
+               padding:8px 14px; font-size:0.8rem; color:var(--text-dim); display:flex; align-items:center; gap:10px; }
+  .user-pill b { color:var(--text); font-weight:600; }
+  .user-pill button { background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.78rem; font-weight:700; font-family:inherit; }
+  nav { display:flex; gap:6px; padding:14px 22px 0; flex-wrap:wrap; }
+  nav button { background:var(--surface); border:1px solid var(--border); color:var(--text-dim);
+               padding:10px 18px; border-radius:10px 10px 0 0; cursor:pointer; font-family:inherit;
+               font-size:0.9rem; font-weight:600; border-bottom:none; }
+  nav button.active { background:var(--surface-2); color:var(--accent); border-color:var(--accent); }
+  main { padding:18px 22px 70px; max-width:1150px; margin:0 auto; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+          padding:22px; margin-bottom:18px; }
+  h2 { font-size:1.05rem; font-weight:800; margin-bottom:4px; }
+  .sub { color:var(--text-dim); font-size:0.85rem; margin-bottom:14px; }
+  label { display:block; font-size:0.76rem; color:var(--text-dim); margin:10px 0 5px; font-weight:600;
+          text-transform:uppercase; letter-spacing:0.04em; }
+  input, select, textarea { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text);
+          border-radius:9px; padding:10px 12px; font-size:0.92rem; font-family:inherit; }
+  input:focus, select:focus { outline:none; border-color:var(--accent); }
+  input:disabled { opacity:0.6; }
+  .row { display:flex; gap:14px; flex-wrap:wrap; }
+  .row > div { flex:1 1 190px; min-width:0; }
+  button.primary { background:var(--accent); color:#0a0e1a; border:none; border-radius:10px; padding:11px 20px;
+                   font-weight:700; cursor:pointer; font-family:inherit; font-size:0.92rem; }
+  button.primary:hover { background:var(--accent-hover); }
+  button.primary:disabled { opacity:0.6; cursor:default; }
+  button.ghost { background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:10px;
+                 padding:11px 18px; font-weight:600; cursor:pointer; font-family:inherit; font-size:0.9rem; }
+  button.ghost:hover { border-color:var(--accent); }
+  button.danger { background:var(--red-soft); color:#f87171; border:1px solid var(--red); border-radius:10px;
+                  padding:11px 18px; font-weight:600; cursor:pointer; font-family:inherit; font-size:0.9rem; }
+  .addlink { color:var(--accent); font-size:0.74rem; text-decoration:none; margin-left:8px; text-transform:none; }
+  .seg { display:flex; gap:8px; flex-wrap:wrap; }
+  .seg button { background:var(--bg); border:1px solid var(--border); color:var(--text-dim); border-radius:999px;
+                padding:9px 18px; cursor:pointer; font-family:inherit; font-weight:600; font-size:0.86rem; }
+  .seg button.on { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+  .scope { border:1px solid var(--border); border-radius:12px; margin-bottom:14px; overflow:hidden; }
+  .scope .head { display:flex; justify-content:space-between; align-items:center; background:var(--surface-2);
+                 padding:11px 15px; font-weight:700; font-size:0.92rem; }
+  .scope .head .x { color:var(--text-dim); cursor:pointer; font-size:0.78rem; font-weight:600; }
+  .scope .head .x:hover { color:#f87171; }
+  .lineitem { padding:13px 15px; border-top:1px solid var(--border); }
+  .it-top { display:flex; justify-content:space-between; gap:10px; }
+  .it-name { font-weight:600; font-size:0.92rem; }
+  .it-note { font-size:0.76rem; color:var(--text-dim); margin-top:2px; }
+  .rm { cursor:pointer; color:var(--text-dim); } .rm:hover { color:#f87171; }
+  .badge { display:inline-block; font-size:0.66rem; font-weight:700; border-radius:999px; padding:2px 8px;
+           text-transform:uppercase; letter-spacing:0.04em; vertical-align:middle; }
+  .badge.req { background:var(--green-soft); color:var(--green); }
+  .badge.opt { background:var(--blue-soft); color:#60a5fa; }
+  .badge.min { background:var(--red-soft); color:#f87171; }
+  .meas { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-top:10px; }
+  .meas .f { flex:0 1 110px; }
+  .meas .f label { margin-top:0; }
+  .meas .wide { width:110px; }
+  .x-sym { color:var(--text-dim); padding-bottom:11px; }
+  .amt { margin-left:auto; text-align:right; }
+  .amt .lbl { font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; }
+  .amt .v { font-weight:800; color:var(--accent); font-size:1.02rem; }
+  .optbar { padding:11px 15px; border-top:1px dashed var(--border); display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .optbar .lbl { font-size:0.72rem; color:var(--text-dim); text-transform:uppercase; font-weight:700; }
+  .chip { background:var(--bg); border:1px dashed var(--border); color:var(--text-dim); border-radius:999px;
+          padding:5px 13px; font-size:0.8rem; cursor:pointer; }
+  .chip:hover { border-color:var(--accent); color:var(--accent); }
+  .totals { display:flex; flex-direction:column; gap:6px; align-items:flex-end; margin-top:16px; }
+  .totals .ln { display:flex; gap:26px; font-size:0.94rem; }
+  .totals .k { color:var(--text-dim); } .totals .v { min-width:130px; text-align:right; font-weight:600; }
+  .totals .grand .v { color:var(--accent); font-weight:800; font-size:1.15rem; }
+  .switch { display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--text-dim); text-transform:none; letter-spacing:0; }
+  .switch input { width:auto; }
+  .empty { text-align:center; color:var(--text-dim); padding:30px; font-size:0.9rem; }
+  .msg { font-size:0.86rem; margin-top:10px; min-height:20px; opacity:0; transition:opacity 0.2s; }
+  .msg.show { opacity:1; } .msg.ok { color:var(--green); } .msg.err { color:#f87171; }
+  table.grid { width:100%; border-collapse:collapse; font-size:0.85rem; }
+  table.grid th { text-align:left; color:var(--text-dim); font-size:0.7rem; text-transform:uppercase;
+                  letter-spacing:0.05em; padding:8px 10px; border-bottom:1px solid var(--border); }
+  table.grid td { padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+  table.grid tr.click { cursor:pointer; } table.grid tr.click:hover td { background:var(--surface-2); }
+  .tag { display:inline-block; background:var(--surface-2); border:1px solid var(--border); border-radius:8px;
+         padding:2px 9px; font-size:0.74rem; color:var(--text-dim); }
+  .status-pill { font-size:0.7rem; font-weight:700; border-radius:999px; padding:3px 10px; }
+  .st-Draft { background:var(--surface-2); color:var(--text-dim); }
+  .st-Sent { background:var(--blue-soft); color:#60a5fa; }
+  .st-Confirmed { background:var(--green-soft); color:var(--green); }
+  .st-Cancelled { background:var(--red-soft); color:#f87171; }
+  .spin { display:inline-block; width:14px; height:14px; border:2px solid var(--accent); border-top-color:transparent;
+          border-radius:50%; animation:s .7s linear infinite; vertical-align:middle; margin-right:6px; }
+  @keyframes s { to { transform:rotate(360deg); } }
+  .loading { text-align:center; color:var(--text-dim); padding:40px; }
+  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:flex-start;
+              justify-content:center; padding:30px 16px; overflow-y:auto; z-index:50; backdrop-filter:blur(6px); }
+  .modal-bg.show { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+           max-width:780px; width:100%; padding:24px; }
+  .hide { display:none !important; }
+  .muted { color:var(--text-dim); }
+  /* login + config gates */
+  .gate { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .gate .card { max-width:430px; width:100%; text-align:center; padding:36px 30px; }
+  .gate .brand-logo { margin:0 auto 16px; width:60px; height:60px; font-size:1.4rem; }
+  .gbtn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:18px;
+          background:#fff; color:#1a1a1a; border:none; border-radius:10px; padding:13px; font-weight:700;
+          font-size:0.95rem; cursor:pointer; font-family:inherit; }
+  .gate input { text-align:left; margin-bottom:4px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════ GATE 0 · SUPABASE CONFIG (shown once if keys not set) ══════════ -->
+<div class="gate" id="gateConfig" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">HG</div>
+    <h2>Connect to Supabase</h2>
+    <div class="sub" style="margin-top:6px;">Paste your project's URL and anon key once — saved in this browser.<br>
+      Find both in <b>Supabase → Project Settings → API</b>.</div>
+    <label style="text-align:left;">Project URL</label>
+    <input id="cfgUrl" placeholder="https://xxxx.supabase.co">
+    <label style="text-align:left;">Anon / public key</label>
+    <input id="cfgKey" placeholder="eyJhbGciOi...">
+    <div id="cfgMsg" class="msg"></div>
+    <button class="primary" style="width:100%; margin-top:14px;" onclick="saveConfig()">Connect</button>
+  </div>
+</div>
+
+<!-- ══════════ GATE 1 · LOGIN ══════════ -->
+<div class="gate" id="gateLogin" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">HG</div>
+    <h2>HG Smart Quotation</h2>
+    <div class="sub" style="margin-top:6px;">Sign in with the Google account your admin has allowlisted.</div>
+    <button class="gbtn" onclick="signIn()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41 35.3 44 30.1 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+      Sign in with Google
+    </button>
+    <div id="loginMsg" class="msg"></div>
+  </div>
+</div>
+
+<!-- ══════════ GATE 2 · NOT ON ALLOWLIST ══════════ -->
+<div class="gate" id="gateDenied" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">🔒</div>
+    <h2>Not authorised</h2>
+    <div class="sub" style="margin-top:6px;"><span id="deniedEmail"></span> is not on the access list.<br>
+      Ask your admin to add you under <b>Settings → Team access</b>.</div>
+    <button class="ghost" style="width:100%; margin-top:10px;" onclick="signOut()">Use a different account</button>
+  </div>
+</div>
+
+<!-- ══════════ THE APP ══════════ -->
+<div id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand-block">
+      <div class="brand-logo">HG</div>
+      <div>
+        <div class="brand-name">Smart Quotation</div>
+        <div class="brand-sub">Supabase edition · Mall → scope → measure → price → quote</div>
+      </div>
+    </div>
+    <div class="user-pill"><b id="userPill">…</b><button onclick="signOut()">Sign out</button></div>
+  </div>
+
+  <nav>
+    <button class="active" data-tab="build" onclick="showTab('build')">New Quote</button>
+    <button data-tab="saved" onclick="showTab('saved')">Saved Quotes</button>
+    <button data-tab="prices" onclick="showTab('prices')">Price Book</button>
+    <button data-tab="settings" onclick="showTab('settings')">Settings</button>
+  </nav>
+
+  <main>
+    <!-- ════ NEW QUOTE ════ -->
+    <section id="tab-build">
+      <div class="card">
+        <h2>1 · Client &amp; Mall</h2>
+        <div class="sub">Pick the mall — its price book pre-fills every scope below.</div>
+        <div class="row">
+          <div>
+            <label>Mall <a href="#" class="addlink" onclick="openModalEl('mallModal');return false;">+ new mall</a></label>
+            <select id="mall" onchange="onMallChange()"></select>
+          </div>
+          <div><label>Client name</label><input id="client" placeholder="e.g. ABC Sdn Bhd"></div>
+        </div>
+        <div class="row">
+          <div><label>Attention (PIC)</label><input id="attention" placeholder="e.g. Mr. Tan"></div>
+          <div><label>Project / location</label><input id="project" placeholder="e.g. Lot 2.15 renovation"></div>
+        </div>
+        <label>Client type — sets which price column is used</label>
+        <div class="seg" id="clientTypeSeg"></div>
+      </div>
+
+      <div class="card">
+        <h2>2 · Add scope</h2>
+        <div class="sub">Choose a service and sub-scope. Compulsory items load automatically — remove what the client doesn't need.</div>
+        <div class="row">
+          <div>
+            <label>Service <a href="#" class="addlink" onclick="openModalEl('svcModal');return false;">+ new service</a></label>
+            <select id="svc" onchange="onServiceChange()"></select>
+          </div>
+          <div><label>Sub-scope</label><select id="subscope"></select></div>
+          <div style="flex:0 0 auto; display:flex; align-items:flex-end;">
+            <button class="primary" onclick="addScope()">Add to quote</button>
+          </div>
+        </div>
+        <div id="extraHint" class="sub" style="margin:12px 0 0;"></div>
+      </div>
+
+      <div class="card">
+        <h2>3 · Quotation</h2>
+        <div class="sub">Enter measurements — sqft auto-calculates. Rates come from the price book (editable).</div>
+        <div id="scopes"></div>
+        <div id="noScopes" class="empty">No scope added yet. Add one above ↑</div>
+        <div class="totals" id="totals" style="display:none;">
+          <label class="switch"><input type="checkbox" id="sstToggle" checked onchange="renderTotals()"> Apply SST <span id="sstPctLbl"></span></label>
+          <div class="ln"><span class="k">Subtotal</span><span class="v" id="tSub">RM 0.00</span></div>
+          <div class="ln"><span class="k" id="tSstK">SST</span><span class="v" id="tSst">RM 0.00</span></div>
+          <div class="ln grand"><span class="k">Total</span><span class="v" id="tTotal">RM 0.00</span></div>
+        </div>
+        <div id="buildMsg" class="msg"></div>
+        <div class="row" style="margin-top:18px; justify-content:flex-end;">
+          <div style="flex:0 0 auto;"><button class="ghost" onclick="resetBuilder()">Clear</button></div>
+          <div style="flex:0 0 auto;"><button class="ghost" onclick="previewPrint()">Print / PDF</button></div>
+          <div style="flex:0 0 auto;"><button class="ghost" onclick="copyWhatsApp()">Copy WhatsApp</button></div>
+          <div style="flex:0 0 auto;"><button class="primary" id="saveBtn" onclick="saveQuoteNow()">Save quote</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ SAVED QUOTES ════ -->
+    <section id="tab-saved" class="hide">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div style="flex:1;"><h2>Saved quotes</h2><div class="sub" style="margin:0;">Most recent first. Click a row to view / print / export.</div></div>
+          <div style="flex:0 0 auto;"><button class="ghost" onclick="exportQuotesExcel()">⬇ Export Excel</button></div>
+        </div>
+        <div id="savedList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+
+    <!-- ════ PRICE BOOK ════ -->
+    <section id="tab-prices" class="hide">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div style="flex:1;"><h2>Price book</h2>
+            <div class="sub" style="margin:0;">Rows under <span class="tag">(All Malls)</span> apply everywhere; a mall-specific row overrides them.</div></div>
+          <div style="flex:0 0 auto;"><button class="ghost" onclick="exportPriceBookExcel()">⬇ Export Excel</button></div>
+        </div>
+        <div class="row" style="margin-top:12px;">
+          <div><label>Filter mall</label><select id="pbMall" onchange="renderPriceBook()"></select></div>
+          <div><label>Filter service</label><select id="pbSvc" onchange="renderPriceBook()"></select></div>
+          <div style="flex:0 0 auto; display:flex; align-items:flex-end; gap:8px;">
+            <button class="ghost" onclick="openPriceForm()">+ Add item</button>
+            <button class="ghost" onclick="cloneDefaults()">Clone defaults → mall</button>
+          </div>
+        </div>
+        <div id="pbMsg2" class="msg"></div>
+        <div id="pbList" style="margin-top:16px;" class="loading"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+
+    <!-- ════ SETTINGS ════ -->
+    <section id="tab-settings" class="hide">
+      <div class="card">
+        <h2>Company &amp; quote settings</h2>
+        <div class="sub">Shown on every printed quotation.</div>
+        <div id="setForm" class="loading"><span class="spin"></span> Loading…</div>
+      </div>
+      <div class="card" id="teamCard" style="display:none;">
+        <h2>Team access (admin)</h2>
+        <div class="sub">Who can sign in. Google login + this list = access. Admins can manage this list.</div>
+        <div class="row">
+          <div><label>Email</label><input id="au_email" placeholder="name@gmail.com"></div>
+          <div><label>Name</label><input id="au_name" placeholder="optional"></div>
+          <div style="flex:0 0 auto; display:flex; align-items:flex-end; gap:8px;">
+            <label class="switch" style="margin:0 0 10px;"><input type="checkbox" id="au_admin"> Admin</label>
+            <button class="primary" onclick="addAllowed()">Add</button>
+          </div>
+        </div>
+        <div id="auMsg" class="msg"></div>
+        <div id="auList" style="margin-top:10px;"></div>
+      </div>
+      <div class="card">
+        <h2>Audit log</h2>
+        <div class="sub">Last 50 actions — who changed what, when.</div>
+        <div id="auditList" class="loading"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- price form modal -->
+<div class="modal-bg" id="pbModal">
+  <div class="modal">
+    <h2 id="pbModalTitle">Add price item</h2>
+    <div class="sub">Leave a price 0 if it doesn't apply to that client type.</div>
+    <input type="hidden" id="pf_id">
+    <div class="row">
+      <div><label>Mall</label><select id="pf_mall"></select></div>
+      <div><label>Service</label><input id="pf_service" list="svcDatalist"></div>
+    </div>
+    <div class="row">
+      <div><label>Sub-scope</label><input id="pf_subscope" placeholder="e.g. Installation"></div>
+      <div><label>Unit</label>
+        <select id="pf_unit"><option>sqft</option><option>ft</option><option>m</option><option>nos</option><option>lot</option><option>day</option><option>month</option><option>trip</option><option>item</option></select>
+      </div>
+    </div>
+    <label>Item</label><input id="pf_item" placeholder="e.g. Hoarding panel">
+    <div class="row">
+      <div><label>Compulsory?</label><select id="pf_comp"><option value="Y">Yes — auto-load</option><option value="N">No — optional</option></select></div>
+      <div><label>Min qty</label><input id="pf_minqty" type="number" step="any" value="0"></div>
+      <div><label>Min charge (RM)</label><input id="pf_mincharge" type="number" step="any" value="0"></div>
+    </div>
+    <div class="row">
+      <div><label>Price — Mall</label><input id="pf_pm" type="number" step="any" value="0"></div>
+      <div><label>Price — Contractor</label><input id="pf_pc" type="number" step="any" value="0"></div>
+      <div><label>Price — Tenant</label><input id="pf_pt" type="number" step="any" value="0"></div>
+    </div>
+    <div class="row">
+      <div><label>Sort</label><input id="pf_sort" type="number" value="1"></div>
+      <div style="flex:2;"><label>Notes</label><input id="pf_notes"></div>
+    </div>
+    <div id="pbMsg" class="msg"></div>
+    <div class="row" style="margin-top:16px; justify-content:flex-end;">
+      <div style="flex:0 0 auto;"><button class="danger" id="pbDelBtn" onclick="deletePrice()">Delete</button></div>
+      <div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal('pbModal')">Cancel</button></div>
+      <div style="flex:0 0 auto;"><button class="primary" onclick="savePrice()">Save</button></div>
+    </div>
+  </div>
+</div>
+<datalist id="svcDatalist"></datalist>
+
+<!-- add mall modal -->
+<div class="modal-bg" id="mallModal">
+  <div class="modal">
+    <h2>Add mall</h2>
+    <div class="sub">It instantly uses every (All Malls) price — add override rows only where it differs.</div>
+    <label>Mall name</label><input id="m_name" placeholder="e.g. The Gardens Mall">
+    <div class="row">
+      <div><label>Code (optional)</label><input id="m_code" placeholder="e.g. TGM"></div>
+      <div><label>Location (optional)</label><input id="m_loc" placeholder="e.g. Mid Valley City"></div>
+    </div>
+    <div id="mallMsg" class="msg"></div>
+    <div class="row" style="margin-top:16px; justify-content:flex-end;">
+      <div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal('mallModal')">Cancel</button></div>
+      <div style="flex:0 0 auto;"><button class="primary" onclick="saveMall()">Add mall</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- add service modal -->
+<div class="modal-bg" id="svcModal">
+  <div class="modal">
+    <h2>Add service</h2>
+    <div class="sub">Then add its items under Price Book. Sub-scopes appear automatically once priced.</div>
+    <label>Service name</label><input id="s_name" placeholder="e.g. Demolition">
+    <label>Type</label>
+    <select id="s_extra"><option value="N">Main scope</option><option value="Y">Extra work (like Fit-Out / Scaffold)</option></select>
+    <div id="svcMsg" class="msg"></div>
+    <div class="row" style="margin-top:16px; justify-content:flex-end;">
+      <div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal('svcModal')">Cancel</button></div>
+      <div style="flex:0 0 auto;"><button class="primary" onclick="saveSvc()">Add service</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- view quote modal -->
+<div class="modal-bg" id="viewModal"><div class="modal" id="viewBody"></div></div>
+
+<script>
+// ═══════════════════════════ CONFIG ═══════════════════════════
+// Option A: paste your values here (recommended once stable):
+var SUPABASE_URL = '';   // e.g. 'https://abcd1234.supabase.co'
+var SUPABASE_KEY = '';   // the anon/public key
+// Option B: leave blank — the app shows a one-time connect screen and
+// stores them in this browser (localStorage).
+if (!SUPABASE_URL) SUPABASE_URL = localStorage.getItem('hg_supabase_url') || '';
+if (!SUPABASE_KEY) SUPABASE_KEY = localStorage.getItem('hg_supabase_key') || '';
+
+var sb = null;            // supabase client
+var SESSION = null;       // auth session
+var IS_ADMIN = false;
+
+// ═══════════════════════════ STATE ═══════════════════════════
+var BOOT = { malls:[], services:[], settings:{}, clientTypes:['Mall','Contractor','Tenant'] };
+var CLIENT_TYPE = 'Mall';
+var SCOPES = [];          // [{key, service, subScope, items:[line], optional:[item]}]
+var SAVED = [];
+var PRICEBOOK = [];       // raw price_book rows
+var LAST = null;
+
+// ═══════════════════════════ HELPERS ═══════════════════════════
+function el(id){ return document.getElementById(id); }
+function rm(n){ return 'RM ' + (Number(n)||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function uid(){ return 'u'+Math.random().toString(36).slice(2,10); }
+function round2(n){ return Math.round((Number(n)+Number.EPSILON)*100)/100; }
+function openModalEl(id){ el(id).classList.add('show'); }
+function closeModal(id){ el(id).classList.remove('show'); }
+document.addEventListener('click', function(e){ if(e.target.classList && e.target.classList.contains('modal-bg')) e.target.classList.remove('show'); });
+function showMsg(id, t, ok){ var m=el(id); m.textContent=t; m.className='msg show '+(ok?'ok':'err'); setTimeout(function(){m.classList.remove('show');},4500); }
+function buildMsg(t, ok){ showMsg('buildMsg', t, ok); }
+function fmtQty(n){ return (Math.round(n*100)/100).toString(); }
+function fail(e){ alert(e && e.message ? e.message : String(e)); }
+function fmtDate(d){ if(!d) return ''; var x=new Date(d); return isNaN(x)?String(d):x.toLocaleDateString('en-MY',{day:'2-digit',month:'short',year:'numeric'}); }
+
+// ═══════════════════════════ BOOT / AUTH FLOW ═══════════════════════════
+function saveConfig(){
+  var u = el('cfgUrl').value.trim().replace(/\/+$/,'');
+  var k = el('cfgKey').value.trim();
+  if(!/^https:\/\/.+\.supabase\.co$/.test(u)){ showMsg('cfgMsg','URL must look like https://xxxx.supabase.co', false); return; }
+  if(!(k.indexOf('eyJ')===0 || k.indexOf('sb_publishable_')===0) || k.length < 30){
+    showMsg('cfgMsg','That does not look like the anon/public key (starts with eyJ… or sb_publishable_…).', false); return; }
+  localStorage.setItem('hg_supabase_url', u);
+  localStorage.setItem('hg_supabase_key', k);
+  location.reload();
+}
+
+async function start(){
+  if(!SUPABASE_URL || !SUPABASE_KEY){ el('gateConfig').style.display='flex'; return; }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var s = await sb.auth.getSession();
+  SESSION = s.data.session;
+  sb.auth.onAuthStateChange(function(_e, session){ if(!!session !== !!SESSION){ SESSION = session; route(); } });
+  route();
+}
+
+async function route(){
+  ['gateConfig','gateLogin','gateDenied'].forEach(function(g){ el(g).style.display='none'; });
+  el('app').style.display='none';
+  if(!SESSION){ el('gateLogin').style.display='flex'; return; }
+  var email = (SESSION.user.email||'').toLowerCase();
+  // allowlist check
+  var r = await sb.from('allowed_users').select('email,is_admin').ilike('email', email).maybeSingle();
+  if(r.error){ showMsg('loginMsg', r.error.message, false); el('gateLogin').style.display='flex'; return; }
+  if(!r.data){ el('deniedEmail').textContent = email; el('gateDenied').style.display='flex'; return; }
+  IS_ADMIN = !!r.data.is_admin;
+  el('app').style.display='block';
+  el('userPill').textContent = email;
+  el('teamCard').style.display = IS_ADMIN ? 'block' : 'none';
+  await loadBootstrap();
+}
+
+function signIn(){
+  var here = window.location.href.split('#')[0];
+  var embedded = (window.self !== window.top);
+  // Google blocks its login page inside iframes — when embedded (e.g. in the hub),
+  // redirect the TOP window instead. Same flow, same redirect back to this page.
+  sb.auth.signInWithOAuth({ provider:'google',
+      options:{ redirectTo: here, skipBrowserRedirect: embedded } })
+    .then(function(r){
+      if(r.error){ showMsg('loginMsg', r.error.message, false); return; }
+      if(embedded && r.data && r.data.url){ window.top.location.href = r.data.url; }
+    });
+}
+function signOut(){ sb.auth.signOut().then(function(){ location.reload(); }); }
+
+// ═══════════════════════════ BOOTSTRAP DATA ═══════════════════════════
+async function loadBootstrap(){
+  var mallsQ = await sb.from('malls').select('*').order('name');
+  var svcQ   = await sb.from('services').select('*').order('sort');
+  var setQ   = await sb.from('app_settings').select('*');
+  if(mallsQ.error||svcQ.error||setQ.error){ fail((mallsQ.error||svcQ.error||setQ.error)); return; }
+  BOOT.malls = mallsQ.data;
+  BOOT.services = svcQ.data;
+  BOOT.settings = {};
+  setQ.data.forEach(function(r){ BOOT.settings[r.key] = r.value; });
+  onBoot();
+}
+
+function onBoot(){
+  el('mall').innerHTML = BOOT.malls.map(function(m){ return '<option>'+esc(m.name)+'</option>'; }).join('');
+  el('svc').innerHTML = BOOT.services.map(function(s){ return '<option data-extra="'+(s.is_extra?'Y':'N')+'">'+esc(s.name)+'</option>'; }).join('');
+  el('clientTypeSeg').innerHTML = BOOT.clientTypes.map(function(t){
+    return '<button class="'+(t===CLIENT_TYPE?'on':'')+'" onclick="setClientType(\''+t+'\')">'+t+'</button>'; }).join('');
+  el('sstPctLbl').textContent = '('+(BOOT.settings.SST_PERCENT||6)+'%)';
+  el('svcDatalist').innerHTML = BOOT.services.map(function(s){ return '<option value="'+esc(s.name)+'">'; }).join('');
+  onMallChange(); renderScopes();
+}
+
+function setClientType(t){
+  CLIENT_TYPE = t;
+  SCOPES.forEach(function(sc){ sc.items.forEach(function(li){ if(!li.rateEdited) li.rate = li.rates[t]||0; }); });
+  onBoot();
+}
+
+// ═══════════════════════════ PRICE RESOLUTION (was resolvedPrices) ═══════════════════════════
+async function fetchPricesFor(mall){
+  var r = await sb.from('price_book').select('*').in('mall', ['(All Malls)', mall]).order('sort');
+  if(r.error){ fail(r.error); return []; }
+  var map = {};
+  r.data.forEach(function(row){
+    var key = [row.service,row.sub_scope,row.item].map(function(x){return String(x||'').trim().toLowerCase();}).join('|');
+    var ex = map[key];
+    if(!ex || (row.mall===mall && ex.mall!==mall)) map[key] = row;   // mall-specific beats default
+  });
+  return Object.keys(map).map(function(k){ return map[k]; });
+}
+
+var MALL_PRICES = [];
+async function onMallChange(){
+  MALL_PRICES = await fetchPricesFor(el('mall').value);
+  onServiceChange();
+}
+
+function onServiceChange(){
+  var svc = el('svc').value;
+  var opt = el('svc').selectedOptions[0];
+  el('extraHint').textContent = (opt && opt.dataset.extra==='Y') ? 'This service is "extra work" — added on top of the main scope.' : '';
+  var seen={}, subs=[];
+  MALL_PRICES.filter(function(r){ return r.service===svc; })
+    .sort(function(a,b){ return (a.sort||0)-(b.sort||0); })
+    .forEach(function(r){ var s=String(r.sub_scope||'').trim();
+      if(s && !seen[s.toLowerCase()]){ seen[s.toLowerCase()]=1; subs.push(s); } });
+  el('subscope').innerHTML = subs.map(function(s){ return '<option>'+esc(s)+'</option>'; }).join('');
+}
+
+function itemsFor(svc, sub){
+  return MALL_PRICES
+    .filter(function(r){ return r.service===svc && r.sub_scope===sub; })
+    .sort(function(a,b){ return (a.sort||0)-(b.sort||0); })
+    .map(function(r){ return {
+      item:r.item, unit:r.unit||'nos', compulsory:!!r.compulsory,
+      minQty:Number(r.min_qty)||0, minCharge:Number(r.min_charge)||0,
+      rates:{ Mall:Number(r.price_mall)||0, Contractor:Number(r.price_contractor)||0, Tenant:Number(r.price_tenant)||0 },
+      notes:r.notes||'' }; });
+}
+
+// ═══════════════════════════ SCOPE / LINE BUILDER ═══════════════════════════
+function addScope(){
+  var svc = el('svc').value, sub = el('subscope').value;
+  if(!svc || !sub){ buildMsg('Pick a service and sub-scope first.', false); return; }
+  var key = (svc+'|'+sub).toLowerCase();
+  if(SCOPES.some(function(s){ return s.key===key; })){ buildMsg('That scope is already in the quote.', false); return; }
+  var items = itemsFor(svc, sub);
+  if(!items.length){ buildMsg('No priced items for that scope yet — add them in Price Book.', false); return; }
+  SCOPES.push({ key:key, service:svc, subScope:sub,
+    items: items.filter(function(i){ return i.compulsory; }).map(function(i){ return newLine(svc,sub,i); }),
+    optional: items.filter(function(i){ return !i.compulsory; }) });
+  renderScopes();
+}
+
+function newLine(svc, sub, it){
+  return { uid:uid(), service:svc, subScope:sub, item:it.item, unit:it.unit,
+           compulsory:it.compulsory, minQty:it.minQty, minCharge:it.minCharge,
+           rate:it.rates[CLIENT_TYPE]||0, rates:it.rates, rateEdited:false,
+           L:'', H:'', count:'', qty:'', notes:it.notes };
+}
+function addOptional(scopeKey, idx){
+  var sc = SCOPES.find(function(s){return s.key===scopeKey;});
+  var it = sc.optional[idx];
+  sc.items.push(newLine(sc.service, sc.subScope, it));
+  sc.optional.splice(idx,1);
+  renderScopes();
+}
+function removeScope(key){ SCOPES = SCOPES.filter(function(s){return s.key!==key;}); renderScopes(); }
+function removeLine(scopeKey, lineUid){
+  var sc = SCOPES.find(function(s){return s.key===scopeKey;});
+  sc.items = sc.items.filter(function(l){return l.uid!==lineUid;});
+  renderScopes();
+}
+
+// qty / amount math — identical rules to the Apps Script version
+function isArea(u){ return u==='sqft'; }
+function isLinear(u){ return u==='ft' || u==='m'; }
+function lineQty(li){
+  if(isArea(li.unit)) return (parseFloat(li.L)||0)*(parseFloat(li.H)||0)*(parseFloat(li.count)||1);
+  if(isLinear(li.unit)) return (parseFloat(li.L)||0)*(parseFloat(li.count)||1);
+  return parseFloat(li.qty)||0;
+}
+function lineCompute(li){
+  var qty = lineQty(li), rate = parseFloat(li.rate)||0, notes=[];
+  var eff = qty;
+  if(li.minQty>0 && qty>0 && qty<li.minQty){ eff = li.minQty; notes.push('min '+li.minQty+' '+li.unit); }
+  var amt = round2(eff*rate);
+  if(li.minCharge>0 && amt<li.minCharge){ amt = li.minCharge; notes.push('min charge RM'+li.minCharge); }
+  return { qty:eff, amount:amt, note:notes.join('; ') };
+}
+
+function renderScopes(){
+  var host = el('scopes');
+  el('noScopes').style.display = SCOPES.length ? 'none' : 'block';
+  el('totals').style.display = SCOPES.length ? 'flex' : 'none';
+  host.innerHTML = SCOPES.map(function(sc){
+    var lines = sc.items.map(function(li){ return lineHtml(sc.key, li); }).join('');
+    var opts = sc.optional.length ? (
+      '<div class="optbar"><span class="lbl">Optional</span>' +
+      sc.optional.map(function(it,i){ return '<span class="chip" onclick="addOptional(\''+sc.key+'\','+i+')">'+esc(it.item)+'</span>'; }).join('') +
+      '</div>') : '';
+    return '<div class="scope"><div class="head"><span>'+esc(sc.service)+' · '+esc(sc.subScope)+'</span>'+
+           '<span class="x" onclick="removeScope(\''+sc.key+'\')">Remove ✕</span></div>'+
+           (lines||'<div class="lineitem muted">All items removed.</div>')+opts+'</div>';
+  }).join('');
+  renderTotals();
+}
+
+function lineHtml(scopeKey, li){
+  var c = lineCompute(li);
+  var meas;
+  if(isArea(li.unit)){
+    meas = field('Length (ft)','number',li.L,scopeKey,li.uid,'L') + xsym() +
+           field('Height (ft)','number',li.H,scopeKey,li.uid,'H') + xsym() +
+           field('Count','number',li.count,scopeKey,li.uid,'count','84','1') +
+           '<div class="f"><label>Sqft</label><input id="sqft_'+li.uid+'" value="'+(c.qty?c.qty.toFixed(2):'0')+'" disabled></div>';
+  } else if(isLinear(li.unit)){
+    meas = field('Length ('+li.unit+')','number',li.L,scopeKey,li.uid,'L','120') + xsym() +
+           field('Count','number',li.count,scopeKey,li.uid,'count','84','1');
+  } else {
+    meas = field('Qty ('+li.unit+')','number',li.qty,scopeKey,li.uid,'qty','120');
+  }
+  var rateInp = '<div class="f"><label>Rate (RM)</label><input class="wide" type="number" step="any" value="'+esc(li.rate)+
+                '" oninput="setLine(\''+scopeKey+'\',\''+li.uid+'\',\'rate\',this.value)"></div>';
+  var noteBadge = '<span class="badge min" id="note_'+li.uid+'"'+(c.note?'':' style="display:none"')+'>'+esc(c.note)+'</span>';
+  return '<div class="lineitem"><div class="it-top"><div>'+
+           '<span class="it-name">'+esc(li.item)+'</span> '+
+           (li.compulsory?'<span class="badge req">required</span>':'<span class="badge opt">added</span>')+' '+noteBadge+
+           (li.notes?'<div class="it-note">'+esc(li.notes)+'</div>':'')+
+         '</div><span class="rm" onclick="removeLine(\''+scopeKey+'\',\''+li.uid+'\')">✕</span></div>'+
+         '<div class="meas">'+meas+rateInp+
+           '<div class="amt"><div class="lbl">Amount</div><div class="v" id="amt_'+li.uid+'">'+rm(c.amount)+'</div></div>'+
+         '</div></div>';
+}
+function field(label,type,val,sk,u,prop,w,ph){
+  return '<div class="f"><label>'+label+'</label><input type="'+type+'" step="any" '+(w?'style="width:'+w+'px"':'')+
+         ' value="'+esc(val)+'" '+(ph?'placeholder="'+ph+'"':'')+
+         ' oninput="setLine(\''+sk+'\',\''+u+'\',\''+prop+'\',this.value)"></div>';
+}
+function xsym(){ return '<span class="x-sym">×</span>'; }
+
+function setLine(scopeKey, lineUid, prop, val){
+  var sc = SCOPES.find(function(s){return s.key===scopeKey;});
+  var li = sc.items.find(function(l){return l.uid===lineUid;});
+  li[prop] = val;
+  if(prop==='rate') li.rateEdited = true;
+  var c = lineCompute(li);
+  var sq = el('sqft_'+li.uid); if(sq) sq.value = c.qty ? c.qty.toFixed(2) : '0';
+  var amt = el('amt_'+li.uid); if(amt) amt.textContent = rm(c.amount);
+  var note = el('note_'+li.uid);
+  if(note){ note.textContent = c.note; note.style.display = c.note ? '' : 'none'; }
+  renderTotals();
+}
+
+function allLines(){ var out=[]; SCOPES.forEach(function(s){ s.items.forEach(function(l){ out.push(l); }); }); return out; }
+function renderTotals(){
+  var sub = 0;
+  allLines().forEach(function(li){ sub += lineCompute(li).amount; });
+  sub = round2(sub);
+  var pct = el('sstToggle').checked ? (parseFloat(BOOT.settings.SST_PERCENT)||6) : 0;
+  var sst = round2(sub*pct/100);
+  el('tSub').textContent = rm(sub);
+  el('tSstK').textContent = 'SST ('+pct+'%)';
+  el('tSst').textContent = rm(sst);
+  el('tTotal').textContent = rm(sub+sst);
+}
+
+// ═══════════════════════════ SAVE (server recomputes via RPC) ═══════════════════════════
+function collectPayload(){
+  var lines = [];
+  SCOPES.forEach(function(sc){ sc.items.forEach(function(li){
+    lines.push({ service:li.service, subScope:li.subScope, item:li.item, unit:li.unit,
+                 qty:lineQty(li), rate:parseFloat(li.rate)||0, minQty:li.minQty, minCharge:li.minCharge, note:'' });
+  });});
+  return { mall:el('mall').value, clientName:el('client').value.trim(), clientType:CLIENT_TYPE,
+           attention:el('attention').value.trim(), project:el('project').value.trim(),
+           applySST:el('sstToggle').checked, notes:'', lines:lines };
+}
+async function saveQuoteNow(){
+  var p = collectPayload();
+  if(!p.clientName){ buildMsg('Enter the client name.', false); return; }
+  if(!p.lines.length){ buildMsg('Add at least one item.', false); return; }
+  var btn = el('saveBtn'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Saving…';
+  var r = await sb.rpc('save_quote', { payload: p });
+  btn.disabled = false; btn.textContent = 'Save quote';
+  if(r.error){ buildMsg(r.error.message, false); return; }
+  var q = await getQuote(r.data);
+  LAST = q;
+  buildMsg('Saved as ' + q.quoteNo, true);
+  showTab('saved');
+}
+function resetBuilder(){
+  if(SCOPES.length && !confirm('Clear the current quote?')) return;
+  SCOPES=[]; el('client').value=''; el('attention').value=''; el('project').value='';
+  renderScopes();
+}
+
+// ═══════════════════════════ SAVED QUOTES ═══════════════════════════
+async function loadSaved(){
+  el('savedList').innerHTML = '<div class="loading"><span class="spin"></span> Loading…</div>';
+  var r = await sb.from('quotes').select('*').order('created_at', {ascending:false});
+  if(r.error){ el('savedList').innerHTML = '<div class="empty">'+esc(r.error.message)+'</div>'; return; }
+  SAVED = r.data;
+  renderSaved();
+}
+function renderSaved(){
+  if(!SAVED.length){ el('savedList').innerHTML = '<div class="empty">No quotes saved yet.</div>'; return; }
+  el('savedList').innerHTML = '<table class="grid"><thead><tr><th>Quote No</th><th>Date</th><th>Mall</th><th>Client</th><th>Type</th><th style="text-align:right">Total</th><th>Status</th><th>By</th></tr></thead><tbody>'+
+    SAVED.map(function(q){
+      return '<tr class="click" onclick="viewQuote(\''+q.id+'\')"><td><b>'+esc(q.quote_no)+'</b></td><td>'+esc(fmtDate(q.quote_date))+'</td>'+
+        '<td>'+esc(q.mall)+'</td><td>'+esc(q.client_name)+'</td><td>'+esc(q.client_type)+'</td>'+
+        '<td style="text-align:right">'+rm(q.total)+'</td>'+
+        '<td><span class="status-pill st-'+esc(q.status)+'">'+esc(q.status)+'</span></td>'+
+        '<td class="muted">'+esc(String(q.created_by||'').split('@')[0])+'</td></tr>';
+    }).join('')+'</tbody></table>';
+}
+
+async function getQuote(id){
+  var q = await sb.from('quotes').select('*').eq('id', id).single();
+  if(q.error) throw q.error;
+  var ls = await sb.from('quote_lines').select('*').eq('quote_id', id).order('sort');
+  if(ls.error) throw ls.error;
+  return {
+    id:q.data.id, quoteNo:q.data.quote_no, date:fmtDate(q.data.quote_date), mall:q.data.mall,
+    client:q.data.client_name, clientType:q.data.client_type, attention:q.data.attention,
+    project:q.data.project, subtotal:Number(q.data.subtotal), sstPct:Number(q.data.sst_pct),
+    sst:Number(q.data.sst), total:Number(q.data.total), status:q.data.status, notes:q.data.notes,
+    createdBy:q.data.created_by, company:BOOT.settings,
+    lines: ls.data.map(function(r){ return { service:r.service, subScope:r.sub_scope, item:r.item,
+      unit:r.unit, qty:Number(r.qty), rate:Number(r.rate), amount:Number(r.amount), note:r.note }; })
+  };
+}
+
+async function viewQuote(id){
+  try {
+    var q = await getQuote(id);
+    LAST = q;
+    var rows = q.lines.map(function(li,i){
+      return '<tr><td>'+(i+1)+'</td><td>'+esc(li.item)+'<br><small class="muted">'+esc(li.service+' · '+li.subScope)+(li.note?(' — '+esc(li.note)):'')+'</small></td>'+
+        '<td style="text-align:right">'+(li.qty?fmtQty(li.qty)+' '+esc(li.unit):'-')+'</td>'+
+        '<td style="text-align:right">'+rm(li.rate)+'</td><td style="text-align:right">'+rm(li.amount)+'</td></tr>';
+    }).join('');
+    el('viewBody').innerHTML =
+      '<div class="row" style="justify-content:space-between; align-items:center;">'+
+        '<h2 style="margin:0;">'+esc(q.quoteNo)+' <span class="status-pill st-'+esc(q.status)+'">'+esc(q.status)+'</span></h2>'+
+        '<button class="ghost" style="flex:0 0 auto;" onclick="closeModal(\'viewModal\')">✕ Close</button></div>'+
+      '<div class="sub" style="margin-top:6px;">'+esc(q.date)+' · '+esc(q.mall)+' · '+esc(q.client)+' ('+esc(q.clientType)+')'+
+        (q.project?(' · '+esc(q.project)):'')+'</div>'+
+      '<table class="grid"><thead><tr><th>#</th><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Rate</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<div class="totals" style="margin-top:14px;">'+
+        '<div class="ln"><span class="k">Subtotal</span><span class="v">'+rm(q.subtotal)+'</span></div>'+
+        (q.sstPct?('<div class="ln"><span class="k">SST ('+q.sstPct+'%)</span><span class="v">'+rm(q.sst)+'</span></div>'):'')+
+        '<div class="ln grand"><span class="k">Total</span><span class="v">'+rm(q.total)+'</span></div></div>'+
+      '<div class="row" style="margin-top:18px; justify-content:flex-end;">'+
+        '<div style="flex:0 0 auto;"><select id="qStatus" onchange="setStatus(\''+q.id+'\', this.value)" style="padding:9px 12px;">'+
+          ['Draft','Sent','Confirmed','Cancelled'].map(function(s){ return '<option'+(s===q.status?' selected':'')+'>'+s+'</option>'; }).join('')+'</select></div>'+
+        '<div style="flex:0 0 auto;"><button class="danger" onclick="delQuote(\''+q.id+'\')">Delete</button></div>'+
+        '<div style="flex:0 0 auto;"><button class="ghost" onclick="exportQuoteExcel()">⬇ Excel</button></div>'+
+        '<div style="flex:0 0 auto;"><button class="ghost" onclick="copyWhatsAppSaved()">Copy WhatsApp</button></div>'+
+        '<div style="flex:0 0 auto;"><button class="primary" onclick="doPrint(LAST)">Print / PDF</button></div></div>';
+    openModalEl('viewModal');
+  } catch(e){ fail(e); }
+}
+
+async function setStatus(id, status){
+  var r = await sb.from('quotes').update({status:status}).eq('id', id);
+  if(r.error){ fail(r.error); return; }
+  await sb.rpc('log_audit', { p_action:'STATUS', p_details:String(id).slice(0,8)+' → '+status });
+  loadSaved();
+}
+async function delQuote(id){
+  if(!confirm('Delete this quote? This cannot be undone.')) return;
+  var r = await sb.from('quotes').delete().eq('id', id);   // lines cascade
+  if(r.error){ fail(r.error); return; }
+  await sb.rpc('log_audit', { p_action:'DELETE QUOTE', p_details:String(id).slice(0,8) });
+  closeModal('viewModal');
+  loadSaved();
+}
+function copyWhatsAppSaved(){
+  if(!LAST) return;
+  navigator.clipboard.writeText(whatsAppText(LAST)).then(function(){ alert('WhatsApp text copied.'); });
+}
+
+// ═══════════════════════════ OUTPUTS — WhatsApp / Print-PDF / Excel ═══════════════════════════
+function currentQuoteForOutput(){
+  var p = collectPayload();
+  var lines = [], sub=0;
+  SCOPES.forEach(function(sc){ sc.items.forEach(function(li){
+    var c = lineCompute(li);
+    lines.push({ service:li.service, subScope:li.subScope, item:li.item, unit:li.unit, qty:c.qty, rate:parseFloat(li.rate)||0, amount:c.amount, note:c.note });
+    sub += c.amount;
+  });});
+  sub = round2(sub);
+  var pct = el('sstToggle').checked ? (parseFloat(BOOT.settings.SST_PERCENT)||6) : 0;
+  var sst = round2(sub*pct/100);
+  return { quoteNo:'(unsaved draft)', date:new Date().toLocaleDateString('en-MY'), mall:p.mall, client:p.clientName,
+           clientType:p.clientType, attention:p.attention, project:p.project, lines:lines,
+           subtotal:sub, sstPct:pct, sst:sst, total:sub+sst, company:BOOT.settings, notes:'' };
+}
+function copyWhatsApp(){
+  var q = currentQuoteForOutput();
+  if(!q.lines.length){ buildMsg('Nothing to copy.', false); return; }
+  navigator.clipboard.writeText(whatsAppText(q)).then(function(){ buildMsg('WhatsApp text copied — paste into chat.', true); },
+    function(){ buildMsg('Copy failed — long-press to copy manually.', false); });
+}
+function whatsAppText(q){
+  var L = [];
+  L.push('*Quotation* — ' + (q.company.COMPANY_NAME||'HG Group'));
+  L.push(q.mall + (q.project?(' · '+q.project):''));
+  L.push('Client: ' + q.client + (q.attention?(' (Attn: '+q.attention+')'):''));
+  L.push('Type: ' + q.clientType);
+  L.push('');
+  var n=0, lastScope='';
+  q.lines.forEach(function(li){
+    var scope = li.service+' · '+li.subScope;
+    if(scope!==lastScope){ L.push('— '+scope+' —'); lastScope=scope; }
+    n++;
+    L.push(n+'. '+li.item+'  '+(li.qty?(fmtQty(li.qty)+li.unit+' × '+rm(li.rate).replace('RM ','RM')+'  '):'')+'= '+rm(li.amount)+(li.note?(' ('+li.note+')'):''));
+  });
+  L.push('');
+  L.push('Subtotal: '+rm(q.subtotal));
+  if(q.sstPct) L.push('SST ('+q.sstPct+'%): '+rm(q.sst));
+  L.push('*Total: '+rm(q.total)+'*');
+  if(q.company.QUOTE_FOOTER){ L.push(''); L.push(q.company.QUOTE_FOOTER); }
+  return L.join('\n');
+}
+function previewPrint(){ doPrint(currentQuoteForOutput()); }
+function doPrint(q){
+  var rows = q.lines.map(function(li,i){
+    return '<tr><td>'+(i+1)+'</td><td>'+esc(li.item)+'<br><small style="color:#666">'+esc(li.service+' · '+li.subScope)+(li.note?(' — '+esc(li.note)):'')+'</small></td>'+
+           '<td style="text-align:right">'+(li.qty?fmtQty(li.qty)+' '+esc(li.unit):'-')+'</td>'+
+           '<td style="text-align:right">'+rm(li.rate)+'</td>'+
+           '<td style="text-align:right">'+rm(li.amount)+'</td></tr>';
+  }).join('');
+  var c = q.company||{};
+  var html = '<html><head><title>'+esc(q.quoteNo)+'</title><style>'+
+    'body{font-family:Arial,Helvetica,sans-serif;color:#111;max-width:800px;margin:24px auto;padding:0 16px;font-size:13px}'+
+    'h1{font-size:20px;margin:0}.muted{color:#666}.hd{display:flex;justify-content:space-between;border-bottom:2px solid #f59e0b;padding-bottom:12px;margin-bottom:16px}'+
+    'table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top}'+
+    'th{background:#faf6ee;font-size:11px;text-transform:uppercase;color:#666}tfoot td{border:0;text-align:right}'+
+    '.tot{font-size:17px;font-weight:bold;color:#b8860b}.box{background:#faf6ee;padding:10px 14px;border-radius:8px;margin-bottom:14px}'+
+    '</style></head><body>'+
+    '<div class="hd"><div><h1>'+esc(c.COMPANY_NAME||'HG Group')+'</h1><div class="muted">'+esc(c.COMPANY_ADDRESS||'')+'<br>'+esc(c.COMPANY_PHONE||'')+' · '+esc(c.COMPANY_EMAIL||'')+'<br>'+esc(c.COMPANY_REG||'')+'</div></div>'+
+    '<div style="text-align:right"><h1 style="color:#b8860b">QUOTATION</h1><div class="muted">'+esc(q.quoteNo)+'<br>'+esc(q.date)+'</div></div></div>'+
+    '<div class="box"><b>To:</b> '+esc(q.client)+(q.attention?(' (Attn: '+esc(q.attention)+')'):'')+'<br>'+
+    '<b>Mall:</b> '+esc(q.mall)+(q.project?(' &nbsp; <b>Project:</b> '+esc(q.project)):'')+' &nbsp; <b>Rate type:</b> '+esc(q.clientType)+'</div>'+
+    '<table><thead><tr><th>#</th><th>Description</th><th style="text-align:right">Qty</th><th style="text-align:right">Rate</th><th style="text-align:right">Amount</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody>'+
+    '<tfoot><tr><td colspan="4">Subtotal</td><td>'+rm(q.subtotal)+'</td></tr>'+
+    (q.sstPct?'<tr><td colspan="4">SST ('+q.sstPct+'%)</td><td>'+rm(q.sst)+'</td></tr>':'')+
+    '<tr><td colspan="4" class="tot">TOTAL</td><td class="tot">'+rm(q.total)+'</td></tr></tfoot></table>'+
+    '<p class="muted" style="margin-top:18px">'+esc(c.QUOTE_FOOTER||'')+'</p>'+
+    '<scr'+'ipt>window.onload=function(){window.print();}</scr'+'ipt></body></html>';
+  var w = window.open('', '_blank'); w.document.write(html); w.document.close();
+}
+
+// Excel exports (SheetJS) — the "get my data out any time" guarantee
+async function exportQuotesExcel(){
+  var qs = await sb.from('quotes').select('*').order('created_at');
+  var ls = await sb.from('quote_lines').select('*').order('sort');
+  if(qs.error||ls.error){ fail(qs.error||ls.error); return; }
+  var qById = {};
+  qs.data.forEach(function(q){ qById[q.id] = q; });
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(qs.data.map(function(q){ return {
+    'Quote No':q.quote_no, 'Date':q.quote_date, 'Mall':q.mall, 'Client':q.client_name,
+    'Client Type':q.client_type, 'Attention':q.attention, 'Project':q.project,
+    'Subtotal':Number(q.subtotal), 'SST %':Number(q.sst_pct), 'SST':Number(q.sst),
+    'Total':Number(q.total), 'Status':q.status, 'Created By':q.created_by, 'Created On':q.created_at }; })), 'Quotes');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ls.data.map(function(l){ var q=qById[l.quote_id]||{}; return {
+    'Quote No':q.quote_no||'', 'Client':q.client_name||'', 'Service':l.service, 'Sub-scope':l.sub_scope,
+    'Item':l.item, 'Unit':l.unit, 'Qty':Number(l.qty), 'Rate':Number(l.rate), 'Amount':Number(l.amount), 'Note':l.note }; })), 'Quote Lines');
+  XLSX.writeFile(wb, 'HG-Quotes-'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+function exportQuoteExcel(){
+  if(!LAST) return;
+  var wb = XLSX.utils.book_new();
+  var head = [
+    ['Quotation', LAST.quoteNo], ['Date', LAST.date], ['Mall', LAST.mall],
+    ['Client', LAST.client + (LAST.attention?(' (Attn: '+LAST.attention+')'):'')],
+    ['Project', LAST.project||''], ['Rate type', LAST.clientType], []
+  ];
+  var rows = [['#','Service','Sub-scope','Item','Unit','Qty','Rate (RM)','Amount (RM)','Note']];
+  LAST.lines.forEach(function(l,i){ rows.push([i+1, l.service, l.subScope, l.item, l.unit, l.qty, l.rate, l.amount, l.note||'']); });
+  rows.push([]); rows.push(['','','','','','','Subtotal', LAST.subtotal]);
+  if(LAST.sstPct) rows.push(['','','','','','','SST ('+LAST.sstPct+'%)', LAST.sst]);
+  rows.push(['','','','','','','TOTAL', LAST.total]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(head.concat(rows)), 'Quote');
+  XLSX.writeFile(wb, (LAST.quoteNo||'quote').replace(/[^\w\-]/g,'_')+'.xlsx');
+}
+async function exportPriceBookExcel(){
+  var r = await sb.from('price_book').select('*').order('mall').order('service').order('sort');
+  if(r.error){ fail(r.error); return; }
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(r.data.map(function(p){ return {
+    'Mall':p.mall, 'Service':p.service, 'Sub-scope':p.sub_scope, 'Item':p.item, 'Unit':p.unit,
+    'Compulsory':p.compulsory?'Y':'N', 'Min Qty':Number(p.min_qty), 'Min Charge':Number(p.min_charge),
+    'Price Mall':Number(p.price_mall), 'Price Contractor':Number(p.price_contractor),
+    'Price Tenant':Number(p.price_tenant), 'Sort':p.sort, 'Notes':p.notes,
+    'Updated By':p.updated_by, 'Updated On':p.updated_at }; })), 'PriceBook');
+  XLSX.writeFile(wb, 'HG-PriceBook-'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+// ═══════════════════════════ MALL / SERVICE ADD ═══════════════════════════
+async function saveMall(){
+  var name = el('m_name').value.trim();
+  if(!name){ showMsg('mallMsg','Mall name is required.', false); return; }
+  var r = await sb.from('malls').insert({ name:name, code:el('m_code').value.trim(), location:el('m_loc').value.trim() });
+  if(r.error){ showMsg('mallMsg', r.error.message, false); return; }
+  await sb.rpc('log_audit', { p_action:'ADD Malls', p_details:name });
+  closeModal('mallModal'); el('m_name').value=''; el('m_code').value=''; el('m_loc').value='';
+  await loadBootstrap(); el('mall').value = name; onMallChange();
+}
+async function saveSvc(){
+  var name = el('s_name').value.trim();
+  if(!name){ showMsg('svcMsg','Service name is required.', false); return; }
+  var maxSort = BOOT.services.reduce(function(m,s){ return Math.max(m, s.sort||0); }, 0);
+  var r = await sb.from('services').insert({ name:name, is_extra:el('s_extra').value==='Y', sort:maxSort+1 });
+  if(r.error){ showMsg('svcMsg', r.error.message, false); return; }
+  await sb.rpc('log_audit', { p_action:'ADD Services', p_details:name });
+  closeModal('svcModal'); el('s_name').value='';
+  await loadBootstrap();
+}
+
+// ═══════════════════════════ PRICE BOOK TAB ═══════════════════════════
+async function loadPriceBook(){
+  var r = await sb.from('price_book').select('*').order('mall').order('service').order('sort');
+  if(r.error){ el('pbList').innerHTML = '<div class="empty">'+esc(r.error.message)+'</div>'; return; }
+  PRICEBOOK = r.data;
+  var malls = ['(All Malls)'].concat(BOOT.malls.map(function(m){ return m.name; }));
+  el('pbMall').innerHTML = '<option value="">All</option>'+malls.map(function(m){ return '<option>'+esc(m)+'</option>'; }).join('');
+  var svcs = {};
+  PRICEBOOK.forEach(function(p){ svcs[p.service]=1; });
+  el('pbSvc').innerHTML = '<option value="">All</option>'+Object.keys(svcs).sort().map(function(s){ return '<option>'+esc(s)+'</option>'; }).join('');
+  el('pf_mall').innerHTML = malls.map(function(m){ return '<option>'+esc(m)+'</option>'; }).join('');
+  renderPriceBook();
+}
+function renderPriceBook(){
+  var fm = el('pbMall').value, fs = el('pbSvc').value;
+  var rows = PRICEBOOK.filter(function(p){ return (!fm || p.mall===fm) && (!fs || p.service===fs); });
+  if(!rows.length){ el('pbList').innerHTML = '<div class="empty">No items match.</div>'; return; }
+  el('pbList').innerHTML = '<table class="grid"><thead><tr><th>Mall</th><th>Service · Sub-scope</th><th>Item</th><th>Unit</th><th>Comp.</th><th style="text-align:right">Mall</th><th style="text-align:right">Contr.</th><th style="text-align:right">Tenant</th><th>Min</th></tr></thead><tbody>'+
+    rows.map(function(p){
+      var min = [];
+      if(Number(p.min_qty)>0) min.push('≥'+p.min_qty);
+      if(Number(p.min_charge)>0) min.push('RM'+p.min_charge);
+      return '<tr class="click" onclick="editPrice(\''+p.id+'\')">'+
+        '<td>'+(p.mall==='(All Malls)'?'<span class="tag">(All Malls)</span>':esc(p.mall))+'</td>'+
+        '<td>'+esc(p.service)+' · '+esc(p.sub_scope)+'</td><td>'+esc(p.item)+'</td><td>'+esc(p.unit)+'</td>'+
+        '<td>'+(p.compulsory?'Y':'—')+'</td>'+
+        '<td style="text-align:right">'+Number(p.price_mall).toFixed(2)+'</td>'+
+        '<td style="text-align:right">'+Number(p.price_contractor).toFixed(2)+'</td>'+
+        '<td style="text-align:right">'+Number(p.price_tenant).toFixed(2)+'</td>'+
+        '<td class="muted">'+min.join(' / ')+'</td></tr>';
+    }).join('')+'</tbody></table>';
+}
+function openPriceForm(){
+  el('pbModalTitle').textContent = 'Add price item';
+  el('pf_id').value=''; el('pf_service').value=''; el('pf_subscope').value=''; el('pf_item').value='';
+  el('pf_unit').value='sqft'; el('pf_comp').value='Y'; el('pf_minqty').value='0'; el('pf_mincharge').value='0';
+  el('pf_pm').value='0'; el('pf_pc').value='0'; el('pf_pt').value='0'; el('pf_sort').value='1'; el('pf_notes').value='';
+  el('pbDelBtn').style.display='none';
+  openModalEl('pbModal');
+}
+function editPrice(id){
+  var p = PRICEBOOK.find(function(x){ return x.id===id; });
+  if(!p) return;
+  el('pbModalTitle').textContent = 'Edit price item';
+  el('pf_id').value=p.id; el('pf_mall').value=p.mall; el('pf_service').value=p.service;
+  el('pf_subscope').value=p.sub_scope; el('pf_item').value=p.item; el('pf_unit').value=p.unit;
+  el('pf_comp').value=p.compulsory?'Y':'N'; el('pf_minqty').value=p.min_qty; el('pf_mincharge').value=p.min_charge;
+  el('pf_pm').value=p.price_mall; el('pf_pc').value=p.price_contractor; el('pf_pt').value=p.price_tenant;
+  el('pf_sort').value=p.sort; el('pf_notes').value=p.notes||'';
+  el('pbDelBtn').style.display='inline-block';
+  openModalEl('pbModal');
+}
+async function savePrice(){
+  var obj = {
+    mall:el('pf_mall').value, service:el('pf_service').value.trim(), sub_scope:el('pf_subscope').value.trim(),
+    item:el('pf_item').value.trim(), unit:el('pf_unit').value, compulsory:el('pf_comp').value==='Y',
+    min_qty:parseFloat(el('pf_minqty').value)||0, min_charge:parseFloat(el('pf_mincharge').value)||0,
+    price_mall:parseFloat(el('pf_pm').value)||0, price_contractor:parseFloat(el('pf_pc').value)||0,
+    price_tenant:parseFloat(el('pf_pt').value)||0, sort:parseInt(el('pf_sort').value)||1,
+    notes:el('pf_notes').value.trim(), updated_by:SESSION.user.email, updated_at:new Date().toISOString()
+  };
+  if(!obj.service || !obj.sub_scope || !obj.item){ showMsg('pbMsg','Service, sub-scope and item are required.', false); return; }
+  var id = el('pf_id').value, r;
+  if(id){ r = await sb.from('price_book').update(obj).eq('id', id); }
+  else  { r = await sb.from('price_book').insert(obj); }
+  if(r.error){ showMsg('pbMsg', r.error.message, false); return; }
+  await sb.rpc('log_audit', { p_action:(id?'EDIT':'ADD')+' PriceBook', p_details:obj.mall+' · '+obj.service+' · '+obj.item });
+  closeModal('pbModal');
+  await loadPriceBook();
+  onMallChange();
+}
+async function deletePrice(){
+  var id = el('pf_id').value;
+  if(!id || !confirm('Delete this price item?')) return;
+  var r = await sb.from('price_book').delete().eq('id', id);
+  if(r.error){ showMsg('pbMsg', r.error.message, false); return; }
+  await sb.rpc('log_audit', { p_action:'DELETE PriceBook', p_details:id });
+  closeModal('pbModal');
+  await loadPriceBook();
+  onMallChange();
+}
+async function cloneDefaults(){
+  var mall = prompt('Clone every (All Malls) default into which mall?\n\n' + BOOT.malls.map(function(m){ return '· '+m.name; }).join('\n'));
+  if(!mall) return;
+  mall = mall.trim();
+  if(!BOOT.malls.some(function(m){ return m.name===mall; })){ showMsg('pbMsg2','Unknown mall: '+mall, false); return; }
+  var defaults = PRICEBOOK.filter(function(p){ return p.mall==='(All Malls)'; });
+  var existing = {};
+  PRICEBOOK.filter(function(p){ return p.mall===mall; }).forEach(function(p){
+    existing[[p.service,p.sub_scope,p.item].join('|').toLowerCase()]=1; });
+  var toInsert = defaults.filter(function(p){ return !existing[[p.service,p.sub_scope,p.item].join('|').toLowerCase()]; })
+    .map(function(p){ return {
+      mall:mall, service:p.service, sub_scope:p.sub_scope, item:p.item, unit:p.unit,
+      compulsory:p.compulsory, min_qty:p.min_qty, min_charge:p.min_charge,
+      price_mall:p.price_mall, price_contractor:p.price_contractor, price_tenant:p.price_tenant,
+      sort:p.sort, notes:p.notes, updated_by:SESSION.user.email }; });
+  if(!toInsert.length){ showMsg('pbMsg2','Nothing to clone — '+mall+' already has every default.', true); return; }
+  var r = await sb.from('price_book').insert(toInsert);
+  if(r.error){ showMsg('pbMsg2', r.error.message, false); return; }
+  await sb.rpc('log_audit', { p_action:'CLONE DEFAULTS', p_details:mall+' ('+toInsert.length+' rows)' });
+  showMsg('pbMsg2','Cloned '+toInsert.length+' rows into '+mall+'.', true);
+  await loadPriceBook();
+}
+
+// ═══════════════════════════ SETTINGS TAB ═══════════════════════════
+var SETTING_KEYS = [
+  ['COMPANY_NAME','Company name'], ['COMPANY_REG','SSM reg no.'], ['COMPANY_ADDRESS','Address'],
+  ['COMPANY_PHONE','Phone'], ['COMPANY_EMAIL','Email'], ['SST_PERCENT','SST %'],
+  ['QUOTE_PREFIX','Quote no. prefix'], ['VALIDITY_DAYS','Validity (days)'], ['QUOTE_FOOTER','Quote footer']
+];
+function loadSettings(){
+  el('setForm').innerHTML = SETTING_KEYS.map(function(k){
+    return '<label>'+k[1]+'</label><input id="set_'+k[0]+'" value="'+esc(BOOT.settings[k[0]]||'')+'">';
+  }).join('') +
+  '<div id="setMsg" class="msg"></div>'+
+  '<div class="row" style="margin-top:14px; justify-content:flex-end;"><div style="flex:0 0 auto;">'+
+  '<button class="primary" onclick="saveSettings()">Save settings</button></div></div>';
+  loadAudit();
+  if(IS_ADMIN) loadAllowed();
+}
+async function saveSettings(){
+  var rows = SETTING_KEYS.map(function(k){ return { key:k[0], value:el('set_'+k[0]).value }; });
+  var r = await sb.from('app_settings').upsert(rows);
+  if(r.error){ showMsg('setMsg', r.error.message, false); return; }
+  await sb.rpc('log_audit', { p_action:'EDIT Settings', p_details:'company/quote settings' });
+  rows.forEach(function(x){ BOOT.settings[x.key]=x.value; });
+  showMsg('setMsg','Saved.', true);
+  el('sstPctLbl').textContent = '('+(BOOT.settings.SST_PERCENT||6)+'%)';
+}
+async function loadAudit(){
+  var r = await sb.from('audit_log').select('*').order('at', {ascending:false}).limit(50);
+  if(r.error){ el('auditList').innerHTML = '<div class="empty">'+esc(r.error.message)+'</div>'; return; }
+  if(!r.data.length){ el('auditList').innerHTML = '<div class="empty">No activity yet.</div>'; return; }
+  el('auditList').innerHTML = '<table class="grid"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>'+
+    r.data.map(function(a){ return '<tr><td class="muted">'+esc(new Date(a.at).toLocaleString('en-MY'))+'</td>'+
+      '<td>'+esc(String(a.user_email||'').split('@')[0])+'</td><td><b>'+esc(a.action)+'</b></td><td class="muted">'+esc(a.details)+'</td></tr>'; }).join('')+
+    '</tbody></table>';
+}
+async function loadAllowed(){
+  var r = await sb.from('allowed_users').select('*').order('added_at');
+  if(r.error){ el('auList').innerHTML = '<div class="empty">'+esc(r.error.message)+'</div>'; return; }
+  el('auList').innerHTML = '<table class="grid"><thead><tr><th>Email</th><th>Name</th><th>Role</th><th></th></tr></thead><tbody>'+
+    r.data.map(function(u){ return '<tr><td>'+esc(u.email)+'</td><td>'+esc(u.full_name||'')+'</td>'+
+      '<td>'+(u.is_admin?'<span class="tag">admin</span>':'staff')+'</td>'+
+      '<td style="text-align:right"><button class="danger" style="padding:5px 12px; font-size:0.76rem;" onclick="removeAllowed(\''+esc(u.email)+'\')">Remove</button></td></tr>'; }).join('')+
+    '</tbody></table>';
+}
+async function addAllowed(){
+  var email = el('au_email').value.trim().toLowerCase();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showMsg('auMsg','Enter a valid email.', false); return; }
+  var r = await sb.from('allowed_users').insert({ email:email, full_name:el('au_name').value.trim(),
+    is_admin:el('au_admin').checked, added_by:SESSION.user.email });
+  if(r.error){ showMsg('auMsg', r.error.message, false); return; }
+  await sb.rpc('log_audit', { p_action:'ADD User', p_details:email });
+  el('au_email').value=''; el('au_name').value=''; el('au_admin').checked=false;
+  showMsg('auMsg','Added '+email, true);
+  loadAllowed();
+}
+async function removeAllowed(email){
+  if(email.toLowerCase() === (SESSION.user.email||'').toLowerCase()){ alert('You cannot remove yourself.'); return; }
+  if(!confirm('Remove '+email+' from access?')) return;
+  var r = await sb.from('allowed_users').delete().eq('email', email);
+  if(r.error){ fail(r.error); return; }
+  await sb.rpc('log_audit', { p_action:'REMOVE User', p_details:email });
+  loadAllowed();
+}
+
+// ═══════════════════════════ TABS ═══════════════════════════
+function showTab(t){
+  document.querySelectorAll('nav button').forEach(function(b){ b.classList.toggle('active', b.dataset.tab===t); });
+  ['build','saved','prices','settings'].forEach(function(x){ el('tab-'+x).classList.toggle('hide', x!==t); });
+  if(t==='saved') loadSaved();
+  if(t==='prices') loadPriceBook();
+  if(t==='settings') loadSettings();
+}
+
+start();
+</script>
+</body>
+</html>

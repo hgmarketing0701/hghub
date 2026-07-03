@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HG Scaffold — Command Center</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #141926;
+    --surface-2: #1c2335;
+    --surface-3: #232b40;
+    --border: #2a3245;
+    --border-strong: #3a445c;
+    --text: #ffffff;
+    --text-dim: #a0a8b8;
+    --text-mute: #6b7488;
+    --accent: #f59e0b;
+    --accent-hover: #d97706;
+    --accent-soft: rgba(245, 158, 11, 0.12);
+    --green: #22c55e;
+    --green-soft: rgba(34, 197, 94, 0.15);
+    --red: #ef4444;
+    --red-soft: rgba(239, 68, 68, 0.15);
+    --amber: #f59e0b;
+    --amber-soft: rgba(245, 158, 11, 0.15);
+    --blue: #3b82f6;
+    --blue-soft: rgba(59, 130, 246, 0.15);
+    --purple: #a855f7;
+    --purple-soft: rgba(168, 85, 247, 0.15);
+    --wa: #25D366;
+    --wa-hover: #1ebe5d;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { overflow-x: hidden; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .container { max-width: 1400px; margin: 0 auto; padding: 20px 18px 100px; }
+
+  /* TOPBAR */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 16px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 22px;
+  }
+  .brand-block { display: flex; align-items: center; gap: 14px; }
+  .brand-logo {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; color: #0a0e1a; font-weight: 900;
+  }
+  .brand-name { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
+  .brand-sub { font-size: 0.82rem; color: var(--text-dim); margin-top: 3px; }
+  .topbar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .top-pill {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 8px 14px; border-radius: 999px;
+    font-size: 0.82rem; color: var(--text-dim);
+    display: inline-flex; align-items: center; gap: 6px;
+    text-decoration: none;
+  }
+  .top-pill:hover { color: var(--text); border-color: var(--accent); }
+  .top-pill strong { color: var(--text); }
+  .top-pill.live { color: var(--green); border-color: var(--green); }
+  .top-pill.live::before {
+    content: ''; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green); animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 2px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-weight: 600; font-size: 0.9rem;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    font-family: inherit;
+    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab .badge {
+    background: var(--accent); color: #0a0e1a;
+    font-size: 0.7rem; font-weight: 800;
+    padding: 2px 7px; border-radius: 999px; min-width: 20px; text-align: center;
+  }
+  .tab .badge.red { background: var(--red); color: #fff; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; animation: fadeIn 0.2s; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* SECTION */
+  .section-head {
+    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .section-title { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; }
+  .section-sub { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 20px; }
+
+  /* KPI GRID */
+  .kpi-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px; margin-bottom: 24px;
+  }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px;
+  }
+  .kpi.alert { border-color: var(--red); background: linear-gradient(135deg, var(--surface), var(--red-soft)); }
+  .kpi.warn { border-color: var(--accent); background: linear-gradient(135deg, var(--surface), var(--accent-soft)); }
+  .kpi-label {
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-dim); font-weight: 600; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .kpi-value { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1; }
+  .kpi-sub { font-size: 0.8rem; color: var(--text-dim); margin-top: 6px; }
+  .kpi-value.red { color: var(--red); }
+  .kpi-value.green { color: var(--green); }
+  .kpi-value.amber { color: var(--accent); }
+
+  /* CARDS */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; margin-bottom: 18px;
+  }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; margin-bottom: 14px;
+  }
+  .card-title { font-size: 1.05rem; font-weight: 700; }
+  .card-sub { font-size: 0.85rem; color: var(--text-dim); }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 16px; border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    transition: background 0.15s, border-color 0.15s, transform 0.05s;
+  }
+  .btn:hover { border-color: var(--accent); background: var(--surface-3); }
+  .btn:active { transform: scale(0.98); }
+  .btn.primary {
+    background: var(--accent); color: #0a0e1a; border-color: var(--accent);
+  }
+  .btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .btn.danger { color: var(--red); border-color: var(--red); }
+  .btn.danger:hover { background: var(--red-soft); }
+  .btn.green { background: var(--green); color: #0a0e1a; border-color: var(--green); }
+  .btn.green:hover { background: #1aaa50; border-color: #1aaa50; }
+  .btn.wa { background: var(--wa); color: #fff; border-color: var(--wa); }
+  .btn.wa:hover { background: var(--wa-hover); border-color: var(--wa-hover); }
+  .btn.sm { padding: 6px 11px; font-size: 0.78rem; }
+  .btn.icon-only { padding: 8px 10px; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* FORMS */
+  .form-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .form-row { display: flex; flex-direction: column; gap: 6px; }
+  .form-row.full { grid-column: 1 / -1; }
+  label { font-size: 0.78rem; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  input[type="text"], input[type="number"], input[type="date"], input[type="tel"], input[type="email"],
+  select, textarea {
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px; border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 0.92rem;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+  .help-text { font-size: 0.75rem; color: var(--text-mute); margin-top: 2px; }
+
+  /* TABLES */
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; min-width: 700px; }
+  th, td { padding: 12px 14px; text-align: left; font-size: 0.88rem; border-bottom: 1px solid var(--border); }
+  th { background: var(--surface-2); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); }
+  tr:last-child td { border-bottom: none; }
+  tr.clickable { cursor: pointer; }
+  tr.clickable:hover { background: var(--surface-2); }
+  td.right, th.right { text-align: right; }
+  td.center, th.center { text-align: center; }
+
+  /* STATUS PILLS */
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 999px;
+    font-size: 0.72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    border: 1px solid transparent;
+  }
+  .pill.green { background: var(--green-soft); color: var(--green); border-color: var(--green); }
+  .pill.red { background: var(--red-soft); color: var(--red); border-color: var(--red); }
+  .pill.amber { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
+  .pill.blue { background: var(--blue-soft); color: var(--blue); border-color: var(--blue); }
+  .pill.purple { background: var(--purple-soft); color: var(--purple); border-color: var(--purple); }
+  .pill.grey { background: var(--surface-2); color: var(--text-dim); border-color: var(--border); }
+
+  /* MODAL */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    display: none; align-items: flex-start; justify-content: center;
+    z-index: 100; padding: 24px 12px; overflow-y: auto;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); width: 100%; max-width: 800px;
+    box-shadow: var(--shadow);
+    margin: 20px auto;
+  }
+  .modal.wide { max-width: 1100px; }
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; z-index: 2;
+  }
+  .modal-title { font-size: 1.1rem; font-weight: 700; }
+  .modal-close {
+    background: transparent; border: none; color: var(--text-dim);
+    font-size: 1.4rem; cursor: pointer; padding: 4px 10px; border-radius: 6px;
+  }
+  .modal-close:hover { color: var(--red); background: var(--surface-2); }
+  .modal-body { padding: 22px; }
+  .modal-foot {
+    padding: 16px 22px; border-top: 1px solid var(--border);
+    display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;
+    position: sticky; bottom: 0; background: var(--surface); border-radius: 0 0 var(--radius) var(--radius);
+  }
+
+  /* JOB CARD GRID */
+  .jobs-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+  }
+  .job-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+    cursor: pointer; transition: transform 0.1s, border-color 0.15s;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .job-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .job-card.overdue { border-color: var(--red); }
+  .job-card.due-today { border-color: var(--accent); }
+  .job-card-head {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+  }
+  .job-card-title { font-size: 1rem; font-weight: 700; line-height: 1.2; }
+  .job-card-meta { font-size: 0.78rem; color: var(--text-dim); margin-top: 4px; }
+  .job-card-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.82rem; color: var(--text-dim);
+  }
+  .job-card-row strong { color: var(--text); font-weight: 600; }
+  .job-card-foot {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 10px; border-top: 1px solid var(--border);
+    font-size: 0.78rem;
+  }
+
+  /* SIGNATURE CANVAS */
+  .sig-wrap {
+    background: #fff; border-radius: var(--radius-sm); border: 1px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+  .sig-canvas {
+    display: block; width: 100%; height: 120px; touch-action: none; cursor: crosshair;
+    background: #fff;
+  }
+  .sig-actions { display: flex; gap: 6px; margin-top: 6px; }
+  .sig-placeholder {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #aaa; font-size: 0.85rem; pointer-events: none;
+  }
+  .sig-saved {
+    width: 100%; height: 120px; object-fit: contain; background: #fff;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+  }
+
+  /* MATERIAL ITEM ROW (mobile checklist) */
+  .mat-item {
+    display: grid; grid-template-columns: 1fr auto auto;
+    gap: 10px; align-items: center;
+    padding: 12px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+  }
+  .mat-item-info { min-width: 0; }
+  .mat-item-name { font-weight: 600; font-size: 0.92rem; }
+  .mat-item-spec { font-size: 0.76rem; color: var(--text-dim); margin-top: 2px; }
+  .mat-item-code { font-size: 0.7rem; color: var(--text-mute); font-family: monospace; margin-top: 1px; }
+  .qty-input {
+    width: 64px; text-align: center; font-weight: 700; font-size: 1rem;
+    padding: 6px 4px;
+  }
+  .qty-label {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--text-dim);
+  }
+
+  /* GREEN TAG ITEMS */
+  .gt-item {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 14px; align-items: center;
+    padding: 14px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+  }
+  .gt-item.overdue { border-color: var(--red); background: linear-gradient(90deg, var(--surface-2), var(--red-soft)); }
+  .gt-item.today { border-color: var(--accent); background: linear-gradient(90deg, var(--surface-2), var(--accent-soft)); }
+  .gt-item-main { min-width: 0; }
+  .gt-item-title { font-weight: 700; font-size: 0.95rem; }
+  .gt-item-meta { font-size: 0.78rem; color: var(--text-dim); margin-top: 4px; }
+  .gt-countdown { font-size: 0.85rem; font-weight: 700; }
+
+  /* EMPTY STATE */
+  .empty {
+    text-align: center; padding: 40px 20px;
+    color: var(--text-dim); font-size: 0.9rem;
+  }
+  .empty .emoji { font-size: 2.2rem; margin-bottom: 10px; display: block; }
+
+  /* TOOLBAR */
+  .toolbar {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 16px;
+  }
+  .toolbar input[type="text"] { max-width: 280px; }
+  .toolbar .spacer { flex: 1; }
+
+  /* TOAST */
+  .toast-stack {
+    position: fixed; bottom: 20px; right: 20px; z-index: 200;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .toast {
+    background: var(--surface-2); border: 1px solid var(--green); color: var(--text);
+    padding: 12px 18px; border-radius: var(--radius-sm);
+    font-size: 0.88rem; font-weight: 600;
+    box-shadow: var(--shadow); min-width: 220px;
+    animation: slideIn 0.2s;
+  }
+  .toast.error { border-color: var(--red); }
+  @keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  /* PRINT */
+  @media print {
+    body { background: #fff; color: #000; }
+    .no-print, .topbar, .tabs, .toolbar, .modal-foot, .modal-head .modal-close { display: none !important; }
+    .modal-bg { position: static; background: #fff; padding: 0; }
+    .modal { box-shadow: none; border: none; max-width: 100%; }
+    .modal-body { padding: 0; }
+    .print-only { display: block !important; }
+    .print-form { color: #000; }
+    .print-form table { border-collapse: collapse; }
+    .print-form th, .print-form td { border: 1px solid #333; padding: 6px 8px; }
+    .print-form .sig-saved { border: 1px solid #333; background: #fff; }
+  }
+  .print-only { display: none; }
+
+  /* MOBILE */
+  @media (max-width: 700px) {
+    .container { padding: 14px 12px 80px; }
+    .brand-name { font-size: 1.1rem; }
+    .kpi-value { font-size: 1.5rem; }
+    .tab { padding: 10px 12px; font-size: 0.82rem; }
+    .mat-item { grid-template-columns: 1fr; gap: 8px; }
+    .mat-item-actions { display: flex; gap: 12px; justify-content: space-between; }
+    .modal { margin: 4px auto; border-radius: 8px; }
+    .modal-body { padding: 16px; }
+    table { min-width: 500px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TOPBAR -->
+  <div class="topbar no-print">
+    <div class="brand-block">
+      <div class="brand-logo">HG</div>
+      <div>
+        <div class="brand-name">Scaffold Command Center</div>
+        <div class="brand-sub">HG Services (M) Sdn Bhd — Aluminium Scaffold Ops</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <a href="operations.html" class="top-pill">← Operations</a>
+      <span class="top-pill live">Live</span>
+      <span class="top-pill"><span id="today-date">—</span></span>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs no-print" id="tabs">
+    <button class="tab active" data-tab="dashboard">📊 Dashboard</button>
+    <button class="tab" data-tab="jobs">🏗️ Jobs <span class="badge" id="badge-jobs">0</span></button>
+    <button class="tab" data-tab="greentag">🏷️ Green Tag <span class="badge red" id="badge-gt">0</span></button>
+    <button class="tab" data-tab="materials">📦 Materials</button>
+    <button class="tab" data-tab="clients">👥 Clients</button>
+    <button class="tab" data-tab="team">👷 Team</button>
+    <button class="tab" data-tab="settings">⚙️ Settings</button>
+  </div>
+
+  <!-- ===== DASHBOARD ===== -->
+  <div class="tab-panel active" id="tab-dashboard">
+    <div class="section-head">
+      <h2 class="section-title">Today at a glance</h2>
+    </div>
+    <div class="section-sub">What needs attention. What's moving. What's overdue.</div>
+
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">🚨 Green tags — needs action</div>
+          <div class="card-sub">Overdue and due today / this week. One-tap renew.</div>
+        </div>
+        <button class="btn sm" onclick="switchTab('greentag')">View all →</button>
+      </div>
+      <div id="dash-gt-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">🏗️ Active jobs</div>
+          <div class="card-sub">Scaffolds currently onsite or rental ongoing.</div>
+        </div>
+        <button class="btn sm" onclick="switchTab('jobs')">View all →</button>
+      </div>
+      <div id="dash-active-jobs"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">📅 Recent activity</div>
+          <div class="card-sub">Last 8 changes across jobs, materials, inspections.</div>
+        </div>
+      </div>
+      <div id="dash-activity"></div>
+    </div>
+  </div>
+
+  <!-- ===== JOBS ===== -->
+  <div class="tab-panel" id="tab-jobs">
+    <div class="section-head">
+      <h2 class="section-title">Jobs</h2>
+    </div>
+    <div class="section-sub">Every scaffold job, end to end. Quoted → Erected → Active → Returned → Invoiced.</div>
+
+    <div class="toolbar">
+      <input type="text" id="job-search" placeholder="🔍 Search client, location, invoice no, PIC...">
+      <select id="job-filter-status">
+        <option value="">All status</option>
+        <option value="quoted">Quoted</option>
+        <option value="erected">Erected</option>
+        <option value="active">Active (rental)</option>
+        <option value="returned">Returned</option>
+        <option value="invoiced">Invoiced</option>
+        <option value="paid">Paid</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="btn" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="btn primary" onclick="openJobForm()">+ New Job</button>
+    </div>
+
+    <div id="jobs-list"></div>
+  </div>
+
+  <!-- ===== GREEN TAG ===== -->
+  <div class="tab-panel" id="tab-greentag">
+    <div class="section-head">
+      <h2 class="section-title">Green Tag Inspections</h2>
+    </div>
+    <div class="section-sub">Every 7 days, every active scaffold. Re-inspect or it's not safe to use.</div>
+
+    <div class="kpi-grid" id="gt-kpi-grid"></div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">🔴 Overdue — fix today</div>
+      </div>
+      <div id="gt-overdue-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">🟡 Due this week</div>
+      </div>
+      <div id="gt-due-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">✅ All active scaffolds</div>
+      </div>
+      <div id="gt-all-list"></div>
+    </div>
+  </div>
+
+  <!-- ===== MATERIALS ===== -->
+  <div class="tab-panel" id="tab-materials">
+    <div class="section-head">
+      <h2 class="section-title">Materials Checklist</h2>
+    </div>
+    <div class="section-sub">Mobile-first. Replaces the hardcopy form. Capture signatures + photos onsite.</div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">📦 Current stock deployed</div>
+          <div class="card-sub">Total qty out across all active jobs. Returns subtracted automatically.</div>
+        </div>
+      </div>
+      <div id="stock-grid"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">📋 New checklist</div>
+          <div class="card-sub">Delivery (erection) or return — pick a job and start.</div>
+        </div>
+        <button class="btn primary" onclick="openMaterialsForm()">+ New Checklist</button>
+      </div>
+      <div id="materials-recent"></div>
+    </div>
+  </div>
+
+  <!-- ===== CLIENTS ===== -->
+  <div class="tab-panel" id="tab-clients">
+    <div class="section-head">
+      <h2 class="section-title">Clients</h2>
+    </div>
+    <div class="section-sub">Save once. Autocomplete forever. Stop retyping "Toy World Genting" every time.</div>
+
+    <div class="toolbar">
+      <input type="text" id="client-search" placeholder="🔍 Search client name, contact, tel...">
+      <div class="spacer"></div>
+      <button class="btn primary" onclick="openClientForm()">+ New Client</button>
+    </div>
+    <div id="clients-list"></div>
+  </div>
+
+  <!-- ===== TEAM ===== -->
+  <div class="tab-panel" id="tab-team">
+    <div class="section-head">
+      <h2 class="section-title">Scaffold Team (PIC)</h2>
+    </div>
+    <div class="section-sub">Project-in-charge directory. Issued-by signatures on file for fast checklist sign-off.</div>
+
+    <div class="toolbar">
+      <div class="spacer"></div>
+      <button class="btn primary" onclick="openPicForm()">+ New PIC</button>
+    </div>
+    <div id="pic-list"></div>
+  </div>
+
+  <!-- ===== SETTINGS ===== -->
+  <div class="tab-panel" id="tab-settings">
+    <div class="section-head">
+      <h2 class="section-title">Settings</h2>
+    </div>
+    <div class="section-sub">Material catalogue, job types, company info, data backup.</div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">🏭 Material catalogue</div>
+          <div class="card-sub">13 standard items from your hardcopy form. Edit codes / specs / rental rate.</div>
+        </div>
+        <button class="btn primary sm" onclick="openMaterialForm()">+ Add Item</button>
+      </div>
+      <div id="material-catalogue-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">🛠 Job types</div>
+          <div class="card-sub">What scaffold services you offer. Used in the job form dropdown.</div>
+        </div>
+      </div>
+      <div id="jobtypes-list"></div>
+      <div class="btn-row" style="margin-top: 12px;">
+        <input type="text" id="new-jobtype" placeholder="Add new job type..." style="flex: 1; min-width: 200px;">
+        <button class="btn" onclick="addJobType()">+ Add</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">🏢 Company info</div>
+          <div class="card-sub">Prints on materials checklist + invoices.</div>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row full">
+          <label>Company name</label>
+          <input type="text" id="set-companyName">
+        </div>
+        <div class="form-row full">
+          <label>Address</label>
+          <input type="text" id="set-companyAddress">
+        </div>
+        <div class="form-row">
+          <label>Office tel</label>
+          <input type="text" id="set-companyTel">
+        </div>
+        <div class="form-row">
+          <label>WhatsApp</label>
+          <input type="text" id="set-companyWhatsApp">
+        </div>
+        <div class="form-row">
+          <label>Email</label>
+          <input type="text" id="set-companyEmail">
+        </div>
+        <div class="form-row">
+          <label>CIDB</label>
+          <input type="text" id="set-cidbNo">
+        </div>
+        <div class="form-row">
+          <label>Invoice prefix</label>
+          <input type="text" id="set-invoicePrefix">
+        </div>
+        <div class="form-row">
+          <label>SST rate (%)</label>
+          <input type="number" id="set-sstRate" step="0.1">
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top: 14px;">
+        <button class="btn primary" onclick="saveSettings()">💾 Save</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">💾 Data backup & migration</div>
+          <div class="card-sub">v1 uses browser storage. Export to JSON or Sheet-ready CSV. v2 will sync direct to Google Sheets via Apps Script (@hggroup.com.my locked).</div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="exportAllJSON()">⬇ Export ALL data (JSON)</button>
+        <button class="btn" onclick="exportCSV()">⬇ Jobs CSV (Sheet-ready)</button>
+        <button class="btn" onclick="document.getElementById('import-file').click()">⬆ Import JSON</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+        <button class="btn danger" onclick="resetAll()">🗑 Reset all data</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== MODALS ===== -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal" id="modal" role="dialog">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Title</div>
+      <button class="modal-close no-print" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot no-print" id="modal-foot"></div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toast-stack"></div>
+
+<script>
+// ============================================================
+// HG SCAFFOLD — Command Center
+// Single-file ops system. localStorage v1 → Apps Script v2.
+// Data model maps 1:1 to Google Sheet columns.
+// ============================================================
+
+const LS_KEY = 'hg_scaffold_v1';
+const TODAY = () => new Date().toISOString().slice(0,10);
+const NOW = () => new Date().toISOString();
+
+// ---------- DEFAULT MATERIAL CATALOGUE (from hardcopy form) ----------
+const DEFAULT_MATERIALS = [
+  { code: 'AFS05/AFD05', desc: '5 Rung Frame',    spec: '0.75m x 2.5m / 1.35m x 2.5m', rate: 0 },
+  { code: 'AFS04/AFD04', desc: '4 Rung Frame',    spec: '0.75m x 2m / 1.35m x 2m',     rate: 0 },
+  { code: 'AFS03/AFD03', desc: '3 Rung Frame',    spec: '0.75m x 1.5m / 1.35m x 1.5m', rate: 0 },
+  { code: 'AFS02/AFD02', desc: 'Guardrail',       spec: '0.75m x 1m / 1.35m x 1m',     rate: 0 },
+  { code: 'AHB01/AHB02', desc: 'Horizontal Brace',spec: '1.8m / 2.4m',                 rate: 0 },
+  { code: 'ADB01/ADB02', desc: 'Diagonal Brace',  spec: '2.4m / 3m',                   rate: 0 },
+  { code: 'DP01/DP02/DP03', desc: 'Door Platform',spec: '1.8m / 1.9m / 2.4m',          rate: 0 },
+  { code: 'P01/P02/P03',  desc: 'Platform',       spec: '1.8m / 1.9m / 2.4m',          rate: 0 },
+  { code: 'S01',          desc: 'Stabilizer',     spec: '3.5m',                        rate: 0 },
+  { code: 'TB01',         desc: 'Toe Board',      spec: '—',                           rate: 0 },
+  { code: 'L01',          desc: 'Ladder',         spec: '2.4m',                        rate: 0 },
+  { code: 'LH01',         desc: 'Ladder Handrail',spec: '2.15m',                       rate: 0 },
+  { code: 'CW01',         desc: '8" Castor Wheel',spec: '—',                           rate: 0 },
+];
+
+const DEFAULT_JOB_TYPES = [
+  'Aluminium Scaffold — Erection Only',
+  'Aluminium Scaffold — Rental Only',
+  'Aluminium Scaffold — Erection + Rental',
+  'Aluminium Scaffold — Dismantle Only',
+  'Aluminium Scaffold — Full Service (Erect + Rental + Dismantle)',
+  'Mobile Scaffold Tower',
+  'Logistics Arrangement',
+  'Scaffold Inspection / Green Tag',
+];
+
+const DEFAULT_STATE = {
+  jobs: [],
+  materialsLogs: [],
+  greenTagLogs: [],
+  clients: [],
+  sites: [],
+  pics: [],
+  settings: {
+    companyName: 'HG Services (M) Sdn Bhd (958510-M)',
+    companyAddress: 'Lot 12 & 13, Jalan BK 1/11, Taman Perindustrian Bandar Kinrara, Bandar Kinrara 1, 47180 Puchong, Selangor',
+    companyTel: '03-8082 3388',
+    companyWhatsApp: '012-6273 3524',
+    companyEmail: 'lee@hggroup.com.my / enquiry@hggroup.com.my',
+    cidbNo: '0120170412-WP1187072 (Grade G7)',
+    invoicePrefix: 'HG-INV',
+    sstRate: 6,
+    nextJobNo: 1,
+    nextInvoiceCounter: 1,
+    jobTypes: DEFAULT_JOB_TYPES.slice(),
+    materials: DEFAULT_MATERIALS.slice(),
+  },
+};
+
+// ---------- STATE LOAD / SAVE ----------
+let S = loadState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return seedDemo(JSON.parse(JSON.stringify(DEFAULT_STATE)));
+    const parsed = JSON.parse(raw);
+    // Merge with defaults to add new fields safely
+    return { ...DEFAULT_STATE, ...parsed, settings: { ...DEFAULT_STATE.settings, ...(parsed.settings||{}) } };
+  } catch (e) {
+    console.error('Load failed', e);
+    return JSON.parse(JSON.stringify(DEFAULT_STATE));
+  }
+}
+function saveState() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(S)); }
+  catch (e) { toast('Save failed: ' + e.message, true); }
+}
+
+// ---------- DEMO SEED (Huplek Pavilion KL from the photo) ----------
+function seedDemo(state) {
+  const today = TODAY();
+  const erectionDate = '2026-04-06';
+  state.clients.push({ id: 'C001', name: 'Huplek', type: 'External', contactName: 'Renna', contactTel: '0125085141', contactEmail: '', notes: '' });
+  state.clients.push({ id: 'C002', name: 'CK Yeong', type: 'Internal (HGMR Team)', contactName: '', contactTel: '', contactEmail: '', notes: '' });
+  state.sites.push({ id: 'S001', name: 'Pavilion KL', address: '168 Jalan Bukit Bintang, KL' });
+  state.sites.push({ id: 'S002', name: 'KLCC', address: 'Suria KLCC' });
+  state.sites.push({ id: 'S003', name: 'Genting SkyAvenue', address: 'Resorts World Genting' });
+  state.pics.push({ id: 'P001', name: 'Aqif', tel: '013-9838879', role: 'Scaffold Team Lead' });
+  state.pics.push({ id: 'P002', name: 'Sun',  tel: '012-7866653', role: 'Scaffold Coordinator' });
+  state.pics.push({ id: 'P003', name: 'Meelee', tel: '016-7253677', role: 'Scaffold Coordinator' });
+  state.pics.push({ id: 'P004', name: 'Dylan', tel: '', role: 'Project Coordinator' });
+
+  const job1 = {
+    id: 'J' + Date.now(),
+    no: 1,
+    invoiceNo: 'HG-INV26040091',
+    invoiceDate: erectionDate,
+    clientPrefix: '',
+    clientName: 'Huplek',
+    clientType: 'External',
+    pic: 'Aqif',
+    location: 'Pavilion KL',
+    lotNumber: 'L3.01.11',
+    projectName: 'Huplek Interior',
+    scaffoldDetails: 'Aluminium Scaffold HG',
+    noOfTower: 1,
+    scaffoldHeight: '6m',
+    jobType: 'Aluminium Scaffold — Full Service (Erect + Rental + Dismantle)',
+    value: 2400.00,
+    erectionDate: erectionDate,
+    plannedReturnDate: '2026-05-06',
+    actualReturnDate: null,
+    status: 'active',
+    notes: 'From hardcopy form — Huplek Interior, Lot L3.01.11. PIC: Aqif.',
+    createdAt: NOW(),
+    updatedAt: NOW(),
+  };
+  state.jobs.push(job1);
+  state.settings.nextJobNo = 2;
+  state.settings.nextInvoiceCounter = 92;
+
+  // Demo materials log matching the photo
+  state.materialsLogs.push({
+    id: 'M' + Date.now(),
+    jobId: job1.id,
+    type: 'delivery',
+    date: erectionDate,
+    items: [
+      { code: 'AFS04/AFD04', desc: '4 Rung Frame',    spec: '0.75m x 2m', deliverQty: 4, returnQty: 0, remark: '' },
+      { code: 'AFS03/AFD03', desc: '3 Rung Frame',    spec: '0.75m x 1.5m', deliverQty: 4, returnQty: 0, remark: '' },
+      { code: 'AFS02/AFD02', desc: 'Guardrail',       spec: '0.75m x 1m', deliverQty: 4, returnQty: 0, remark: '' },
+      { code: 'AHB01/AHB02', desc: 'Horizontal Brace',spec: '1.8m / 2.4m', deliverQty: 8, returnQty: 0, remark: '' },
+      { code: 'ADB01/ADB02', desc: 'Diagonal Brace',  spec: '2.4m / 3m', deliverQty: 10, returnQty: 0, remark: '' },
+      { code: 'DP01/DP02/DP03', desc: 'Door Platform',spec: '1.8m / 1.9m / 2.4m', deliverQty: 3, returnQty: 0, remark: '' },
+      { code: 'P01/P02/P03',  desc: 'Platform',       spec: '1.8m / 1.9m / 2.4m', deliverQty: 1, returnQty: 0, remark: '' },
+      { code: 'L01',          desc: 'Ladder',         spec: '2.4m', deliverQty: 2, returnQty: 0, remark: '' },
+      { code: 'CW01',         desc: '8" Castor Wheel',spec: '—', deliverQty: 8, returnQty: 0, remark: '' },
+    ],
+    issuedByName: 'Aqif',
+    issuedByCompany: 'HG Services',
+    issuedBySignature: '',
+    receivedByName: 'Renna',
+    receivedByCompany: 'Huplek',
+    receivedByTel: '0125085141',
+    receivedBySignature: '',
+    photoUrls: [],
+    notes: '',
+    createdAt: NOW(),
+  });
+
+  // Seed green tag history — initial inspection on erection day, next due 7 days later
+  state.greenTagLogs.push({
+    id: 'G' + Date.now(),
+    jobId: job1.id,
+    inspectionDate: erectionDate,
+    nextDueDate: addDays(erectionDate, 7),
+    inspectorName: 'Aqif',
+    notes: 'Initial inspection — erection complete, all bracing & guardrails verified.',
+    photoUrl: '',
+    createdAt: NOW(),
+  });
+
+  return state;
+}
+
+// ---------- HELPERS ----------
+function addDays(dateStr, n) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0,10);
+}
+function daysBetween(a, b) {
+  const da = new Date(a), db = new Date(b);
+  return Math.round((db - da) / (1000*60*60*24));
+}
+function fmtRM(n) {
+  if (n === null || n === undefined || isNaN(n)) return 'RM 0.00';
+  return 'RM ' + Number(n).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+function escapeHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function genId(prefix) { return prefix + Date.now() + Math.floor(Math.random()*1000); }
+function getClient(name) { return S.clients.find(c => c.name === name); }
+function getJob(id) { return S.jobs.find(j => j.id === id); }
+
+function nextInvoiceNo() {
+  const yr = new Date().getFullYear().toString().slice(-2);
+  const mo = String(new Date().getMonth()+1).padStart(2,'0');
+  const seq = String(S.settings.nextInvoiceCounter).padStart(4,'0');
+  return `${S.settings.invoicePrefix}${yr}${mo}${seq}`;
+}
+
+function toast(msg, isError) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (isError ? ' error' : '');
+  el.textContent = msg;
+  document.getElementById('toast-stack').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ---------- TAB ROUTER ----------
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'jobs') renderJobs();
+  if (name === 'greentag') renderGreenTag();
+  if (name === 'materials') renderMaterials();
+  if (name === 'clients') renderClients();
+  if (name === 'team') renderPics();
+  if (name === 'settings') renderSettings();
+}
+document.getElementById('tabs').addEventListener('click', e => {
+  const t = e.target.closest('.tab');
+  if (t) switchTab(t.dataset.tab);
+});
+
+// ---------- DASHBOARD ----------
+function renderDashboard() {
+  const activeJobs = S.jobs.filter(j => ['quoted','erected','active'].includes(j.status));
+  const activeValue = activeJobs.reduce((s,j) => s + (Number(j.value)||0), 0);
+  const today = TODAY();
+  const gtStatus = activeJobs.map(j => gtStatusFor(j));
+  const overdue = gtStatus.filter(g => g.status === 'overdue');
+  const dueWeek = gtStatus.filter(g => g.status === 'due-week' || g.status === 'due-today');
+  const dueToday = gtStatus.filter(g => g.status === 'due-today');
+  const monthStart = today.slice(0,7) + '-01';
+  const mtdJobs = S.jobs.filter(j => j.invoiceDate >= monthStart);
+  const mtdValue = mtdJobs.reduce((s,j) => s + (Number(j.value)||0), 0);
+
+  document.getElementById('kpi-grid').innerHTML = `
+    <div class="kpi"><div class="kpi-label">🏗️ Active Jobs</div><div class="kpi-value amber">${activeJobs.length}</div><div class="kpi-sub">${fmtRM(activeValue)} committed</div></div>
+    <div class="kpi ${overdue.length?'alert':''}"><div class="kpi-label">🔴 Green Tags Overdue</div><div class="kpi-value ${overdue.length?'red':''}">${overdue.length}</div><div class="kpi-sub">${overdue.length?'⚠ Re-inspect today':'All current'}</div></div>
+    <div class="kpi ${dueToday.length?'warn':''}"><div class="kpi-label">🟡 Due Today / This Week</div><div class="kpi-value ${dueWeek.length?'amber':''}">${dueWeek.length}</div><div class="kpi-sub">${dueToday.length} due today</div></div>
+    <div class="kpi"><div class="kpi-label">💰 This Month</div><div class="kpi-value green">${fmtRM(mtdValue)}</div><div class="kpi-sub">${mtdJobs.length} jobs MTD</div></div>
+    <div class="kpi"><div class="kpi-label">📦 Items Deployed</div><div class="kpi-value">${totalDeployedItems()}</div><div class="kpi-sub">across ${activeJobs.length} active jobs</div></div>
+    <div class="kpi"><div class="kpi-label">👥 Clients on Books</div><div class="kpi-value">${S.clients.length}</div><div class="kpi-sub">${S.sites.length} sites tracked</div></div>
+  `;
+
+  // Green tags action list
+  const gtActionList = [...overdue, ...dueWeek.filter(g => g.status !== 'overdue')]
+    .sort((a,b) => daysBetween(TODAY(), a.nextDue) - daysBetween(TODAY(), b.nextDue))
+    .slice(0, 6);
+  document.getElementById('dash-gt-list').innerHTML = gtActionList.length === 0
+    ? `<div class="empty"><span class="emoji">✅</span>All green tags current. Nothing due in 7 days.</div>`
+    : gtActionList.map(g => renderGtRow(g)).join('');
+
+  // Active jobs (top 6 by value)
+  const topJobs = activeJobs.slice().sort((a,b) => (b.value||0) - (a.value||0)).slice(0, 6);
+  document.getElementById('dash-active-jobs').innerHTML = topJobs.length === 0
+    ? `<div class="empty"><span class="emoji">🏗️</span>No active jobs. <button class="btn primary sm" onclick="switchTab('jobs');openJobForm()">+ Create first job</button></div>`
+    : `<div class="jobs-grid">${topJobs.map(j => renderJobCard(j)).join('')}</div>`;
+
+  // Activity
+  const acts = activityFeed().slice(0, 8);
+  document.getElementById('dash-activity').innerHTML = acts.length === 0
+    ? `<div class="empty">No activity yet.</div>`
+    : `<div class="table-wrap"><table>
+        <thead><tr><th>When</th><th>What</th><th>Job</th></tr></thead>
+        <tbody>${acts.map(a => `<tr><td>${fmtDate(a.date)}</td><td>${escapeHtml(a.label)}</td><td>${escapeHtml(a.jobLabel||'—')}</td></tr>`).join('')}</tbody>
+       </table></div>`;
+
+  // Badges
+  document.getElementById('badge-jobs').textContent = activeJobs.length;
+  document.getElementById('badge-gt').textContent = overdue.length + dueToday.length;
+  document.getElementById('badge-gt').style.display = (overdue.length + dueToday.length) ? '' : 'none';
+}
+
+function activityFeed() {
+  const items = [];
+  S.jobs.forEach(j => items.push({ date: j.createdAt, label: `New job created — ${j.status}`, jobLabel: `${j.clientName} @ ${j.location}` }));
+  S.materialsLogs.forEach(m => {
+    const j = getJob(m.jobId);
+    items.push({ date: m.createdAt, label: `Materials ${m.type === 'delivery' ? 'delivered' : 'returned'}`, jobLabel: j ? `${j.clientName} @ ${j.location}` : '—' });
+  });
+  S.greenTagLogs.forEach(g => {
+    const j = getJob(g.jobId);
+    items.push({ date: g.createdAt, label: `Green tag — inspected by ${g.inspectorName}`, jobLabel: j ? `${j.clientName} @ ${j.location}` : '—' });
+  });
+  return items.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+}
+
+function totalDeployedItems() {
+  let total = 0;
+  S.materialsLogs.forEach(m => {
+    m.items.forEach(i => { total += (Number(i.deliverQty)||0) - (Number(i.returnQty)||0); });
+  });
+  return total;
+}
+
+// ---------- JOBS ----------
+function renderJobs() {
+  const q = (document.getElementById('job-search').value || '').toLowerCase();
+  const status = document.getElementById('job-filter-status').value;
+  const filtered = S.jobs.filter(j => {
+    if (status && j.status !== status) return false;
+    if (!q) return true;
+    const hay = `${j.clientName} ${j.location} ${j.lotNumber} ${j.invoiceNo} ${j.pic} ${j.projectName||''}`.toLowerCase();
+    return hay.includes(q);
+  }).sort((a,b) => (b.invoiceDate||'').localeCompare(a.invoiceDate||''));
+
+  document.getElementById('jobs-list').innerHTML = filtered.length === 0
+    ? `<div class="empty"><span class="emoji">🏗️</span>No jobs match. <button class="btn primary sm" onclick="openJobForm()">+ Create new job</button></div>`
+    : `<div class="jobs-grid">${filtered.map(j => renderJobCard(j)).join('')}</div>`;
+}
+
+function renderJobCard(j) {
+  const gt = gtStatusFor(j);
+  const borderClass = gt.status === 'overdue' ? 'overdue' : (gt.status === 'due-today' ? 'due-today' : '');
+  const statusColor = { quoted:'grey', erected:'blue', active:'green', returned:'amber', invoiced:'purple', paid:'green' }[j.status] || 'grey';
+  return `
+    <div class="job-card ${borderClass}" onclick="openJobDetail('${j.id}')">
+      <div class="job-card-head">
+        <div>
+          <div class="job-card-title">${escapeHtml(j.clientName)} <span class="pill ${statusColor}">${j.status}</span></div>
+          <div class="job-card-meta">${escapeHtml(j.location)} · ${escapeHtml(j.lotNumber||'—')}${j.projectName?' · '+escapeHtml(j.projectName):''}</div>
+        </div>
+        <div style="text-align:right;font-size:0.78rem;color:var(--text-dim)">#${j.no}<br><strong style="color:var(--text)">${escapeHtml(j.invoiceNo||'—')}</strong></div>
+      </div>
+      <div class="job-card-row"><span>Scaffold</span><strong>${escapeHtml(j.scaffoldDetails)} × ${j.noOfTower||1}</strong></div>
+      <div class="job-card-row"><span>Height</span><strong>${escapeHtml(j.scaffoldHeight||'—')}</strong></div>
+      <div class="job-card-row"><span>PIC</span><strong>${escapeHtml(j.pic||'—')}</strong></div>
+      <div class="job-card-row"><span>Value</span><strong>${fmtRM(j.value)}</strong></div>
+      <div class="job-card-row"><span>Erected → Return</span><strong>${fmtDate(j.erectionDate)} → ${fmtDate(j.actualReturnDate || j.plannedReturnDate)}</strong></div>
+      <div class="job-card-foot">
+        <span style="color:var(--text-dim)">Green tag: ${gt.label}</span>
+        <span class="pill ${gt.color}">${gt.short}</span>
+      </div>
+    </div>`;
+}
+
+function openJobForm(jobId) {
+  const j = jobId ? getJob(jobId) : null;
+  const isEdit = !!j;
+  const data = j || {
+    no: S.settings.nextJobNo,
+    invoiceNo: nextInvoiceNo(),
+    invoiceDate: TODAY(),
+    erectionDate: TODAY(),
+    status: 'quoted',
+    noOfTower: 1,
+  };
+
+  const clientOpts = S.clients.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)} (${escapeHtml(c.type)})</option>`).join('');
+  const siteOpts = S.sites.map(s => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`).join('');
+  const picOpts = S.pics.map(p => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)} — ${escapeHtml(p.role||'')}</option>`).join('');
+  const jobTypeOpts = S.settings.jobTypes.map(t => `<option value="${escapeHtml(t)}" ${t===data.jobType?'selected':''}>${escapeHtml(t)}</option>`).join('');
+
+  modal(isEdit ? `Edit Job #${data.no}` : 'New Job', `
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Job No</label>
+        <input type="number" id="f-no" value="${data.no}">
+      </div>
+      <div class="form-row">
+        <label>Invoice No</label>
+        <input type="text" id="f-invoiceNo" value="${escapeHtml(data.invoiceNo||'')}">
+      </div>
+      <div class="form-row">
+        <label>Invoice Date</label>
+        <input type="date" id="f-invoiceDate" value="${data.invoiceDate||TODAY()}">
+      </div>
+      <div class="form-row">
+        <label>Status</label>
+        <select id="f-status">
+          ${['quoted','erected','active','returned','invoiced','paid'].map(s => `<option value="${s}" ${s===data.status?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>Client Type</label>
+        <select id="f-clientType">
+          <option ${data.clientType==='External'?'selected':''}>External</option>
+          <option ${data.clientType==='Internal (HGMR Team)'?'selected':''}>Internal (HGMR Team)</option>
+          <option ${data.clientType==='Hoarding'?'selected':''}>Hoarding</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Client Name</label>
+        <input type="text" id="f-clientName" value="${escapeHtml(data.clientName||'')}" list="dl-clients" placeholder="Type or pick">
+        <datalist id="dl-clients">${clientOpts}</datalist>
+        <div class="help-text">New name auto-saves to Clients on save.</div>
+      </div>
+      <div class="form-row">
+        <label>PIC</label>
+        <input type="text" id="f-pic" value="${escapeHtml(data.pic||'')}" list="dl-pics">
+        <datalist id="dl-pics">${picOpts}</datalist>
+      </div>
+      <div class="form-row">
+        <label>Project Name</label>
+        <input type="text" id="f-projectName" value="${escapeHtml(data.projectName||'')}" placeholder="e.g. Huplek Interior">
+      </div>
+
+      <div class="form-row">
+        <label>Location / Mall</label>
+        <input type="text" id="f-location" value="${escapeHtml(data.location||'')}" list="dl-sites" placeholder="e.g. Pavilion KL">
+        <datalist id="dl-sites">${siteOpts}</datalist>
+      </div>
+      <div class="form-row">
+        <label>Lot Number</label>
+        <input type="text" id="f-lotNumber" value="${escapeHtml(data.lotNumber||'')}" placeholder="e.g. L3.01.11">
+      </div>
+
+      <div class="form-row full">
+        <label>Job Type</label>
+        <select id="f-jobType">${jobTypeOpts}</select>
+      </div>
+
+      <div class="form-row">
+        <label>Scaffold Details</label>
+        <input type="text" id="f-scaffoldDetails" value="${escapeHtml(data.scaffoldDetails||'Aluminium Scaffold HG')}">
+      </div>
+      <div class="form-row">
+        <label>No of Towers</label>
+        <input type="number" id="f-noOfTower" value="${data.noOfTower||1}" min="1">
+      </div>
+      <div class="form-row">
+        <label>Scaffold Height</label>
+        <input type="text" id="f-scaffoldHeight" value="${escapeHtml(data.scaffoldHeight||'')}" placeholder="e.g. 6m">
+      </div>
+      <div class="form-row">
+        <label>Job Value (RM)</label>
+        <input type="number" id="f-value" value="${data.value||0}" step="0.01">
+      </div>
+
+      <div class="form-row">
+        <label>Erection Date</label>
+        <input type="date" id="f-erectionDate" value="${data.erectionDate||TODAY()}">
+      </div>
+      <div class="form-row">
+        <label>Planned Return Date</label>
+        <input type="date" id="f-plannedReturnDate" value="${data.plannedReturnDate||''}">
+      </div>
+      <div class="form-row">
+        <label>Actual Return Date</label>
+        <input type="date" id="f-actualReturnDate" value="${data.actualReturnDate||''}">
+      </div>
+      <div class="form-row">
+        <label>Rental Days</label>
+        <input type="text" id="f-rentalDays" value="${data.erectionDate && data.plannedReturnDate ? daysBetween(data.erectionDate, data.plannedReturnDate)+' days' : '—'}" readonly>
+      </div>
+
+      <div class="form-row full">
+        <label>Notes</label>
+        <textarea id="f-notes" rows="2">${escapeHtml(data.notes||'')}</textarea>
+      </div>
+    </div>
+  `, [
+    isEdit ? { label: '🗑 Delete', class: 'danger', onclick: () => deleteJob(j.id) } : null,
+    { label: 'Cancel', onclick: closeModal },
+    { label: isEdit ? '💾 Save' : '+ Create Job', class: 'primary', onclick: () => saveJob(j ? j.id : null) },
+  ].filter(Boolean));
+}
+
+function saveJob(id) {
+  const get = k => document.getElementById('f-'+k).value;
+  const isNew = !id;
+  const job = isNew ? { id: genId('J'), createdAt: NOW() } : { ...getJob(id) };
+  Object.assign(job, {
+    no: Number(get('no')) || S.settings.nextJobNo,
+    invoiceNo: get('invoiceNo').trim(),
+    invoiceDate: get('invoiceDate'),
+    status: get('status'),
+    clientType: get('clientType'),
+    clientName: get('clientName').trim(),
+    pic: get('pic').trim(),
+    projectName: get('projectName').trim(),
+    location: get('location').trim(),
+    lotNumber: get('lotNumber').trim(),
+    jobType: get('jobType'),
+    scaffoldDetails: get('scaffoldDetails').trim(),
+    noOfTower: Number(get('noOfTower')) || 1,
+    scaffoldHeight: get('scaffoldHeight').trim(),
+    value: Number(get('value')) || 0,
+    erectionDate: get('erectionDate'),
+    plannedReturnDate: get('plannedReturnDate'),
+    actualReturnDate: get('actualReturnDate') || null,
+    notes: get('notes').trim(),
+    updatedAt: NOW(),
+  });
+  if (!job.clientName) { toast('Client name required', true); return; }
+  if (!job.location) { toast('Location required', true); return; }
+
+  // Auto-create client if new
+  if (job.clientName && !getClient(job.clientName)) {
+    S.clients.push({ id: genId('C'), name: job.clientName, type: job.clientType, contactName: '', contactTel: '', contactEmail: '', notes: '' });
+  }
+  // Auto-create site
+  if (job.location && !S.sites.find(s => s.name === job.location)) {
+    S.sites.push({ id: genId('S'), name: job.location, address: '' });
+  }
+
+  if (isNew) {
+    S.jobs.push(job);
+    S.settings.nextJobNo = Math.max(S.settings.nextJobNo, job.no + 1);
+    S.settings.nextInvoiceCounter++;
+    // Seed first green tag for active/erected jobs
+    if (['erected','active'].includes(job.status)) {
+      S.greenTagLogs.push({
+        id: genId('G'), jobId: job.id,
+        inspectionDate: job.erectionDate,
+        nextDueDate: addDays(job.erectionDate, 7),
+        inspectorName: job.pic, notes: 'Initial inspection on erection.', photoUrl: '',
+        createdAt: NOW(),
+      });
+    }
+    toast('Job created');
+  } else {
+    const idx = S.jobs.findIndex(x => x.id === id);
+    S.jobs[idx] = job;
+    toast('Job updated');
+  }
+  saveState(); closeModal(); renderJobs(); renderDashboard();
+}
+
+function deleteJob(id) {
+  if (!confirm('Delete this job + all linked materials + green tag records? Cannot undo.')) return;
+  S.jobs = S.jobs.filter(j => j.id !== id);
+  S.materialsLogs = S.materialsLogs.filter(m => m.jobId !== id);
+  S.greenTagLogs = S.greenTagLogs.filter(g => g.jobId !== id);
+  saveState(); closeModal(); renderJobs(); renderDashboard();
+  toast('Job deleted');
+}
+
+function openJobDetail(id) {
+  const j = getJob(id); if (!j) return;
+  const matLogs = S.materialsLogs.filter(m => m.jobId === id).sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+  const gtLogs = S.greenTagLogs.filter(g => g.jobId === id).sort((a,b) => (b.inspectionDate||'').localeCompare(a.inspectionDate||''));
+  const gt = gtStatusFor(j);
+  const stockSummary = stockForJob(id);
+
+  modal(`Job #${j.no} — ${j.clientName}`, `
+    <div class="form-grid" style="margin-bottom:18px">
+      <div class="form-row"><label>Status</label><div><span class="pill ${gt.color === 'red' ? 'red' : 'green'}">${escapeHtml(j.status)}</span> · Green tag: ${gt.label}</div></div>
+      <div class="form-row"><label>Invoice</label><div>${escapeHtml(j.invoiceNo||'—')} · ${fmtDate(j.invoiceDate)}</div></div>
+      <div class="form-row"><label>Value</label><div>${fmtRM(j.value)}</div></div>
+      <div class="form-row"><label>PIC</label><div>${escapeHtml(j.pic||'—')}</div></div>
+      <div class="form-row"><label>Project</label><div>${escapeHtml(j.projectName||'—')}</div></div>
+      <div class="form-row"><label>Location</label><div>${escapeHtml(j.location)} · ${escapeHtml(j.lotNumber||'')}</div></div>
+      <div class="form-row"><label>Scaffold</label><div>${escapeHtml(j.scaffoldDetails)} × ${j.noOfTower||1} · ${escapeHtml(j.scaffoldHeight||'—')}</div></div>
+      <div class="form-row"><label>Job Type</label><div>${escapeHtml(j.jobType||'—')}</div></div>
+      <div class="form-row"><label>Erection → Return</label><div>${fmtDate(j.erectionDate)} → ${fmtDate(j.actualReturnDate || j.plannedReturnDate)}</div></div>
+      <div class="form-row"><label>Notes</label><div>${escapeHtml(j.notes||'—')}</div></div>
+    </div>
+
+    <div class="card-head" style="border-top:1px solid var(--border);padding-top:14px"><div class="card-title">📦 Materials on this job</div></div>
+    ${matLogs.length === 0 ? '<div class="empty">No checklist filed yet.</div>' : ''}
+    ${Object.keys(stockSummary).length > 0 ? `
+      <div class="table-wrap" style="margin-bottom:14px"><table>
+        <thead><tr><th>Item</th><th class="center">Delivered</th><th class="center">Returned</th><th class="center">Still Out</th></tr></thead>
+        <tbody>${Object.entries(stockSummary).map(([code,v]) => `<tr><td>${escapeHtml(v.desc)} <span style="color:var(--text-mute);font-family:monospace;font-size:0.78rem">${escapeHtml(code)}</span></td><td class="center">${v.delivered}</td><td class="center">${v.returned}</td><td class="center"><strong>${v.delivered - v.returned}</strong></td></tr>`).join('')}</tbody>
+      </table></div>` : ''}
+    ${matLogs.map(m => `
+      <div class="gt-item" style="cursor:pointer" onclick="openMaterialsForm('${m.id}')">
+        <div class="gt-item-main">
+          <div class="gt-item-title">${m.type === 'delivery' ? '📥 Delivery' : '📤 Return'} — ${fmtDate(m.date)}</div>
+          <div class="gt-item-meta">Issued: ${escapeHtml(m.issuedByName||'—')} (${escapeHtml(m.issuedByCompany||'')}) · Received: ${escapeHtml(m.receivedByName||'—')} (${escapeHtml(m.receivedByCompany||'')}) · ${m.items.length} item types</div>
+        </div>
+        <div><span class="pill ${m.type==='delivery'?'green':'amber'}">${m.type}</span></div>
+      </div>
+    `).join('')}
+
+    <div class="card-head" style="border-top:1px solid var(--border);padding-top:14px;margin-top:18px"><div class="card-title">🏷️ Green tag history</div><button class="btn primary sm" onclick="openGtRenew('${j.id}')">+ Renew Green Tag</button></div>
+    ${gtLogs.length === 0 ? '<div class="empty">No inspections logged.</div>' : `
+      <div class="table-wrap"><table>
+        <thead><tr><th>Inspected</th><th>Inspector</th><th>Next Due</th><th>Notes</th></tr></thead>
+        <tbody>${gtLogs.map(g => `<tr><td>${fmtDate(g.inspectionDate)}</td><td>${escapeHtml(g.inspectorName||'—')}</td><td>${fmtDate(g.nextDueDate)}</td><td>${escapeHtml(g.notes||'—')}</td></tr>`).join('')}</tbody>
+      </table></div>
+    `}
+  `, [
+    { label: '+ Materials Checklist', onclick: () => { closeModal(); openMaterialsForm(null, j.id); } },
+    { label: '+ Green Tag Renew', class: 'green', onclick: () => openGtRenew(j.id) },
+    { label: '✏ Edit Job', class: 'primary', onclick: () => openJobForm(j.id) },
+    { label: 'Close', onclick: closeModal },
+  ], 'wide');
+}
+
+function stockForJob(jobId) {
+  const out = {};
+  S.materialsLogs.filter(m => m.jobId === jobId).forEach(m => {
+    m.items.forEach(i => {
+      if (!out[i.code]) out[i.code] = { desc: i.desc, delivered: 0, returned: 0 };
+      out[i.code].delivered += Number(i.deliverQty)||0;
+      out[i.code].returned += Number(i.returnQty)||0;
+    });
+  });
+  return out;
+}
+
+// ---------- GREEN TAG ----------
+function gtStatusFor(j) {
+  const logs = S.greenTagLogs.filter(g => g.jobId === j.id).sort((a,b) => (b.inspectionDate||'').localeCompare(a.inspectionDate||''));
+  const last = logs[0];
+  if (!last) return { jobId: j.id, status: 'none', label: 'No inspection yet', short: 'NONE', color: 'grey', nextDue: null };
+  const today = TODAY();
+  const diff = daysBetween(today, last.nextDueDate);
+  if (diff < 0) return { jobId: j.id, status: 'overdue', label: `${Math.abs(diff)}d overdue`, short: `${Math.abs(diff)}d OVERDUE`, color: 'red', nextDue: last.nextDueDate, lastInspectionDate: last.inspectionDate };
+  if (diff === 0) return { jobId: j.id, status: 'due-today', label: 'Due today', short: 'DUE TODAY', color: 'amber', nextDue: last.nextDueDate, lastInspectionDate: last.inspectionDate };
+  if (diff <= 7) return { jobId: j.id, status: 'due-week', label: `${diff}d to renew`, short: `${diff}d`, color: 'amber', nextDue: last.nextDueDate, lastInspectionDate: last.inspectionDate };
+  return { jobId: j.id, status: 'ok', label: `OK — ${diff}d left`, short: 'OK', color: 'green', nextDue: last.nextDueDate, lastInspectionDate: last.inspectionDate };
+}
+
+function renderGtRow(g) {
+  const j = getJob(g.jobId); if (!j) return '';
+  const cls = g.status === 'overdue' ? 'overdue' : (g.status === 'due-today' ? 'today' : '');
+  return `
+    <div class="gt-item ${cls}">
+      <div class="gt-item-main">
+        <div class="gt-item-title">${escapeHtml(j.clientName)} · ${escapeHtml(j.location)} ${escapeHtml(j.lotNumber||'')}</div>
+        <div class="gt-item-meta">${escapeHtml(j.scaffoldDetails)} × ${j.noOfTower} · PIC ${escapeHtml(j.pic||'—')} · Last: ${fmtDate(g.lastInspectionDate)} · Next due: ${fmtDate(g.nextDue)}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="pill ${g.color}">${g.short}</span>
+        <button class="btn green sm" onclick="openGtRenew('${j.id}')">Renew</button>
+        <button class="btn sm" onclick="openJobDetail('${j.id}')">View</button>
+      </div>
+    </div>`;
+}
+
+function renderGreenTag() {
+  const activeJobs = S.jobs.filter(j => ['quoted','erected','active'].includes(j.status));
+  const statuses = activeJobs.map(j => gtStatusFor(j));
+  const overdue = statuses.filter(g => g.status === 'overdue');
+  const dueToday = statuses.filter(g => g.status === 'due-today');
+  const dueWeek = statuses.filter(g => g.status === 'due-week');
+  const ok = statuses.filter(g => g.status === 'ok' || g.status === 'none');
+
+  document.getElementById('gt-kpi-grid').innerHTML = `
+    <div class="kpi ${overdue.length?'alert':''}"><div class="kpi-label">Overdue</div><div class="kpi-value ${overdue.length?'red':''}">${overdue.length}</div></div>
+    <div class="kpi ${dueToday.length?'warn':''}"><div class="kpi-label">Due Today</div><div class="kpi-value ${dueToday.length?'amber':''}">${dueToday.length}</div></div>
+    <div class="kpi"><div class="kpi-label">Due This Week</div><div class="kpi-value amber">${dueWeek.length}</div></div>
+    <div class="kpi"><div class="kpi-label">All Current</div><div class="kpi-value green">${ok.length}</div></div>
+  `;
+
+  document.getElementById('gt-overdue-list').innerHTML = overdue.length === 0
+    ? `<div class="empty">✅ Nothing overdue.</div>`
+    : overdue.map(renderGtRow).join('');
+  document.getElementById('gt-due-list').innerHTML = ([...dueToday, ...dueWeek]).length === 0
+    ? `<div class="empty">Nothing due in 7 days.</div>`
+    : ([...dueToday, ...dueWeek]).map(renderGtRow).join('');
+  document.getElementById('gt-all-list').innerHTML = statuses.length === 0
+    ? `<div class="empty">No active scaffolds.</div>`
+    : statuses.map(renderGtRow).join('');
+}
+
+function openGtRenew(jobId) {
+  const j = getJob(jobId); if (!j) return;
+  const picOpts = S.pics.map(p => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('');
+  modal(`🏷️ Renew Green Tag — ${j.clientName} · ${j.location}`, `
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Inspection Date</label>
+        <input type="date" id="gt-date" value="${TODAY()}">
+      </div>
+      <div class="form-row">
+        <label>Next Due (auto +7 days)</label>
+        <input type="date" id="gt-next" value="${addDays(TODAY(), 7)}">
+      </div>
+      <div class="form-row full">
+        <label>Inspector</label>
+        <input type="text" id="gt-inspector" value="${escapeHtml(j.pic||'')}" list="dl-gt-pics">
+        <datalist id="dl-gt-pics">${picOpts}</datalist>
+      </div>
+      <div class="form-row full">
+        <label>Notes</label>
+        <textarea id="gt-notes" rows="3" placeholder="e.g. Bracing verified. Tower stable. Castor brakes locked."></textarea>
+      </div>
+      <div class="form-row full">
+        <label>Photo URL (optional — paste WhatsApp share or Drive link)</label>
+        <input type="text" id="gt-photo" placeholder="https://...">
+      </div>
+    </div>
+    <p style="color:var(--text-dim);font-size:0.85rem;margin-top:12px">Saves a new 7-day countdown from inspection date. Audit log preserved.</p>
+  `, [
+    { label: 'Cancel', onclick: closeModal },
+    { label: '🏷️ Renew + Schedule Next', class: 'green', onclick: () => saveGtRenew(jobId) },
+  ]);
+  document.getElementById('gt-date').addEventListener('change', e => {
+    document.getElementById('gt-next').value = addDays(e.target.value, 7);
+  });
+}
+function saveGtRenew(jobId) {
+  const insp = document.getElementById('gt-inspector').value.trim();
+  if (!insp) { toast('Inspector name required', true); return; }
+  S.greenTagLogs.push({
+    id: genId('G'), jobId,
+    inspectionDate: document.getElementById('gt-date').value,
+    nextDueDate: document.getElementById('gt-next').value,
+    inspectorName: insp,
+    notes: document.getElementById('gt-notes').value.trim(),
+    photoUrl: document.getElementById('gt-photo').value.trim(),
+    createdAt: NOW(),
+  });
+  saveState(); closeModal(); renderGreenTag(); renderDashboard();
+  toast('Green tag renewed');
+}
+
+// ---------- MATERIALS CHECKLIST ----------
+function renderMaterials() {
+  // Stock currently deployed
+  const stock = {};
+  S.materialsLogs.forEach(m => {
+    m.items.forEach(i => {
+      if (!stock[i.code]) stock[i.code] = { desc: i.desc, spec: i.spec, delivered: 0, returned: 0 };
+      stock[i.code].delivered += Number(i.deliverQty)||0;
+      stock[i.code].returned += Number(i.returnQty)||0;
+    });
+  });
+  const stockEntries = Object.entries(stock).filter(([,v]) => v.delivered - v.returned > 0);
+  document.getElementById('stock-grid').innerHTML = stockEntries.length === 0
+    ? `<div class="empty">No materials currently deployed.</div>`
+    : `<div class="table-wrap"><table>
+        <thead><tr><th>Item</th><th>Spec</th><th class="center">Out</th><th class="center">In</th><th class="center">Net Deployed</th></tr></thead>
+        <tbody>${stockEntries.map(([code,v]) => `<tr><td>${escapeHtml(v.desc)} <span style="color:var(--text-mute);font-family:monospace;font-size:0.78rem">${escapeHtml(code)}</span></td><td>${escapeHtml(v.spec||'—')}</td><td class="center">${v.delivered}</td><td class="center">${v.returned}</td><td class="center"><strong>${v.delivered - v.returned}</strong></td></tr>`).join('')}</tbody>
+       </table></div>`;
+
+  // Recent checklists
+  const recent = S.materialsLogs.slice().sort((a,b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 8);
+  document.getElementById('materials-recent').innerHTML = recent.length === 0
+    ? `<div class="empty">No checklists yet. Click "+ New Checklist" to capture the first one.</div>`
+    : recent.map(m => {
+        const j = getJob(m.jobId);
+        return `<div class="gt-item" style="cursor:pointer" onclick="openMaterialsForm('${m.id}')">
+          <div class="gt-item-main">
+            <div class="gt-item-title">${m.type === 'delivery' ? '📥' : '📤'} ${j ? escapeHtml(j.clientName) + ' · ' + escapeHtml(j.location) : '(deleted job)'}</div>
+            <div class="gt-item-meta">${fmtDate(m.date)} · Issued by ${escapeHtml(m.issuedByName||'—')} · Received by ${escapeHtml(m.receivedByName||'—')}</div>
+          </div>
+          <span class="pill ${m.type==='delivery'?'green':'amber'}">${m.type}</span>
+        </div>`;
+      }).join('');
+}
+
+let sigPads = {}; // signature pad instances
+
+function openMaterialsForm(logId, presetJobId) {
+  const log = logId ? S.materialsLogs.find(m => m.id === logId) : null;
+  const isEdit = !!log;
+  const data = log || {
+    jobId: presetJobId || (S.jobs[0] ? S.jobs[0].id : ''),
+    type: 'delivery',
+    date: TODAY(),
+    items: S.settings.materials.map(m => ({ code: m.code, desc: m.desc, spec: m.spec, deliverQty: 0, returnQty: 0, remark: '' })),
+    issuedByName: '', issuedByCompany: 'HG Services', issuedBySignature: '',
+    receivedByName: '', receivedByCompany: '', receivedByTel: '', receivedBySignature: '',
+    photoUrls: [], notes: '',
+  };
+
+  const jobOpts = S.jobs.map(j => `<option value="${j.id}" ${j.id===data.jobId?'selected':''}>#${j.no} ${escapeHtml(j.clientName)} — ${escapeHtml(j.location)} ${escapeHtml(j.lotNumber||'')}</option>`).join('');
+  const picOpts = S.pics.map(p => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('');
+
+  const itemsHtml = data.items.map((i, idx) => `
+    <div class="mat-item">
+      <div class="mat-item-info">
+        <div class="mat-item-name">${escapeHtml(i.desc)}</div>
+        <div class="mat-item-spec">${escapeHtml(i.spec||'—')}</div>
+        <div class="mat-item-code">${escapeHtml(i.code)}</div>
+      </div>
+      <div class="qty-label"><span>Deliver</span><input type="number" class="qty-input" data-idx="${idx}" data-k="deliverQty" value="${i.deliverQty||0}" min="0"></div>
+      <div class="qty-label"><span>Return</span><input type="number" class="qty-input" data-idx="${idx}" data-k="returnQty" value="${i.returnQty||0}" min="0"></div>
+    </div>
+  `).join('');
+
+  modal(isEdit ? '📋 Edit Checklist' : '📋 New Materials Checklist', `
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="form-row">
+        <label>Job</label>
+        <select id="m-jobId">${jobOpts}</select>
+      </div>
+      <div class="form-row">
+        <label>Type</label>
+        <select id="m-type">
+          <option value="delivery" ${data.type==='delivery'?'selected':''}>📥 Delivery (Erection)</option>
+          <option value="return" ${data.type==='return'?'selected':''}>📤 Return (Dismantle)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Date</label>
+        <input type="date" id="m-date" value="${data.date||TODAY()}">
+      </div>
+    </div>
+
+    <div class="card-title" style="margin-bottom:8px">Materials</div>
+    <div id="m-items">${itemsHtml}</div>
+
+    <div class="card-title" style="margin-top:18px;margin-bottom:8px">Issued by (HG Team)</div>
+    <div class="form-grid">
+      <div class="form-row"><label>Name</label><input type="text" id="m-issuedByName" value="${escapeHtml(data.issuedByName||'')}" list="dl-m-pics"><datalist id="dl-m-pics">${picOpts}</datalist></div>
+      <div class="form-row"><label>Company</label><input type="text" id="m-issuedByCompany" value="${escapeHtml(data.issuedByCompany||'HG Services')}"></div>
+    </div>
+    <div class="form-row full" style="margin-top:10px">
+      <label>Signature</label>
+      <div class="sig-wrap">
+        <canvas class="sig-canvas" id="sig-issued"></canvas>
+        ${data.issuedBySignature ? '' : '<div class="sig-placeholder" id="sigph-issued">Sign here with finger or mouse</div>'}
+      </div>
+      <div class="sig-actions"><button type="button" class="btn sm" onclick="clearSig('issued')">Clear</button></div>
+    </div>
+
+    <div class="card-title" style="margin-top:18px;margin-bottom:8px">Received by (Client)</div>
+    <div class="form-grid">
+      <div class="form-row"><label>Name</label><input type="text" id="m-receivedByName" value="${escapeHtml(data.receivedByName||'')}"></div>
+      <div class="form-row"><label>Company</label><input type="text" id="m-receivedByCompany" value="${escapeHtml(data.receivedByCompany||'')}"></div>
+      <div class="form-row"><label>Tel</label><input type="tel" id="m-receivedByTel" value="${escapeHtml(data.receivedByTel||'')}"></div>
+    </div>
+    <div class="form-row full" style="margin-top:10px">
+      <label>Signature</label>
+      <div class="sig-wrap">
+        <canvas class="sig-canvas" id="sig-received"></canvas>
+        ${data.receivedBySignature ? '' : '<div class="sig-placeholder" id="sigph-received">Pass phone to client — they sign here</div>'}
+      </div>
+      <div class="sig-actions"><button type="button" class="btn sm" onclick="clearSig('received')">Clear</button></div>
+    </div>
+
+    <div class="card-title" style="margin-top:18px;margin-bottom:8px">Photos & Notes</div>
+    <div class="form-row full">
+      <label>Photo URLs (one per line — paste WhatsApp share links or Drive URLs)</label>
+      <textarea id="m-photoUrls" rows="3" placeholder="https://...&#10;https://...">${(data.photoUrls||[]).join('\n')}</textarea>
+    </div>
+    <div class="form-row full" style="margin-top:10px">
+      <label>Remarks</label>
+      <textarea id="m-notes" rows="2">${escapeHtml(data.notes||'')}</textarea>
+    </div>
+  `, [
+    isEdit ? { label: '🗑 Delete', class: 'danger', onclick: () => deleteMaterialsLog(log.id) } : null,
+    { label: '🖨 Print', onclick: () => printChecklist(data, isEdit ? log.id : null) },
+    { label: 'Cancel', onclick: closeModal },
+    { label: isEdit ? '💾 Save' : '+ Save Checklist', class: 'primary', onclick: () => saveMaterialsLog(log ? log.id : null) },
+  ].filter(Boolean), 'wide');
+
+  // Bind qty inputs
+  document.querySelectorAll('#m-items .qty-input').forEach(inp => {
+    inp.addEventListener('change', e => {
+      const idx = Number(e.target.dataset.idx);
+      const k = e.target.dataset.k;
+      data.items[idx][k] = Number(e.target.value)||0;
+    });
+  });
+
+  // Setup signature pads
+  setTimeout(() => {
+    initSigPad('issued', data.issuedBySignature);
+    initSigPad('received', data.receivedBySignature);
+  }, 50);
+}
+
+function initSigPad(key, existing) {
+  const canvas = document.getElementById('sig-' + key);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * 2;
+  canvas.height = 240; // 120 * 2 retina
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = '120px';
+  ctx.scale(2,2);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+
+  if (existing) {
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0, rect.width, 120);
+    img.src = existing;
+    const ph = document.getElementById('sigph-' + key); if (ph) ph.style.display = 'none';
+  }
+
+  let drawing = false, hasInk = !!existing;
+  const getPos = e => {
+    const r = canvas.getBoundingClientRect();
+    if (e.touches && e.touches[0]) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+  const start = e => { drawing = true; hasInk = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); const ph = document.getElementById('sigph-' + key); if (ph) ph.style.display = 'none'; e.preventDefault(); };
+  const move = e => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); };
+  const end = () => { drawing = false; };
+  canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end); canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start); canvas.addEventListener('touchmove', move);
+  canvas.addEventListener('touchend', end);
+  sigPads[key] = { canvas, ctx, hasInk: () => hasInk };
+}
+
+function clearSig(key) {
+  const pad = sigPads[key]; if (!pad) return;
+  pad.ctx.clearRect(0, 0, pad.canvas.width, pad.canvas.height);
+  pad._cleared = true;
+  const ph = document.getElementById('sigph-' + key); if (ph) ph.style.display = '';
+}
+
+function getSigDataUrl(key) {
+  const pad = sigPads[key]; if (!pad) return '';
+  if (pad._cleared) return '';
+  return pad.canvas.toDataURL('image/png');
+}
+
+function saveMaterialsLog(id) {
+  const get = k => document.getElementById('m-'+k).value;
+  const isNew = !id;
+  const log = isNew ? { id: genId('M'), createdAt: NOW() } : { ...S.materialsLogs.find(m => m.id === id) };
+  const items = [];
+  document.querySelectorAll('#m-items .mat-item').forEach((row, idx) => {
+    const deliver = Number(row.querySelector('[data-k="deliverQty"]').value) || 0;
+    const ret = Number(row.querySelector('[data-k="returnQty"]').value) || 0;
+    const refItem = (S.settings.materials[idx] || S.settings.materials.find(m => m.code === log.items?.[idx]?.code) || {});
+    items.push({
+      code: refItem.code || `IT${idx}`,
+      desc: refItem.desc || '',
+      spec: refItem.spec || '',
+      deliverQty: deliver, returnQty: ret, remark: ''
+    });
+  });
+  Object.assign(log, {
+    jobId: get('jobId'),
+    type: get('type'),
+    date: get('date'),
+    items,
+    issuedByName: get('issuedByName').trim(),
+    issuedByCompany: get('issuedByCompany').trim(),
+    issuedBySignature: getSigDataUrl('issued'),
+    receivedByName: get('receivedByName').trim(),
+    receivedByCompany: get('receivedByCompany').trim(),
+    receivedByTel: get('receivedByTel').trim(),
+    receivedBySignature: getSigDataUrl('received'),
+    photoUrls: get('photoUrls').split('\n').map(s => s.trim()).filter(Boolean),
+    notes: get('notes').trim(),
+  });
+  if (!log.jobId) { toast('Pick a job first', true); return; }
+  if (isNew) S.materialsLogs.push(log); else S.materialsLogs[S.materialsLogs.findIndex(m => m.id === id)] = log;
+  saveState(); closeModal(); renderMaterials(); renderDashboard();
+  toast(isNew ? 'Checklist saved' : 'Checklist updated');
+}
+
+function deleteMaterialsLog(id) {
+  if (!confirm('Delete this checklist?')) return;
+  S.materialsLogs = S.materialsLogs.filter(m => m.id !== id);
+  saveState(); closeModal(); renderMaterials();
+  toast('Checklist deleted');
+}
+
+function printChecklist(data, id) {
+  // Build printable HTML matching the hardcopy form
+  const log = id ? S.materialsLogs.find(m => m.id === id) : data;
+  const j = getJob(log.jobId) || {};
+  const cs = S.settings;
+  const items = log.items;
+  const half1 = items.slice(0, Math.ceil(items.length/2));
+  const half2 = items.slice(Math.ceil(items.length/2));
+  const win = window.open('', '_blank', 'width=900,height=1200');
+  const tableHtml = arr => `<table style="width:100%;border-collapse:collapse;margin-bottom:14px"><thead>
+    <tr><th style="border:1px solid #333;padding:6px;text-align:left">Description</th><th style="border:1px solid #333;padding:6px;width:90px">Deliver Qty</th><th style="border:1px solid #333;padding:6px;width:90px">Return Qty</th><th style="border:1px solid #333;padding:6px">Remark</th></tr>
+    </thead><tbody>${arr.map(i => `<tr><td style="border:1px solid #333;padding:6px"><strong>${escapeHtml(i.desc)}</strong><br><span style="font-size:0.8em">${escapeHtml(i.spec||'')}</span><br><code style="font-size:0.75em">${escapeHtml(i.code)}</code></td><td style="border:1px solid #333;padding:6px;text-align:center;font-size:1.2em">${i.deliverQty||''}</td><td style="border:1px solid #333;padding:6px;text-align:center;font-size:1.2em">${i.returnQty||''}</td><td style="border:1px solid #333;padding:6px">${escapeHtml(i.remark||'')}</td></tr>`).join('')}</tbody></table>`;
+
+  win.document.write(`<!DOCTYPE html><html><head><title>Scaffold Checklist — ${escapeHtml(j.clientName||'')}</title>
+    <style>body{font-family:Arial;color:#000;padding:20px;font-size:13px} h1{font-size:16px;text-align:center;margin:14px 0;text-decoration:underline} .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px} .logo{width:70px;height:70px;background:#f59e0b;color:#000;font-weight:900;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:22px} .info{flex:1;margin-left:14px;font-size:11px} .info h2{font-size:14px;margin-bottom:3px} .meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px} .meta div{border:1px solid #333;padding:6px;display:flex;gap:8px} .meta strong{min-width:110px} .sig-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:16px} .sig-box{border:1px solid #333;padding:10px;min-height:120px} .sig-box img{max-height:60px;display:block;margin-bottom:6px} .sig-box label{font-weight:700;display:block;margin-bottom:4px}</style>
+    </head><body>
+    <div class="head">
+      <div class="logo">HG</div>
+      <div class="info">
+        <h2>${escapeHtml(cs.companyName)}</h2>
+        <div>${escapeHtml(cs.companyAddress)}</div>
+        <div>Tel: ${escapeHtml(cs.companyTel)} · WhatsApp: ${escapeHtml(cs.companyWhatsApp)}</div>
+        <div>Email: ${escapeHtml(cs.companyEmail)}</div>
+        <div>CIDB: ${escapeHtml(cs.cidbNo)}</div>
+      </div>
+    </div>
+    <h1>ALUMINIUM SCAFFOLD MATERIALS CHECKLIST</h1>
+    <div class="meta">
+      <div><strong>Project:</strong> <span>${escapeHtml(j.projectName||'—')}</span></div>
+      <div><strong>Lot:</strong> <span>${escapeHtml(j.lotNumber||'—')}</span></div>
+      <div><strong>Mall / Location:</strong> <span>${escapeHtml(j.location||'—')}</span></div>
+      <div><strong>Requested By:</strong> <span>${escapeHtml(log.receivedByName||'')} / ${escapeHtml(log.receivedByCompany||'')}</span></div>
+      <div><strong>${log.type === 'delivery' ? 'Delivery Date' : 'Return Date'}:</strong> <span>${fmtDate(log.date)}</span></div>
+      <div><strong>PIC:</strong> <span>${escapeHtml(log.issuedByName||j.pic||'')}</span></div>
+    </div>
+    ${tableHtml(half1)}
+    ${tableHtml(half2)}
+    <div class="sig-grid">
+      <div class="sig-box">
+        <label>ISSUED BY</label>
+        ${log.issuedBySignature ? `<img src="${log.issuedBySignature}">` : '<div style="height:60px"></div>'}
+        Name: ${escapeHtml(log.issuedByName||'')}<br>
+        Company: ${escapeHtml(log.issuedByCompany||'')}
+      </div>
+      <div class="sig-box">
+        <label>RECEIVED BY</label>
+        ${log.receivedBySignature ? `<img src="${log.receivedBySignature}">` : '<div style="height:60px"></div>'}
+        Name: ${escapeHtml(log.receivedByName||'')}<br>
+        Company: ${escapeHtml(log.receivedByCompany||'')}<br>
+        Tel: ${escapeHtml(log.receivedByTel||'')}
+      </div>
+      <div class="sig-box">
+        <label>RETURN BY</label>
+        <div style="height:60px"></div>
+        Name: ___________________<br>Company: _______________<br>Tel: ________________
+      </div>
+    </div>
+    <p style="margin-top:18px;font-size:11px">For more information regarding scaffold enquiries or request. Please contact scaffold team:<br>
+    1) Sun — 012-7866653 &nbsp;&nbsp; 2) Aqif — 013-9838879 &nbsp;&nbsp; 3) Meelee — 016-7253677</p>
+    <script>setTimeout(()=>window.print(),500);<\/script>
+    </body></html>`);
+  win.document.close();
+}
+
+// ---------- CLIENTS ----------
+function renderClients() {
+  const q = (document.getElementById('client-search').value || '').toLowerCase();
+  const filtered = S.clients.filter(c => !q || `${c.name} ${c.contactName||''} ${c.contactTel||''}`.toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    document.getElementById('clients-list').innerHTML = `<div class="empty">No clients.</div>`;
+    return;
+  }
+  document.getElementById('clients-list').innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Contact</th><th>Tel</th><th>Jobs</th><th></th></tr></thead>
+    <tbody>${filtered.map(c => {
+      const jobCount = S.jobs.filter(j => j.clientName === c.name).length;
+      return `<tr><td><strong>${escapeHtml(c.name)}</strong></td><td>${escapeHtml(c.type||'')}</td><td>${escapeHtml(c.contactName||'—')}</td><td>${escapeHtml(c.contactTel||'—')}</td><td>${jobCount}</td><td class="right"><button class="btn sm" onclick="openClientForm('${c.id}')">Edit</button></td></tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+function openClientForm(id) {
+  const c = id ? S.clients.find(x => x.id === id) : null;
+  const isEdit = !!c;
+  const d = c || { type: 'External' };
+  modal(isEdit ? 'Edit Client' : 'New Client', `
+    <div class="form-grid">
+      <div class="form-row"><label>Name</label><input type="text" id="c-name" value="${escapeHtml(d.name||'')}"></div>
+      <div class="form-row"><label>Type</label><select id="c-type">
+        <option ${d.type==='External'?'selected':''}>External</option>
+        <option ${d.type==='Internal (HGMR Team)'?'selected':''}>Internal (HGMR Team)</option>
+        <option ${d.type==='Hoarding'?'selected':''}>Hoarding</option>
+      </select></div>
+      <div class="form-row"><label>Contact Name</label><input type="text" id="c-contactName" value="${escapeHtml(d.contactName||'')}"></div>
+      <div class="form-row"><label>Contact Tel</label><input type="tel" id="c-contactTel" value="${escapeHtml(d.contactTel||'')}"></div>
+      <div class="form-row full"><label>Email</label><input type="email" id="c-contactEmail" value="${escapeHtml(d.contactEmail||'')}"></div>
+      <div class="form-row full"><label>Notes</label><textarea id="c-notes" rows="2">${escapeHtml(d.notes||'')}</textarea></div>
+    </div>
+  `, [
+    isEdit ? { label: '🗑 Delete', class: 'danger', onclick: () => { if(confirm('Delete client?')){ S.clients = S.clients.filter(x=>x.id!==id); saveState(); closeModal(); renderClients(); }} } : null,
+    { label: 'Cancel', onclick: closeModal },
+    { label: 'Save', class: 'primary', onclick: () => saveClient(id) },
+  ].filter(Boolean));
+}
+function saveClient(id) {
+  const get = k => document.getElementById('c-'+k).value;
+  const name = get('name').trim(); if (!name) { toast('Name required', true); return; }
+  const obj = { id: id || genId('C'), name, type: get('type'), contactName: get('contactName').trim(), contactTel: get('contactTel').trim(), contactEmail: get('contactEmail').trim(), notes: get('notes').trim() };
+  if (id) S.clients[S.clients.findIndex(x=>x.id===id)] = obj; else S.clients.push(obj);
+  saveState(); closeModal(); renderClients(); toast('Client saved');
+}
+
+// ---------- PICs ----------
+function renderPics() {
+  if (S.pics.length === 0) {
+    document.getElementById('pic-list').innerHTML = `<div class="empty">No PICs yet. Add your scaffold team here.</div>`;
+    return;
+  }
+  document.getElementById('pic-list').innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Role</th><th>Tel</th><th>Active Jobs</th><th></th></tr></thead>
+    <tbody>${S.pics.map(p => {
+      const jobCount = S.jobs.filter(j => j.pic === p.name && ['quoted','erected','active'].includes(j.status)).length;
+      return `<tr><td><strong>${escapeHtml(p.name)}</strong></td><td>${escapeHtml(p.role||'—')}</td><td>${escapeHtml(p.tel||'—')}</td><td>${jobCount}</td><td class="right"><button class="btn sm" onclick="openPicForm('${p.id}')">Edit</button></td></tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+function openPicForm(id) {
+  const p = id ? S.pics.find(x => x.id === id) : null;
+  const isEdit = !!p;
+  const d = p || {};
+  modal(isEdit ? 'Edit PIC' : 'New PIC', `
+    <div class="form-grid">
+      <div class="form-row"><label>Name</label><input type="text" id="p-name" value="${escapeHtml(d.name||'')}"></div>
+      <div class="form-row"><label>Role</label><input type="text" id="p-role" value="${escapeHtml(d.role||'')}" placeholder="e.g. Scaffold Team Lead"></div>
+      <div class="form-row full"><label>Tel</label><input type="tel" id="p-tel" value="${escapeHtml(d.tel||'')}"></div>
+    </div>
+  `, [
+    isEdit ? { label: '🗑 Delete', class: 'danger', onclick: () => { if(confirm('Delete PIC?')){ S.pics = S.pics.filter(x=>x.id!==id); saveState(); closeModal(); renderPics(); }} } : null,
+    { label: 'Cancel', onclick: closeModal },
+    { label: 'Save', class: 'primary', onclick: () => savePic(id) },
+  ].filter(Boolean));
+}
+function savePic(id) {
+  const get = k => document.getElementById('p-'+k).value;
+  const name = get('name').trim(); if (!name) { toast('Name required', true); return; }
+  const obj = { id: id || genId('P'), name, role: get('role').trim(), tel: get('tel').trim() };
+  if (id) S.pics[S.pics.findIndex(x=>x.id===id)] = obj; else S.pics.push(obj);
+  saveState(); closeModal(); renderPics(); toast('PIC saved');
+}
+
+// ---------- SETTINGS ----------
+function renderSettings() {
+  const s = S.settings;
+  ['companyName','companyAddress','companyTel','companyWhatsApp','companyEmail','cidbNo','invoicePrefix','sstRate'].forEach(k => {
+    const el = document.getElementById('set-'+k); if (el) el.value = s[k] || '';
+  });
+  document.getElementById('jobtypes-list').innerHTML = s.jobTypes.map((t,i) => `
+    <div class="gt-item" style="padding:8px 12px">
+      <div class="gt-item-main">${escapeHtml(t)}</div>
+      <div><button class="btn sm danger" onclick="removeJobType(${i})">✕</button></div>
+    </div>
+  `).join('');
+  document.getElementById('material-catalogue-list').innerHTML = s.materials.map((m,i) => `
+    <div class="gt-item">
+      <div class="gt-item-main">
+        <div class="gt-item-title">${escapeHtml(m.desc)}</div>
+        <div class="gt-item-meta">Spec: ${escapeHtml(m.spec||'—')} · Code: ${escapeHtml(m.code)} · Rate/day: ${fmtRM(m.rate)}</div>
+      </div>
+      <div style="display:flex;gap:6px"><button class="btn sm" onclick="openMaterialForm(${i})">Edit</button><button class="btn sm danger" onclick="removeMaterial(${i})">✕</button></div>
+    </div>
+  `).join('');
+}
+function saveSettings() {
+  ['companyName','companyAddress','companyTel','companyWhatsApp','companyEmail','cidbNo','invoicePrefix'].forEach(k => {
+    S.settings[k] = document.getElementById('set-'+k).value;
+  });
+  S.settings.sstRate = Number(document.getElementById('set-sstRate').value) || 0;
+  saveState(); toast('Settings saved');
+}
+function addJobType() {
+  const v = document.getElementById('new-jobtype').value.trim();
+  if (!v) return;
+  S.settings.jobTypes.push(v);
+  document.getElementById('new-jobtype').value = '';
+  saveState(); renderSettings();
+}
+function removeJobType(i) {
+  if (!confirm('Remove this job type?')) return;
+  S.settings.jobTypes.splice(i,1); saveState(); renderSettings();
+}
+function openMaterialForm(idx) {
+  const isEdit = typeof idx === 'number';
+  const d = isEdit ? S.settings.materials[idx] : { code: '', desc: '', spec: '', rate: 0 };
+  modal(isEdit ? 'Edit Material' : 'Add Material', `
+    <div class="form-grid">
+      <div class="form-row"><label>Description</label><input type="text" id="mat-desc" value="${escapeHtml(d.desc||'')}"></div>
+      <div class="form-row"><label>Spec</label><input type="text" id="mat-spec" value="${escapeHtml(d.spec||'')}"></div>
+      <div class="form-row"><label>Code(s)</label><input type="text" id="mat-code" value="${escapeHtml(d.code||'')}"></div>
+      <div class="form-row"><label>Rental rate / day (RM)</label><input type="number" id="mat-rate" value="${d.rate||0}" step="0.01"></div>
+    </div>
+  `, [
+    { label: 'Cancel', onclick: closeModal },
+    { label: 'Save', class: 'primary', onclick: () => {
+      const obj = { code: document.getElementById('mat-code').value.trim(), desc: document.getElementById('mat-desc').value.trim(), spec: document.getElementById('mat-spec').value.trim(), rate: Number(document.getElementById('mat-rate').value)||0 };
+      if (isEdit) S.settings.materials[idx] = obj; else S.settings.materials.push(obj);
+      saveState(); closeModal(); renderSettings(); toast('Material saved');
+    }},
+  ]);
+}
+function removeMaterial(i) {
+  if (!confirm('Remove this material from catalogue? Existing logs keep their data.')) return;
+  S.settings.materials.splice(i,1); saveState(); renderSettings();
+}
+
+// ---------- EXPORTS ----------
+function exportCSV() {
+  const headers = ['No','Client','Client Type','Invoice Date','Invoice No','PIC','Project Name','Location','Lot Number','Scaffold Details','No of Tower','Scaffold Height','Job Type','Value (RM)','Erection Date','Planned Return','Actual Return','Status','Notes'];
+  const rows = S.jobs.map(j => [j.no, j.clientName, j.clientType, j.invoiceDate, j.invoiceNo, j.pic, j.projectName||'', j.location, j.lotNumber, j.scaffoldDetails, j.noOfTower, j.scaffoldHeight, j.jobType, j.value, j.erectionDate, j.plannedReturnDate, j.actualReturnDate||'', j.status, (j.notes||'').replace(/\n/g,' ')]);
+  const csv = [headers, ...rows].map(r => r.map(c => `"${String(c==null?'':c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  download('scaffold-jobs-' + TODAY() + '.csv', csv, 'text/csv');
+}
+function exportAllJSON() {
+  download('scaffold-backup-' + TODAY() + '.json', JSON.stringify(S, null, 2), 'application/json');
+}
+function importJSON(ev) {
+  const f = ev.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      if (!confirm('Replace ALL current data with imported file?')) return;
+      S = JSON.parse(e.target.result);
+      saveState(); renderDashboard(); renderJobs(); renderGreenTag(); renderMaterials(); renderClients(); renderPics(); renderSettings();
+      toast('Data imported');
+    } catch (er) { toast('Import failed: ' + er.message, true); }
+  };
+  r.readAsText(f);
+  ev.target.value = '';
+}
+function download(name, content, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function resetAll() {
+  if (!confirm('⚠ Delete EVERYTHING and reset to defaults? This cannot be undone.')) return;
+  if (!confirm('Really sure? Last chance.')) return;
+  localStorage.removeItem(LS_KEY);
+  S = seedDemo(JSON.parse(JSON.stringify(DEFAULT_STATE)));
+  saveState(); switchTab('dashboard');
+  toast('All data reset');
+}
+
+// ---------- MODAL ----------
+function modal(title, body, buttons, size) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal').className = 'modal' + (size === 'wide' ? ' wide' : '');
+  const foot = document.getElementById('modal-foot'); foot.innerHTML = '';
+  (buttons || []).forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = 'btn ' + (b.class || '');
+    btn.textContent = b.label;
+    btn.addEventListener('click', b.onclick);
+    foot.appendChild(btn);
+  });
+  document.getElementById('modal-bg').classList.add('open');
+  sigPads = {};
+}
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('open');
+}
+document.getElementById('modal-bg').addEventListener('click', e => {
+  if (e.target.id === 'modal-bg') closeModal();
+});
+
+// ---------- BINDINGS ----------
+document.getElementById('job-search').addEventListener('input', () => renderJobs());
+document.getElementById('job-filter-status').addEventListener('change', () => renderJobs());
+document.getElementById('client-search').addEventListener('input', () => renderClients());
+
+// ---------- INIT ----------
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+saveState();
+renderDashboard();
+</script>
+</body>
+</html>

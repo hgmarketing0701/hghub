@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Black Lee — Operations Command Center</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #141926;
+    --surface-2: #1c2335;
+    --border: #2a3245;
+    --text: #ffffff;
+    --text-dim: #a0a8b8;
+    --accent: #f59e0b;
+    --accent-hover: #d97706;
+    --accent-soft: rgba(245, 158, 11, 0.12);
+    --green: #22c55e;
+    --green-soft: rgba(34, 197, 94, 0.15);
+    --blue: #3b82f6;
+    --blue-soft: rgba(59, 130, 246, 0.15);
+    --purple: #a855f7;
+    --purple-soft: rgba(168, 85, 247, 0.15);
+    --grey: #6b7280;
+    --grey-soft: rgba(107, 114, 128, 0.18);
+    --wa: #25D366;
+    --wa-hover: #1ebe5d;
+    --radius: 14px;
+    --shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .container { max-width: 1320px; margin: 0 auto; padding: 32px 24px; }
+
+  /* HEADER */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 20px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+  .brand-block { display: flex; align-items: center; gap: 16px; }
+  .brand-logo {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    color: #0a0e1a;
+    font-weight: 900;
+  }
+  .brand-name {
+    font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .brand-sub {
+    font-size: 0.85rem; color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .meta-pills {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  }
+  .pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .pill strong { color: var(--text); font-weight: 700; }
+
+  /* SECTION */
+  section { margin-bottom: 56px; }
+  .section-head {
+    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;
+  }
+  .section-meta {
+    font-size: 0.85rem; color: var(--text-dim);
+  }
+  .section-sub {
+    color: var(--text-dim); font-size: 0.95rem; max-width: 720px;
+    margin-bottom: 24px;
+  }
+
+  /* THE STACK DIAGRAM */
+  .stack {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    overflow-x: auto;
+  }
+  .stack-layers {
+    display: flex; flex-direction: column; gap: 10px;
+    min-width: 700px;
+  }
+  .stack-layer {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 14px;
+    align-items: center;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .stack-layer .layer-label {
+    font-weight: 700; font-size: 0.95rem;
+    color: var(--accent);
+  }
+  .stack-layer .layer-label .sub {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .stack-layer .layer-items {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .chip {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    color: var(--text);
+  }
+  .chip.live { border-color: var(--green); color: var(--green); }
+  .chip.next { border-color: var(--accent); color: var(--accent); }
+
+  /* TILE GRID */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 18px;
+  }
+  .tile {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    display: flex; flex-direction: column; gap: 12px;
+    transition: transform 0.15s, border-color 0.2s;
+    cursor: pointer;
+  }
+  .tile:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .tile-head {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+  }
+  .tile-icon {
+    width: 44px; height: 44px;
+    background: var(--accent-soft);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+  }
+  .tile-status {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+  }
+  .status-live    { background: var(--green-soft);  color: var(--green);  border-color: var(--green); }
+  .status-next    { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .status-phase2  { background: var(--blue-soft);   color: var(--blue);   border-color: var(--blue); }
+  .status-phase3  { background: var(--purple-soft); color: var(--purple); border-color: var(--purple); }
+
+  .tile-name { font-size: 1.05rem; font-weight: 700; }
+  .tile-desc { font-size: 0.88rem; color: var(--text-dim); flex: 1; }
+  .tile-action {
+    margin-top: auto;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 600;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 600; font-size: 0.95rem;
+    text-decoration: none;
+    border: none; cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.1s, background 0.2s;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--accent); color: #0a0e1a; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-ghost {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface-2); border-color: var(--accent); }
+  .btn-wa { background: var(--wa); color: white; }
+  .btn-wa:hover { background: var(--wa-hover); }
+  .btn-sm { padding: 7px 12px; font-size: 0.82rem; }
+
+  /* MODAL */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: flex-start; justify-content: center;
+    padding: 40px 20px;
+    z-index: 1000;
+    overflow-y: auto;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 30px;
+    width: 100%; max-width: 780px;
+    box-shadow: var(--shadow);
+  }
+  .modal-head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-head h2 {
+    font-size: 1.35rem;
+    letter-spacing: -0.02em;
+  }
+  .modal-head .modal-sub {
+    font-size: 0.88rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .x-btn {
+    background: transparent; border: none; color: var(--text-dim);
+    font-size: 1.5rem; cursor: pointer; line-height: 1; padding: 0;
+  }
+  .x-btn:hover { color: var(--text); }
+
+  .playbook { font-size: 0.95rem; }
+  .playbook h3 {
+    font-size: 0.9rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 18px 0 8px;
+  }
+  .playbook ul { padding-left: 22px; }
+  .playbook li { padding: 3px 0; color: var(--text); }
+  .playbook li strong { color: var(--text); }
+  .playbook .callout {
+    background: var(--bg);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    margin: 14px 0;
+    border-radius: 4px;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+  }
+  .playbook code {
+    background: var(--bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', Consolas, monospace;
+    font-size: 0.85rem;
+    color: var(--accent);
+  }
+
+  /* QUOTATION BUILDER */
+  .form-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  .form-grid .full { grid-column: 1 / -1; }
+  @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+  .form-field label {
+    display: block;
+    font-weight: 600; font-size: 0.82rem;
+    margin-bottom: 6px;
+  }
+  .form-field input,
+  .form-field textarea,
+  .form-field select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    font-family: inherit;
+  }
+  .form-field input:focus, .form-field textarea:focus, .form-field select:focus {
+    outline: none; border-color: var(--accent);
+  }
+
+  /* LINE ITEMS */
+  .line-items { margin: 16px 0; }
+  .line-row {
+    display: grid;
+    grid-template-columns: 2fr 0.7fr 0.7fr 1fr 1fr 40px;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+  .line-row input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 10px;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-family: inherit;
+  }
+  .line-row input:focus { outline: none; border-color: var(--accent); }
+  .line-row .amt {
+    background: var(--surface-2);
+    color: var(--accent);
+    font-weight: 700;
+    text-align: right;
+    padding: 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.88rem;
+  }
+  .line-row button.remove {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 8px;
+    font-size: 0.9rem;
+  }
+  .line-row button.remove:hover { color: #ef4444; border-color: #ef4444; }
+  .line-head {
+    display: grid;
+    grid-template-columns: 2fr 0.7fr 0.7fr 1fr 1fr 40px;
+    gap: 8px;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-bottom: 8px;
+    padding: 0 4px;
+  }
+  @media (max-width: 720px) {
+    .line-row, .line-head { grid-template-columns: 1fr; }
+    .line-head { display: none; }
+    .line-row input, .line-row .amt { width: 100%; }
+  }
+
+  .totals {
+    margin-top: 18px;
+    padding: 18px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .total-row {
+    display: flex; justify-content: space-between;
+    padding: 5px 0;
+    font-size: 0.95rem;
+  }
+  .total-row.grand {
+    border-top: 1px solid var(--border);
+    margin-top: 8px; padding-top: 12px;
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+  .total-row.grand .v { color: var(--accent); }
+  .switch-row {
+    display: flex; align-items: center; gap: 8px;
+    margin: 10px 0;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+  }
+  .switch-row input { accent-color: var(--accent); }
+
+  .preview-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+    font-family: 'Courier New', Consolas, monospace;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    max-height: 50vh;
+    overflow-y: auto;
+    margin-top: 14px;
+  }
+  .modal-foot {
+    display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  /* ROADMAP */
+  .roadmap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+  }
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    border-top: 4px solid var(--accent);
+  }
+  .phase.p2 { border-top-color: var(--blue); }
+  .phase.p3 { border-top-color: var(--purple); }
+  .phase-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .phase.p2 .phase-label { color: var(--blue); }
+  .phase.p3 .phase-label { color: var(--purple); }
+  .phase-name {
+    font-size: 1.2rem; font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .phase-time {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 14px;
+  }
+  .phase ul { padding-left: 22px; }
+  .phase li {
+    padding: 4px 0;
+    font-size: 0.92rem;
+  }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--green);
+    color: #06120a;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-weight: 700;
+    box-shadow: 0 10px 30px rgba(34, 197, 94, 0.4);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 2000;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    font-size: 0.8rem; color: var(--text-dim);
+    margin-bottom: 24px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="topbar">
+    <div class="brand-block">
+      <div class="brand-logo">BL</div>
+      <div>
+        <div class="brand-name">Operations Command Center</div>
+        <div class="brand-sub">Black Lee · Contractor Support · 14-module AI system</div>
+      </div>
+    </div>
+    <div class="meta-pills">
+      <div class="pill" id="dateNow">—</div>
+      <div class="pill"><strong>40</strong> staff</div>
+      <div class="pill"><strong>6</strong> service lines</div>
+      <div class="pill"><strong>4</strong> modules live</div>
+    </div>
+  </div>
+
+  <!-- THE STACK -->
+  <section>
+    <div class="section-head">
+      <div class="section-title">🧱 The Stack</div>
+      <div class="section-meta">How 13 pieces become 1 system</div>
+    </div>
+    <p class="section-sub">5 layers. Each layer reuses the layer below it. Skip a layer and the whole thing wobbles.</p>
+    <div class="stack">
+      <div class="stack-layers">
+        <div class="stack-layer">
+          <div class="layer-label">🧠 The Brain<span class="sub">Layer 1 · Project Instructions</span></div>
+          <div class="layer-items">
+            <span class="chip live">My AI Brain (CLAUDE.md)</span>
+            <span class="chip">Your voice</span>
+            <span class="chip">Your services</span>
+            <span class="chip">Your tools</span>
+          </div>
+        </div>
+        <div class="stack-layer">
+          <div class="layer-label">⚡ Commands<span class="sub">Layer 2 · Skills</span></div>
+          <div class="layer-items">
+            <span class="chip live">/my-quote</span>
+            <span class="chip next">/my-tracking</span>
+            <span class="chip next">/my-linkedin</span>
+            <span class="chip">/my-onboard</span>
+            <span class="chip">/my-followup</span>
+          </div>
+        </div>
+        <div class="stack-layer">
+          <div class="layer-label">🦾 Arms<span class="sub">Layer 3 · MCP Tools</span></div>
+          <div class="layer-items">
+            <span class="chip">WATI</span>
+            <span class="chip">Odoo</span>
+            <span class="chip">Google Sheets</span>
+            <span class="chip">Gmail</span>
+            <span class="chip">LinkedIn</span>
+            <span class="chip">ClickUp</span>
+            <span class="chip">Wix</span>
+          </div>
+        </div>
+        <div class="stack-layer">
+          <div class="layer-label">👥 The Team<span class="sub">Layer 4 · Parallel Agents</span></div>
+          <div class="layer-items">
+            <span class="chip">Quote Agent</span>
+            <span class="chip">Tracking Agent</span>
+            <span class="chip">Content Agent</span>
+            <span class="chip">Follow-Up Agent</span>
+          </div>
+        </div>
+        <div class="stack-layer">
+          <div class="layer-label">🏗️ The Build<span class="sub">Layer 5 · Tools & Tools</span></div>
+          <div class="layer-items">
+            <span class="chip live">Public Hub</span>
+            <span class="chip live">Site Tracking</span>
+            <span class="chip live">Quotation Builder</span>
+            <span class="chip next">Client Dashboard</span>
+            <span class="chip">+ 9 more</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULES -->
+  <section>
+    <div class="section-head">
+      <div class="section-title">📦 17 Modules</div>
+      <div class="section-meta">Click any tile to view its playbook or open the tool</div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-dot" style="background: var(--green);"></span> LIVE — working tool you can use today</div>
+      <div class="legend-item"><span class="legend-dot" style="background: var(--accent);"></span> NEXT — build immediately, playbook ready</div>
+      <div class="legend-item"><span class="legend-dot" style="background: var(--blue);"></span> PHASE 2 — sales engine</div>
+      <div class="legend-item"><span class="legend-dot" style="background: var(--purple);"></span> PHASE 3 — growth</div>
+    </div>
+
+    <div class="tiles">
+
+      <!-- 1. SITE TRACKING -->
+      <div class="tile" onclick="window.open('dashboard.html','_blank')">
+        <div class="tile-head">
+          <div class="tile-icon">📊</div>
+          <span class="tile-status status-live">● Live</span>
+        </div>
+        <div class="tile-name">1. Daily Site Tracking</div>
+        <div class="tile-desc">Replace the manual Google Sheets entry. Add sites, update progress, generate daily report — ready for WhatsApp.</div>
+        <div class="tile-action">Open dashboard.html <span>→</span></div>
+      </div>
+
+      <!-- 2. QUOTATION BUILDER -->
+      <div class="tile" onclick="openModal('mQuote')">
+        <div class="tile-head">
+          <div class="tile-icon">📝</div>
+          <span class="tile-status status-live">● Live</span>
+        </div>
+        <div class="tile-name">2. Quotation Builder</div>
+        <div class="tile-desc">Your /my-quote skill as a web tool. Add line items, auto-calc SST + total, output a ready-to-send quotation.</div>
+        <div class="tile-action">Open tool <span>→</span></div>
+      </div>
+
+      <!-- 3. PUBLIC HUB -->
+      <div class="tile" onclick="window.open('index.html','_blank')">
+        <div class="tile-head">
+          <div class="tile-icon">🌐</div>
+          <span class="tile-status status-live">● Live</span>
+        </div>
+        <div class="tile-name">3. Contractor Support Hub</div>
+        <div class="tile-desc">Your client-facing site. Hero, services, quote form that routes to your WhatsApp. Mobile-responsive.</div>
+        <div class="tile-action">Open index.html <span>→</span></div>
+      </div>
+
+      <!-- 4. FULL SALES FUNNEL -->
+      <div class="tile" onclick="openModal('mFunnel')">
+        <div class="tile-head">
+          <div class="tile-icon">🎯</div>
+          <span class="tile-status status-phase2">Phase 2</span>
+        </div>
+        <div class="tile-name">4. Full Sales Funnel</div>
+        <div class="tile-desc">Hub → thank-you page → post-quote nurture sequence → close. Built on top of the Hub you already have.</div>
+        <div class="tile-action">View playbook <span>→</span></div>
+      </div>
+
+      <!-- 5. ONBOARDING SYSTEM -->
+      <div class="tile" onclick="openModal('mOnboard')">
+        <div class="tile-head">
+          <div class="tile-icon">🤝</div>
+          <span class="tile-status status-next">Next</span>
+        </div>
+        <div class="tile-name">5. Onboarding System</div>
+        <div class="tile-desc">New contractor client welcome + project kickoff checklist + WhatsApp group setup brief. Cuts your first-week chaos.</div>
+        <div class="tile-action">View playbook <span>→</span></div>
+      </div>
+
+      <!-- 6. LEAD MAGNET -->
+      <div class="tile" onclick="openModal('mLead')">
+        <div class="tile-head">
+          <div class="tile-icon">🧲</div>
+          <span class="tile-status status-phase2">Phase 2</span>
+        </div>
+        <div class="tile-name">6. Lead Magnet Builder</div>
+        <div class="tile-desc">"The Contractor's Hoarding Cost Calculator" PDF + delivery page. Turns Google Ads clicks into qualified leads.</div>
+        <div class="tile-action">View playbook <span>→</span></div>
+      </div>
+
+      <!-- 7. OFFER BUILDER -->
+      <div class="tile" onclick="openModal('mOffer')">
+        <div class="tile-head">
+          <div class="tile-icon">💼</div>
+          <span class="tile-status status-phase2">Phase 2</span>
+        </div>
+        <div class="tile-name">7. Offer Builder</div>
+        <div class="tile-desc">Bundled service packages (Hoarding+Visual, Scaffold+Storage, Full Fit-Out) with anchor pricing & guarantees.</div>
+        <div class="tile-action">View playbook <span>→</span></div>
+      </div>
+
+      <!-- 8. AD CAMPAIGN KIT -->
+      <div class="tile" onclick="openModal('mAds')">
+        <div class="tile-head">
+          <div class="tile-icon">📢</div>
+          <span class="tile-status status-phase2">Phase 2</span>
+        </div>
+        <div class="tile-name">8. Ad Campaign Kit</div>
+        <div class="tile-desc">3 Google Ads variations targeting developers, mall PMs, office reno firms. Budget framework + landing page logic.</div>
+        <div class="tile-action">View playbook <span>→</span></div>
+      </div>
+
+      <!-- 9. CLIENT DASHBOARD -->
+      <div class="tile" onclick="openModal('mClient')">
+        <div class="tile-head">
+          <div class="tile-icon">📈</div>
+          <span class="tile-status status-next">Next</span>
+        </div>
+        <div class="tile-name">9. Client Dashboard</div>
+        <div class="tile-desc">Per-client view: active sites, milestones, AR aging, outstanding actions. Your "morning brief" view.</div>
+        <div class="tile-action">View playbook <span>→</span></div>
+      </div>
+
+      <!-- 10. FOLLOW-UP ENGINE -->
+      <div class="tile" onclick="openModal('mFollow')">
+        <div class="tile-head">
+          <div class="tile-icon">📲</div>
+          <span class="tile-status status-next">Next</span>
+        </div>
+        <div class="tile-name">10. Follow-Up Engine</div>
+        <div class="tile-desc">7-touch sequence library for cold leads, warm quotes, ghosted contractors. Auto-triggered via Odoo + WATI.</div>
+        <div class="tile-action">View playbook <span>→</span></div>
+      </div>
+
+      <!-- 11. OBJECTION HANDLER -->
+      <div class="tile" onclick="openModal('mObj')">
+        <div class="tile-head">
+          <div class="tile-icon">🛡️</div>
+          <span class="tile-status status-phase3">Phase 3</span>
+        </div>
+        <div class="tile-name">11. Objection Handler</div>
+        <div class="tile-desc">Your top 5 contractor objections — pricing, "already have a guy", reliability concerns — fully scripted.</div>
+        <div class="tile-action">View playbook <span>→</span></div>
+      </div>
+
+      <!-- 12. CONTENT CALENDAR -->
+      <div class="tile" onclick="openModal('mContent')">
+        <div class="tile-head">
+          <div class="tile-icon">📅</div>
+          <span class="tile-status status-phase3">Phase 3</span>
+        </div>
+        <div class="tile-name">12. Content Calendar</div>
+        <div class="tile-desc">30 days of LinkedIn "daily job done" posts mapped to your service lines. Auto-pull from your tracking dashboard.</div>
+        <div class="tile-action">View playbook <span>→</span></div>
+      </div>
+
+      <!-- 13. HIRING SYSTEM -->
+      <div class="tile" onclick="openModal('mHire')">
+        <div class="tile-head">
+          <div class="tile-icon">👷</div>
+          <span class="tile-status status-phase3">Phase 3</span>
+        </div>
+        <div class="tile-name">13. Hiring System</div>
+        <div class="tile-desc">Job post + WhatsApp application filter + first interview script. 40 staff = real turnover, need a system.</div>
+        <div class="tile-action">View playbook <span>→</span></div>
+      </div>
+
+      <!-- 14. JOB COMPLETION REPORT -->
+      <div class="tile" onclick="window.open('job-report.html','_blank')">
+        <div class="tile-head">
+          <div class="tile-icon">📸</div>
+          <span class="tile-status status-live">● Live</span>
+        </div>
+        <div class="tile-name">14. Job Completion Report</div>
+        <div class="tile-desc">Upload tilted site photos → auto-straighten → fill job details → push PDF + photos to a lot-numbered Drive folder + log to Sheet.</div>
+        <div class="tile-action">Open job-report.html <span>→</span></div>
+      </div>
+
+      <!-- 15. INVENTORY & PURCHASING (LOCAL PROTOTYPE) -->
+      <div class="tile" onclick="window.open('inventory.html','_blank')">
+        <div class="tile-head">
+          <div class="tile-icon">📦</div>
+          <span class="tile-status status-live">● Live</span>
+        </div>
+        <div class="tile-name">15. Inventory (Local sandbox)</div>
+        <div class="tile-desc">Single-user prototype with photos. Use for personal testing — data is in your browser only, not shared with staff.</div>
+        <div class="tile-action">Open inventory.html <span>→</span></div>
+      </div>
+
+      <!-- 16. INVENTORY & PURCHASING (CLOUD — STAFF VERSION) -->
+      <div class="tile" onclick="openCloudInventory()">
+        <div class="tile-head">
+          <div class="tile-icon">☁️</div>
+          <span class="tile-status status-next">Next</span>
+        </div>
+        <div class="tile-name">16. Inventory (Cloud — staff)</div>
+        <div class="tile-desc">Google Apps Script + Sheets backend. @hggroup.com.my login. Auto-audit on every save. Deploy using apps-script/DEPLOY.md, then paste the URL into this tile.</div>
+        <div class="tile-action">Open cloud app <span>→</span></div>
+      </div>
+
+      <!-- 17. WORKERS DOCUMENTATION (CLOUD) -->
+      <div class="tile" onclick="openWorkersDocs()">
+        <div class="tile-head">
+          <div class="tile-icon">🪪</div>
+          <span class="tile-status status-next">Next</span>
+        </div>
+        <div class="tile-name">17. Workers Docs & Work Permits</div>
+        <div class="tile-desc">Every worker's passport, IC, visa, mall EHS card, CIDB green card, competency & driving licences in one place. Stores every issued mall / building work permit (applied by us or passed over by client) with worker linkage — site team retrieves the PDF onsite. Form Library tab keeps blank permit forms from each mall for easy retrieval when applying. Expiry reminders for both. Deploy using apps-script-workers/DEPLOY.md, then paste the URL into this tile.</div>
+        <div class="tile-action">Open cloud app <span>→</span></div>
+      </div>
+
+      <!-- 18. DAILY SCHEDULE & DISPATCH (CLOUD) -->
+      <div class="tile" onclick="openDispatch()">
+        <div class="tile-head">
+          <div class="tile-icon">🌙</div>
+          <span class="tile-status status-next">Next</span>
+        </div>
+        <div class="tile-name">18. Daily Schedule &amp; Dispatch</div>
+        <div class="tile-desc">Replaces Eason's manual Excel. Readiness board checks every job's gates (lot, sketch, quote, permit, visual, fab) and won't go green until ready — with a permit early-warning so jobs don't get postponed. Dispatch board lets Calvin load ready jobs into night teams (driver/SV, workers, lorry, max 5 jobs) and one-click generates the WhatsApp message for the HG Operation group. @hggroup.com.my login, full audit trail. Deploy using apps-script-dispatch/DEPLOY.md, then paste the URL into this tile.</div>
+        <div class="tile-action">Open cloud app <span>→</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section>
+    <div class="section-head">
+      <div class="section-title">🗺️ Build Order</div>
+      <div class="section-meta">Don't try to build all 13 at once</div>
+    </div>
+    <p class="section-sub">Phase 1 = kill your biggest manual pain. Phase 2 = turn the lights on for new revenue. Phase 3 = scale what's working.</p>
+    <div class="roadmap">
+      <div class="phase">
+        <div class="phase-label">Phase 1 · Now → 30 days</div>
+        <div class="phase-name">Kill Manual Pain</div>
+        <div class="phase-time">~30 days · stop the bleed</div>
+        <ul>
+          <li><strong>1. Site Tracking ✅</strong> — live</li>
+          <li><strong>2. Quotation Builder ✅</strong> — live</li>
+          <li><strong>3. Public Hub ✅</strong> — live</li>
+          <li><strong>14. Job Completion Report ✅</strong> — live</li>
+          <li><strong>15. Inventory & Purchasing ✅</strong> — live</li>
+          <li><strong>17. Workers Documentation</strong> — deploy via apps-script-workers/DEPLOY.md</li>
+          <li><strong>18. Daily Schedule &amp; Dispatch</strong> — deploy via apps-script-dispatch/DEPLOY.md</li>
+          <li>5. Onboarding System</li>
+          <li>9. Client Dashboard</li>
+          <li>10. Follow-Up Engine</li>
+        </ul>
+      </div>
+      <div class="phase p2">
+        <div class="phase-label">Phase 2 · 30–60 days</div>
+        <div class="phase-name">Sales Engine</div>
+        <div class="phase-time">~30 days · turn on inbound</div>
+        <ul>
+          <li>4. Full Sales Funnel</li>
+          <li>6. Lead Magnet Builder</li>
+          <li>7. Offer Builder</li>
+          <li>8. Ad Campaign Kit (your existing Google Ads on Wix)</li>
+        </ul>
+      </div>
+      <div class="phase p3">
+        <div class="phase-label">Phase 3 · 60–90 days</div>
+        <div class="phase-name">Scale & Defend</div>
+        <div class="phase-time">~30 days · grow the team</div>
+        <ul>
+          <li>11. Objection Handler</li>
+          <li>12. Content Calendar (powers your LinkedIn)</li>
+          <li>13. Hiring System (40 staff = ongoing pipeline)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ─────────────── QUOTATION BUILDER MODAL ─────────────── -->
+<div class="modal-bg" id="mQuote">
+  <div class="modal" style="max-width: 880px;">
+    <div class="modal-head">
+      <div>
+        <h2>📝 Quotation Builder</h2>
+        <div class="modal-sub">Your /my-quote skill, as a working tool. Any of your 40 staff can use this — no Claude account needed.</div>
+      </div>
+      <button class="x-btn" onclick="closeModal('mQuote')">✕</button>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="qClient">Client name</label>
+        <input type="text" id="qClient" placeholder="e.g. ABC Sdn Bhd" />
+      </div>
+      <div class="form-field">
+        <label for="qRef">Quote ref</label>
+        <input type="text" id="qRef" placeholder="BLAI/Q/2026/001" />
+      </div>
+      <div class="form-field">
+        <label for="qTerms">Payment terms</label>
+        <input type="text" id="qTerms" value="Full payment upon confirmation" />
+      </div>
+      <div class="form-field">
+        <label for="qValidity">Validity (days)</label>
+        <input type="number" id="qValidity" value="30" />
+      </div>
+    </div>
+
+    <h3 style="margin: 20px 0 10px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent);">Line Items</h3>
+    <div class="line-head">
+      <div>Description</div>
+      <div>Unit</div>
+      <div>Qty</div>
+      <div>Rate (RM)</div>
+      <div>Amount</div>
+      <div></div>
+    </div>
+    <div class="line-items" id="lineItems"></div>
+    <button class="btn btn-ghost btn-sm" onclick="addLine()">+ Add Line</button>
+
+    <div class="switch-row">
+      <input type="checkbox" id="qSst" checked onchange="recalc()" />
+      <label for="qSst">Include SST 6% (uncheck if not SST-registered)</label>
+    </div>
+
+    <div class="totals">
+      <div class="total-row"><span>Subtotal</span><span class="v" id="tSubtotal">RM 0.00</span></div>
+      <div class="total-row"><span>SST 6%</span><span class="v" id="tSst">RM 0.00</span></div>
+      <div class="total-row grand"><span>Total</span><span class="v" id="tTotal">RM 0.00</span></div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('mQuote')">Close</button>
+      <button class="btn btn-primary" onclick="generateQuote()">Generate Quotation →</button>
+    </div>
+
+    <div id="quotePreviewWrap" style="display: none;">
+      <h3 style="margin: 24px 0 10px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent);">Output</h3>
+      <div class="preview-box" id="quotePreview">—</div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="copyQuote()">📋 Copy</button>
+        <button class="btn btn-wa" onclick="waQuote()">💬 Send via WhatsApp</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────── PLAYBOOK MODALS ─────────────── -->
+
+<div class="modal-bg" id="mFunnel">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2>🎯 Full Sales Funnel</h2><div class="modal-sub">Build on top of your existing Hub. ~3-4 days work.</div></div>
+      <button class="x-btn" onclick="closeModal('mFunnel')">✕</button>
+    </div>
+    <div class="playbook">
+      <h3>The Flow</h3>
+      <ul>
+        <li><strong>Step 1 — Hub:</strong> contractor lands from Google Ads or LinkedIn → fills quote form → routes to your WhatsApp ✅ (already built)</li>
+        <li><strong>Step 2 — Auto-acknowledge:</strong> WATI auto-reply within 30 sec ("Got it Black will revert in 4h")</li>
+        <li><strong>Step 3 — Quote sent:</strong> via Quotation Builder → Gmail PDF → Odoo record</li>
+        <li><strong>Step 4 — Day 3, 5, 7, 14 follow-ups:</strong> see Module 10</li>
+        <li><strong>Step 5 — Win:</strong> trigger Onboarding (Module 5)</li>
+        <li><strong>Step 5b — Lose:</strong> drop into nurture list, retarget in 90 days</li>
+      </ul>
+      <div class="callout">⚡ Quick win: Steps 1-3 you can do this week. Step 4 needs MCP. Step 5 needs CRM workflow in Odoo.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="mOnboard">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2>🤝 Onboarding System</h2><div class="modal-sub">New client → mobilisation in 3 days, without the chaos.</div></div>
+      <button class="x-btn" onclick="closeModal('mOnboard')">✕</button>
+    </div>
+    <div class="playbook">
+      <h3>Day 0 (Quote Confirmed)</h3>
+      <ul>
+        <li>Welcome WhatsApp: timeline, your PIC, what we need from them</li>
+        <li>Create WhatsApp group: contractor PM + your project coordinator + you</li>
+        <li>Odoo: create project, assign team, mobilisation date</li>
+      </ul>
+      <h3>Day 1</h3>
+      <ul>
+        <li>Site walk: photos + scope confirm</li>
+        <li>Drop materials list to your storage team</li>
+      </ul>
+      <h3>Day 3 (Mobilisation)</h3>
+      <ul>
+        <li>Crew on site by 8am</li>
+        <li>First daily report via Site Tracking Dashboard (Module 1)</li>
+      </ul>
+      <div class="callout">⚡ Skill: build <code>/my-onboard</code> using the Skill Builder gift from Lesson 2. Takes 5 min.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="mLead">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2>🧲 Lead Magnet Builder</h2><div class="modal-sub">Turn Google Ads clicks into qualified contractor leads.</div></div>
+      <button class="x-btn" onclick="closeModal('mLead')">✕</button>
+    </div>
+    <div class="playbook">
+      <h3>The Magnet</h3>
+      <ul>
+        <li><strong>"The Contractor's Hoarding Cost Calculator"</strong> — interactive PDF or web tool</li>
+        <li>Inputs: site perimeter, indoor/outdoor, brand visuals yes/no, duration</li>
+        <li>Output: indicative cost range + 5 cost-saving tips</li>
+        <li>Delivery: email + WhatsApp opt-in</li>
+      </ul>
+      <h3>Why It Works</h3>
+      <ul>
+        <li>Contractor PMs Google "hoarding cost Malaysia" every week — you intercept that search</li>
+        <li>By giving them the cost upfront, you filter price-shoppers vs serious buyers</li>
+        <li>They're now on your list — drop into Follow-Up Engine (Module 10)</li>
+      </ul>
+      <div class="callout">⚡ Could be a 2nd HTML page. ~1 day to build a v1.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="mOffer">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2>💼 Offer Builder</h2><div class="modal-sub">Stop quoting 6 vendors worth of stuff individually. Bundle it.</div></div>
+      <button class="x-btn" onclick="closeModal('mOffer')">✕</button>
+    </div>
+    <div class="playbook">
+      <h3>3 Anchor Packages</h3>
+      <ul>
+        <li><strong>Site Starter</strong> — Hoarding + Visual Tarpaulin + Sliding Door. Mobilise in 3 days. Fixed price tiers (S/M/L).</li>
+        <li><strong>Site Runner</strong> — Site Starter + Scaffold + Temp Storage. Monthly hire model.</li>
+        <li><strong>Full Fit-Out</strong> — End-to-end: hoarding to handover. Phased payment. Project-managed.</li>
+      </ul>
+      <h3>Why Bundles Beat À-La-Carte</h3>
+      <ul>
+        <li>Bigger ticket size per client</li>
+        <li>Fewer quotation revisions (your team loves you)</li>
+        <li>"One quote, one team" — directly answers your Hub's value prop</li>
+      </ul>
+      <div class="callout">⚡ Use Claude in chat to write each package — services, deliverables, anchor pricing, guarantee. 1 prompt = 3 polished packages.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="mAds">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2>📢 Ad Campaign Kit</h2><div class="modal-sub">You already pay for Google Ads on Wix. Make it earn.</div></div>
+      <button class="x-btn" onclick="closeModal('mAds')">✕</button>
+    </div>
+    <div class="playbook">
+      <h3>3 Campaign Variants</h3>
+      <ul>
+        <li><strong>Variant A — Developers:</strong> Keywords "hoarding contractor KL", "site fencing Malaysia". Lands on Hub.</li>
+        <li><strong>Variant B — Mall PMs:</strong> "mall fit-out contractor", "retail reinstatement". Lands on Lead Magnet (cost calculator).</li>
+        <li><strong>Variant C — Office Reno:</strong> "office partition contractor", "fit-out KL". Lands on Offer Builder (Full Fit-Out package).</li>
+      </ul>
+      <h3>Budget Frame</h3>
+      <ul>
+        <li>Start: RM 30/day per variant = RM 90/day total</li>
+        <li>Kill any variant under 2% CTR after 14 days</li>
+        <li>Double down on the winner</li>
+      </ul>
+      <div class="callout">⚡ Already on Wix Google Ads — just need to point ads at the right page + load these ad copies.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="mClient">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2>📈 Client Dashboard</h2><div class="modal-sub">Your morning brief, one screen.</div></div>
+      <button class="x-btn" onclick="closeModal('mClient')">✕</button>
+    </div>
+    <div class="playbook">
+      <h3>What It Shows</h3>
+      <ul>
+        <li>Active sites with % progress (pull from Site Tracking)</li>
+        <li>AR aging by client (pull from Odoo)</li>
+        <li>Outstanding quotations + days since sent</li>
+        <li>Unread WhatsApp threads on client groups (pull from WATI)</li>
+        <li>Top 3 actions for today (auto-prioritised)</li>
+      </ul>
+      <h3>Why It's Next</h3>
+      <ul>
+        <li>It's the "Monday Morning Autopilot" from Lesson 3 — now as a visual page instead of a chat output</li>
+        <li>Same UI pattern as Site Tracking Dashboard — fastest to build</li>
+      </ul>
+      <div class="callout">⚡ Needs MCP to connect Odoo + WATI. Without MCP, this is sample data only.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="mFollow">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2>📲 Follow-Up Engine</h2><div class="modal-sub">Stop chasing manually. Set the sequence, walk away.</div></div>
+      <button class="x-btn" onclick="closeModal('mFollow')">✕</button>
+    </div>
+    <div class="playbook">
+      <h3>7-Touch Sequence (built in Lesson 4)</h3>
+      <ul>
+        <li><strong>Day 1:</strong> Quote sent confirmation</li>
+        <li><strong>Day 3:</strong> Soft nudge — "any item to clarify?"</li>
+        <li><strong>Day 5:</strong> Momentum check — slot scarcity</li>
+        <li><strong>Day 7:</strong> Decision ask — 3 options (confirm/hold/park)</li>
+        <li><strong>Day 14:</strong> Clean close</li>
+        <li><strong>Day 60:</strong> Re-engage — "any new project?"</li>
+        <li><strong>Day 120:</strong> Final re-engage — share recent case study</li>
+      </ul>
+      <div class="callout">⚡ Already drafted in Lesson 4 Agent 3. Now wire to WATI for auto-send.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="mObj">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2>🛡️ Objection Handler</h2><div class="modal-sub">The 5 you hear every week, fully scripted.</div></div>
+      <button class="x-btn" onclick="closeModal('mObj')">✕</button>
+    </div>
+    <div class="playbook">
+      <h3>The Big 5</h3>
+      <ul>
+        <li><strong>"Too expensive"</strong> → reframe: you're not paying for hoarding, you're paying to avoid site delay</li>
+        <li><strong>"We already have a guy"</strong> → ask: "what does he handle when 3 jobs overlap?" — your 40 staff = surge capacity</li>
+        <li><strong>"Send quote first, we'll discuss later"</strong> → counter: 15-min call before quote = 50% better fit</li>
+        <li><strong>"How do we know you'll deliver?"</strong> → black-and-white SOP + photo evidence + named PIC</li>
+        <li><strong>"Can you match [competitor] price?"</strong> → not on price, but show what they're NOT including</li>
+      </ul>
+      <div class="callout">⚡ Train your team on these. Build them into WATI quick-reply templates.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="mContent">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2>📅 Content Calendar</h2><div class="modal-sub">30 days, auto-fed by your site tracking data.</div></div>
+      <button class="x-btn" onclick="closeModal('mContent')">✕</button>
+    </div>
+    <div class="playbook">
+      <h3>Weekly Mix</h3>
+      <ul>
+        <li><strong>Monday:</strong> Job-done post from a Friday completion</li>
+        <li><strong>Tuesday:</strong> Lesson learned / war story</li>
+        <li><strong>Wednesday:</strong> Behind-the-scenes (crew, process)</li>
+        <li><strong>Thursday:</strong> Service spotlight (one of your 6 lines)</li>
+        <li><strong>Friday:</strong> Week recap / numbers</li>
+      </ul>
+      <h3>Auto-Feed Logic</h3>
+      <ul>
+        <li>Site Tracking marks site COMPLETED → triggers content draft</li>
+        <li>Claude pulls site name (anonymised) + photos + your `/my-linkedin` skill</li>
+        <li>Output → review queue → you approve → schedule</li>
+      </ul>
+      <div class="callout">⚡ Plugs directly into Module 1. Your daily personal record becomes inbound marketing fuel.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="mHire">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2>👷 Hiring System</h2><div class="modal-sub">40 staff = constant turnover. Need a pipeline, not a panic.</div></div>
+      <button class="x-btn" onclick="closeModal('mHire')">✕</button>
+    </div>
+    <div class="playbook">
+      <h3>The Pipeline</h3>
+      <ul>
+        <li><strong>Job post</strong> — one template per role (site crew / supervisor / coordinator). Distributed via LinkedIn + WhatsApp networks.</li>
+        <li><strong>WhatsApp application filter</strong> — WATI bot asks 5 qualifying questions, scores answers, routes A-grade to your HR</li>
+        <li><strong>First interview script</strong> — 7 questions, decision framework: hire / hold / pass</li>
+        <li><strong>Onboarding loop</strong> — Day 1 WhatsApp pack, Week 1 check-ins, Day 30 review</li>
+      </ul>
+      <div class="callout">⚡ Same skill pattern as <code>/my-quote</code>. Build <code>/my-jobpost</code> with the Skill Builder gift.</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Done.</div>
+
+<script>
+  /* ─── DATE ─── */
+  document.getElementById('dateNow').textContent =
+    new Date().toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
+
+  /* ─── MODALS ─── */
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-bg').forEach(bg => {
+    bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+  });
+
+  /* ─── CLOUD INVENTORY URL ─── */
+  // First click prompts for the deployed Apps Script Web App URL, then remembers it.
+  // To change later: clear localStorage key `bl_cloud_inventory_url` or edit it via DevTools.
+  function openCloudInventory() {
+    let url = localStorage.getItem('bl_cloud_inventory_url');
+    if (!url) {
+      url = prompt(
+        'Paste the Google Apps Script Web App URL for the Cloud Inventory app.\n\n' +
+        'Get this from Apps Script → Deploy → New deployment (see apps-script/DEPLOY.md, Step 7).\n\n' +
+        'It looks like: https://script.google.com/a/macros/hggroup.com.my/s/.../exec'
+      );
+      if (!url) return;
+      url = url.trim();
+      if (!/^https:\/\/script\.google\.com\//.test(url)) {
+        alert('That does not look like an Apps Script Web App URL. It must start with https://script.google.com/');
+        return;
+      }
+      localStorage.setItem('bl_cloud_inventory_url', url);
+    }
+    window.open(url, '_blank');
+  }
+  // Helper to forget the saved URL (paste into DevTools console if needed):
+  // localStorage.removeItem('bl_cloud_inventory_url')
+
+  /* ─── WORKERS DOCUMENTATION URL ─── */
+  // Same pattern as Cloud Inventory — first click prompts for the deployed Apps Script URL.
+  function openWorkersDocs() {
+    let url = localStorage.getItem('bl_workers_docs_url');
+    if (!url) {
+      url = prompt(
+        'Paste the Google Apps Script Web App URL for the Workers Documentation app.\n\n' +
+        'Get this from Apps Script → Deploy → New deployment (see apps-script-workers/DEPLOY.md, Step 7).\n\n' +
+        'It looks like: https://script.google.com/a/macros/hggroup.com.my/s/.../exec'
+      );
+      if (!url) return;
+      url = url.trim();
+      if (!/^https:\/\/script\.google\.com\//.test(url)) {
+        alert('That does not look like an Apps Script Web App URL. It must start with https://script.google.com/');
+        return;
+      }
+      localStorage.setItem('bl_workers_docs_url', url);
+    }
+    window.open(url, '_blank');
+  }
+  // localStorage.removeItem('bl_workers_docs_url')
+
+  /* ─── DAILY SCHEDULE & DISPATCH URL ─── */
+  // Same pattern — first click prompts for the deployed Apps Script URL.
+  function openDispatch() {
+    let url = localStorage.getItem('bl_dispatch_url');
+    if (!url) {
+      url = prompt(
+        'Paste the Google Apps Script Web App URL for the Daily Schedule & Dispatch app.\n\n' +
+        'Get this from Apps Script → Deploy → New deployment (see apps-script-dispatch/DEPLOY.md, Step 8).\n\n' +
+        'It looks like: https://script.google.com/a/macros/hggroup.com.my/s/.../exec'
+      );
+      if (!url) return;
+      url = url.trim();
+      if (!/^https:\/\/script\.google\.com\//.test(url)) {
+        alert('That does not look like an Apps Script Web App URL. It must start with https://script.google.com/');
+        return;
+      }
+      localStorage.setItem('bl_dispatch_url', url);
+    }
+    window.open(url, '_blank');
+  }
+  // localStorage.removeItem('bl_dispatch_url')
+
+  /* ─── QUOTATION BUILDER ─── */
+  let lineId = 0;
+  function addLine(desc, unit, qty, rate) {
+    const id = ++lineId;
+    const row = document.createElement('div');
+    row.className = 'line-row';
+    row.id = 'line-' + id;
+    row.innerHTML =
+      '<input type="text" placeholder="Description" value="' + (desc || '') + '" />' +
+      '<input type="text" placeholder="sqft / nos" value="' + (unit || '') + '" />' +
+      '<input type="number" placeholder="0" step="any" value="' + (qty || '') + '" oninput="recalc()" />' +
+      '<input type="number" placeholder="0.00" step="any" value="' + (rate || '') + '" oninput="recalc()" />' +
+      '<div class="amt" id="amt-' + id + '">0.00</div>' +
+      '<button class="remove" onclick="removeLine(' + id + ')">✕</button>';
+    document.getElementById('lineItems').appendChild(row);
+    recalc();
+  }
+  function removeLine(id) {
+    const row = document.getElementById('line-' + id);
+    if (row) row.remove();
+    recalc();
+  }
+  function recalc() {
+    let subtotal = 0;
+    document.querySelectorAll('#lineItems .line-row').forEach(row => {
+      const inputs = row.querySelectorAll('input');
+      const qty = parseFloat(inputs[2].value) || 0;
+      const rate = parseFloat(inputs[3].value) || 0;
+      const amt = qty * rate;
+      const amtDiv = row.querySelector('.amt');
+      if (amtDiv) amtDiv.textContent = amt.toFixed(2);
+      subtotal += amt;
+    });
+    const sstOn = document.getElementById('qSst').checked;
+    const sst = sstOn ? subtotal * 0.06 : 0;
+    const total = subtotal + sst;
+    document.getElementById('tSubtotal').textContent = 'RM ' + subtotal.toFixed(2);
+    document.getElementById('tSst').textContent      = 'RM ' + sst.toFixed(2);
+    document.getElementById('tTotal').textContent    = 'RM ' + total.toFixed(2);
+  }
+  function fmtDate(d) {
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  function generateQuote() {
+    const client = document.getElementById('qClient').value.trim() || '[Client]';
+    const ref = document.getElementById('qRef').value.trim() || 'BLAI/Q/[Ref]';
+    const terms = document.getElementById('qTerms').value.trim();
+    const validityDays = parseInt(document.getElementById('qValidity').value, 10) || 30;
+    const today = new Date();
+    const validUntil = new Date(today); validUntil.setDate(validUntil.getDate() + validityDays);
+    const sstOn = document.getElementById('qSst').checked;
+
+    const lines = [];
+    let subtotal = 0;
+    document.querySelectorAll('#lineItems .line-row').forEach((row, i) => {
+      const inputs = row.querySelectorAll('input');
+      const desc = inputs[0].value.trim();
+      const unit = inputs[1].value.trim();
+      const qty = parseFloat(inputs[2].value) || 0;
+      const rate = parseFloat(inputs[3].value) || 0;
+      const amt = qty * rate;
+      subtotal += amt;
+      if (desc) {
+        lines.push((i+1) + '. ' + desc.padEnd(35) +
+          (qty + ' ' + unit).padEnd(14) +
+          ('RM ' + rate.toFixed(2)).padEnd(12) +
+          'RM ' + amt.toFixed(2));
+      }
+    });
+    const sst = sstOn ? subtotal * 0.06 : 0;
+    const total = subtotal + sst;
+
+    const out = [];
+    out.push('═════════════════════════════════════════════════════');
+    out.push('                       QUOTATION');
+    out.push('═════════════════════════════════════════════════════');
+    out.push('');
+    out.push('Quote Ref:    ' + ref);
+    out.push('Date:         ' + fmtDate(today));
+    out.push('Valid Until:  ' + fmtDate(validUntil));
+    out.push('');
+    out.push('QUOTATION FOR:');
+    out.push(client);
+    out.push('');
+    out.push('─────────────────────────────────────────────────────');
+    out.push('No  Description                        Qty/Unit      Rate        Amount');
+    out.push('─────────────────────────────────────────────────────');
+    lines.forEach(l => out.push(l));
+    out.push('─────────────────────────────────────────────────────');
+    out.push('                                       SUBTOTAL:     RM ' + subtotal.toFixed(2));
+    if (sstOn) out.push('                                       SST 6%:       RM ' + sst.toFixed(2));
+    out.push('                                       TOTAL:        RM ' + total.toFixed(2));
+    out.push('─────────────────────────────────────────────────────');
+    out.push('');
+    out.push('PAYMENT TERMS:');
+    out.push(terms || 'As agreed');
+    out.push('');
+    out.push('NOTES:');
+    out.push('- Pricing valid for ' + validityDays + ' days from quote date');
+    out.push('- Site access arranged by client prior to mobilisation');
+    out.push('- Variation orders quoted separately');
+    out.push('');
+    out.push('─────────────────────────────────────────────────────');
+    out.push('Prepared by Black Lee — Director');
+    out.push('═════════════════════════════════════════════════════');
+
+    document.getElementById('quotePreview').textContent = out.join('\n');
+    document.getElementById('quotePreviewWrap').style.display = 'block';
+    document.getElementById('quotePreviewWrap').scrollIntoView({ behavior: 'smooth' });
+  }
+  function copyQuote() {
+    navigator.clipboard.writeText(document.getElementById('quotePreview').textContent)
+      .then(() => showToast('Copied!'));
+  }
+  function waQuote() {
+    const url = 'https://wa.me/?text=' + encodeURIComponent(document.getElementById('quotePreview').textContent);
+    window.open(url, '_blank');
+  }
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  /* seed sample lines */
+  addLine('Hoarding PVC', 'sqft', 576, 4.50);
+  addLine('Sliding door', 'nos', 1, 450);
+  addLine('Counterweight', 'm', 12, 45);
+</script>
+
+</body>
+</html>

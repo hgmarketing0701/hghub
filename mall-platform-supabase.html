@@ -1,0 +1,1922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HG Mall Platform — Supabase</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335; --border:#2a3245;
+    --text:#ffffff; --text-dim:#a0a8b8;
+    --accent:#f59e0b; --accent-hover:#d97706; --accent-soft:rgba(245,158,11,0.12);
+    --green:#22c55e; --green-soft:rgba(34,197,94,0.15);
+    --red:#ef4444; --red-soft:rgba(239,68,68,0.14);
+    --radius:14px; --shadow:0 10px 40px rgba(0,0,0,0.4);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+         background:var(--bg); color:var(--text); line-height:1.55; -webkit-font-smoothing:antialiased;
+         min-height:100vh; font-size:15px; }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+
+  /* HEADER */
+  .topbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+            max-width:920px; margin:0 auto; padding:24px 20px 18px; }
+  .brand-block { display:flex; align-items:center; gap:14px; }
+  .brand-logo { width:48px; height:48px; background:linear-gradient(135deg,var(--accent),var(--accent-hover));
+                border-radius:12px; display:flex; align-items:center; justify-content:center;
+                font-size:1.4rem; color:#0a0e1a; font-weight:900; }
+  .brand-name { font-size:1.25rem; font-weight:800; letter-spacing:-0.02em; line-height:1.1; }
+  .brand-sub { font-size:0.8rem; color:var(--text-dim); margin-top:3px; }
+  .user-pill { background:var(--surface); border:1px solid var(--border); padding:8px 14px;
+               border-radius:999px; font-size:0.82rem; color:var(--text-dim); display:flex; align-items:center; gap:8px; }
+  .user-pill::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--green); }
+  .user-pill button { background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.78rem;
+                      font-weight:700; font-family:inherit; }
+
+  /* NAV */
+  nav { max-width:920px; margin:0 auto; padding:0 20px; display:flex; gap:6px; flex-wrap:wrap;
+        border-bottom:1px solid var(--border); }
+  nav button { border:0; background:none; padding:13px 16px; font-size:0.92rem; color:var(--text-dim);
+               border-bottom:2px solid transparent; cursor:pointer; white-space:nowrap; font-family:inherit; }
+  nav button:hover { color:var(--text); }
+  nav button.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:700; }
+
+  main { max-width:920px; margin:0 auto; padding:24px 20px 60px; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+          padding:22px; margin-bottom:18px; }
+  h2 { font-size:1.15rem; font-weight:800; letter-spacing:-0.01em; margin-bottom:4px; }
+  .sub { color:var(--text-dim); font-size:0.88rem; margin-bottom:18px; }
+
+  label { display:block; font-size:0.8rem; font-weight:700; color:var(--text-dim);
+          text-transform:uppercase; letter-spacing:0.04em; margin:14px 0 6px; }
+  input, select, textarea { width:100%; padding:11px 12px; border:1px solid var(--border); border-radius:10px;
+                            font-size:0.95rem; font-family:inherit; background:var(--bg); color:var(--text); }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); }
+  textarea { resize:vertical; min-height:62px; }
+  select option { background:var(--surface); }
+  .row { display:flex; gap:14px; flex-wrap:wrap; }
+  .row > div { flex:1; min-width:150px; }
+  .inline { display:flex; gap:10px; align-items:flex-end; }
+
+  .btn, button.primary, button.ghost {
+    display:inline-flex; align-items:center; gap:8px; padding:12px 20px; border-radius:10px;
+    font-weight:700; font-size:0.92rem; border:none; cursor:pointer; font-family:inherit;
+    transition:transform 0.1s, background 0.2s, border-color 0.2s; }
+  button.primary { background:var(--accent); color:#0a0e1a; margin-top:18px; }
+  button.primary:hover { background:var(--accent-hover); }
+  button.primary:disabled { opacity:.5; cursor:default; }
+  button.ghost { background:var(--surface-2); color:var(--text); border:1px solid var(--border); }
+  button.ghost:hover { border-color:var(--accent); }
+  button:active { transform:translateY(1px); }
+
+  .drop { border:2px dashed var(--border); border-radius:12px; padding:24px; text-align:center;
+          color:var(--text-dim); cursor:pointer; background:var(--bg); transition:border-color .2s,color .2s; }
+  .drop:hover, .drop.has { border-color:var(--accent); color:var(--text); }
+  .filelist { font-size:0.85rem; margin-top:10px; }
+  .filelist div { padding:4px 0; color:var(--text-dim); }
+
+  .msg { padding:11px 14px; border-radius:10px; font-size:0.9rem; margin-top:16px; display:none; }
+  .msg.show { display:block; }
+  .msg.ok  { background:var(--green-soft); color:var(--green); border:1px solid var(--green); }
+  .msg.err { background:var(--red-soft);   color:#fca5a5;      border:1px solid var(--red); }
+
+  .lot { border:1px solid var(--border); border-radius:12px; margin-bottom:14px; overflow:hidden; background:var(--bg); }
+  .lot .head { background:var(--surface-2); padding:11px 14px; font-weight:700; display:flex;
+               justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .ver { padding:12px 14px; border-top:1px solid var(--border); }
+  .ver .top { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+  .badge { background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent);
+           font-size:0.7rem; font-weight:700; padding:2px 9px; border-radius:999px; }
+  .meta { color:var(--text-dim); font-size:0.78rem; }
+  .files { margin-top:5px; }
+  .files a { display:inline-block; font-size:0.85rem; margin:5px 12px 0 0; }
+  .thumb { width:120px; height:90px; object-fit:cover; border-radius:8px; border:1px solid var(--border);
+           vertical-align:middle; margin:5px 10px 0 0; cursor:pointer; background:var(--surface-2); }
+  .empty { text-align:center; color:var(--text-dim); padding:32px; }
+
+  .spin { display:inline-block; width:14px; height:14px; border:2px solid #0a0e1a;
+          border-top-color:transparent; border-radius:50%; animation:s .7s linear infinite;
+          vertical-align:middle; margin-right:6px; }
+  .spin.lt { border-color:var(--accent); border-top-color:transparent; }
+  @keyframes s { to { transform:rotate(360deg); } }
+
+  /* DOOR 2 */
+  .subnav { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+  .subnav button { background:var(--surface); border:1px solid var(--border); color:var(--text-dim);
+                   padding:8px 14px; border-radius:999px; font-size:0.85rem; cursor:pointer; font-family:inherit; }
+  .subnav button:hover { color:var(--text); border-color:var(--accent); }
+  .subnav button.active { background:var(--accent-soft); color:var(--accent); border-color:var(--accent); font-weight:700; }
+
+  .mgr-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px; }
+  .mgr-head h2 { margin-bottom:2px; }
+  .mgr-head .hbtns { display:flex; gap:8px; flex-wrap:wrap; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px 14px; background:var(--bg);
+               border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; }
+  .form-grid .full { grid-column:1 / -1; }
+  .form-grid label { margin-top:0; }
+  .form-actions { grid-column:1 / -1; display:flex; gap:10px; }
+
+  table.tbl { width:100%; border-collapse:collapse; font-size:0.86rem; }
+  table.tbl th { text-align:left; color:var(--text-dim); font-weight:700; text-transform:uppercase;
+                 font-size:0.7rem; letter-spacing:0.04em; padding:8px 10px; border-bottom:1px solid var(--border); }
+  table.tbl td { padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+  table.tbl tr:hover td { background:var(--bg); }
+  .rowbtns { white-space:nowrap; text-align:right; }
+  .rowbtns button { background:none; border:1px solid var(--border); color:var(--text-dim);
+                    border-radius:7px; padding:4px 9px; font-size:0.75rem; cursor:pointer; margin-left:5px; }
+  .rowbtns button:hover { border-color:var(--accent); color:var(--accent); }
+  .rowbtns button.del:hover { border-color:var(--red); color:#fca5a5; }
+  .filterbar { margin-bottom:14px; max-width:280px; }
+  .pricecell { color:var(--accent); font-weight:700; white-space:nowrap; }
+  .cheap { color:var(--green) !important; }
+  .reqgroup { margin-bottom:16px; }
+  .reqgroup h3 { color:var(--accent); font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em;
+                 margin-bottom:8px; }
+  .tag { display:inline-block; background:var(--surface-2); border:1px solid var(--border); color:var(--text-dim);
+         font-size:0.68rem; padding:1px 7px; border-radius:999px; margin-left:6px; }
+
+  /* DOOR 4 — measurement requests */
+  .wa-msg { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px;
+            white-space:pre-wrap; font-family:inherit; font-size:0.9rem; color:var(--text); margin:0 0 4px; }
+  .req { border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:12px; background:var(--bg); }
+  .req.flag { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+  .req .rtop { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start; }
+  .req .rtitle { font-weight:700; }
+  .req .ractions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .req .ractions button { background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+                          border-radius:8px; padding:6px 11px; font-size:0.8rem; cursor:pointer; }
+  .req .ractions button.go { background:var(--accent); color:#0a0e1a; border-color:var(--accent); font-weight:700; }
+  .req .ractions button.del:hover { border-color:var(--red); color:#fca5a5; }
+  .stbadge { font-size:0.7rem; font-weight:700; padding:3px 10px; border-radius:999px; white-space:nowrap; }
+  .banner { background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent);
+            border-radius:10px; padding:12px 14px; margin-bottom:14px; font-weight:600; font-size:0.9rem; }
+
+  /* DOOR 3 — service chips */
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
+  .chips label { display:inline-flex; align-items:center; gap:7px; margin:0; text-transform:none; letter-spacing:0;
+                 font-weight:500; font-size:0.85rem; background:var(--surface-2); border:1px solid var(--border);
+                 color:var(--text); padding:8px 13px; border-radius:999px; cursor:pointer; }
+  .chips label:hover { border-color:var(--accent); }
+  .chips input { width:auto; }
+  .chips button.active { background:var(--accent-soft); color:var(--accent); border-color:var(--accent); font-weight:700; }
+  .chips button { background:var(--surface); border:1px solid var(--border); color:var(--text-dim);
+                  padding:8px 14px; border-radius:999px; font-size:0.85rem; cursor:pointer; font-family:inherit; }
+
+  /* DOOR 3 — printable document (white paper) */
+  #swmsOut { margin-top:16px; }
+  .swms { background:#fff; color:#111; border-radius:10px; padding:34px 38px;
+          font-size:12.5px; line-height:1.5; box-shadow:var(--shadow); }
+  .swms h1 { font-size:18px; margin:0 0 4px; color:#111; }
+  .swms h2 { font-size:14px; margin:22px 0 8px; color:#111; border-bottom:2px solid #111; padding-bottom:4px; }
+  .swms .docmeta { font-size:11.5px; color:#444; }
+  .swms table { width:100%; border-collapse:collapse; margin:6px 0 4px; }
+  .swms th, .swms td { border:1px solid #999; padding:6px 8px; text-align:left; vertical-align:top; font-size:11.5px; }
+  .swms th { background:#f0f0f0; color:#111; }
+  .swms ul { margin:0; padding-left:16px; }
+  .swms li { margin:1px 0; }
+  .swms .stepname { font-weight:700; }
+  .swms .rr { font-weight:700; color:#fff; padding:2px 7px; border-radius:4px; display:inline-block; font-size:11px; }
+  .swms .legend td { font-size:10.5px; }
+  .printbar { display:flex; gap:10px; margin-bottom:12px; }
+
+  @media print {
+    body * { visibility:hidden; }
+    #swmsOut, #swmsOut * { visibility:visible; }
+    #swmsOut { position:absolute; left:0; top:0; width:100%; }
+    .printbar, .no-print { display:none !important; }
+    .swms { box-shadow:none; border-radius:0; padding:0; }
+    .swms h2 { page-break-after:avoid; }
+    .swms tr, .swms li { page-break-inside:avoid; }
+  }
+
+  /* login + config gates (pattern from quotation-supabase.html) */
+  .gate { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .gate .card { max-width:430px; width:100%; text-align:center; padding:36px 30px; }
+  .gate .brand-logo { margin:0 auto 16px; width:60px; height:60px; font-size:1.4rem; }
+  .gbtn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:18px;
+          background:#fff; color:#1a1a1a; border:none; border-radius:10px; padding:13px; font-weight:700;
+          font-size:0.95rem; cursor:pointer; font-family:inherit; }
+  .gate input { text-align:left; margin-bottom:4px; }
+  .gmsg { font-size:0.86rem; margin-top:10px; min-height:20px; opacity:0; transition:opacity 0.2s; }
+  .gmsg.show { opacity:1; } .gmsg.ok { color:var(--green); } .gmsg.err { color:#f87171; }
+</style>
+</head>
+<body>
+
+<!-- ══════════ GATE 0 · SUPABASE CONFIG (shown once if keys not set) ══════════ -->
+<div class="gate" id="gateConfig" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">HG</div>
+    <h2>Connect to Supabase</h2>
+    <div class="sub" style="margin-top:6px;">Paste your project's URL and anon key once — saved in this browser.<br>
+      Find both in <b>Supabase → Project Settings → API</b>.</div>
+    <label style="text-align:left;">Project URL</label>
+    <input id="cfgUrl" placeholder="https://xxxx.supabase.co">
+    <label style="text-align:left;">Anon / public key</label>
+    <input id="cfgKey" placeholder="eyJhbGciOi...">
+    <div id="cfgMsg" class="gmsg"></div>
+    <button class="primary" style="width:100%; margin-top:14px;" onclick="saveConfig()">Connect</button>
+  </div>
+</div>
+
+<!-- ══════════ GATE 1 · LOGIN ══════════ -->
+<div class="gate" id="gateLogin" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">HG</div>
+    <h2>HG Mall Platform</h2>
+    <div class="sub" style="margin-top:6px;">Sign in with the Google account your admin has allowlisted.</div>
+    <button class="gbtn" onclick="signIn()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41 35.3 44 30.1 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+      Sign in with Google
+    </button>
+    <div id="loginMsg" class="gmsg"></div>
+  </div>
+</div>
+
+<!-- ══════════ GATE 2 · NOT ON ALLOWLIST ══════════ -->
+<div class="gate" id="gateDenied" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">🔒</div>
+    <h2>Not authorised</h2>
+    <div class="sub" style="margin-top:6px;"><span id="deniedEmail"></span> is not on the access list.<br>
+      Ask your admin to add you to <b>allowed_users</b>.</div>
+    <button class="ghost" style="width:100%; margin-top:10px;" onclick="signOut()">Use a different account</button>
+  </div>
+</div>
+
+<!-- ══════════ THE APP ══════════ -->
+<div id="app" style="display:none;">
+  <header class="topbar">
+    <div class="brand-block">
+      <div class="brand-logo">HG</div>
+      <div>
+        <div class="brand-name">Mall Platform</div>
+        <div class="brand-sub">Site intelligence · Supabase edition · Black Lee</div>
+      </div>
+    </div>
+    <div class="user-pill"><b id="userPill">…</b><button onclick="signOut()">Sign out</button></div>
+  </header>
+
+  <nav>
+    <button class="active" data-tab="vault">🗂 Site Drawing Vault</button>
+    <button data-tab="requests">🎯 Measurement Requests</button>
+    <button data-tab="lookup">📋 Requirement Lookup</button>
+    <button data-tab="safety">🦺 HIRARC / MOS</button>
+    <button data-tab="audit">🧾 Audit</button>
+  </nav>
+
+  <main>
+    <!-- DOOR 1 -->
+    <section id="vault">
+      <div class="card">
+        <h2>Upload site drawing + photos</h2>
+        <p class="sub">Auto-files into storage by Mall → Lot. Amended drawing = new version, old ones kept.</p>
+
+        <label>Mall / Building</label>
+        <div class="inline">
+          <select id="mall"></select>
+          <button class="ghost" onclick="toggleAddMall()">+ New</button>
+        </div>
+        <div id="addMallBox" style="display:none; margin-top:10px;">
+          <div class="row">
+            <div><input id="newMallName" placeholder="Mall name"></div>
+            <div><input id="newMallCode" placeholder="Code (e.g. SCM)"></div>
+          </div>
+          <button class="ghost" style="margin-top:10px" onclick="saveMall()">Save mall</button>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Lot No.</label>
+            <input id="lot" placeholder="e.g. L1-142/143">
+            <div class="meta" id="lotHint" style="margin-top:5px"></div>
+          </div>
+          <div>
+            <label>Shop Type</label>
+            <select id="shop"><option value="">—</option></select>
+          </div>
+        </div>
+
+        <label>Remarks (optional)</label>
+        <textarea id="remarks" placeholder="e.g. revised per client request — ceiling height 3550"></textarea>
+
+        <label>Files (sketch + site photos)</label>
+        <div class="drop" id="drop" onclick="document.getElementById('file').click()">
+          Tap to choose photos / PDF — or drop here
+        </div>
+        <input type="file" id="file" multiple accept="image/*,application/pdf" style="display:none">
+        <div class="filelist" id="filelist"></div>
+
+        <button class="primary" id="uploadBtn" onclick="doUpload()">Upload</button>
+        <div class="msg" id="vmsg"></div>
+      </div>
+
+      <div class="card">
+        <h2>Browse drawings</h2>
+        <p class="sub">Search by mall and lot. Newest version on top.</p>
+        <div class="row">
+          <div>
+            <label>Mall</label>
+            <select id="fMall"><option value="">All</option></select>
+          </div>
+          <div>
+            <label>Lot No.</label>
+            <input id="fLot" placeholder="any part of lot no.">
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px">
+          <button class="ghost" onclick="loadSketches()">Search</button>
+          <button class="ghost" onclick="exportSketchesExcel()">⬇ Export Excel</button>
+        </div>
+        <div id="results" style="margin-top:16px"></div>
+      </div>
+    </section>
+
+    <!-- DOOR 4 — Measurement Requests -->
+    <section id="requests" style="display:none">
+      <div class="card">
+        <h2>New measurement request</h2>
+        <p class="sub">Log the onsite request → auto-build the WhatsApp message → track until quotation is sent. Same mall, many lots? Add a row per lot.</p>
+        <div class="row">
+          <div><label>Mall / Building</label><select id="mrMall"></select></div>
+          <div><label>Attention to (measure onsite)</label><select id="mrAssign"></select></div>
+        </div>
+        <label>Measure for</label>
+        <div id="mrTypes" class="chips"></div>
+        <label>Purpose</label>
+        <select id="mrPurpose"><option>Quotation</option><option>Reference only</option></select>
+
+        <label style="margin-top:16px">Lots to measure <span class="meta" style="text-transform:none;letter-spacing:0;font-weight:400">— one row per lot, different client is fine</span></label>
+        <div id="mrLots"></div>
+        <button class="ghost" style="margin-top:8px" onclick="addLotRow()">+ Add lot</button>
+
+        <label>WhatsApp message (auto)</label>
+        <pre id="mrMsg" class="wa-msg"></pre>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="primary" style="margin-top:0" id="mrSaveBtn" onclick="saveRequest()">Save request(s)</button>
+          <button class="ghost" onclick="copyMsg()">📋 Copy message</button>
+        </div>
+        <div class="msg" id="mrFeedback"></div>
+      </div>
+
+      <div class="card">
+        <div class="mgr-head"><div>
+          <h2>Tracker</h2>
+          <p class="sub" style="margin-bottom:0">After measurement is taken, advance the status. Anything measured but not yet quoted is flagged.</p>
+        </div><button class="ghost" onclick="exportRequestsExcel()">⬇ Excel</button></div>
+        <div class="chips" id="mrFilters"></div>
+        <div id="mrBanner"></div>
+        <div id="mrList"></div>
+      </div>
+    </section>
+
+    <!-- DOOR 2 -->
+    <section id="lookup" style="display:none">
+      <div class="subnav">
+        <button class="active" data-d2="d2lookup">🔎 Lookup</button>
+        <button data-d2="d2req">📋 Requirements</button>
+        <button data-d2="d2malls">🏬 Malls</button>
+        <button data-d2="d2panels">🏢 Panel Rates</button>
+        <button data-d2="d2lists">⚙ Lists</button>
+      </div>
+
+      <!-- staff-facing read view -->
+      <div id="d2lookup">
+        <div class="card">
+          <h2>Requirement lookup</h2>
+          <p class="sub">Pick mall + shop type → all requirements, plus panel contractor comparison. For staff with zero industry knowledge.</p>
+          <div class="row">
+            <div><label>Mall</label><select id="luMall"></select></div>
+            <div><label>Shop Category</label><select id="luShop"></select></div>
+            <div><label>Lot Size (sqft, optional)</label><input id="luSize" placeholder="e.g. 850"></div>
+          </div>
+          <button class="primary" onclick="runLookup()">Show requirements</button>
+        </div>
+        <div id="luResult"></div>
+      </div>
+
+      <!-- manage screens -->
+      <div id="d2req" style="display:none"><div id="mgrReq"></div></div>
+      <div id="d2malls" style="display:none"><div id="mgrMalls"></div></div>
+      <div id="d2panels" style="display:none">
+        <div id="mgrPanels"></div>
+        <div id="mgrRates"></div>
+      </div>
+      <div id="d2lists" style="display:none">
+        <div id="mgrCats"></div>
+        <div id="mgrReqTypes"></div>
+        <div id="mgrTypes"></div>
+        <div id="mgrShopTypes"></div>
+        <div id="mgrRateBasis"></div>
+        <div id="mgrJobcats"></div>
+        <div id="mgrTeam"></div>
+        <div id="mgrMTypes"></div>
+      </div>
+    </section>
+
+    <!-- DOOR 3 -->
+    <section id="safety" style="display:none">
+      <div class="subnav">
+        <button class="active" data-d3="d3gen">📝 Generate</button>
+        <button data-d3="d3tpl">🗂 Templates</button>
+      </div>
+
+      <div id="d3gen">
+        <div class="card no-print">
+          <h2>Generate HIRARC + Method of Statement</h2>
+          <p class="sub">Tick the services → auto-build a combined SWMS + HIRARC. Shared steps merge automatically. Print to PDF.</p>
+          <div class="row">
+            <div><label>Project / Mall</label><input id="swProject" placeholder="e.g. Setia City Mall"></div>
+            <div><label>Lot / Location</label><input id="swLoc" placeholder="e.g. L1-142/143"></div>
+          </div>
+          <div class="row">
+            <div><label>Document Ref. No.</label><input id="swRef" placeholder="e.g. HG-SWMS-001"></div>
+            <div><label>Revision</label><input id="swRev" value="1"></div>
+            <div><label>Date</label><input id="swDate" placeholder="dd/mm/yyyy"></div>
+          </div>
+          <div class="row">
+            <div><label>Duration (from)</label><input id="swFrom" placeholder="dd/mm/yyyy"></div>
+            <div><label>Duration (to)</label><input id="swTo" placeholder="dd/mm/yyyy"></div>
+            <div><label>Prepared by</label><input id="swBy" value="Black Lee"></div>
+          </div>
+          <label>Services</label>
+          <div id="swServices" class="chips"></div>
+          <button class="primary" onclick="generateSwms()">Generate document</button>
+        </div>
+        <div id="swmsOut"></div>
+      </div>
+
+      <div id="d3tpl" style="display:none">
+        <div id="mgrSwmsServices"></div>
+        <div id="mgrSwmsSteps"></div>
+        <div id="mgrSwmsEquip"></div>
+        <div id="mgrSwmsPPE"></div>
+      </div>
+    </section>
+
+    <!-- AUDIT (was the AuditLog sheet, reachable via the control-sheet link) -->
+    <section id="audit" style="display:none">
+      <div class="card">
+        <h2>Audit log</h2>
+        <p class="sub">Every upload / edit / delete across all HG tools — searchable. Newest first (last 200).</p>
+        <div class="filterbar" style="max-width:340px"><label>Search</label>
+          <input id="auditSearch" placeholder="e.g. UPLOAD, SCM, calvin…" oninput="renderAudit()"></div>
+        <div id="auditList" class="empty">Loading…</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════ CONFIG (same keys as every HG tool) ═══════════════════════════
+// Option A: paste your values here (recommended once stable):
+var SUPABASE_URL = '';   // e.g. 'https://abcd1234.supabase.co'
+var SUPABASE_KEY = '';   // the anon/public key
+// Option B: leave blank — the app shows a one-time connect screen and
+// stores them in this browser (localStorage).
+if (!SUPABASE_URL) SUPABASE_URL = localStorage.getItem('hg_supabase_url') || '';
+if (!SUPABASE_KEY) SUPABASE_KEY = localStorage.getItem('hg_supabase_key') || '';
+
+var sb = null;            // supabase client
+var SESSION = null;       // auth session
+var IS_ADMIN = false;
+var BUCKET = 'mall-sketches';
+
+function el(id){ return document.getElementById(id); }
+function gmsg(id, t, ok){ var m=el(id); m.textContent=t; m.className='gmsg show '+(ok?'ok':'err'); setTimeout(function(){m.classList.remove('show');},4500); }
+function fail(e){ alert(e && e.message ? e.message : String(e)); }
+function userEmail(){ return (SESSION && SESSION.user && SESSION.user.email) || 'unknown'; }
+
+// ═══════════════════════════ BOOT / AUTH FLOW (copied from quotation-supabase.html) ═══════════════════════════
+function saveConfig(){
+  var u = el('cfgUrl').value.trim().replace(/\/+$/,'');
+  var k = el('cfgKey').value.trim();
+  if(!/^https:\/\/.+\.supabase\.co$/.test(u)){ gmsg('cfgMsg','URL must look like https://xxxx.supabase.co', false); return; }
+  if(!(k.indexOf('eyJ')===0 || k.indexOf('sb_publishable_')===0) || k.length < 30){
+    gmsg('cfgMsg','That does not look like the anon/public key (starts with eyJ… or sb_publishable_…).', false); return; }
+  localStorage.setItem('hg_supabase_url', u);
+  localStorage.setItem('hg_supabase_key', k);
+  location.reload();
+}
+
+async function start(){
+  if(!SUPABASE_URL || !SUPABASE_KEY){ el('gateConfig').style.display='flex'; return; }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var s = await sb.auth.getSession();
+  SESSION = s.data.session;
+  sb.auth.onAuthStateChange(function(_e, session){ if(!!session !== !!SESSION){ SESSION = session; route(); } });
+  route();
+}
+
+async function route(){
+  ['gateConfig','gateLogin','gateDenied'].forEach(function(g){ el(g).style.display='none'; });
+  el('app').style.display='none';
+  if(!SESSION){ el('gateLogin').style.display='flex'; return; }
+  var email = (SESSION.user.email||'').toLowerCase();
+  // allowlist check
+  var r = await sb.from('allowed_users').select('email,is_admin').ilike('email', email).maybeSingle();
+  if(r.error){ gmsg('loginMsg', r.error.message, false); el('gateLogin').style.display='flex'; return; }
+  if(!r.data){ el('deniedEmail').textContent = email; el('gateDenied').style.display='flex'; return; }
+  IS_ADMIN = !!r.data.is_admin;
+  el('app').style.display='block';
+  el('userPill').textContent = email;
+  initApp();
+}
+
+function signIn(){
+  var here = window.location.href.split('#')[0];
+  var embedded = (window.self !== window.top);
+  // Google blocks its login page inside iframes — when embedded (e.g. in the hub),
+  // redirect the TOP window instead. Same flow, same redirect back to this page.
+  sb.auth.signInWithOAuth({ provider:'google',
+      options:{ redirectTo: here, skipBrowserRedirect: embedded } })
+    .then(function(r){
+      if(r.error){ gmsg('loginMsg', r.error.message, false); return; }
+      if(embedded && r.data && r.data.url){ window.top.location.href = r.data.url; }
+    });
+}
+function signOut(){ sb.auth.signOut().then(function(){ location.reload(); }); }
+
+// ═══════════════════════════ TABLE ADAPTER (GAS sheet headers ↔ mp_ columns) ═══════════════════════════
+// Keeps the original Index.html logic near-verbatim: rows come back keyed by the
+// old sheet header names (+ _id), writes are translated to snake_case columns.
+var TDEF = {
+  Malls:            { t:'mp_malls', order:'name', cols:{ Name:'name', Code:'code', Location:'location', Notes:'notes' }, addedBy:true },
+  Categories:       { t:'mp_categories', order:'sort', cols:{ Name:'name', Sort:'sort' }, num:['sort'] },
+  Requirements:     { t:'mp_requirements', order:'sort', cols:{ Mall:'mall', Category:'category', Requirement:'requirement', Type:'type', Value:'value', 'Shop Type':'shop_type', Notes:'notes', Sort:'sort' }, num:['sort'], upd:true },
+  RequirementTypes: { t:'mp_requirement_types', order:'sort', cols:{ Category:'category', Name:'name', Sort:'sort' }, num:['sort'] },
+  Types:            { t:'mp_types', order:'sort', cols:{ Category:'category', Name:'name', Sort:'sort' }, num:['sort'] },
+  JobCategories:    { t:'mp_job_categories', order:'sort', cols:{ Name:'name', Sort:'sort' }, num:['sort'] },
+  Panels:           { t:'mp_panels', order:'name', cols:{ Name:'name', PIC:'pic', Phone:'phone', Email:'email', Notes:'notes' }, upd:true },
+  PanelRates:       { t:'mp_panel_rates', order:'created_at', cols:{ Panel:'panel', 'Job Category':'job_category', Mall:'mall', 'Rate Basis':'rate_basis', 'Price From':'price_from', 'Price To':'price_to', 'Lot Size Ref':'lot_size_ref', 'Engaged On':'engaged_on', Notes:'notes' }, num:['price_from','price_to'], upd:true },
+  ShopTypes:        { t:'mp_shop_types', order:'sort', cols:{ Name:'name', Sort:'sort' }, num:['sort'] },
+  RateBasis:        { t:'mp_rate_basis', order:'sort', cols:{ Name:'name', Sort:'sort' }, num:['sort'] },
+  SwmsServices:     { t:'mp_swms_services', order:'sort', cols:{ Name:'name', Sort:'sort' }, num:['sort'] },
+  SwmsSteps:        { t:'mp_swms_steps', order:'sort', cols:{ Service:'service', 'Step No':'step_no', 'Job Step':'job_step', Method:'method', Hazards:'hazards', Impacts:'impacts', 'Existing Controls':'existing_controls', Impact:'impact', Likelihood:'likelihood', 'Additional Controls':'additional_controls', Sort:'sort' }, num:['step_no','impact','likelihood','sort'] },
+  SwmsEquipment:    { t:'mp_swms_equipment', order:'sort', cols:{ Service:'service', Equipment:'equipment', Purpose:'purpose', Sort:'sort' }, num:['sort'] },
+  SwmsPPE:          { t:'mp_swms_ppe', order:'sort', cols:{ Service:'service', PPE:'ppe', Sort:'sort' }, num:['sort'] },
+  TeamMembers:      { t:'mp_team_members', order:'sort', cols:{ Name:'name', Sort:'sort' }, num:['sort'] },
+  MeasureTypes:     { t:'mp_measure_types', order:'sort', cols:{ Name:'name', Sort:'sort' }, num:['sort'] },
+  MeasureRequests:  { t:'mp_measure_requests', order:'created_at', cols:{ Date:'req_date', Requestor:'requestor', Mall:'mall', 'Lot No':'lot_no', Client:'client', 'Work Type':'work_type', 'Assigned To':'assigned_to', Remarks:'remarks', 'Ref Photos':'ref_photos', Purpose:'purpose', Status:'status', 'Quote Sent On':'quote_sent_on', Notes:'notes' }, dates:['req_date','quote_sent_on'], upd:true }
+};
+
+async function audit(action, details){
+  try { await sb.rpc('log_audit', { p_action:action, p_details:String(details==null?'':details).slice(0,300) }); }
+  catch(e){ /* audit must never block the action */ }
+}
+function summarize(obj){
+  return ['Name','Mall','Category','Requirement','Value','Panel','Job Category']
+    .filter(function(k){return obj[k];}).map(function(k){return obj[k];}).join(' · ').slice(0,120);
+}
+
+async function crudList(table){
+  var d = TDEF[table]; if(!d) throw new Error('Unknown table: '+table);
+  var q = sb.from(d.t).select('*').order(d.order||'created_at', {ascending:true});
+  if(d.order && d.order!=='created_at') q = q.order('created_at', {ascending:true});
+  var r = await q;
+  if(r.error) throw r.error;
+  return r.data.map(function(row){
+    var o = {};
+    Object.keys(d.cols).forEach(function(k){
+      var col = d.cols[k], v = row[col];
+      if(d.dates && d.dates.indexOf(col)>=0) v = v ? fmtD(v) : '';
+      o[k] = (v==null ? '' : v);
+    });
+    o._id = row.id;
+    return o;
+  });
+}
+
+async function crudSave(table, obj){
+  var d = TDEF[table]; if(!d) throw new Error('Unknown table: '+table);
+  // Block duplicate mall names (case-insensitive), whether adding or renaming.
+  if(table==='Malls'){
+    var nm = String(obj.Name||'').trim().toLowerCase();
+    if(nm){
+      var ms = await crudList('Malls');
+      if(ms.some(function(m){ return String(m.Name).trim().toLowerCase()===nm && String(m._id)!==String(obj.ID||''); }))
+        throw new Error('Mall "'+String(obj.Name).trim()+'" already exists.');
+    }
+  }
+  var payload = {};
+  Object.keys(d.cols).forEach(function(k){
+    if(!obj.hasOwnProperty(k)) return;
+    var col = d.cols[k], v = obj[k];
+    if(d.dates && d.dates.indexOf(col)>=0) return;   // dates set server-side / by dedicated fns
+    if(d.num && d.num.indexOf(col)>=0) v = (v===''||v==null) ? null : Number(v);
+    payload[col] = v;
+  });
+  if(d.upd){ payload.updated_by = userEmail(); payload.updated_at = new Date().toISOString(); }
+  var r, id;
+  if(obj.ID){
+    r = await sb.from(d.t).update(payload).eq('id', obj.ID);
+    if(r.error) throw r.error;
+    id = obj.ID;
+    await audit('EDIT '+table, summarize(obj));
+  } else {
+    if(d.addedBy) payload.added_by = userEmail();
+    r = await sb.from(d.t).insert(payload).select('id').single();
+    if(r.error) throw r.error;
+    id = r.data.id;
+    await audit('ADD '+table, summarize(obj));
+  }
+  return id;
+}
+
+async function crudDelete(table, id){
+  var d = TDEF[table]; if(!d) throw new Error('Unknown table: '+table);
+  var r = await sb.from(d.t).delete().eq('id', id);
+  if(r.error) throw r.error;
+  await audit('DELETE '+table, String(id).slice(0,8));
+  return true;
+}
+
+// ═══════════════════════════ SMALL HELPERS ═══════════════════════════
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function escAttr(s){ return String(s==null?'':s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+function msg(id,kind,html){
+  var m=el(id);
+  m.className='msg show '+kind; m.innerHTML=html;
+  if(kind==='ok') setTimeout(function(){ m.classList.remove('show'); }, 9000);
+}
+function fmtD(d){ if(!d) return ''; var x=new Date(d); return isNaN(x)?String(d):x.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtDT(d){ if(!d) return ''; var x=new Date(d);
+  return isNaN(x)?String(d):(fmtD(x)+', '+x.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false})); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function safeSeg(s){ return String(s==null?'':s).trim().replace(/[^\w\-.() ]+/g,'-').replace(/\s+/g,' '); }
+function likeEsc(s){ return String(s==null?'':s).replace(/([%_\\])/g,'\\$1'); }
+async function openStored(path){
+  var r = await sb.storage.from(BUCKET).createSignedUrl(path, 3600);
+  if(r.error){ fail(r.error); return; }
+  window.open(r.data.signedUrl, '_blank');
+}
+function xlsxDownload(rows, sheetName, fileBase){
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), sheetName.slice(0,31));
+  XLSX.writeFile(wb, fileBase+'-'+todayISO()+'.xlsx');
+}
+
+// ═══════════════════════════ APP BOOT (after auth) ═══════════════════════════
+var booted = false;
+function initApp(){
+  if(booted) return;
+  booted = true;
+  loadMalls();
+  loadShopTypes();
+  loadSketches();
+}
+
+var picked = []; // {name, mimeType, file}
+
+// tabs
+document.querySelectorAll('nav button').forEach(function(b){
+  b.onclick = function(){
+    document.querySelectorAll('nav button').forEach(function(x){x.classList.remove('active');});
+    b.classList.add('active');
+    ['vault','requests','lookup','safety','audit'].forEach(function(id){
+      el(id).style.display = (id===b.dataset.tab)?'block':'none';
+    });
+    if(b.dataset.tab==='requests') openDoor4();
+    if(b.dataset.tab==='lookup') openDoor2();
+    if(b.dataset.tab==='safety') openDoor3();
+    if(b.dataset.tab==='audit') loadAuditLog();
+  };
+});
+
+// sub-nav inside Door 2
+document.querySelectorAll('#lookup .subnav button').forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll('#lookup .subnav button').forEach(function(x){x.classList.remove('active');});
+    b.classList.add('active');
+    ['d2lookup','d2req','d2malls','d2panels','d2lists'].forEach(function(id){
+      el(id).style.display=(id===b.dataset.d2)?'block':'none';
+    });
+  };
+});
+
+// sub-nav inside Door 3
+document.querySelectorAll('#safety .subnav button').forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll('#safety .subnav button').forEach(function(x){x.classList.remove('active');});
+    b.classList.add('active');
+    ['d3gen','d3tpl'].forEach(function(id){
+      el(id).style.display=(id===b.dataset.d3)?'block':'none';
+    });
+  };
+});
+
+function loadShopTypes(){
+  crudList('ShopTypes').then(function(list){
+    list.sort(bySort);
+    window.__shoptypes = list;
+    var sel=el('shop');
+    if(sel) sel.innerHTML='<option value="">—</option>'+list.map(function(s){return '<option>'+esc(s.Name)+'</option>';}).join('');
+  }).catch(fail);
+}
+
+// ═══════════════════════════ DOOR 1 — Site Drawing Vault ═══════════════════════════
+async function getMalls(){
+  var r = await sb.from('mp_malls').select('*').order('name');
+  if(r.error) throw r.error;
+  return r.data.map(function(m){ return { id:m.id, name:m.name, code:m.code||'', location:m.location||'', notes:m.notes||'' }; });
+}
+
+function loadMalls(){
+  getMalls().then(function(malls){
+    window.__malls = malls;
+    var s = el('mall'), f = el('fMall');
+    s.innerHTML=''; f.innerHTML='<option value="">All</option>';
+    malls.forEach(function(m){
+      var label = m.code ? (m.name+' ('+m.code+')') : m.name;
+      s.add(new Option(label, m.name));
+      f.add(new Option(label, m.name));
+    });
+    s._codes = {}; malls.forEach(function(m){ s._codes[m.name]=m.code; });
+  }).catch(fail);
+}
+
+function toggleAddMall(){
+  var b=el('addMallBox');
+  b.style.display = b.style.display==='none' ? 'block':'none';
+}
+async function saveMall(){
+  var n=el('newMallName').value.trim(), c=el('newMallCode').value.trim();
+  if(!n){ alert('Enter mall name'); return; }
+  try {
+    var malls = await getMalls();
+    if(malls.some(function(m){ return String(m.name).toLowerCase()===n.toLowerCase(); }))
+      throw new Error('Mall "'+n+'" already exists.');
+    var r = await sb.from('mp_malls').insert({ name:n, code:c, added_by:userEmail() });
+    if(r.error) throw r.error;
+    await audit('ADD Malls', n);
+    el('newMallName').value=''; el('newMallCode').value=''; toggleAddMall(); loadMalls();
+  } catch(e){ alert(e.message||String(e)); }
+}
+
+/** How many drawings + requests already exist for a mall + lot (for the "already exists" hint). */
+async function countMallLot(mall, lot){
+  mall = String(mall||'').trim(); lot = String(lot||'').trim();
+  if(!mall || !lot) return { drawings:0, requests:0 };
+  var d = await sb.from('mp_sketches').select('id',{count:'exact',head:true}).ilike('mall',likeEsc(mall)).ilike('lot_no',likeEsc(lot));
+  var r = await sb.from('mp_measure_requests').select('id',{count:'exact',head:true}).ilike('mall',likeEsc(mall)).ilike('lot_no',likeEsc(lot));
+  return { drawings:d.count||0, requests:r.count||0 };
+}
+
+// "lot already exists" hint on the upload form
+el('lot').onchange = checkUploadLot;
+el('mall').onchange = checkUploadLot;
+function checkUploadLot(){
+  var mall=el('mall').value, lot=el('lot').value.trim();
+  var hint=el('lotHint');
+  if(!mall||!lot){ hint.innerHTML=''; return; }
+  countMallLot(mall, lot).then(function(c){
+    hint.innerHTML=(c.drawings||c.requests)
+      ? '⚠️ '+esc(mall)+' '+esc(lot)+' already exists — '+c.drawings+' drawing(s), '+c.requests+' request(s). Uploading adds a NEW version.'
+      : '';
+  }).catch(function(){ hint.innerHTML=''; });
+}
+
+// file picking
+var drop=el('drop'), fileInput=el('file');
+fileInput.onchange=function(){ addFiles(fileInput.files); fileInput.value=''; };
+['dragover','dragenter'].forEach(function(e){drop.addEventListener(e,function(ev){ev.preventDefault(); drop.classList.add('has');});});
+['dragleave','drop'].forEach(function(e){drop.addEventListener(e,function(ev){ev.preventDefault(); drop.classList.remove('has');});});
+drop.addEventListener('drop',function(ev){ addFiles(ev.dataTransfer.files); });
+
+function addFiles(list){
+  Array.prototype.forEach.call(list,function(file){
+    picked.push({ name:file.name, mimeType:file.type||'application/octet-stream', file:file });
+  });
+  renderFiles();
+}
+function renderFiles(){
+  var d=el('filelist');
+  drop.classList.toggle('has', picked.length>0);
+  if(!picked.length){ d.innerHTML=''; return; }
+  d.innerHTML = picked.map(function(f,i){
+    return '<div>📎 '+esc(f.name)+' &nbsp;<a href="#" onclick="rmFile('+i+');return false;">remove</a></div>';
+  }).join('');
+}
+function rmFile(i){ picked.splice(i,1); renderFiles(); }
+
+async function doUpload(){
+  var mallSel=el('mall');
+  var mallName = mallSel.value;
+  var code = (mallSel._codes||{})[mallName]||'';
+  var lotNo = el('lot').value.trim();
+  var shopType = el('shop').value;
+  var remarks = el('remarks').value.trim();
+  if(!mallName){ return msg('vmsg','err','Pick a mall.'); }
+  if(!lotNo){ return msg('vmsg','err','Enter Lot No.'); }
+  if(!picked.length){ return msg('vmsg','err','Choose at least one file.'); }
+
+  var btn=el('uploadBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>Uploading…';
+  try {
+    // same rule as GAS nextVersion(): max version for that Mall+Lot, +1 (server-side RPC)
+    var vr = await sb.rpc('mp_next_version', { p_mall:mallName, p_lot:lotNo });
+    if(vr.error) throw vr.error;
+    var version = Number(vr.data)||1;
+    var stamp = todayISO();
+    var saved = 0;
+    for(var i=0;i<picked.length;i++){
+      var f = picked[i];
+      var cleanName = 'v'+version+'_'+stamp+'_'+safeSeg(f.name);
+      var path = safeSeg(mallName)+'/'+safeSeg(lotNo)+'/'+cleanName;
+      var up = await sb.storage.from(BUCKET).upload(path, f.file, { contentType:f.mimeType, upsert:true });
+      if(up.error) throw up.error;
+      var ins = await sb.from('mp_sketches').insert({
+        mall:mallName, code:code, lot_no:String(lotNo), shop_type:shopType||'', version:version,
+        file_name:cleanName, storage_path:path, mime_type:f.mimeType, remarks:remarks||'', uploaded_by:userEmail()
+      });
+      if(ins.error) throw ins.error;
+      saved++;
+    }
+    await audit('UPLOAD', mallName+' / '+lotNo+' v'+version+' ('+saved+' file)');
+    btn.disabled=false; btn.textContent='Upload';
+    msg('vmsg','ok','Saved as version '+version+' — '+saved+' file(s).');
+    picked=[]; renderFiles();
+    el('lot').value=''; el('remarks').value=''; el('lotHint').innerHTML='';
+    loadSketches();
+  } catch(e){
+    btn.disabled=false; btn.textContent='Upload';
+    msg('vmsg','err', esc(e.message||String(e)));
+  }
+}
+
+async function loadSketches(){
+  var mall = el('fMall').value, lot = el('fLot').value.trim();
+  var box=el('results');
+  box.innerHTML='<div class="empty"><span class="spin lt"></span> Loading…</div>';
+  try {
+    var q = sb.from('mp_sketches').select('*').order('created_at',{ascending:false});
+    if(mall) q = q.ilike('mall', likeEsc(mall));
+    if(lot)  q = q.ilike('lot_no', '%'+likeEsc(lot)+'%');
+    var r = await q;
+    if(r.error) throw r.error;
+    var rows = r.data.map(function(x){
+      return { fileId:x.id, ts:new Date(x.created_at).getTime(), timestamp:fmtDT(x.created_at),
+               mall:x.mall, code:x.code||'', lotNo:x.lot_no, shopType:x.shop_type||'',
+               version:Number(x.version)||1, fileName:x.file_name, path:x.storage_path,
+               mime:x.mime_type||'', remarks:x.remarks||'', uploadedBy:x.uploaded_by||'', url:'' };
+    });
+    // signed URLs (bucket is private) — 1 hour
+    var paths = rows.map(function(x){return x.path;}).filter(Boolean);
+    if(paths.length){
+      var s = await sb.storage.from(BUCKET).createSignedUrls(paths, 3600);
+      if(!s.error && s.data){
+        var m={}; s.data.forEach(function(x){ if(x.signedUrl) m[x.path]=x.signedUrl; });
+        rows.forEach(function(x){ x.url = m[x.path]||''; });
+      }
+    }
+    render(rows);
+  } catch(e){ box.innerHTML='<div class="empty">'+esc(e.message||String(e))+'</div>'; }
+}
+
+function render(rows){
+  window.__sketches = rows;
+  var box=el('results');
+  if(!rows.length){ box.innerHTML='<div class="empty">No drawings yet.</div>'; return; }
+  var groups={};
+  rows.forEach(function(r){
+    var k=r.mall+' ▸ '+r.lotNo;
+    (groups[k]=groups[k]||[]).push(r);
+  });
+  box.innerHTML = Object.keys(groups).map(function(k){
+    var items=groups[k];
+    var rowsHtml=items.map(function(r){
+      var isImg = /^image\//.test(r.mime);
+      return '<div class="ver"><div class="top">'+
+        '<span><span class="badge">v'+r.version+'</span> '+
+        (r.shopType?('&nbsp;'+esc(r.shopType)):'')+'</span>'+
+        '<span class="meta">'+esc(r.timestamp)+' · '+esc(r.uploadedBy)+'</span></div>'+
+        (r.remarks?('<div class="meta" style="margin-top:4px">📝 '+esc(r.remarks)+'</div>'):'')+
+        '<div class="files">'+
+          (r.url && isImg ? '<a href="'+esc(r.url)+'" target="_blank"><img src="'+esc(r.url)+'" class="thumb" title="'+esc(r.fileName)+'"></a>' : '')+
+          '📎 <a href="'+esc(r.url||'#')+'" target="_blank">'+esc(r.fileName)+'</a></div>'+
+        '<div class="rowbtns" style="text-align:left;margin-top:8px">'+
+          '<button style="margin-left:0" onclick="editSketch(\''+r.fileId+'\')">Move / Edit</button>'+
+          '<button class="del" onclick="delSketch(\''+r.fileId+'\')">Delete</button></div>'+
+        '<div id="sed_'+r.fileId+'"></div>'+
+        '</div>';
+    }).join('');
+    return '<div class="lot"><div class="head"><span>'+esc(k)+'</span>'+
+      '<span class="meta">'+items.length+' file(s)</span></div>'+rowsHtml+'</div>';
+  }).join('');
+}
+
+function editSketch(fileId){
+  var row=(window.__sketches||[]).filter(function(r){return r.fileId===fileId;})[0];
+  var box=el('sed_'+fileId);
+  if(!row||!box) return;
+  var malls=window.__malls||[];
+  var mallOpts=malls.map(function(m){
+    var lab=m.code?(m.name+' ('+m.code+')'):m.name;
+    return '<option value="'+esc(m.name)+'"'+(m.name===row.mall?' selected':'')+'>'+esc(lab)+'</option>';
+  }).join('');
+  var stList=(window.__shoptypes||[]).map(function(s){return s.Name;});
+  var shops='<option value=""'+(!row.shopType?' selected':'')+'>—</option>'+
+    stList.map(function(s){ return '<option'+(s===row.shopType?' selected':'')+'>'+esc(s)+'</option>'; }).join('');
+  box.innerHTML='<div class="form-grid" style="margin-top:10px">'+
+    '<div><label>Mall</label><select id="se_m_'+fileId+'">'+mallOpts+'</select></div>'+
+    '<div><label>Lot No.</label><input id="se_l_'+fileId+'" value="'+esc(row.lotNo)+'"></div>'+
+    '<div><label>Shop Type</label><select id="se_s_'+fileId+'">'+shops+'</select></div>'+
+    '<div class="full"><label>Remarks</label><input id="se_r_'+fileId+'" value="'+esc(row.remarks)+'"></div>'+
+    '<div class="form-actions">'+
+      '<button class="primary" style="margin-top:0" onclick="saveSketchEdit(\''+fileId+'\')">Save changes</button>'+
+      '<button class="ghost" onclick="el(\'sed_'+fileId+'\').innerHTML=\'\'">Cancel</button>'+
+    '</div></div>';
+}
+
+/** Fix a wrongly-filed drawing: moves the storage file to the correct Mall/Lot path + updates the log. */
+async function saveSketchEdit(fileId){
+  var p={ fileId:fileId,
+    mall:el('se_m_'+fileId).value,
+    lotNo:el('se_l_'+fileId).value.trim(),
+    shopType:el('se_s_'+fileId).value,
+    remarks:el('se_r_'+fileId).value.trim() };
+  if(!p.lotNo){ alert('Lot No. is required.'); return; }
+  try {
+    var row=(window.__sketches||[]).filter(function(r){return r.fileId===fileId;})[0];
+    if(!row) throw new Error('Drawing not found.');
+    var code = ((window.__malls||[]).filter(function(m){return m.name===p.mall;})[0]||{}).code||'';
+    var newPath = row.path;
+    if(row.mall!==p.mall || String(row.lotNo)!==String(p.lotNo)){
+      var fname = String(row.path).split('/').pop();
+      newPath = safeSeg(p.mall)+'/'+safeSeg(p.lotNo)+'/'+fname;
+      if(newPath!==row.path){
+        var mv = await sb.storage.from(BUCKET).move(row.path, newPath);
+        if(mv.error) throw mv.error;
+      }
+    }
+    var r = await sb.from('mp_sketches').update({
+      mall:p.mall, code:code, lot_no:String(p.lotNo), shop_type:p.shopType||'',
+      remarks:p.remarks||'', storage_path:newPath
+    }).eq('id', fileId);
+    if(r.error) throw r.error;
+    await audit('EDIT_SKETCH', row.mall+'/'+row.lotNo+' → '+p.mall+'/'+p.lotNo);
+    loadSketches();
+  } catch(e){ alert(e.message||String(e)); }
+}
+
+/** Delete a drawing: removes the storage file + the log row. */
+async function delSketch(fileId){
+  if(!confirm('Delete this drawing? The file will be removed from storage.')) return;
+  try {
+    var row=(window.__sketches||[]).filter(function(r){return r.fileId===fileId;})[0];
+    if(row && row.path){ await sb.storage.from(BUCKET).remove([row.path]); }
+    var r = await sb.from('mp_sketches').delete().eq('id', fileId);
+    if(r.error) throw r.error;
+    await audit('DELETE_SKETCH', row ? (row.mall+'/'+row.lotNo) : String(fileId).slice(0,8));
+    loadSketches();
+  } catch(e){ alert(e.message||String(e)); }
+}
+
+function exportSketchesExcel(){
+  var rows=(window.__sketches||[]);
+  if(!rows.length){ alert('Nothing to export — run a search first.'); return; }
+  xlsxDownload(rows.map(function(r){ return {
+    'Mall':r.mall, 'Code':r.code, 'Lot No':r.lotNo, 'Shop Type':r.shopType, 'Version':r.version,
+    'File Name':r.fileName, 'Storage Path':r.path, 'Remarks':r.remarks,
+    'Uploaded By':r.uploadedBy, 'Uploaded On':r.timestamp }; }), 'Sketches', 'HG-MallPlatform-Drawings');
+}
+
+/* =====================  DOOR 2  ===================== */
+var D2 = { malls:[], cats:[], jobcats:[], panels:[], reqtypes:[], types:[], shoptypes:[], ratebasis:[],
+           swmsservices:[], swmssteps:[], swmsequip:[], swmsppe:[],
+           team:[], mtypes:[], requests:[] };
+var MGR = {};
+var d2Ready = false, d3Ready = false, d4Ready = false;
+var dataLoaded = false, dataLoading = false, dataWaiters = [];
+
+function ensureData(cb){
+  if(dataLoaded){ if(cb) cb(); return; }
+  if(cb) dataWaiters.push(cb);
+  if(dataLoading) return;
+  dataLoading = true;
+  loadD2(function(){
+    dataLoaded = true; dataLoading = false;
+    var w = dataWaiters.slice(); dataWaiters = [];
+    w.forEach(function(f){ f(); });
+  });
+}
+
+function openDoor2(){
+  if(d2Ready) return;
+  d2Ready = true;
+  el('luResult').innerHTML = '<div class="empty">Loading…</div>';
+  ensureData(function(){
+    el('luResult').innerHTML = '';
+    refreshShared();
+    mountAllManagers();
+  });
+}
+
+function openDoor3(){
+  if(d3Ready) return;
+  d3Ready = true;
+  el('swServices').innerHTML = 'Loading…';
+  ensureData(function(){
+    refreshShared();
+    mountDoor3Managers();
+  });
+}
+
+function openDoor4(){
+  if(d4Ready) return;
+  d4Ready = true;
+  el('mrList').innerHTML = '<div class="empty">Loading…</div>';
+  ensureData(function(){
+    fillRequestSelects();
+    attachReqPreview();
+    mrPreview();
+    renderRequests('all');
+  });
+}
+
+function refreshShared(){
+  fillSelect('luMall', D2.malls.map(mallOpt));
+  fillSelect('luShop', D2.shoptypes.map(function(s){return {value:s.Name,label:s.Name};}));
+  fillSwServices();
+  if(d4Ready){ fillRequestSelects(); renderRequests(window.__mrFilter||'all'); }
+}
+
+function loadD2(cb){
+  Promise.all([
+    crudList('TeamMembers'), crudList('MeasureTypes'), crudList('MeasureRequests'), getMalls(),
+    crudList('Categories'), crudList('JobCategories'), crudList('Panels'), crudList('RequirementTypes'),
+    crudList('Types'), crudList('ShopTypes'), crudList('RateBasis'), crudList('SwmsServices'),
+    crudList('SwmsSteps'), crudList('SwmsEquipment'), crudList('SwmsPPE')
+  ]).then(function(x){
+    D2.team=x[0].sort(bySort); D2.mtypes=x[1].sort(bySort); D2.requests=x[2]; D2.malls=x[3];
+    D2.cats=x[4].sort(bySort); D2.jobcats=x[5].sort(bySort); D2.panels=x[6]; D2.reqtypes=x[7].sort(bySort);
+    D2.types=x[8].sort(bySort); D2.shoptypes=x[9].sort(bySort); D2.ratebasis=x[10].sort(bySort);
+    D2.swmsservices=x[11].sort(bySort); D2.swmssteps=x[12]; D2.swmsequip=x[13]; D2.swmsppe=x[14];
+    if(cb) cb();
+  }).catch(fail);
+}
+function bySort(a,b){ return (Number(a.Sort)||0)-(Number(b.Sort)||0); }
+function mallOpt(m){ return { value:m.name, label:m.code?(m.name+' ('+m.code+')'):m.name }; }
+function fillSelect(id, opts, blank){
+  var s=el(id); if(!s) return;
+  s.innerHTML = (blank?'<option value="">'+blank+'</option>':'') +
+    opts.map(function(o){ return '<option value="'+esc(o.value)+'">'+esc(o.label)+'</option>'; }).join('');
+}
+function listOpts(arr){ return arr.map(function(x){return {value:x.Name,label:x.Name};}); }
+function dynOptions(from, filterVal){
+  if(from==='malls')    return D2.malls.map(mallOpt);
+  if(from==='cats')     return listOpts(D2.cats);
+  if(from==='jobcats')  return listOpts(D2.jobcats);
+  if(from==='panels')   return D2.panels.map(function(p){return {value:p.Name,label:p.Name};});
+  if(from==='shoptypes')return listOpts(D2.shoptypes);
+  if(from==='ratebasis')return listOpts(D2.ratebasis);
+  if(from==='swmsservices')return listOpts(D2.swmsservices);
+  if(from==='team')      return listOpts(D2.team);
+  if(from==='mtypes')    return listOpts(D2.mtypes);
+  if(from==='reqtypes'){
+    var list=D2.reqtypes;
+    if(filterVal) list=list.filter(function(r){ return String(r.Category)===String(filterVal); });
+    return listOpts(list);
+  }
+  if(from==='types'){
+    var tl=D2.types;
+    if(filterVal) tl=tl.filter(function(r){ return String(r.Category)===String(filterVal); });
+    return listOpts(tl);
+  }
+  return [];
+}
+
+/* ---------- staff lookup view (was server-side lookupRequirements / comparePanels) ---------- */
+async function lookupRequirements(mall, shopType){
+  var cats = D2.cats.slice().sort(bySort).map(function(c){return c.Name;});
+  var all = await crudList('Requirements');
+  var rows = all.filter(function(r){
+    if(String(r.Mall) !== String(mall)) return false;
+    var st = r['Shop Type'];
+    return !shopType || !st || st === 'All' || st === shopType;
+  });
+  var grouped = [];
+  var order = cats.length ? cats : Array.from(new Set(rows.map(function(r){return r.Category;})));
+  order.forEach(function(cat){
+    var items = rows.filter(function(r){return r.Category===cat;})
+      .map(function(r){ return { requirement:r.Requirement, type:r.Type, value:r.Value, shopType:r['Shop Type'], notes:r.Notes }; });
+    if(items.length) grouped.push({ category:cat, items:items });
+  });
+  rows.map(function(r){return r.Category;}).filter(function(c,i,a){return a.indexOf(c)===i && order.indexOf(c)<0;})
+    .forEach(function(cat){
+      grouped.push({ category:cat, items:rows.filter(function(r){return r.Category===cat;})
+        .map(function(r){ return { requirement:r.Requirement, value:r.Value, shopType:r['Shop Type'], notes:r.Notes }; }) });
+    });
+  return grouped;
+}
+async function comparePanels(mall, jobCategory){
+  var all = await crudList('PanelRates');
+  return all.filter(function(r){ return String(r.Mall)===String(mall) &&
+      (!jobCategory || String(r['Job Category'])===String(jobCategory)); })
+    .sort(function(a,b){ return (Number(a['Price From'])||0)-(Number(b['Price From'])||0); });
+}
+
+function runLookup(){
+  var mall=el('luMall').value;
+  var shop=el('luShop').value;
+  if(!mall){ el('luResult').innerHTML='<div class="empty">Pick a mall.</div>'; return; }
+  el('luResult').innerHTML='<div class="empty">Loading…</div>';
+  Promise.all([lookupRequirements(mall, shop), comparePanels(mall, '')]).then(function(x){
+    renderLookup(mall, shop, x[0], x[1]);
+  }).catch(fail);
+}
+function renderLookup(mall, shop, groups, rates){
+  var html='';
+  if(!groups.length){
+    html += '<div class="card empty">No requirements set for '+esc(mall)+' yet. Add them in the Requirements tab.</div>';
+  } else {
+    html += '<div class="card"><h2>'+esc(mall)+' — requirements <span class="tag">'+esc(shop)+'</span></h2>';
+    groups.forEach(function(g){
+      html += '<div class="reqgroup"><h3>'+esc(g.category)+'</h3><table class="tbl">';
+      g.items.forEach(function(it){
+        html += '<tr><td style="width:38%"><b>'+esc(it.requirement)+'</b>'+
+                (it.type?'<span class="tag">'+esc(it.type)+'</span>':'')+
+                (it.shopType && it.shopType!=='All'?'<span class="tag">'+esc(it.shopType)+'</span>':'')+'</td>'+
+                '<td>'+esc(it.value)+(it.notes?('<div class="meta" style="margin-top:3px">'+esc(it.notes)+'</div>'):'')+'</td></tr>';
+      });
+      html += '</table></div>';
+    });
+    html += '</div>';
+  }
+  // panel comparison grouped by job category
+  if(rates.length){
+    var byJob={};
+    rates.forEach(function(r){ var k=r['Job Category']||'—'; (byJob[k]=byJob[k]||[]).push(r); });
+    html += '<div class="card"><h2>Panel contractor comparison</h2><p class="sub">Cheapest first. Rates from past engagement — reference only.</p>';
+    Object.keys(byJob).forEach(function(job){
+      var list=byJob[job].sort(function(a,b){return (Number(a['Price From'])||0)-(Number(b['Price From'])||0);});
+      html += '<div class="reqgroup"><h3>'+esc(job)+'</h3><table class="tbl">'+
+              '<tr><th>Contractor</th><th>Basis</th><th>Price range</th><th>Lot size</th><th>Engaged</th></tr>';
+      list.forEach(function(r,i){
+        html += '<tr><td>'+esc(r.Panel)+'</td><td>'+esc(r['Rate Basis'])+'</td>'+
+                '<td class="pricecell'+(i===0?' cheap':'')+'">'+rmRange(r['Price From'],r['Price To'])+'</td>'+
+                '<td>'+esc(r['Lot Size Ref'])+'</td><td class="meta">'+esc(r['Engaged On'])+'</td></tr>';
+      });
+      html += '</table></div>';
+    });
+    html += '</div>';
+  }
+  el('luResult').innerHTML = html;
+}
+function rmFmt(v){ return (v===''||v==null)?'':'RM '+Number(v).toLocaleString(); }
+function rmRange(a,b){
+  if((a===''||a==null)&&(b===''||b==null)) return '—';
+  if(b===''||b==null) return rmFmt(a);
+  if(a===''||a==null) return rmFmt(b);
+  return rmFmt(a)+' – '+rmFmt(b);
+}
+
+/* ---------- generic add/edit/delete manager (ported verbatim; storage = Supabase) ---------- */
+function mountAllManagers(){
+  mountManager('mgrReq', {
+    table:'Requirements', title:'Requirements', subtitle:'Add / edit / delete guideline items per mall.',
+    filter:{key:'Mall', from:'malls'},
+    fields:[
+      {key:'Mall', label:'Mall', type:'dyn', from:'malls'},
+      {key:'Category', label:'Job Category', type:'dyn', from:'cats'},
+      {key:'Requirement', label:'Requirement', type:'dyn', from:'reqtypes', dependsOn:'Category', full:true},
+      {key:'Type', label:'Type (Hoarding / Visual only)', type:'dyn', from:'types', dependsOn:'Category', hideIfEmpty:true, allowBlank:true, full:true},
+      {key:'Value', label:'Value / item', type:'text', ph:'e.g. MDF', full:true},
+      {key:'Shop Type', label:'Shop Category (applies to)', type:'dyn', from:'shoptypes'},
+      {key:'Sort', label:'Order', type:'number'},
+      {key:'Notes', label:'Notes / remarks', type:'textarea', full:true}
+    ],
+    columns:['Category','Requirement','Type','Value','Shop Type','Notes']
+  });
+  mountManager('mgrMalls', {
+    table:'Malls', title:'Malls', subtitle:'Your mall master list.', afterChange:true,
+    fields:[
+      {key:'Name', label:'Mall name', type:'text'},
+      {key:'Code', label:'Code', type:'text', ph:'e.g. SCM'},
+      {key:'Location', label:'Location', type:'text', full:true},
+      {key:'Notes', label:'Notes', type:'textarea', full:true}
+    ],
+    columns:['Name','Code','Location','Notes']
+  });
+  mountManager('mgrPanels', {
+    table:'Panels', title:'Panel contractors', subtitle:'The companies. Add their rates in the table below.', afterChange:true,
+    fields:[
+      {key:'Name', label:'Company name', type:'text', full:true},
+      {key:'PIC', label:'PIC', type:'text'},
+      {key:'Phone', label:'Phone', type:'text'},
+      {key:'Email', label:'Email', type:'text'},
+      {key:'Notes', label:'Notes', type:'textarea', full:true}
+    ],
+    columns:['Name','PIC','Phone','Email','Notes']
+  });
+  mountManager('mgrRates', {
+    table:'PanelRates', title:'Panel rates', subtitle:'Rate reference per mall, from past engagement.',
+    filter:{key:'Mall', from:'malls'},
+    fields:[
+      {key:'Panel', label:'Panel contractor', type:'dyn', from:'panels', full:true},
+      {key:'Job Category', label:'Job category', type:'dyn', from:'jobcats', full:true},
+      {key:'Mall', label:'Mall', type:'dyn', from:'malls'},
+      {key:'Rate Basis', label:'Rate basis', type:'dyn', from:'ratebasis'},
+      {key:'Price From', label:'Price from (RM)', type:'number'},
+      {key:'Price To', label:'Price to (RM)', type:'number'},
+      {key:'Lot Size Ref', label:'Lot size ref', type:'text', ph:'e.g. ≤ 1000 sqft'},
+      {key:'Engaged On', label:'Engaged on', type:'text', ph:'e.g. May 2025'},
+      {key:'Notes', label:'Notes', type:'textarea', full:true}
+    ],
+    columns:['Panel','Job Category','Mall','Rate Basis','Price From','Price To','Lot Size Ref','Engaged On']
+  });
+  mountManager('mgrCats', {
+    table:'Categories', title:'Job Categories', subtitle:'Hoarding, Visual, Reinstatement, Renovation…', afterChange:true,
+    fields:[{key:'Name',label:'Name',type:'text'},{key:'Sort',label:'Order',type:'number'}],
+    columns:['Name','Sort']
+  });
+  mountManager('mgrReqTypes', {
+    table:'RequirementTypes', title:'Requirement types', subtitle:'The Requirement dropdown, grouped by category. Add / edit / delete.', afterChange:true,
+    filter:{key:'Category', from:'cats', label:'Job Category'},
+    fields:[
+      {key:'Category', label:'Job Category', type:'dyn', from:'cats'},
+      {key:'Name', label:'Requirement name', type:'text', ph:'e.g. Hoarding material', full:true},
+      {key:'Sort', label:'Order', type:'number'}
+    ],
+    columns:['Category','Name','Sort']
+  });
+  mountManager('mgrTypes', {
+    table:'Types', title:'Hoarding / Visual types', subtitle:'The Type dropdown, grouped by category. Add / edit / delete.', afterChange:true,
+    filter:{key:'Category', from:'cats', label:'Job Category'},
+    fields:[
+      {key:'Category', label:'Job Category', type:'dyn', from:'cats'},
+      {key:'Name', label:'Type name', type:'text', ph:'e.g. Lot (Shop Front) (Indoor)', full:true},
+      {key:'Sort', label:'Order', type:'number'}
+    ],
+    columns:['Category','Name','Sort']
+  });
+  mountManager('mgrShopTypes', {
+    table:'ShopTypes', title:'Shop Categories', subtitle:'The “Applies to” dropdown (All, F&B, Office…).', afterChange:true,
+    fields:[{key:'Name',label:'Name',type:'text'},{key:'Sort',label:'Order',type:'number'}],
+    columns:['Name','Sort']
+  });
+  mountManager('mgrRateBasis', {
+    table:'RateBasis', title:'Rate basis', subtitle:'The panel rate basis dropdown (Per lot, Per sqft…).', afterChange:true,
+    fields:[{key:'Name',label:'Name',type:'text'},{key:'Sort',label:'Order',type:'number'}],
+    columns:['Name','Sort']
+  });
+  mountManager('mgrJobcats', {
+    table:'JobCategories', title:'Panel job categories', subtitle:'Specializations for panel contractors.', afterChange:true,
+    fields:[{key:'Name',label:'Name',type:'text'},{key:'Sort',label:'Order',type:'number'}],
+    columns:['Name','Sort']
+  });
+  mountManager('mgrTeam', {
+    table:'TeamMembers', title:'Team members', subtitle:'The “Attention to” list for measurement requests (e.g. Calvin).', afterChange:true,
+    fields:[{key:'Name',label:'Name',type:'text'},{key:'Sort',label:'Order',type:'number'}],
+    columns:['Name','Sort']
+  });
+  mountManager('mgrMTypes', {
+    table:'MeasureTypes', title:'Measurement types', subtitle:'The “Measure for” options (Hoarding size, Reinstatement lot size…).', afterChange:true,
+    fields:[{key:'Name',label:'Name',type:'text'},{key:'Sort',label:'Order',type:'number'}],
+    columns:['Name','Sort']
+  });
+}
+
+function refreshAll(){ Object.keys(MGR).forEach(function(k){ MGR[k].reload(); }); }
+
+function mountManager(mountId, cfg){
+  var elx=el(mountId);
+  var st={ rows:[], editId:null, showForm:false, filter:'', vals:{} };
+
+  function fid(key){ return mountId+'_f_'+key.replace(/\W/g,''); }
+  function isDependedOn(key){ return cfg.fields.some(function(f){ return f.dependsOn===key; }); }
+
+  function buildDefaults(){
+    var v={};
+    cfg.fields.forEach(function(f){
+      if(f.type==='select'||f.type==='dyn'){
+        var opts=(f.type==='select')?f.options.map(function(o){return{value:o};}):dynOptions(f.from, f.dependsOn?v[f.dependsOn]:null);
+        v[f.key]=opts.length?opts[0].value:'';
+      } else v[f.key]='';
+    });
+    return v;
+  }
+  function readForm(){
+    cfg.fields.forEach(function(f){
+      var node=el(fid(f.key));
+      if(node) st.vals[f.key]=node.value;
+    });
+  }
+
+  function fieldHtml(f){
+    var id=fid(f.key), v=(st.vals[f.key]==null?'':st.vals[f.key]);
+    var inner;
+    if(f.type==='textarea') inner='<textarea id="'+id+'" placeholder="'+esc(f.ph||'')+'">'+esc(v)+'</textarea>';
+    else if(f.type==='number') inner='<input id="'+id+'" type="number" step="any" value="'+esc(v)+'" placeholder="'+esc(f.ph||'')+'">';
+    else if(f.type==='select'||f.type==='dyn'){
+      var opts=(f.type==='select')?f.options.map(function(o){return {value:o,label:o};}):dynOptions(f.from, f.dependsOn?st.vals[f.dependsOn]:null);
+      if(f.hideIfEmpty && !opts.length && !v) return '';   // e.g. Type only shows for Hoarding/Visual
+      if(f.allowBlank) opts=[{value:'',label:'—'}].concat(opts);
+      if(v && !opts.some(function(o){return String(o.value)===String(v);})) opts.unshift({value:v,label:v+' (not in list)'});
+      var onch=isDependedOn(f.key)?' onchange="MGR[\''+mountId+'\']._dep()"':'';
+      inner='<select id="'+id+'"'+onch+'>'+opts.map(function(o){
+        return '<option value="'+esc(o.value)+'"'+(String(o.value)===String(v)?' selected':'')+'>'+esc(o.label)+'</option>';
+      }).join('')+'</select>';
+    } else inner='<input id="'+id+'" value="'+esc(v)+'" placeholder="'+esc(f.ph||'')+'">';
+    return '<div'+(f.full?' class="full"':'')+'><label>'+esc(f.label)+'</label>'+inner+'</div>';
+  }
+
+  function formHtml(){
+    if(!st.showForm) return '';
+    return '<div class="form-grid">'+cfg.fields.map(fieldHtml).join('')+
+      '<div class="form-actions">'+
+      '<button class="primary" style="margin-top:0" onclick="MGR[\''+mountId+'\'].save()">'+(st.editId?'Update':'Add')+'</button>'+
+      '<button class="ghost" onclick="MGR[\''+mountId+'\'].cancel()">Cancel</button></div></div>';
+  }
+
+  function filterHtml(){
+    if(!cfg.filter) return '';
+    var opts=dynOptions(cfg.filter.from);
+    return '<div class="filterbar"><label>Filter by '+esc(cfg.filter.label||cfg.filter.key)+'</label><select onchange="MGR[\''+mountId+'\'].setFilter(this.value)">'+
+      '<option value="">All</option>'+opts.map(function(o){
+        return '<option value="'+esc(o.value)+'"'+(o.value===st.filter?' selected':'')+'>'+esc(o.label)+'</option>';
+      }).join('')+'</select></div>';
+  }
+
+  function visibleRows(){
+    var rows=st.rows;
+    if(cfg.filter && st.filter) rows=rows.filter(function(r){ return String(r[cfg.filter.key])===String(st.filter); });
+    return rows;
+  }
+
+  function listHtml(){
+    var rows=visibleRows();
+    if(!rows.length) return '<div class="empty">Nothing yet. Click + Add.</div>';
+    var head='<tr>'+cfg.columns.map(function(c){return '<th>'+esc(c)+'</th>';}).join('')+'<th></th></tr>';
+    var body=rows.map(function(r){
+      var tds=cfg.columns.map(function(c){
+        var val=r[c];
+        if(/^Price/.test(c)) return '<td class="pricecell">'+(val===''||val==null?'—':rmFmt(val))+'</td>';
+        return '<td>'+esc(val)+'</td>';
+      }).join('');
+      return '<tr>'+tds+'<td class="rowbtns">'+
+        '<button onclick="MGR[\''+mountId+'\'].edit(\''+r._id+'\')">Edit</button>'+
+        '<button class="del" onclick="MGR[\''+mountId+'\'].del(\''+r._id+'\')">Delete</button></td></tr>';
+    }).join('');
+    return '<table class="tbl">'+head+body+'</table>';
+  }
+
+  function paint(){
+    elx.innerHTML='<div class="card"><div class="mgr-head"><div><h2>'+esc(cfg.title)+'</h2>'+
+      '<p class="sub">'+esc(cfg.subtitle)+'</p></div>'+
+      '<div class="hbtns"><button class="ghost" onclick="MGR[\''+mountId+'\'].exportX()">⬇ Excel</button>'+
+      '<button class="ghost" onclick="MGR[\''+mountId+'\'].add()">+ Add</button></div></div>'+
+      formHtml()+filterHtml()+'<div>'+listHtml()+'</div></div>';
+  }
+
+  var api={
+    reload:function(){
+      crudList(cfg.table).then(function(rows){ st.rows=rows; paint(); }).catch(fail);
+    },
+    add:function(){ st.editId=null; st.vals=buildDefaults(); st.showForm=true; paint(); },
+    edit:function(id){
+      st.editId=id;
+      var r=st.rows.filter(function(x){return x._id===id;})[0]||{};
+      st.vals={}; cfg.fields.forEach(function(f){ st.vals[f.key]=(r[f.key]==null?'':r[f.key]); });
+      st.showForm=true; paint();
+    },
+    cancel:function(){ st.editId=null; st.showForm=false; paint(); },
+    setFilter:function(v){ st.filter=v; paint(); },
+    exportX:function(){
+      var rows=visibleRows();
+      if(!rows.length){ alert('Nothing to export.'); return; }
+      xlsxDownload(rows.map(function(r){
+        var o={}; cfg.columns.forEach(function(c){ o[c]=r[c]; }); return o;
+      }), cfg.title, 'HG-MallPlatform-'+cfg.table);
+    },
+    _dep:function(){
+      readForm();
+      cfg.fields.forEach(function(f){
+        if(!f.dependsOn) return;
+        var opts=dynOptions(f.from, st.vals[f.dependsOn]);
+        if(!opts.some(function(o){return String(o.value)===String(st.vals[f.key]);}))
+          st.vals[f.key]=opts.length?opts[0].value:'';
+      });
+      paint();
+    },
+    save:function(){
+      readForm();
+      var obj={}; cfg.fields.forEach(function(f){ obj[f.key]=st.vals[f.key]; });
+      if(st.editId) obj.ID=st.editId;
+      if(cfg.fields[0] && !obj[cfg.fields[0].key]){ alert(cfg.fields[0].label+' is required.'); return; }
+      crudSave(cfg.table, obj)
+        .then(function(){ st.editId=null; st.showForm=false;
+          if(cfg.afterChange){ loadD2(function(){ refreshAll(); refreshShared(); }); }
+          else api.reload();
+        })
+        .catch(function(e){ alert(e.message||String(e)); });
+    },
+    del:function(id){
+      if(!confirm('Delete this record? Cannot undo.')) return;
+      crudDelete(cfg.table, id)
+        .then(function(){
+          if(cfg.afterChange){ loadD2(function(){ refreshAll(); refreshShared(); }); }
+          else api.reload();
+        })
+        .catch(function(e){ alert(e.message||String(e)); });
+    }
+  };
+  MGR[mountId]=api;
+  api.reload();
+}
+
+/* =====================  DOOR 3 — HIRARC / MOS  ===================== */
+function fillSwServices(){
+  var elx=el('swServices'); if(!elx) return;
+  if(!D2.swmsservices.length){ elx.innerHTML='<span class="meta">No services. Add under Templates.</span>'; return; }
+  elx.innerHTML=D2.swmsservices.map(function(s){
+    var n=D2.swmssteps.filter(function(x){return x.Service===s.Name;}).length;
+    return '<label><input type="checkbox" value="'+esc(s.Name)+'"> '+esc(s.Name)+(n?'':' <span class="meta">(no steps)</span>')+'</label>';
+  }).join('');
+}
+
+function mountDoor3Managers(){
+  mountManager('mgrSwmsServices', {
+    table:'SwmsServices', title:'SWMS services', subtitle:'The services you can generate a SWMS for.', afterChange:true,
+    fields:[{key:'Name',label:'Name',type:'text'},{key:'Sort',label:'Order',type:'number'}],
+    columns:['Name','Sort']
+  });
+  mountManager('mgrSwmsSteps', {
+    table:'SwmsSteps', title:'SWMS steps + HIRARC', subtitle:'Each job step with its hazards, controls and Impact × Likelihood. Grouped by service.', afterChange:true,
+    filter:{key:'Service', from:'swmsservices', label:'Service'},
+    fields:[
+      {key:'Service', label:'Service', type:'dyn', from:'swmsservices'},
+      {key:'Step No', label:'Step no.', type:'number'},
+      {key:'Job Step', label:'Job step', type:'text', full:true},
+      {key:'Method', label:'Method / safe work procedure (one per line)', type:'textarea', full:true},
+      {key:'Hazards', label:'Hazards (one per line)', type:'textarea', full:true},
+      {key:'Impacts', label:'Impacts / persons at risk (one per line)', type:'textarea', full:true},
+      {key:'Existing Controls', label:'Existing controls (one per line)', type:'textarea', full:true},
+      {key:'Impact', label:'Impact (1-5)', type:'number'},
+      {key:'Likelihood', label:'Likelihood (1-5)', type:'number'},
+      {key:'Additional Controls', label:'Additional controls (one per line)', type:'textarea', full:true},
+      {key:'Sort', label:'Order', type:'number'}
+    ],
+    columns:['Service','Step No','Job Step','Impact','Likelihood']
+  });
+  mountManager('mgrSwmsEquip', {
+    table:'SwmsEquipment', title:'SWMS equipment', subtitle:'Plant / machinery / equipment per service.', afterChange:true,
+    filter:{key:'Service', from:'swmsservices', label:'Service'},
+    fields:[
+      {key:'Service', label:'Service', type:'dyn', from:'swmsservices'},
+      {key:'Equipment', label:'Equipment', type:'text', full:true},
+      {key:'Purpose', label:'Purpose', type:'text', full:true},
+      {key:'Sort', label:'Order', type:'number'}
+    ],
+    columns:['Service','Equipment','Purpose']
+  });
+  mountManager('mgrSwmsPPE', {
+    table:'SwmsPPE', title:'SWMS PPE', subtitle:'PPE list. Use service “All” for general PPE.', afterChange:true,
+    fields:[
+      {key:'Service', label:'Service (or All)', type:'text'},
+      {key:'PPE', label:'PPE item', type:'text', full:true},
+      {key:'Sort', label:'Order', type:'number'}
+    ],
+    columns:['Service','PPE']
+  });
+}
+
+function dlines(s){ return String(s==null?'':s).split('\n').map(function(x){return x.trim();}).filter(function(x){return x && x.toUpperCase()!=='NA';}); }
+function dunion(a,b){ var o=a.slice(); b.forEach(function(x){ if(!o.some(function(y){return y.toLowerCase()===x.toLowerCase();})) o.push(x); }); return o; }
+function dedupeBy(arr,key){ var seen={},out=[]; arr.forEach(function(r){ var k=String(r[key]).toLowerCase(); if(!seen[k]){seen[k]=1; out.push(r);} }); return out; }
+function ul(arr){ return arr.length?('<ul>'+arr.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'):'—'; }
+function riskBand(r){
+  if(r>=20) return {t:'Critical', c:'#b91c1c'};
+  if(r>=15) return {t:'Significant', c:'#c2410c'};
+  if(r>=10) return {t:'Moderate', c:'#b45309'};
+  if(r>=5)  return {t:'Minor', c:'#a16207'};
+  return {t:'Negligible', c:'#15803d'};
+}
+
+function generateSwms(){
+  var services=[].slice.call(document.querySelectorAll('#swServices input:checked')).map(function(x){return x.value;});
+  var out=el('swmsOut');
+  if(!services.length){ out.innerHTML='<div class="card empty">Tick at least one service.</div>'; return; }
+  var pickedSteps=D2.swmssteps.filter(function(s){return services.indexOf(s.Service)>=0;});
+  if(!pickedSteps.length){ out.innerHTML='<div class="card empty">No steps for the selected service(s) yet. Add them under Templates.</div>'; return; }
+  pickedSteps.sort(function(a,b){return (Number(a['Step No'])||0)-(Number(b['Step No'])||0);});
+  var map={}, order=[];
+  pickedSteps.forEach(function(s){
+    var key=String(s['Job Step']).trim().toLowerCase();
+    if(!map[key]){
+      map[key]={step:s['Job Step'], method:dlines(s.Method), haz:dlines(s.Hazards), imp:dlines(s.Impacts),
+                ctrl:dlines(s['Existing Controls']), add:dlines(s['Additional Controls']),
+                i:Number(s.Impact)||0, l:Number(s.Likelihood)||0};
+      order.push(key);
+    } else {
+      var m=map[key];
+      m.method=dunion(m.method,dlines(s.Method)); m.haz=dunion(m.haz,dlines(s.Hazards));
+      m.imp=dunion(m.imp,dlines(s.Impacts)); m.ctrl=dunion(m.ctrl,dlines(s['Existing Controls']));
+      m.add=dunion(m.add,dlines(s['Additional Controls']));
+      m.i=Math.max(m.i,Number(s.Impact)||0); m.l=Math.max(m.l,Number(s.Likelihood)||0);
+    }
+  });
+  var steps=order.map(function(k){return map[k];});
+  var equip=dedupeBy(D2.swmsequip.filter(function(e){return services.indexOf(e.Service)>=0;}),'Equipment');
+  var ppe=dedupeBy(D2.swmsppe.filter(function(p){return p.Service==='All'||services.indexOf(p.Service)>=0;}),'PPE');
+  out.innerHTML=renderSwms(services, steps, equip, ppe);
+  out.scrollIntoView({behavior:'smooth'});
+}
+
+function renderSwms(services, steps, equip, ppe){
+  function v(id){ var n=el(id); return n?esc(n.value):''; }
+  var h='<div class="printbar no-print"><button class="primary" style="margin-top:0" onclick="window.print()">🖨 Print / Save PDF</button>'+
+        '<button class="ghost" onclick="generateSwms()">Regenerate</button></div>';
+  h+='<div class="swms">';
+  h+='<h1>SAFE WORK METHOD STATEMENT &amp; HIRARC</h1>';
+  h+='<div class="docmeta">'+esc(services.join(', '))+'</div>';
+  h+='<table><tr><th style="width:20%">Contractor</th><td>HG Services (M) Sdn Bhd</td><th style="width:16%">Prepared by</th><td>'+v('swBy')+'</td></tr>'+
+     '<tr><th>Project / Mall</th><td>'+v('swProject')+'</td><th>Location</th><td>'+v('swLoc')+'</td></tr>'+
+     '<tr><th>Document Ref.</th><td>'+v('swRef')+'</td><th>Revision</th><td>'+v('swRev')+'</td></tr>'+
+     '<tr><th>Date</th><td>'+v('swDate')+'</td><th>Duration</th><td>'+v('swFrom')+' to '+v('swTo')+'</td></tr></table>';
+  h+='<h2>1. Scope of Works</h2><p>'+esc(services.join(', '))+' works at '+(v('swProject')||'site')+' '+v('swLoc')+'.</p>';
+  h+='<h2>2. Plant / Machinery / Equipment</h2>';
+  h+=equip.length?('<table><tr><th style="width:36px">No</th><th>Equipment</th><th>Purpose</th></tr>'+
+      equip.map(function(e,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(e.Equipment)+'</td><td>'+esc(e.Purpose)+'</td></tr>';}).join('')+'</table>'):'<p>—</p>';
+  h+='<h2>3. Personal Protective Equipment (PPE)</h2>'+ul(ppe.map(function(p){return p.PPE;}));
+  h+='<h2>4. Method of Statement (Work Sequence)</h2>';
+  h+='<table><tr><th style="width:36px">Step</th><th style="width:28%">Job Step</th><th>Method / Safe Work Procedure</th></tr>'+
+     steps.map(function(s,i){return '<tr><td>'+(i+1)+'</td><td class="stepname">'+esc(s.step)+'</td><td>'+ul(s.method)+'</td></tr>';}).join('')+'</table>';
+  h+='<h2>5. HIRARC — Risk Assessment</h2>';
+  h+='<table><tr><th style="width:30px">No</th><th>Job Step</th><th>Hazards</th><th>Impacts / Persons at risk</th><th>Existing Controls</th>'+
+     '<th style="width:24px">I</th><th style="width:24px">L</th><th style="width:86px">Risk</th><th>Additional Controls</th></tr>'+
+     steps.map(function(s,i){
+       var r=s.i*s.l, b=riskBand(r);
+       return '<tr><td>'+(i+1)+'</td><td class="stepname">'+esc(s.step)+'</td><td>'+ul(s.haz)+'</td><td>'+ul(s.imp)+'</td><td>'+ul(s.ctrl)+'</td>'+
+              '<td>'+(s.i||'—')+'</td><td>'+(s.l||'—')+'</td><td>'+(r?('<span class="rr" style="background:'+b.c+'">'+r+' '+b.t+'</span>'):'—')+'</td><td>'+ul(s.add)+'</td></tr>';
+     }).join('')+'</table>';
+  h+='<h2>6. Risk Rating Legend (Risk = Impact × Likelihood)</h2><table class="legend"><tr><th style="width:70px">Rating</th><th style="width:110px">Band</th><th>Action</th></tr>'+
+     '<tr><td>20–25</td><td><span class="rr" style="background:#b91c1c">Critical</span></td><td>Operation not permissible; management attention required.</td></tr>'+
+     '<tr><td>15–19</td><td><span class="rr" style="background:#c2410c">Significant</span></td><td>Not permissible; reduce risk by all possible means.</td></tr>'+
+     '<tr><td>10–14</td><td><span class="rr" style="background:#b45309">Moderate</span></td><td>Further risk reduction; remedial action immediately; 14-day review.</td></tr>'+
+     '<tr><td>5–9</td><td><span class="rr" style="background:#a16207">Minor</span></td><td>Tolerable as low as reasonably practicable; 30-day review.</td></tr>'+
+     '<tr><td>1–4</td><td><span class="rr" style="background:#15803d">Negligible</span></td><td>Acceptable; discretionary remedial action.</td></tr></table>';
+  h+='<p class="docmeta" style="margin-top:18px">Prepared by '+v('swBy')+' — HG Services (M) Sdn Bhd. This SWMS must be reviewed at max. 6-month intervals or earlier if site conditions change.</p>';
+  h+='</div>';
+  return h;
+}
+
+/* =====================  DOOR 4 — Measurement Requests  ===================== */
+function fillRequestSelects(){
+  fillSelect('mrMall', D2.malls.map(mallOpt), 'Pick mall');
+  fillSelect('mrAssign', D2.team.map(function(t){return {value:t.Name,label:t.Name};}), '—');
+  var tc=el('mrTypes');
+  if(tc) tc.innerHTML=D2.mtypes.map(function(m){
+    return '<label><input type="checkbox" value="'+esc(m.Name)+'" onchange="mrPreview()"> '+esc(m.Name)+'</label>';
+  }).join('') || '<span class="meta">Add types in Lists.</span>';
+}
+function attachReqPreview(){
+  ['mrAssign','mrPurpose'].forEach(function(id){
+    var n=el(id); if(n){ n.onchange=mrPreview; }
+  });
+  var mm=el('mrMall');
+  if(mm) mm.onchange=function(){ mrPreview(); refreshAllRowHints(); };
+  if(!document.querySelectorAll('#mrLots .lotrow').length) addLotRow();
+}
+function refreshAllRowHints(){
+  [].slice.call(document.querySelectorAll('#mrLots .lotrow')).forEach(function(elr){ rowLotHint(elr.id.split('_')[1]); });
+}
+function mrCheckedTypes(){
+  return [].slice.call(document.querySelectorAll('#mrTypes input:checked')).map(function(x){return x.value;});
+}
+
+var lotSeq=0;
+function addLotRow(pref){
+  pref=pref||{};
+  var i=++lotSeq;
+  window.__lrFiles=window.__lrFiles||{}; window.__lrFiles[i]=[];
+  var div=document.createElement('div');
+  div.className='lotrow'; div.id='lotrow_'+i;
+  div.style.cssText='border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg)';
+  div.innerHTML=
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">'+
+      '<div style="flex:1;min-width:120px"><input id="lr_lot_'+i+'" placeholder="Lot No. e.g. G118" oninput="mrPreview()" onchange="rowLotHint('+i+')"><div class="meta" id="lr_hint_'+i+'" style="margin-top:4px"></div></div>'+
+      '<div style="flex:1;min-width:140px"><input id="lr_client_'+i+'" placeholder="Client e.g. ABC Sdn Bhd" oninput="mrPreview()"></div>'+
+      '<div style="flex:1.4;min-width:160px"><input id="lr_rem_'+i+'" placeholder="Remarks (optional)" oninput="mrPreview()"></div>'+
+      '<button class="ghost" style="padding:10px 13px" onclick="removeLotRow('+i+')">✕</button>'+
+    '</div>'+
+    '<div style="margin-top:8px">'+
+      '<button class="ghost" style="padding:6px 11px;font-size:0.8rem" onclick="document.getElementById(\'lr_file_'+i+'\').click()">📎 Add reference photos</button>'+
+      '<input type="file" id="lr_file_'+i+'" multiple accept="image/*" style="display:none" onchange="lrFiles('+i+')">'+
+      '<span class="meta" id="lr_files_'+i+'"></span>'+
+    '</div>';
+  el('mrLots').appendChild(div);
+  if(pref.lot) el('lr_lot_'+i).value=pref.lot;
+  if(pref.client) el('lr_client_'+i).value=pref.client;
+  mrPreview();
+}
+function lrFiles(i){
+  var input=el('lr_file_'+i);
+  window.__lrFiles=window.__lrFiles||{}; window.__lrFiles[i]=window.__lrFiles[i]||[];
+  Array.prototype.forEach.call(input.files,function(file){
+    window.__lrFiles[i].push({ name:file.name, mimeType:file.type||'image/jpeg', file:file });
+  });
+  renderLrFiles(i);
+  input.value='';
+}
+function renderLrFiles(i){
+  var span=el('lr_files_'+i); if(!span) return;
+  var arr=(window.__lrFiles||{})[i]||[];
+  span.innerHTML=arr.length?(' &nbsp;'+arr.map(function(f,k){return '📷 '+esc(f.name)+' <a href="#" onclick="lrRm('+i+','+k+');return false;">✕</a>';}).join(' &nbsp; ')):'';
+}
+function lrRm(i,k){ ((window.__lrFiles||{})[i]||[]).splice(k,1); renderLrFiles(i); }
+function removeLotRow(i){
+  var elr=el('lotrow_'+i); if(elr) elr.parentNode.removeChild(elr);
+  if(window.__lrFiles) delete window.__lrFiles[i];
+  if(!document.querySelectorAll('#mrLots .lotrow').length) addLotRow();
+  mrPreview();
+}
+function getLotRows(){
+  return [].slice.call(document.querySelectorAll('#mrLots .lotrow')).map(function(elr){
+    var i=elr.id.split('_')[1];
+    return { lot:(el('lr_lot_'+i).value||'').trim(),
+             client:(el('lr_client_'+i).value||'').trim(),
+             remarks:(el('lr_rem_'+i).value||'').trim(),
+             photos:(window.__lrFiles||{})[i]||[] };
+  });
+}
+function rowLotHint(i){
+  var mall=el('mrMall').value;
+  var lotEl=el('lr_lot_'+i), hintEl=el('lr_hint_'+i);
+  if(!lotEl||!hintEl) return;
+  var lot=lotEl.value.trim();
+  if(!mall||!lot){ hintEl.innerHTML=''; return; }
+  hintEl.innerHTML='<span class="meta">checking…</span>';
+  countMallLot(mall, lot).then(function(c){
+    var parts=[];
+    if(c.drawings) parts.push('✅ Already measured — '+c.drawings+' drawing'+(c.drawings>1?'s':'')+' in the Vault <a href="#" onclick="viewDrawings(\''+escAttr(mall)+'\',\''+escAttr(lot)+'\');return false;">view</a>');
+    if(c.requests) parts.push(c.requests+' existing request'+(c.requests>1?'s':'')+' for this lot');
+    hintEl.innerHTML = parts.length ? ('<span style="color:var(--accent);font-weight:600">'+parts.join(' &nbsp;·&nbsp; ')+'</span>') : '';
+  }).catch(function(){ hintEl.innerHTML=''; });
+}
+function mrPreview(){
+  function val(id){ var n=el(id); return n?n.value.trim():''; }
+  var mall=val('mrMall'), assign=val('mrAssign'), types=mrCheckedTypes(), rows=getLotRows();
+  var lines=[];
+  if(rows.length<=1){
+    var r=rows[0]||{lot:'',client:'',remarks:''};
+    lines.push('Please measure '+(r.lot||'____')+(mall?(', '+mall):''));
+    if(r.client) lines.push('Client is '+r.client);
+    if(types.length) lines.push('Measure for: '+types.join(', '));
+    lines.push('Thanks');
+    if(assign) lines.push('@'+assign);
+    if(r.remarks) lines.push('Remarks: '+r.remarks);
+  } else {
+    lines.push('Please measure at '+(mall||'____')+':');
+    rows.forEach(function(r,i){ lines.push((i+1)+'. '+(r.lot||'____')+' — '+(r.client||'____')+(r.remarks?(' ('+r.remarks+')'):'')); });
+    if(types.length) lines.push('Measure for: '+types.join(', '));
+    lines.push('Thanks');
+    if(assign) lines.push('@'+assign);
+  }
+  var elm=el('mrMsg'); if(elm) elm.textContent=lines.join('\n');
+}
+function copyMsg(){
+  var txt=el('mrMsg').textContent;
+  var ta=document.createElement('textarea'); ta.value=txt;
+  ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand('copy'); msg('mrFeedback','ok','Message copied — paste into WhatsApp.'); }
+  catch(e){ msg('mrFeedback','err','Copy failed — select the text manually.'); }
+  document.body.removeChild(ta);
+}
+
+/** Batch insert: same mall, many lots (each its own client). Photos go to the mall-sketches bucket. */
+async function addMeasureRequests(p){
+  if(!p || !p.Mall) throw new Error('Mall is required.');
+  if(!p.rows || !p.rows.length) throw new Error('Add at least one lot.');
+  var user = userEmail();
+  var stamp = todayISO();
+  var n = 0;
+  for(var j=0;j<p.rows.length;j++){
+    var r = p.rows[j];
+    if(!r.lot || !r.client) continue;
+    var refLines = '';
+    if(r.photos && r.photos.length){
+      var linesArr = [];
+      for(var k=0;k<r.photos.length;k++){
+        var f = r.photos[k];
+        var name = 'ref_'+stamp+'_'+safeSeg(f.name);
+        var path = safeSeg(p.Mall)+'/'+safeSeg(r.lot)+'/'+name;
+        var up = await sb.storage.from(BUCKET).upload(path, f.file, { contentType:f.mimeType, upsert:true });
+        if(up.error) throw up.error;
+        linesArr.push(name+'|'+path);
+      }
+      refLines = linesArr.join('\n');
+    }
+    var ins = await sb.from('mp_measure_requests').insert({
+      req_date: stamp, requestor:user, status:'Requested',
+      mall:p.Mall, lot_no:String(r.lot), client:r.client,
+      work_type:p.WorkType||'', assigned_to:p.Assigned||'',
+      purpose:p.Purpose||'Quotation', remarks:r.remarks||'', ref_photos:refLines,
+      updated_by:user
+    });
+    if(ins.error) throw ins.error;
+    await audit('ADD MeasureRequests', p.Mall+' / '+r.lot+' · '+r.client);
+    n++;
+  }
+  if(!n) throw new Error('Each lot needs a lot no. and a client.');
+  return crudList('MeasureRequests');
+}
+
+function saveRequest(){
+  var mall=el('mrMall').value;
+  if(!mall){ return msg('mrFeedback','err','Pick a mall.'); }
+  var rows=getLotRows().filter(function(r){ return r.lot && r.client; });
+  if(!rows.length){ return msg('mrFeedback','err','Each lot needs a lot no. and a client.'); }
+  var p={ Mall:mall, Assigned:el('mrAssign').value,
+          WorkType:mrCheckedTypes().join(', '), Purpose:el('mrPurpose').value, rows:rows };
+  var btn=el('mrSaveBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>Saving…';
+  addMeasureRequests(p)
+    .then(function(rs){
+      btn.disabled=false; btn.textContent='Save request(s)';
+      D2.requests=rs;
+      msg('mrFeedback','ok',rows.length+' request(s) saved. Copy the message to WhatsApp if not done.');
+      el('mrLots').innerHTML=''; lotSeq=0; window.__lrFiles={}; addLotRow();
+      document.querySelectorAll('#mrTypes input:checked').forEach(function(x){x.checked=false;});
+      mrPreview(); renderRequests(window.__mrFilter||'all');
+    })
+    .catch(function(e){
+      btn.disabled=false; btn.textContent='Save request(s)';
+      msg('mrFeedback','err',esc(e.message||String(e)));
+    });
+}
+
+function reqNeedsQuote(r){ return r.Status==='Measured' && r.Purpose!=='Reference only'; }
+function statusMeta(s){
+  if(s==='Requested')      return {t:'Requested',     c:'#3b82f6'};
+  if(s==='Measured')       return {t:'Measured',      c:'#f59e0b'};
+  if(s==='Quotation Sent') return {t:'Quotation sent', c:'#22c55e'};
+  if(s==='Closed')         return {t:'Closed',        c:'#6b7280'};
+  return {t:s||'—', c:'#6b7280'};
+}
+
+function renderRequests(filter){
+  window.__mrFilter=filter||'all';
+  var rows=(D2.requests||[]).slice().reverse(); // newest first
+  var needs=rows.filter(reqNeedsQuote).length;
+  var filters=[['all','All'],['needs','⚠ Needs quotation'],['requested','Requested'],['done','Done']];
+  el('mrFilters').innerHTML=filters.map(function(f){
+    return '<button class="'+(window.__mrFilter===f[0]?'active':'')+'" onclick="renderRequests(\''+f[0]+'\')">'+f[1]+(f[0]==='needs'&&needs?(' ('+needs+')'):'')+'</button>';
+  }).join('');
+  el('mrBanner').innerHTML = needs
+    ? '<div class="banner">⚠ '+needs+' measurement'+(needs>1?'s':'')+' taken but quotation not sent yet.</div>' : '';
+
+  var view=rows.filter(function(r){
+    if(window.__mrFilter==='needs') return reqNeedsQuote(r);
+    if(window.__mrFilter==='requested') return r.Status==='Requested';
+    if(window.__mrFilter==='done') return r.Status==='Quotation Sent' || r.Status==='Closed';
+    return true;
+  });
+  var box=el('mrList');
+  if(!view.length){ box.innerHTML='<div class="empty">Nothing here.</div>'; return; }
+  box.innerHTML=view.map(function(r){
+    var sm=statusMeta(r.Status), flag=reqNeedsQuote(r);
+    var acts='';
+    if(r.Status==='Requested') acts+='<button class="go" onclick="mrSet(\''+r._id+'\',\'Measured\')">✔ Mark measured</button>';
+    else if(r.Status==='Measured' && r.Purpose!=='Reference only') acts+='<button class="go" onclick="mrSet(\''+r._id+'\',\'Quotation Sent\')">✔ Quotation sent</button>';
+    else if(r.Status==='Measured') acts+='<button class="go" onclick="mrSet(\''+r._id+'\',\'Closed\')">✔ Mark done</button>';
+    else acts+='<button onclick="mrSet(\''+r._id+'\',\'Requested\')">↺ Reopen</button>';
+    acts+='<button onclick="viewDrawings(\''+escAttr(r.Mall)+'\',\''+escAttr(r['Lot No'])+'\')">🗂 Drawings</button>';
+    acts+='<button onclick="mrEdit(\''+r._id+'\')">✏ Edit</button>';
+    acts+='<button class="del" onclick="mrDelete(\''+r._id+'\')">Delete</button>';
+    return '<div class="req'+(flag?' flag':'')+'">'+
+      '<div class="rtop"><span class="rtitle">'+esc(r.Mall)+' ▸ '+esc(r['Lot No'])+' &nbsp;·&nbsp; '+esc(r.Client)+'</span>'+
+      '<span class="stbadge" style="background:'+sm.c+';color:#0a0e1a">'+sm.t+'</span></div>'+
+      '<div class="meta" style="margin-top:5px">'+esc(r.Date)+' · req by '+esc(r.Requestor)+
+        (r['Assigned To']?(' · 👷 '+esc(r['Assigned To'])):'')+' · '+esc(r.Purpose||'')+
+        (r['Quote Sent On']?(' · quoted '+esc(r['Quote Sent On'])):'')+'</div>'+
+      (r['Work Type']?('<div class="meta" style="margin-top:3px">Measure for: '+esc(r['Work Type'])+'</div>'):'')+
+      (r.Remarks?('<div class="meta" style="margin-top:3px">📝 '+esc(r.Remarks)+'</div>'):'')+
+      refPhotosHtml(r['Ref Photos'])+
+      '<div class="ractions">'+acts+'</div>'+
+      '<div id="mre_'+r._id+'"></div></div>';
+  }).join('');
+}
+function refPhotosHtml(s){
+  var lines=String(s==null?'':s).split('\n').filter(function(x){return x.trim();});
+  if(!lines.length) return '';
+  return '<div class="meta" style="margin-top:3px">📷 '+lines.map(function(l){
+    var p=l.split('|');
+    return '<a href="#" onclick="openStored(\''+escAttr(p[1]||'')+'\');return false;">'+esc(p[0]||'photo')+'</a>';
+  }).join(' · ')+'</div>';
+}
+
+/** Advance a request through its pipeline (stamps / clears Quote Sent On like the GAS version). */
+async function mrSet(id,status){
+  try {
+    var upd = { status:status,
+                quote_sent_on: (status==='Quotation Sent') ? todayISO() : null,
+                updated_by:userEmail(), updated_at:new Date().toISOString() };
+    var r = await sb.from('mp_measure_requests').update(upd).eq('id', id);
+    if(r.error) throw r.error;
+    await audit('STATUS MeasureRequests', String(id).slice(0,8)+' → '+status);
+    D2.requests = await crudList('MeasureRequests');
+    renderRequests(window.__mrFilter||'all');
+  } catch(e){ alert(e.message||String(e)); }
+}
+function mrDelete(id){
+  if(!confirm('Delete this request?')) return;
+  crudDelete('MeasureRequests', id)
+    .then(function(){ D2.requests=D2.requests.filter(function(r){return r._id!==id;}); renderRequests(window.__mrFilter||'all'); })
+    .catch(function(e){ alert(e.message||String(e)); });
+}
+function mrEdit(id){
+  var r=(D2.requests||[]).filter(function(x){return x._id===id;})[0];
+  var box=el('mre_'+id); if(!r||!box) return;
+  var malls=D2.malls.map(function(m){ var lab=m.code?(m.name+' ('+m.code+')'):m.name;
+    return '<option value="'+esc(m.name)+'"'+(m.name===r.Mall?' selected':'')+'>'+esc(lab)+'</option>'; }).join('');
+  var team='<option value="">—</option>'+D2.team.map(function(t){
+    return '<option'+(t.Name===r['Assigned To']?' selected':'')+'>'+esc(t.Name)+'</option>'; }).join('');
+  var cur=String(r['Work Type']||'').split(',').map(function(s){return s.trim();});
+  var types=D2.mtypes.map(function(m){
+    return '<label><input type="checkbox" value="'+esc(m.Name)+'"'+(cur.indexOf(m.Name)>=0?' checked':'')+'> '+esc(m.Name)+'</label>'; }).join('');
+  var purp=['Quotation','Reference only'].map(function(p){return '<option'+(p===r.Purpose?' selected':'')+'>'+p+'</option>';}).join('');
+  box.innerHTML='<div class="form-grid" style="margin-top:10px">'+
+    '<div><label>Mall</label><select id="me_m_'+id+'">'+malls+'</select></div>'+
+    '<div><label>Lot No.</label><input id="me_l_'+id+'" value="'+esc(r['Lot No'])+'"></div>'+
+    '<div><label>Client</label><input id="me_c_'+id+'" value="'+esc(r.Client)+'"></div>'+
+    '<div><label>Attention to</label><select id="me_a_'+id+'">'+team+'</select></div>'+
+    '<div class="full"><label>Measure for</label><div class="chips" id="me_t_'+id+'">'+types+'</div></div>'+
+    '<div><label>Purpose</label><select id="me_p_'+id+'">'+purp+'</select></div>'+
+    '<div class="full"><label>Remarks</label><input id="me_r_'+id+'" value="'+esc(r.Remarks)+'"></div>'+
+    '<div class="form-actions">'+
+      '<button class="primary" style="margin-top:0" onclick="mrSaveEdit(\''+id+'\')">Save changes</button>'+
+      '<button class="ghost" onclick="el(\'mre_'+id+'\').innerHTML=\'\'">Cancel</button>'+
+    '</div></div>';
+}
+function mrSaveEdit(id){
+  var types=[].slice.call(document.querySelectorAll('#me_t_'+id+' input:checked')).map(function(x){return x.value;});
+  var obj={ ID:id,
+    Mall:el('me_m_'+id).value,
+    'Lot No':el('me_l_'+id).value.trim(),
+    Client:el('me_c_'+id).value.trim(),
+    'Assigned To':el('me_a_'+id).value,
+    'Work Type':types.join(', '),
+    Purpose:el('me_p_'+id).value,
+    Remarks:el('me_r_'+id).value.trim() };
+  if(!obj['Lot No']){ alert('Lot No. is required.'); return; }
+  if(!obj.Client){ alert('Client is required.'); return; }
+  crudSave('MeasureRequests', obj)
+    .then(function(){ return crudList('MeasureRequests'); })
+    .then(function(rows){ D2.requests=rows; renderRequests(window.__mrFilter||'all'); })
+    .catch(function(e){ alert(e.message||String(e)); });
+}
+
+function exportRequestsExcel(){
+  var rows=(D2.requests||[]);
+  if(!rows.length){ alert('Nothing to export yet.'); return; }
+  xlsxDownload(rows.slice().reverse().map(function(r){ return {
+    'Date':r.Date, 'Requestor':r.Requestor, 'Mall':r.Mall, 'Lot No':r['Lot No'], 'Client':r.Client,
+    'Work Type':r['Work Type'], 'Assigned To':r['Assigned To'], 'Purpose':r.Purpose, 'Status':r.Status,
+    'Quote Sent On':r['Quote Sent On'], 'Remarks':r.Remarks, 'Ref Photos':r['Ref Photos'] }; }),
+    'MeasureRequests', 'HG-MallPlatform-Requests');
+}
+
+function viewDrawings(mall, lot){
+  document.querySelectorAll('nav button').forEach(function(x){ x.classList.toggle('active', x.dataset.tab==='vault'); });
+  ['vault','requests','lookup','safety','audit'].forEach(function(id){ el(id).style.display=(id==='vault')?'block':'none'; });
+  var fm=el('fMall'), fl=el('fLot');
+  if(fm) fm.value=mall; if(fl) fl.value=lot;
+  loadSketches(); window.scrollTo(0,0);
+}
+
+/* =====================  AUDIT (was the AuditLog sheet)  ===================== */
+var AUDIT_ROWS = [];
+async function loadAuditLog(){
+  try {
+    var r = await sb.from('audit_log').select('*').order('at',{ascending:false}).limit(200);
+    if(r.error) throw r.error;
+    AUDIT_ROWS = r.data;
+    renderAudit();
+  } catch(e){ el('auditList').innerHTML='<div class="empty">'+esc(e.message||String(e))+'</div>'; }
+}
+function renderAudit(){
+  var f = (el('auditSearch').value||'').trim().toLowerCase();
+  var rows = AUDIT_ROWS.filter(function(a){
+    if(!f) return true;
+    return [a.user_email, a.action, a.details].join(' ').toLowerCase().indexOf(f)>=0;
+  });
+  if(!rows.length){ el('auditList').innerHTML='<div class="empty">No matching activity.</div>'; return; }
+  el('auditList').innerHTML='<table class="tbl"><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr>'+
+    rows.map(function(a){
+      return '<tr><td class="meta" style="white-space:nowrap">'+esc(fmtDT(a.at))+'</td>'+
+        '<td>'+esc(String(a.user_email||'').split('@')[0])+'</td>'+
+        '<td><b>'+esc(a.action)+'</b></td><td class="meta">'+esc(a.details)+'</td></tr>';
+    }).join('')+'</table>';
+}
+
+start();
+</script>
+</body>
+</html>

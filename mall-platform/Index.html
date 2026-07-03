@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root {
+    --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335; --border:#2a3245;
+    --text:#ffffff; --text-dim:#a0a8b8;
+    --accent:#f59e0b; --accent-hover:#d97706; --accent-soft:rgba(245,158,11,0.12);
+    --green:#22c55e; --green-soft:rgba(34,197,94,0.15);
+    --red:#ef4444; --red-soft:rgba(239,68,68,0.14);
+    --radius:14px; --shadow:0 10px 40px rgba(0,0,0,0.4);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+         background:var(--bg); color:var(--text); line-height:1.55; -webkit-font-smoothing:antialiased;
+         min-height:100vh; font-size:15px; }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+
+  /* HEADER */
+  .topbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+            max-width:920px; margin:0 auto; padding:24px 20px 18px; }
+  .brand-block { display:flex; align-items:center; gap:14px; }
+  .brand-logo { width:48px; height:48px; background:linear-gradient(135deg,var(--accent),var(--accent-hover));
+                border-radius:12px; display:flex; align-items:center; justify-content:center;
+                font-size:1.4rem; color:#0a0e1a; font-weight:900; }
+  .brand-name { font-size:1.25rem; font-weight:800; letter-spacing:-0.02em; line-height:1.1; }
+  .brand-sub { font-size:0.8rem; color:var(--text-dim); margin-top:3px; }
+  .user-pill { background:var(--surface); border:1px solid var(--border); padding:8px 14px;
+               border-radius:999px; font-size:0.82rem; color:var(--text-dim); display:flex; align-items:center; gap:8px; }
+  .user-pill::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--green); }
+
+  /* NAV */
+  nav { max-width:920px; margin:0 auto; padding:0 20px; display:flex; gap:6px; flex-wrap:wrap;
+        border-bottom:1px solid var(--border); }
+  nav button { border:0; background:none; padding:13px 16px; font-size:0.92rem; color:var(--text-dim);
+               border-bottom:2px solid transparent; cursor:pointer; white-space:nowrap; font-family:inherit; }
+  nav button:hover { color:var(--text); }
+  nav button.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:700; }
+
+  main { max-width:920px; margin:0 auto; padding:24px 20px 60px; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+          padding:22px; margin-bottom:18px; }
+  h2 { font-size:1.15rem; font-weight:800; letter-spacing:-0.01em; margin-bottom:4px; }
+  .sub { color:var(--text-dim); font-size:0.88rem; margin-bottom:18px; }
+
+  label { display:block; font-size:0.8rem; font-weight:700; color:var(--text-dim);
+          text-transform:uppercase; letter-spacing:0.04em; margin:14px 0 6px; }
+  input, select, textarea { width:100%; padding:11px 12px; border:1px solid var(--border); border-radius:10px;
+                            font-size:0.95rem; font-family:inherit; background:var(--bg); color:var(--text); }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); }
+  textarea { resize:vertical; min-height:62px; }
+  select option { background:var(--surface); }
+  .row { display:flex; gap:14px; flex-wrap:wrap; }
+  .row > div { flex:1; min-width:150px; }
+  .inline { display:flex; gap:10px; align-items:flex-end; }
+
+  .btn, button.primary, button.ghost {
+    display:inline-flex; align-items:center; gap:8px; padding:12px 20px; border-radius:10px;
+    font-weight:700; font-size:0.92rem; border:none; cursor:pointer; font-family:inherit;
+    transition:transform 0.1s, background 0.2s, border-color 0.2s; }
+  button.primary { background:var(--accent); color:#0a0e1a; margin-top:18px; }
+  button.primary:hover { background:var(--accent-hover); }
+  button.primary:disabled { opacity:.5; cursor:default; }
+  button.ghost { background:var(--surface-2); color:var(--text); border:1px solid var(--border); }
+  button.ghost:hover { border-color:var(--accent); }
+  button:active { transform:translateY(1px); }
+
+  .drop { border:2px dashed var(--border); border-radius:12px; padding:24px; text-align:center;
+          color:var(--text-dim); cursor:pointer; background:var(--bg); transition:border-color .2s,color .2s; }
+  .drop:hover, .drop.has { border-color:var(--accent); color:var(--text); }
+  .filelist { font-size:0.85rem; margin-top:10px; }
+  .filelist div { padding:4px 0; color:var(--text-dim); }
+
+  .msg { padding:11px 14px; border-radius:10px; font-size:0.9rem; margin-top:16px; display:none; }
+  .msg.show { display:block; }
+  .msg.ok  { background:var(--green-soft); color:var(--green); border:1px solid var(--green); }
+  .msg.err { background:var(--red-soft);   color:#fca5a5;      border:1px solid var(--red); }
+
+  .lot { border:1px solid var(--border); border-radius:12px; margin-bottom:14px; overflow:hidden; background:var(--bg); }
+  .lot .head { background:var(--surface-2); padding:11px 14px; font-weight:700; display:flex;
+               justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .ver { padding:12px 14px; border-top:1px solid var(--border); }
+  .ver .top { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+  .badge { background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent);
+           font-size:0.7rem; font-weight:700; padding:2px 9px; border-radius:999px; }
+  .meta { color:var(--text-dim); font-size:0.78rem; }
+  .files { margin-top:5px; }
+  .files a { display:inline-block; font-size:0.85rem; margin:5px 12px 0 0; }
+  .thumb { width:120px; height:90px; object-fit:cover; border-radius:8px; border:1px solid var(--border);
+           vertical-align:middle; margin:5px 10px 0 0; cursor:pointer; background:var(--surface-2); }
+  .empty { text-align:center; color:var(--text-dim); padding:32px; }
+
+  .soon { text-align:center; padding:46px 20px; color:var(--text-dim); }
+  .soon .soon-icon { font-size:2.2rem; display:block; margin-bottom:12px; }
+  .soon b { color:var(--text); font-size:1.05rem; }
+  .soon p { margin-top:8px; }
+
+  .spin { display:inline-block; width:14px; height:14px; border:2px solid #0a0e1a;
+          border-top-color:transparent; border-radius:50%; animation:s .7s linear infinite;
+          vertical-align:middle; margin-right:6px; }
+  @keyframes s { to { transform:rotate(360deg); } }
+
+  /* DOOR 2 */
+  .subnav { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+  .subnav button { background:var(--surface); border:1px solid var(--border); color:var(--text-dim);
+                   padding:8px 14px; border-radius:999px; font-size:0.85rem; cursor:pointer; font-family:inherit; }
+  .subnav button:hover { color:var(--text); border-color:var(--accent); }
+  .subnav button.active { background:var(--accent-soft); color:var(--accent); border-color:var(--accent); font-weight:700; }
+
+  .mgr-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px; }
+  .mgr-head h2 { margin-bottom:2px; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px 14px; background:var(--bg);
+               border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; }
+  .form-grid .full { grid-column:1 / -1; }
+  .form-grid label { margin-top:0; }
+  .form-actions { grid-column:1 / -1; display:flex; gap:10px; }
+
+  table.tbl { width:100%; border-collapse:collapse; font-size:0.86rem; }
+  table.tbl th { text-align:left; color:var(--text-dim); font-weight:700; text-transform:uppercase;
+                 font-size:0.7rem; letter-spacing:0.04em; padding:8px 10px; border-bottom:1px solid var(--border); }
+  table.tbl td { padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+  table.tbl tr:hover td { background:var(--bg); }
+  .rowbtns { white-space:nowrap; text-align:right; }
+  .rowbtns button { background:none; border:1px solid var(--border); color:var(--text-dim);
+                    border-radius:7px; padding:4px 9px; font-size:0.75rem; cursor:pointer; margin-left:5px; }
+  .rowbtns button:hover { border-color:var(--accent); color:var(--accent); }
+  .rowbtns button.del:hover { border-color:var(--red); color:#fca5a5; }
+  .filterbar { margin-bottom:14px; max-width:280px; }
+  .pricecell { color:var(--accent); font-weight:700; white-space:nowrap; }
+  .cheap { color:var(--green) !important; }
+  .reqgroup { margin-bottom:16px; }
+  .reqgroup h3 { color:var(--accent); font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em;
+                 margin-bottom:8px; }
+  .tag { display:inline-block; background:var(--surface-2); border:1px solid var(--border); color:var(--text-dim);
+         font-size:0.68rem; padding:1px 7px; border-radius:999px; margin-left:6px; }
+
+  /* DOOR 4 — measurement requests */
+  .wa-msg { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px;
+            white-space:pre-wrap; font-family:inherit; font-size:0.9rem; color:var(--text); margin:0 0 4px; }
+  .req { border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:12px; background:var(--bg); }
+  .req.flag { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+  .req .rtop { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start; }
+  .req .rtitle { font-weight:700; }
+  .req .ractions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .req .ractions button { background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+                          border-radius:8px; padding:6px 11px; font-size:0.8rem; cursor:pointer; }
+  .req .ractions button.go { background:var(--accent); color:#0a0e1a; border-color:var(--accent); font-weight:700; }
+  .req .ractions button.del:hover { border-color:var(--red); color:#fca5a5; }
+  .stbadge { font-size:0.7rem; font-weight:700; padding:3px 10px; border-radius:999px; white-space:nowrap; }
+  .banner { background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent);
+            border-radius:10px; padding:12px 14px; margin-bottom:14px; font-weight:600; font-size:0.9rem; }
+
+  /* DOOR 3 — service chips */
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
+  .chips label { display:inline-flex; align-items:center; gap:7px; margin:0; text-transform:none; letter-spacing:0;
+                 font-weight:500; font-size:0.85rem; background:var(--surface-2); border:1px solid var(--border);
+                 color:var(--text); padding:8px 13px; border-radius:999px; cursor:pointer; }
+  .chips label:hover { border-color:var(--accent); }
+  .chips input { width:auto; }
+
+  /* DOOR 3 — printable document (white paper) */
+  #swmsOut { margin-top:16px; }
+  .swms { background:#fff; color:#111; border-radius:10px; padding:34px 38px;
+          font-size:12.5px; line-height:1.5; box-shadow:var(--shadow); }
+  .swms h1 { font-size:18px; margin:0 0 4px; color:#111; }
+  .swms h2 { font-size:14px; margin:22px 0 8px; color:#111; border-bottom:2px solid #111; padding-bottom:4px; }
+  .swms .docmeta { font-size:11.5px; color:#444; }
+  .swms table { width:100%; border-collapse:collapse; margin:6px 0 4px; }
+  .swms th, .swms td { border:1px solid #999; padding:6px 8px; text-align:left; vertical-align:top; font-size:11.5px; }
+  .swms th { background:#f0f0f0; color:#111; }
+  .swms ul { margin:0; padding-left:16px; }
+  .swms li { margin:1px 0; }
+  .swms .stepname { font-weight:700; }
+  .swms .rr { font-weight:700; color:#fff; padding:2px 7px; border-radius:4px; display:inline-block; font-size:11px; }
+  .swms .legend td { font-size:10.5px; }
+  .printbar { display:flex; gap:10px; margin-bottom:12px; }
+
+  @media print {
+    body * { visibility:hidden; }
+    #swmsOut, #swmsOut * { visibility:visible; }
+    #swmsOut { position:absolute; left:0; top:0; width:100%; }
+    .printbar, .no-print { display:none !important; }
+    .swms { box-shadow:none; border-radius:0; padding:0; }
+    .swms h2 { page-break-after:avoid; }
+    .swms tr, .swms li { page-break-inside:avoid; }
+  }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-block">
+      <div class="brand-logo">HG</div>
+      <div>
+        <div class="brand-name">Mall Platform</div>
+        <div class="brand-sub">Site intelligence · Black Lee</div>
+      </div>
+    </div>
+    <div class="user-pill" id="user">…</div>
+  </header>
+
+  <nav>
+    <button class="active" data-tab="vault">🗂 Site Drawing Vault</button>
+    <button data-tab="requests">🎯 Measurement Requests</button>
+    <button data-tab="lookup">📋 Requirement Lookup</button>
+    <button data-tab="safety">🦺 HIRARC / MOS</button>
+  </nav>
+
+  <main>
+    <!-- DOOR 1 -->
+    <section id="vault">
+      <div class="card">
+        <h2>Upload site drawing + photos</h2>
+        <p class="sub">Auto-files into Drive by Mall → Lot. Amended drawing = new version, old ones kept.</p>
+
+        <label>Mall / Building</label>
+        <div class="inline">
+          <select id="mall"></select>
+          <button class="ghost" onclick="toggleAddMall()">+ New</button>
+        </div>
+        <div id="addMallBox" style="display:none; margin-top:10px;">
+          <div class="row">
+            <div><input id="newMallName" placeholder="Mall name"></div>
+            <div><input id="newMallCode" placeholder="Code (e.g. SCM)"></div>
+          </div>
+          <button class="ghost" style="margin-top:10px" onclick="saveMall()">Save mall</button>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Lot No.</label>
+            <input id="lot" placeholder="e.g. L1-142/143">
+            <div class="meta" id="lotHint" style="margin-top:5px"></div>
+          </div>
+          <div>
+            <label>Shop Type</label>
+            <select id="shop"><option value="">—</option></select>
+          </div>
+        </div>
+
+        <label>Remarks (optional)</label>
+        <textarea id="remarks" placeholder="e.g. revised per client request — ceiling height 3550"></textarea>
+
+        <label>Files (sketch + site photos)</label>
+        <div class="drop" id="drop" onclick="document.getElementById('file').click()">
+          Tap to choose photos / PDF — or drop here
+        </div>
+        <input type="file" id="file" multiple accept="image/*,application/pdf" style="display:none">
+        <div class="filelist" id="filelist"></div>
+
+        <button class="primary" id="uploadBtn" onclick="doUpload()">Upload</button>
+        <div class="msg" id="vmsg"></div>
+      </div>
+
+      <div class="card">
+        <h2>Browse drawings</h2>
+        <p class="sub">Search by mall and lot. Newest version on top.</p>
+        <div class="row">
+          <div>
+            <label>Mall</label>
+            <select id="fMall"><option value="">All</option></select>
+          </div>
+          <div>
+            <label>Lot No.</label>
+            <input id="fLot" placeholder="any part of lot no.">
+          </div>
+        </div>
+        <button class="ghost" style="margin-top:14px" onclick="loadSketches()">Search</button>
+        <div id="results" style="margin-top:16px"></div>
+      </div>
+    </section>
+
+    <!-- DOOR 4 — Measurement Requests -->
+    <section id="requests" style="display:none">
+      <div class="card">
+        <h2>New measurement request</h2>
+        <p class="sub">Log the onsite request → auto-build the WhatsApp message → track until quotation is sent. Same mall, many lots? Add a row per lot.</p>
+        <div class="row">
+          <div><label>Mall / Building</label><select id="mrMall"></select></div>
+          <div><label>Attention to (measure onsite)</label><select id="mrAssign"></select></div>
+        </div>
+        <label>Measure for</label>
+        <div id="mrTypes" class="chips"></div>
+        <label>Purpose</label>
+        <select id="mrPurpose"><option>Quotation</option><option>Reference only</option></select>
+
+        <label style="margin-top:16px">Lots to measure <span class="meta" style="text-transform:none;letter-spacing:0;font-weight:400">— one row per lot, different client is fine</span></label>
+        <div id="mrLots"></div>
+        <button class="ghost" style="margin-top:8px" onclick="addLotRow()">+ Add lot</button>
+
+        <label>WhatsApp message (auto)</label>
+        <pre id="mrMsg" class="wa-msg"></pre>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="primary" style="margin-top:0" onclick="saveRequest()">Save request(s)</button>
+          <button class="ghost" onclick="copyMsg()">📋 Copy message</button>
+        </div>
+        <div class="msg" id="mrFeedback"></div>
+      </div>
+
+      <div class="card">
+        <h2>Tracker</h2>
+        <p class="sub">After measurement is taken, advance the status. Anything measured but not yet quoted is flagged.</p>
+        <div class="chips" id="mrFilters"></div>
+        <div id="mrBanner"></div>
+        <div id="mrList"></div>
+      </div>
+    </section>
+
+    <!-- DOOR 2 -->
+    <section id="lookup" style="display:none">
+      <div class="subnav">
+        <button class="active" data-d2="d2lookup">🔎 Lookup</button>
+        <button data-d2="d2req">📋 Requirements</button>
+        <button data-d2="d2malls">🏬 Malls</button>
+        <button data-d2="d2panels">🏢 Panel Rates</button>
+        <button data-d2="d2lists">⚙ Lists</button>
+      </div>
+
+      <!-- staff-facing read view -->
+      <div id="d2lookup">
+        <div class="card">
+          <h2>Requirement lookup</h2>
+          <p class="sub">Pick mall + shop type → all requirements, plus panel contractor comparison. For staff with zero industry knowledge.</p>
+          <div class="row">
+            <div><label>Mall</label><select id="luMall"></select></div>
+            <div><label>Shop Category</label><select id="luShop"></select></div>
+            <div><label>Lot Size (sqft, optional)</label><input id="luSize" placeholder="e.g. 850"></div>
+          </div>
+          <button class="primary" onclick="runLookup()">Show requirements</button>
+        </div>
+        <div id="luResult"></div>
+      </div>
+
+      <!-- manage screens -->
+      <div id="d2req" style="display:none"><div id="mgrReq"></div></div>
+      <div id="d2malls" style="display:none"><div id="mgrMalls"></div></div>
+      <div id="d2panels" style="display:none">
+        <div id="mgrPanels"></div>
+        <div id="mgrRates"></div>
+      </div>
+      <div id="d2lists" style="display:none">
+        <div id="mgrCats"></div>
+        <div id="mgrReqTypes"></div>
+        <div id="mgrTypes"></div>
+        <div id="mgrShopTypes"></div>
+        <div id="mgrRateBasis"></div>
+        <div id="mgrJobcats"></div>
+        <div id="mgrTeam"></div>
+        <div id="mgrMTypes"></div>
+      </div>
+    </section>
+
+    <!-- DOOR 3 -->
+    <section id="safety" style="display:none">
+      <div class="subnav">
+        <button class="active" data-d3="d3gen">📝 Generate</button>
+        <button data-d3="d3tpl">🗂 Templates</button>
+      </div>
+
+      <div id="d3gen">
+        <div class="card no-print">
+          <h2>Generate HIRARC + Method of Statement</h2>
+          <p class="sub">Tick the services → auto-build a combined SWMS + HIRARC. Shared steps merge automatically. Print to PDF.</p>
+          <div class="row">
+            <div><label>Project / Mall</label><input id="swProject" placeholder="e.g. Setia City Mall"></div>
+            <div><label>Lot / Location</label><input id="swLoc" placeholder="e.g. L1-142/143"></div>
+          </div>
+          <div class="row">
+            <div><label>Document Ref. No.</label><input id="swRef" placeholder="e.g. HG-SWMS-001"></div>
+            <div><label>Revision</label><input id="swRev" value="1"></div>
+            <div><label>Date</label><input id="swDate" placeholder="dd/mm/yyyy"></div>
+          </div>
+          <div class="row">
+            <div><label>Duration (from)</label><input id="swFrom" placeholder="dd/mm/yyyy"></div>
+            <div><label>Duration (to)</label><input id="swTo" placeholder="dd/mm/yyyy"></div>
+            <div><label>Prepared by</label><input id="swBy" value="Black Lee"></div>
+          </div>
+          <label>Services</label>
+          <div id="swServices" class="chips"></div>
+          <button class="primary" onclick="generateSwms()">Generate document</button>
+        </div>
+        <div id="swmsOut"></div>
+      </div>
+
+      <div id="d3tpl" style="display:none">
+        <div id="mgrSwmsServices"></div>
+        <div id="mgrSwmsSteps"></div>
+        <div id="mgrSwmsEquip"></div>
+        <div id="mgrSwmsPPE"></div>
+      </div>
+    </section>
+
+    <div id="adminLinks" class="meta" style="text-align:center; padding:6px 0 4px"></div>
+  </main>
+
+<script>
+  var picked = []; // {name, mimeType, dataBase64}
+
+  // tabs
+  document.querySelectorAll('nav button').forEach(function(b){
+    b.onclick = function(){
+      document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      ['vault','requests','lookup','safety'].forEach(function(id){
+        document.getElementById(id).style.display = (id===b.dataset.tab)?'block':'none';
+      });
+      if(b.dataset.tab==='requests') openDoor4();
+      if(b.dataset.tab==='lookup') openDoor2();
+      if(b.dataset.tab==='safety') openDoor3();
+    };
+  });
+
+  // sub-nav inside Door 2
+  document.querySelectorAll('#lookup .subnav button').forEach(function(b){
+    b.onclick=function(){
+      document.querySelectorAll('#lookup .subnav button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      ['d2lookup','d2req','d2malls','d2panels','d2lists'].forEach(function(id){
+        document.getElementById(id).style.display=(id===b.dataset.d2)?'block':'none';
+      });
+    };
+  });
+
+  // sub-nav inside Door 3
+  document.querySelectorAll('#safety .subnav button').forEach(function(b){
+    b.onclick=function(){
+      document.querySelectorAll('#safety .subnav button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      ['d3gen','d3tpl'].forEach(function(id){
+        document.getElementById(id).style.display=(id===b.dataset.d3)?'block':'none';
+      });
+    };
+  });
+
+  // boot
+  google.script.run.withSuccessHandler(function(u){ document.getElementById('user').textContent = u; }).getCurrentUser();
+  google.script.run.withSuccessHandler(function(c){
+    var parts = [];
+    if(c.sheetUrl)  parts.push('<a href="'+c.sheetUrl+'" target="_blank">📊 Open control sheet</a>');
+    if(c.folderUrl) parts.push('<a href="'+c.folderUrl+'" target="_blank">📁 Open Drive folder</a>');
+    document.getElementById('adminLinks').innerHTML = parts.join('&nbsp;&nbsp;·&nbsp;&nbsp;');
+  }).getConfigLinks();
+  loadMalls();
+  loadShopTypes();
+  loadSketches();
+
+  function loadShopTypes(){
+    google.script.run.withSuccessHandler(function(list){
+      list.sort(function(a,b){ return (Number(a.Sort)||0)-(Number(b.Sort)||0); });
+      window.__shoptypes = list;
+      var sel=document.getElementById('shop');
+      if(sel) sel.innerHTML='<option value="">—</option>'+list.map(function(s){return '<option>'+esc(s.Name)+'</option>';}).join('');
+    }).crudList('ShopTypes');
+  }
+
+  function loadMalls(){
+    google.script.run.withSuccessHandler(function(malls){
+      window.__malls = malls;
+      var s = document.getElementById('mall'), f = document.getElementById('fMall');
+      s.innerHTML=''; f.innerHTML='<option value="">All</option>';
+      malls.forEach(function(m){
+        var label = m.code ? (m.name+' ('+m.code+')') : m.name;
+        s.add(new Option(label, m.name));
+        f.add(new Option(label, m.name));
+      });
+      s._codes = {}; malls.forEach(m=>s._codes[m.name]=m.code);
+    }).getMalls();
+  }
+
+  function toggleAddMall(){
+    var b=document.getElementById('addMallBox');
+    b.style.display = b.style.display==='none' ? 'block':'none';
+  }
+  function saveMall(){
+    var n=document.getElementById('newMallName').value, c=document.getElementById('newMallCode').value;
+    if(!n.trim()){ alert('Enter mall name'); return; }
+    google.script.run
+      .withSuccessHandler(function(){ document.getElementById('newMallName').value=''; document.getElementById('newMallCode').value=''; toggleAddMall(); loadMalls(); })
+      .withFailureHandler(function(e){ alert(e.message); })
+      .addMall(n,c);
+  }
+
+  // "lot already exists" hint on the upload form
+  document.getElementById('lot').onchange = checkUploadLot;
+  document.getElementById('mall').onchange = checkUploadLot;
+  function checkUploadLot(){
+    var mall=document.getElementById('mall').value, lot=document.getElementById('lot').value.trim();
+    var hint=document.getElementById('lotHint');
+    if(!mall||!lot){ hint.innerHTML=''; return; }
+    google.script.run.withSuccessHandler(function(c){
+      hint.innerHTML=(c.drawings||c.requests)
+        ? '⚠️ '+esc(mall)+' '+esc(lot)+' already exists — '+c.drawings+' drawing(s), '+c.requests+' request(s). Uploading adds a NEW version.'
+        : '';
+    }).countMallLot(mall, lot);
+  }
+
+  // file picking
+  var drop=document.getElementById('drop'), fileInput=document.getElementById('file');
+  fileInput.onchange=function(){ addFiles(fileInput.files); };
+  ['dragover','dragenter'].forEach(e=>drop.addEventListener(e,function(ev){ev.preventDefault(); drop.classList.add('has');}));
+  ['dragleave','drop'].forEach(e=>drop.addEventListener(e,function(ev){ev.preventDefault(); drop.classList.remove('has');}));
+  drop.addEventListener('drop',function(ev){ addFiles(ev.dataTransfer.files); });
+
+  function addFiles(list){
+    Array.prototype.forEach.call(list,function(file){
+      var r=new FileReader();
+      r.onload=function(){
+        picked.push({ name:file.name, mimeType:file.type||'application/octet-stream', dataBase64:r.result.split(',')[1] });
+        renderFiles();
+      };
+      r.readAsDataURL(file);
+    });
+  }
+  function renderFiles(){
+    var d=document.getElementById('filelist');
+    drop.classList.toggle('has', picked.length>0);
+    if(!picked.length){ d.innerHTML=''; return; }
+    d.innerHTML = picked.map(function(f,i){
+      return '<div>📎 '+f.name+' &nbsp;<a href="#" onclick="rm('+i+');return false;">remove</a></div>';
+    }).join('');
+  }
+  function rm(i){ picked.splice(i,1); renderFiles(); }
+
+  function doUpload(){
+    var mallSel=document.getElementById('mall');
+    var payload={
+      mallName: mallSel.value,
+      code: (mallSel._codes||{})[mallSel.value]||'',
+      lotNo: document.getElementById('lot').value.trim(),
+      shopType: document.getElementById('shop').value,
+      remarks: document.getElementById('remarks').value.trim(),
+      files: picked
+    };
+    if(!payload.mallName){ return msg('vmsg','err','Pick a mall.'); }
+    if(!payload.lotNo){ return msg('vmsg','err','Enter Lot No.'); }
+    if(!picked.length){ return msg('vmsg','err','Choose at least one file.'); }
+
+    var btn=document.getElementById('uploadBtn');
+    btn.disabled=true; btn.innerHTML='<span class="spin"></span>Uploading…';
+    google.script.run
+      .withSuccessHandler(function(res){
+        btn.disabled=false; btn.textContent='Upload';
+        msg('vmsg','ok','Saved as version '+res.version+' — '+res.files.length+' file(s). <a href="'+res.folderUrl+'" target="_blank">Open Drive folder</a>');
+        picked=[]; renderFiles();
+        document.getElementById('lot').value=''; document.getElementById('remarks').value='';
+        loadSketches();
+      })
+      .withFailureHandler(function(e){
+        btn.disabled=false; btn.textContent='Upload';
+        msg('vmsg','err', e.message);
+      })
+      .uploadSketch(payload);
+  }
+
+  function loadSketches(){
+    google.script.run.withSuccessHandler(render).getSketches(
+      document.getElementById('fMall').value,
+      document.getElementById('fLot').value
+    );
+  }
+  function render(rows){
+    window.__sketches = rows;
+    var box=document.getElementById('results');
+    if(!rows.length){ box.innerHTML='<div class="empty">No drawings yet.</div>'; return; }
+    var groups={};
+    rows.forEach(function(r){
+      var k=r.mall+' ▸ '+r.lotNo;
+      (groups[k]=groups[k]||[]).push(r);
+    });
+    box.innerHTML = Object.keys(groups).map(function(k){
+      var items=groups[k];
+      var rowsHtml=items.map(function(r){
+        return '<div class="ver"><div class="top">'+
+          '<span><span class="badge">v'+r.version+'</span> '+
+          (r.shopType?('&nbsp;'+r.shopType):'')+'</span>'+
+          '<span class="meta">'+r.timestamp+' · '+r.uploadedBy+'</span></div>'+
+          (r.remarks?('<div class="meta" style="margin-top:4px">📝 '+esc(r.remarks)+'</div>'):'')+
+          '<div class="files"><a href="'+r.fileUrl+'" target="_blank"><img id="thumb_'+r.fileId+'" class="thumb" style="display:none" title="'+esc(r.fileName)+'"></a>'+
+          '📎 <a href="'+r.fileUrl+'" target="_blank">'+esc(r.fileName)+'</a></div>'+
+          '<div class="rowbtns" style="text-align:left;margin-top:8px">'+
+            '<button style="margin-left:0" onclick="editSketch(\''+r.fileId+'\')">Move / Edit</button>'+
+            '<button class="del" onclick="delSketch(\''+r.fileId+'\')">Delete</button></div>'+
+          '<div id="sed_'+r.fileId+'"></div>'+
+          '</div>';
+      }).join('');
+      return '<div class="lot"><div class="head"><span>'+esc(k)+'</span>'+
+        '<a href="'+items[0].folderUrl+'" target="_blank" class="meta">Drive folder ↗</a></div>'+rowsHtml+'</div>';
+    }).join('');
+    loadThumbs(rows);
+  }
+
+  function loadThumbs(rows){
+    var ids=rows.map(function(r){return r.fileId;}).filter(Boolean);
+    if(!ids.length) return;
+    google.script.run.withSuccessHandler(function(map){
+      ids.forEach(function(id){
+        var img=document.getElementById('thumb_'+id);
+        if(img && map[id]){ img.src=map[id]; img.style.display='inline-block'; }
+      });
+    }).getThumbnails(ids);
+  }
+
+  function editSketch(fileId){
+    var row=(window.__sketches||[]).filter(function(r){return r.fileId===fileId;})[0];
+    var box=document.getElementById('sed_'+fileId);
+    if(!row||!box) return;
+    var malls=window.__malls||[];
+    var mallOpts=malls.map(function(m){
+      var lab=m.code?(m.name+' ('+m.code+')'):m.name;
+      return '<option value="'+esc(m.name)+'"'+(m.name===row.mall?' selected':'')+'>'+esc(lab)+'</option>';
+    }).join('');
+    var stList=(window.__shoptypes||[]).map(function(s){return s.Name;});
+    var shops='<option value=""'+(!row.shopType?' selected':'')+'>—</option>'+
+      stList.map(function(s){ return '<option'+(s===row.shopType?' selected':'')+'>'+esc(s)+'</option>'; }).join('');
+    box.innerHTML='<div class="form-grid" style="margin-top:10px">'+
+      '<div><label>Mall</label><select id="se_m_'+fileId+'">'+mallOpts+'</select></div>'+
+      '<div><label>Lot No.</label><input id="se_l_'+fileId+'" value="'+esc(row.lotNo)+'"></div>'+
+      '<div><label>Shop Type</label><select id="se_s_'+fileId+'">'+shops+'</select></div>'+
+      '<div class="full"><label>Remarks</label><input id="se_r_'+fileId+'" value="'+esc(row.remarks)+'"></div>'+
+      '<div class="form-actions">'+
+        '<button class="primary" style="margin-top:0" onclick="saveSketchEdit(\''+fileId+'\')">Save changes</button>'+
+        '<button class="ghost" onclick="document.getElementById(\'sed_'+fileId+'\').innerHTML=\'\'">Cancel</button>'+
+      '</div></div>';
+  }
+
+  function saveSketchEdit(fileId){
+    var p={ fileId:fileId,
+      mall:document.getElementById('se_m_'+fileId).value,
+      lotNo:document.getElementById('se_l_'+fileId).value.trim(),
+      shopType:document.getElementById('se_s_'+fileId).value,
+      remarks:document.getElementById('se_r_'+fileId).value.trim() };
+    if(!p.lotNo){ alert('Lot No. is required.'); return; }
+    google.script.run
+      .withSuccessHandler(function(){ loadSketches(); })
+      .withFailureHandler(function(e){ alert(e.message); })
+      .updateSketch(p);
+  }
+
+  function delSketch(fileId){
+    if(!confirm('Delete this drawing? The file will be moved to Drive trash.')) return;
+    google.script.run
+      .withSuccessHandler(function(){ loadSketches(); })
+      .withFailureHandler(function(e){ alert(e.message); })
+      .deleteSketch(fileId);
+  }
+
+  function msg(id,kind,html){
+    var m=document.getElementById(id);
+    m.className='msg show '+kind; m.innerHTML=html;
+    if(kind==='ok') setTimeout(function(){ m.classList.remove('show'); }, 9000);
+  }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+  /* =====================  DOOR 2  ===================== */
+  var D2 = { malls:[], cats:[], jobcats:[], panels:[], reqtypes:[], types:[], shoptypes:[], ratebasis:[],
+             swmsservices:[], swmssteps:[], swmsequip:[], swmsppe:[],
+             team:[], mtypes:[], requests:[] };
+  var MGR = {};
+  var d2Ready = false, d3Ready = false, d4Ready = false;
+  var dataLoaded = false, dataLoading = false, dataWaiters = [];
+
+  function ensureData(cb){
+    if(dataLoaded){ if(cb) cb(); return; }
+    if(cb) dataWaiters.push(cb);
+    if(dataLoading) return;
+    dataLoading = true;
+    loadD2(function(){
+      dataLoaded = true; dataLoading = false;
+      var w = dataWaiters.slice(); dataWaiters = [];
+      w.forEach(function(f){ f(); });
+    });
+  }
+
+  function openDoor2(){
+    if(d2Ready) return;
+    d2Ready = true;
+    document.getElementById('luResult').innerHTML = '<div class="empty">Loading…</div>';
+    ensureData(function(){
+      document.getElementById('luResult').innerHTML = '';
+      refreshShared();
+      mountAllManagers();
+    });
+  }
+
+  function openDoor3(){
+    if(d3Ready) return;
+    d3Ready = true;
+    document.getElementById('swServices').innerHTML = 'Loading…';
+    ensureData(function(){
+      refreshShared();
+      mountDoor3Managers();
+    });
+  }
+
+  function openDoor4(){
+    if(d4Ready) return;
+    d4Ready = true;
+    document.getElementById('mrList').innerHTML = '<div class="empty">Loading…</div>';
+    ensureData(function(){
+      fillRequestSelects();
+      attachReqPreview();
+      mrPreview();
+      renderRequests('all');
+    });
+  }
+
+  function refreshShared(){
+    fillSelect('luMall', D2.malls.map(mallOpt));
+    fillSelect('luShop', D2.shoptypes.map(function(s){return {value:s.Name,label:s.Name};}));
+    fillSwServices();
+    if(d4Ready){ fillRequestSelects(); renderRequests(window.__mrFilter||'all'); }
+  }
+
+  function loadD2(cb){
+    var total=15, done=0;
+    function tick(){ if(++done>=total && cb) cb(); }
+    google.script.run.withSuccessHandler(function(x){ D2.team=x.sort(bySort);     tick(); }).crudList('TeamMembers');
+    google.script.run.withSuccessHandler(function(x){ D2.mtypes=x.sort(bySort);   tick(); }).crudList('MeasureTypes');
+    google.script.run.withSuccessHandler(function(x){ D2.requests=x;              tick(); }).crudList('MeasureRequests');
+    google.script.run.withSuccessHandler(function(x){ D2.malls=x;                  tick(); }).getMalls();
+    google.script.run.withSuccessHandler(function(x){ D2.cats=x.sort(bySort);       tick(); }).crudList('Categories');
+    google.script.run.withSuccessHandler(function(x){ D2.jobcats=x.sort(bySort);    tick(); }).crudList('JobCategories');
+    google.script.run.withSuccessHandler(function(x){ D2.panels=x;                  tick(); }).crudList('Panels');
+    google.script.run.withSuccessHandler(function(x){ D2.reqtypes=x.sort(bySort);   tick(); }).crudList('RequirementTypes');
+    google.script.run.withSuccessHandler(function(x){ D2.types=x.sort(bySort);      tick(); }).crudList('Types');
+    google.script.run.withSuccessHandler(function(x){ D2.shoptypes=x.sort(bySort);  tick(); }).crudList('ShopTypes');
+    google.script.run.withSuccessHandler(function(x){ D2.ratebasis=x.sort(bySort);  tick(); }).crudList('RateBasis');
+    google.script.run.withSuccessHandler(function(x){ D2.swmsservices=x.sort(bySort);tick();}).crudList('SwmsServices');
+    google.script.run.withSuccessHandler(function(x){ D2.swmssteps=x;               tick(); }).crudList('SwmsSteps');
+    google.script.run.withSuccessHandler(function(x){ D2.swmsequip=x;               tick(); }).crudList('SwmsEquipment');
+    google.script.run.withSuccessHandler(function(x){ D2.swmsppe=x;                 tick(); }).crudList('SwmsPPE');
+  }
+  function bySort(a,b){ return (Number(a.Sort)||0)-(Number(b.Sort)||0); }
+  function mallOpt(m){ return { value:m.name, label:m.code?(m.name+' ('+m.code+')'):m.name }; }
+  function fillSelect(id, opts, blank){
+    var s=document.getElementById(id); if(!s) return;
+    s.innerHTML = (blank?'<option value="">'+blank+'</option>':'') +
+      opts.map(function(o){ return '<option value="'+esc(o.value)+'">'+esc(o.label)+'</option>'; }).join('');
+  }
+  function listOpts(arr){ return arr.map(function(x){return {value:x.Name,label:x.Name};}); }
+  function dynOptions(from, filterVal){
+    if(from==='malls')    return D2.malls.map(mallOpt);
+    if(from==='cats')     return listOpts(D2.cats);
+    if(from==='jobcats')  return listOpts(D2.jobcats);
+    if(from==='panels')   return D2.panels.map(function(p){return {value:p.Name,label:p.Name};});
+    if(from==='shoptypes')return listOpts(D2.shoptypes);
+    if(from==='ratebasis')return listOpts(D2.ratebasis);
+    if(from==='swmsservices')return listOpts(D2.swmsservices);
+    if(from==='team')      return listOpts(D2.team);
+    if(from==='mtypes')    return listOpts(D2.mtypes);
+    if(from==='reqtypes'){
+      var list=D2.reqtypes;
+      if(filterVal) list=list.filter(function(r){ return String(r.Category)===String(filterVal); });
+      return listOpts(list);
+    }
+    if(from==='types'){
+      var tl=D2.types;
+      if(filterVal) tl=tl.filter(function(r){ return String(r.Category)===String(filterVal); });
+      return listOpts(tl);
+    }
+    return [];
+  }
+
+  /* ---------- staff lookup view ---------- */
+  function runLookup(){
+    var mall=document.getElementById('luMall').value;
+    var shop=document.getElementById('luShop').value;
+    if(!mall){ document.getElementById('luResult').innerHTML='<div class="empty">Pick a mall.</div>'; return; }
+    document.getElementById('luResult').innerHTML='<div class="empty">Loading…</div>';
+    google.script.run.withSuccessHandler(function(groups){
+      google.script.run.withSuccessHandler(function(rates){
+        renderLookup(mall, shop, groups, rates);
+      }).comparePanels(mall, '');
+    }).lookupRequirements(mall, shop);
+  }
+  function renderLookup(mall, shop, groups, rates){
+    var html='';
+    if(!groups.length){
+      html += '<div class="card empty">No requirements set for '+esc(mall)+' yet. Add them in the Requirements tab.</div>';
+    } else {
+      html += '<div class="card"><h2>'+esc(mall)+' — requirements <span class="tag">'+esc(shop)+'</span></h2>';
+      groups.forEach(function(g){
+        html += '<div class="reqgroup"><h3>'+esc(g.category)+'</h3><table class="tbl">';
+        g.items.forEach(function(it){
+          html += '<tr><td style="width:38%"><b>'+esc(it.requirement)+'</b>'+
+                  (it.type?'<span class="tag">'+esc(it.type)+'</span>':'')+
+                  (it.shopType && it.shopType!=='All'?'<span class="tag">'+esc(it.shopType)+'</span>':'')+'</td>'+
+                  '<td>'+esc(it.value)+(it.notes?('<div class="meta" style="margin-top:3px">'+esc(it.notes)+'</div>'):'')+'</td></tr>';
+        });
+        html += '</table></div>';
+      });
+      html += '</div>';
+    }
+    // panel comparison grouped by job category
+    if(rates.length){
+      var byJob={};
+      rates.forEach(function(r){ var k=r['Job Category']||'—'; (byJob[k]=byJob[k]||[]).push(r); });
+      html += '<div class="card"><h2>Panel contractor comparison</h2><p class="sub">Cheapest first. Rates from past engagement — reference only.</p>';
+      Object.keys(byJob).forEach(function(job){
+        var list=byJob[job].sort(function(a,b){return (Number(a['Price From'])||0)-(Number(b['Price From'])||0);});
+        html += '<div class="reqgroup"><h3>'+esc(job)+'</h3><table class="tbl">'+
+                '<tr><th>Contractor</th><th>Basis</th><th>Price range</th><th>Lot size</th><th>Engaged</th></tr>';
+        list.forEach(function(r,i){
+          html += '<tr><td>'+esc(r.Panel)+'</td><td>'+esc(r['Rate Basis'])+'</td>'+
+                  '<td class="pricecell'+(i===0?' cheap':'')+'">'+rmRange(r['Price From'],r['Price To'])+'</td>'+
+                  '<td>'+esc(r['Lot Size Ref'])+'</td><td class="meta">'+esc(r['Engaged On'])+'</td></tr>';
+        });
+        html += '</table></div>';
+      });
+      html += '</div>';
+    }
+    document.getElementById('luResult').innerHTML = html;
+  }
+  function rmFmt(v){ return (v===''||v==null)?'':'RM '+Number(v).toLocaleString(); }
+  function rmRange(a,b){
+    if((a===''||a==null)&&(b===''||b==null)) return '—';
+    if(b===''||b==null) return rmFmt(a);
+    if(a===''||a==null) return rmFmt(b);
+    return rmFmt(a)+' – '+rmFmt(b);
+  }
+
+  /* ---------- generic add/edit/delete manager ---------- */
+  function mountAllManagers(){
+    mountManager('mgrReq', {
+      table:'Requirements', title:'Requirements', subtitle:'Add / edit / delete guideline items per mall.',
+      filter:{key:'Mall', from:'malls'},
+      fields:[
+        {key:'Mall', label:'Mall', type:'dyn', from:'malls'},
+        {key:'Category', label:'Job Category', type:'dyn', from:'cats'},
+        {key:'Requirement', label:'Requirement', type:'dyn', from:'reqtypes', dependsOn:'Category', full:true},
+        {key:'Type', label:'Type (Hoarding / Visual only)', type:'dyn', from:'types', dependsOn:'Category', hideIfEmpty:true, allowBlank:true, full:true},
+        {key:'Value', label:'Value / item', type:'text', ph:'e.g. MDF', full:true},
+        {key:'Shop Type', label:'Shop Category (applies to)', type:'dyn', from:'shoptypes'},
+        {key:'Sort', label:'Order', type:'number'},
+        {key:'Notes', label:'Notes / remarks', type:'textarea', full:true}
+      ],
+      columns:['Category','Requirement','Type','Value','Shop Type','Notes']
+    });
+    mountManager('mgrMalls', {
+      table:'Malls', title:'Malls', subtitle:'Your mall master list.', afterChange:true,
+      fields:[
+        {key:'Name', label:'Mall name', type:'text'},
+        {key:'Code', label:'Code', type:'text', ph:'e.g. SCM'},
+        {key:'Location', label:'Location', type:'text', full:true},
+        {key:'Notes', label:'Notes', type:'textarea', full:true}
+      ],
+      columns:['Name','Code','Location','Notes']
+    });
+    mountManager('mgrPanels', {
+      table:'Panels', title:'Panel contractors', subtitle:'The companies. Add their rates in the table below.', afterChange:true,
+      fields:[
+        {key:'Name', label:'Company name', type:'text', full:true},
+        {key:'PIC', label:'PIC', type:'text'},
+        {key:'Phone', label:'Phone', type:'text'},
+        {key:'Email', label:'Email', type:'text'},
+        {key:'Notes', label:'Notes', type:'textarea', full:true}
+      ],
+      columns:['Name','PIC','Phone','Email','Notes']
+    });
+    mountManager('mgrRates', {
+      table:'PanelRates', title:'Panel rates', subtitle:'Rate reference per mall, from past engagement.',
+      filter:{key:'Mall', from:'malls'},
+      fields:[
+        {key:'Panel', label:'Panel contractor', type:'dyn', from:'panels', full:true},
+        {key:'Job Category', label:'Job category', type:'dyn', from:'jobcats', full:true},
+        {key:'Mall', label:'Mall', type:'dyn', from:'malls'},
+        {key:'Rate Basis', label:'Rate basis', type:'dyn', from:'ratebasis'},
+        {key:'Price From', label:'Price from (RM)', type:'number'},
+        {key:'Price To', label:'Price to (RM)', type:'number'},
+        {key:'Lot Size Ref', label:'Lot size ref', type:'text', ph:'e.g. ≤ 1000 sqft'},
+        {key:'Engaged On', label:'Engaged on', type:'text', ph:'e.g. May 2025'},
+        {key:'Notes', label:'Notes', type:'textarea', full:true}
+      ],
+      columns:['Panel','Job Category','Mall','Rate Basis','Price From','Price To','Lot Size Ref','Engaged On']
+    });
+    mountManager('mgrCats', {
+      table:'Categories', title:'Job Categories', subtitle:'Hoarding, Visual, Reinstatement, Renovation…', afterChange:true,
+      fields:[{key:'Name',label:'Name',type:'text'},{key:'Sort',label:'Order',type:'number'}],
+      columns:['Name','Sort']
+    });
+    mountManager('mgrReqTypes', {
+      table:'RequirementTypes', title:'Requirement types', subtitle:'The Requirement dropdown, grouped by category. Add / edit / delete.', afterChange:true,
+      filter:{key:'Category', from:'cats', label:'Job Category'},
+      fields:[
+        {key:'Category', label:'Job Category', type:'dyn', from:'cats'},
+        {key:'Name', label:'Requirement name', type:'text', ph:'e.g. Hoarding material', full:true},
+        {key:'Sort', label:'Order', type:'number'}
+      ],
+      columns:['Category','Name','Sort']
+    });
+    mountManager('mgrTypes', {
+      table:'Types', title:'Hoarding / Visual types', subtitle:'The Type dropdown, grouped by category. Add / edit / delete.', afterChange:true,
+      filter:{key:'Category', from:'cats', label:'Job Category'},
+      fields:[
+        {key:'Category', label:'Job Category', type:'dyn', from:'cats'},
+        {key:'Name', label:'Type name', type:'text', ph:'e.g. Lot (Shop Front) (Indoor)', full:true},
+        {key:'Sort', label:'Order', type:'number'}
+      ],
+      columns:['Category','Name','Sort']
+    });
+    mountManager('mgrShopTypes', {
+      table:'ShopTypes', title:'Shop Categories', subtitle:'The “Applies to” dropdown (All, F&B, Office…).', afterChange:true,
+      fields:[{key:'Name',label:'Name',type:'text'},{key:'Sort',label:'Order',type:'number'}],
+      columns:['Name','Sort']
+    });
+    mountManager('mgrRateBasis', {
+      table:'RateBasis', title:'Rate basis', subtitle:'The panel rate basis dropdown (Per lot, Per sqft…).', afterChange:true,
+      fields:[{key:'Name',label:'Name',type:'text'},{key:'Sort',label:'Order',type:'number'}],
+      columns:['Name','Sort']
+    });
+    mountManager('mgrJobcats', {
+      table:'JobCategories', title:'Panel job categories', subtitle:'Specializations for panel contractors.', afterChange:true,
+      fields:[{key:'Name',label:'Name',type:'text'},{key:'Sort',label:'Order',type:'number'}],
+      columns:['Name','Sort']
+    });
+    mountManager('mgrTeam', {
+      table:'TeamMembers', title:'Team members', subtitle:'The “Attention to” list for measurement requests (e.g. Calvin).', afterChange:true,
+      fields:[{key:'Name',label:'Name',type:'text'},{key:'Sort',label:'Order',type:'number'}],
+      columns:['Name','Sort']
+    });
+    mountManager('mgrMTypes', {
+      table:'MeasureTypes', title:'Measurement types', subtitle:'The “Measure for” options (Hoarding size, Reinstatement lot size…).', afterChange:true,
+      fields:[{key:'Name',label:'Name',type:'text'},{key:'Sort',label:'Order',type:'number'}],
+      columns:['Name','Sort']
+    });
+  }
+
+  function refreshAll(){ Object.keys(MGR).forEach(function(k){ MGR[k].reload(); }); }
+
+  function mountManager(mountId, cfg){
+    var el=document.getElementById(mountId);
+    var st={ rows:[], editId:null, showForm:false, filter:'', vals:{} };
+
+    function fid(key){ return mountId+'_f_'+key.replace(/\W/g,''); }
+    function isDependedOn(key){ return cfg.fields.some(function(f){ return f.dependsOn===key; }); }
+
+    function buildDefaults(){
+      var v={};
+      cfg.fields.forEach(function(f){
+        if(f.type==='select'||f.type==='dyn'){
+          var opts=(f.type==='select')?f.options.map(function(o){return{value:o};}):dynOptions(f.from, f.dependsOn?v[f.dependsOn]:null);
+          v[f.key]=opts.length?opts[0].value:'';
+        } else v[f.key]='';
+      });
+      return v;
+    }
+    function readForm(){
+      cfg.fields.forEach(function(f){
+        var node=document.getElementById(fid(f.key));
+        if(node) st.vals[f.key]=node.value;
+      });
+    }
+
+    function fieldHtml(f){
+      var id=fid(f.key), v=(st.vals[f.key]==null?'':st.vals[f.key]);
+      var inner;
+      if(f.type==='textarea') inner='<textarea id="'+id+'" placeholder="'+esc(f.ph||'')+'">'+esc(v)+'</textarea>';
+      else if(f.type==='number') inner='<input id="'+id+'" type="number" value="'+esc(v)+'" placeholder="'+esc(f.ph||'')+'">';
+      else if(f.type==='select'||f.type==='dyn'){
+        var opts=(f.type==='select')?f.options.map(function(o){return {value:o,label:o};}):dynOptions(f.from, f.dependsOn?st.vals[f.dependsOn]:null);
+        if(f.hideIfEmpty && !opts.length && !v) return '';   // e.g. Type only shows for Hoarding/Visual
+        if(f.allowBlank) opts=[{value:'',label:'—'}].concat(opts);
+        if(v && !opts.some(function(o){return String(o.value)===String(v);})) opts.unshift({value:v,label:v+' (not in list)'});
+        var onch=isDependedOn(f.key)?' onchange="MGR[\''+mountId+'\']._dep()"':'';
+        inner='<select id="'+id+'"'+onch+'>'+opts.map(function(o){
+          return '<option value="'+esc(o.value)+'"'+(String(o.value)===String(v)?' selected':'')+'>'+esc(o.label)+'</option>';
+        }).join('')+'</select>';
+      } else inner='<input id="'+id+'" value="'+esc(v)+'" placeholder="'+esc(f.ph||'')+'">';
+      return '<div'+(f.full?' class="full"':'')+'><label>'+esc(f.label)+'</label>'+inner+'</div>';
+    }
+
+    function formHtml(){
+      if(!st.showForm) return '';
+      return '<div class="form-grid">'+cfg.fields.map(fieldHtml).join('')+
+        '<div class="form-actions">'+
+        '<button class="primary" style="margin-top:0" onclick="MGR[\''+mountId+'\'].save()">'+(st.editId?'Update':'Add')+'</button>'+
+        '<button class="ghost" onclick="MGR[\''+mountId+'\'].cancel()">Cancel</button></div></div>';
+    }
+
+    function filterHtml(){
+      if(!cfg.filter) return '';
+      var opts=dynOptions(cfg.filter.from);
+      return '<div class="filterbar"><label>Filter by '+esc(cfg.filter.label||cfg.filter.key)+'</label><select onchange="MGR[\''+mountId+'\'].setFilter(this.value)">'+
+        '<option value="">All</option>'+opts.map(function(o){
+          return '<option value="'+esc(o.value)+'"'+(o.value===st.filter?' selected':'')+'>'+esc(o.label)+'</option>';
+        }).join('')+'</select></div>';
+    }
+
+    function listHtml(){
+      var rows=st.rows;
+      if(cfg.filter && st.filter) rows=rows.filter(function(r){ return String(r[cfg.filter.key])===String(st.filter); });
+      if(!rows.length) return '<div class="empty">Nothing yet. Click + Add.</div>';
+      var head='<tr>'+cfg.columns.map(function(c){return '<th>'+esc(c)+'</th>';}).join('')+'<th></th></tr>';
+      var body=rows.map(function(r){
+        var tds=cfg.columns.map(function(c){
+          var val=r[c];
+          if(/^Price/.test(c)) return '<td class="pricecell">'+(val===''||val==null?'—':rmFmt(val))+'</td>';
+          return '<td>'+esc(val)+'</td>';
+        }).join('');
+        return '<tr>'+tds+'<td class="rowbtns">'+
+          '<button onclick="MGR[\''+mountId+'\'].edit(\''+r._id+'\')">Edit</button>'+
+          '<button class="del" onclick="MGR[\''+mountId+'\'].del(\''+r._id+'\')">Delete</button></td></tr>';
+      }).join('');
+      return '<table class="tbl">'+head+body+'</table>';
+    }
+
+    function paint(){
+      el.innerHTML='<div class="card"><div class="mgr-head"><div><h2>'+esc(cfg.title)+'</h2>'+
+        '<p class="sub">'+esc(cfg.subtitle)+'</p></div>'+
+        '<button class="ghost" onclick="MGR[\''+mountId+'\'].add()">+ Add</button></div>'+
+        formHtml()+filterHtml()+'<div>'+listHtml()+'</div></div>';
+    }
+
+    var api={
+      reload:function(){
+        google.script.run.withSuccessHandler(function(rows){ st.rows=rows; paint(); }).crudList(cfg.table);
+      },
+      add:function(){ st.editId=null; st.vals=buildDefaults(); st.showForm=true; paint(); },
+      edit:function(id){
+        st.editId=id;
+        var r=st.rows.filter(function(x){return x._id===id;})[0]||{};
+        st.vals={}; cfg.fields.forEach(function(f){ st.vals[f.key]=(r[f.key]==null?'':r[f.key]); });
+        st.showForm=true; paint();
+      },
+      cancel:function(){ st.editId=null; st.showForm=false; paint(); },
+      setFilter:function(v){ st.filter=v; paint(); },
+      _dep:function(){
+        readForm();
+        cfg.fields.forEach(function(f){
+          if(!f.dependsOn) return;
+          var opts=dynOptions(f.from, st.vals[f.dependsOn]);
+          if(!opts.some(function(o){return String(o.value)===String(st.vals[f.key]);}))
+            st.vals[f.key]=opts.length?opts[0].value:'';
+        });
+        paint();
+      },
+      save:function(){
+        readForm();
+        var obj={}; cfg.fields.forEach(function(f){ obj[f.key]=st.vals[f.key]; });
+        if(st.editId) obj.ID=st.editId;
+        if(cfg.fields[0] && !obj[cfg.fields[0].key]){ alert(cfg.fields[0].label+' is required.'); return; }
+        google.script.run
+          .withSuccessHandler(function(){ st.editId=null; st.showForm=false;
+            if(cfg.afterChange){ loadD2(function(){ refreshAll(); refreshShared(); }); }
+            else api.reload();
+          })
+          .withFailureHandler(function(e){ alert(e.message); })
+          .crudSave(cfg.table, obj);
+      },
+      del:function(id){
+        if(!confirm('Delete this record? Cannot undo.')) return;
+        google.script.run
+          .withSuccessHandler(function(){
+            if(cfg.afterChange){ loadD2(function(){ refreshAll(); refreshShared(); }); }
+            else api.reload();
+          })
+          .withFailureHandler(function(e){ alert(e.message); })
+          .crudDelete(cfg.table, id);
+      }
+    };
+    MGR[mountId]=api;
+    api.reload();
+  }
+
+  /* =====================  DOOR 3 — HIRARC / MOS  ===================== */
+  function fillSwServices(){
+    var el=document.getElementById('swServices'); if(!el) return;
+    if(!D2.swmsservices.length){ el.innerHTML='<span class="meta">No services. Add under Templates.</span>'; return; }
+    el.innerHTML=D2.swmsservices.map(function(s){
+      var n=D2.swmssteps.filter(function(x){return x.Service===s.Name;}).length;
+      return '<label><input type="checkbox" value="'+esc(s.Name)+'"> '+esc(s.Name)+(n?'':' <span class="meta">(no steps)</span>')+'</label>';
+    }).join('');
+  }
+
+  function mountDoor3Managers(){
+    mountManager('mgrSwmsServices', {
+      table:'SwmsServices', title:'SWMS services', subtitle:'The services you can generate a SWMS for.', afterChange:true,
+      fields:[{key:'Name',label:'Name',type:'text'},{key:'Sort',label:'Order',type:'number'}],
+      columns:['Name','Sort']
+    });
+    mountManager('mgrSwmsSteps', {
+      table:'SwmsSteps', title:'SWMS steps + HIRARC', subtitle:'Each job step with its hazards, controls and Impact × Likelihood. Grouped by service.', afterChange:true,
+      filter:{key:'Service', from:'swmsservices', label:'Service'},
+      fields:[
+        {key:'Service', label:'Service', type:'dyn', from:'swmsservices'},
+        {key:'Step No', label:'Step no.', type:'number'},
+        {key:'Job Step', label:'Job step', type:'text', full:true},
+        {key:'Method', label:'Method / safe work procedure (one per line)', type:'textarea', full:true},
+        {key:'Hazards', label:'Hazards (one per line)', type:'textarea', full:true},
+        {key:'Impacts', label:'Impacts / persons at risk (one per line)', type:'textarea', full:true},
+        {key:'Existing Controls', label:'Existing controls (one per line)', type:'textarea', full:true},
+        {key:'Impact', label:'Impact (1-5)', type:'number'},
+        {key:'Likelihood', label:'Likelihood (1-5)', type:'number'},
+        {key:'Additional Controls', label:'Additional controls (one per line)', type:'textarea', full:true},
+        {key:'Sort', label:'Order', type:'number'}
+      ],
+      columns:['Service','Step No','Job Step','Impact','Likelihood']
+    });
+    mountManager('mgrSwmsEquip', {
+      table:'SwmsEquipment', title:'SWMS equipment', subtitle:'Plant / machinery / equipment per service.', afterChange:true,
+      filter:{key:'Service', from:'swmsservices', label:'Service'},
+      fields:[
+        {key:'Service', label:'Service', type:'dyn', from:'swmsservices'},
+        {key:'Equipment', label:'Equipment', type:'text', full:true},
+        {key:'Purpose', label:'Purpose', type:'text', full:true},
+        {key:'Sort', label:'Order', type:'number'}
+      ],
+      columns:['Service','Equipment','Purpose']
+    });
+    mountManager('mgrSwmsPPE', {
+      table:'SwmsPPE', title:'SWMS PPE', subtitle:'PPE list. Use service “All” for general PPE.', afterChange:true,
+      fields:[
+        {key:'Service', label:'Service (or All)', type:'text'},
+        {key:'PPE', label:'PPE item', type:'text', full:true},
+        {key:'Sort', label:'Order', type:'number'}
+      ],
+      columns:['Service','PPE']
+    });
+  }
+
+  function dlines(s){ return String(s==null?'':s).split('\n').map(function(x){return x.trim();}).filter(function(x){return x && x.toUpperCase()!=='NA';}); }
+  function dunion(a,b){ var o=a.slice(); b.forEach(function(x){ if(!o.some(function(y){return y.toLowerCase()===x.toLowerCase();})) o.push(x); }); return o; }
+  function dedupeBy(arr,key){ var seen={},out=[]; arr.forEach(function(r){ var k=String(r[key]).toLowerCase(); if(!seen[k]){seen[k]=1; out.push(r);} }); return out; }
+  function ul(arr){ return arr.length?('<ul>'+arr.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'):'—'; }
+  function riskBand(r){
+    if(r>=20) return {t:'Critical', c:'#b91c1c'};
+    if(r>=15) return {t:'Significant', c:'#c2410c'};
+    if(r>=10) return {t:'Moderate', c:'#b45309'};
+    if(r>=5)  return {t:'Minor', c:'#a16207'};
+    return {t:'Negligible', c:'#15803d'};
+  }
+
+  function generateSwms(){
+    var services=[].slice.call(document.querySelectorAll('#swServices input:checked')).map(function(x){return x.value;});
+    var out=document.getElementById('swmsOut');
+    if(!services.length){ out.innerHTML='<div class="card empty">Tick at least one service.</div>'; return; }
+    var picked=D2.swmssteps.filter(function(s){return services.indexOf(s.Service)>=0;});
+    if(!picked.length){ out.innerHTML='<div class="card empty">No steps for the selected service(s) yet. Add them under Templates.</div>'; return; }
+    picked.sort(function(a,b){return (Number(a['Step No'])||0)-(Number(b['Step No'])||0);});
+    var map={}, order=[];
+    picked.forEach(function(s){
+      var key=String(s['Job Step']).trim().toLowerCase();
+      if(!map[key]){
+        map[key]={step:s['Job Step'], method:dlines(s.Method), haz:dlines(s.Hazards), imp:dlines(s.Impacts),
+                  ctrl:dlines(s['Existing Controls']), add:dlines(s['Additional Controls']),
+                  i:Number(s.Impact)||0, l:Number(s.Likelihood)||0};
+        order.push(key);
+      } else {
+        var m=map[key];
+        m.method=dunion(m.method,dlines(s.Method)); m.haz=dunion(m.haz,dlines(s.Hazards));
+        m.imp=dunion(m.imp,dlines(s.Impacts)); m.ctrl=dunion(m.ctrl,dlines(s['Existing Controls']));
+        m.add=dunion(m.add,dlines(s['Additional Controls']));
+        m.i=Math.max(m.i,Number(s.Impact)||0); m.l=Math.max(m.l,Number(s.Likelihood)||0);
+      }
+    });
+    var steps=order.map(function(k){return map[k];});
+    var equip=dedupeBy(D2.swmsequip.filter(function(e){return services.indexOf(e.Service)>=0;}),'Equipment');
+    var ppe=dedupeBy(D2.swmsppe.filter(function(p){return p.Service==='All'||services.indexOf(p.Service)>=0;}),'PPE');
+    out.innerHTML=renderSwms(services, steps, equip, ppe);
+    out.scrollIntoView({behavior:'smooth'});
+  }
+
+  function renderSwms(services, steps, equip, ppe){
+    function v(id){ var n=document.getElementById(id); return n?esc(n.value):''; }
+    var title=services.join(' + ')+' — Method Statement &amp; HIRARC';
+    var h='<div class="printbar no-print"><button class="primary" style="margin-top:0" onclick="window.print()">🖨 Print / Save PDF</button>'+
+          '<button class="ghost" onclick="generateSwms()">Regenerate</button></div>';
+    h+='<div class="swms">';
+    h+='<h1>SAFE WORK METHOD STATEMENT &amp; HIRARC</h1>';
+    h+='<div class="docmeta">'+esc(services.join(', '))+'</div>';
+    h+='<table><tr><th style="width:20%">Contractor</th><td>HG Services (M) Sdn Bhd</td><th style="width:16%">Prepared by</th><td>'+v('swBy')+'</td></tr>'+
+       '<tr><th>Project / Mall</th><td>'+v('swProject')+'</td><th>Location</th><td>'+v('swLoc')+'</td></tr>'+
+       '<tr><th>Document Ref.</th><td>'+v('swRef')+'</td><th>Revision</th><td>'+v('swRev')+'</td></tr>'+
+       '<tr><th>Date</th><td>'+v('swDate')+'</td><th>Duration</th><td>'+v('swFrom')+' to '+v('swTo')+'</td></tr></table>';
+    h+='<h2>1. Scope of Works</h2><p>'+esc(services.join(', '))+' works at '+(v('swProject')||'site')+' '+v('swLoc')+'.</p>';
+    h+='<h2>2. Plant / Machinery / Equipment</h2>';
+    h+=equip.length?('<table><tr><th style="width:36px">No</th><th>Equipment</th><th>Purpose</th></tr>'+
+        equip.map(function(e,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(e.Equipment)+'</td><td>'+esc(e.Purpose)+'</td></tr>';}).join('')+'</table>'):'<p>—</p>';
+    h+='<h2>3. Personal Protective Equipment (PPE)</h2>'+ul(ppe.map(function(p){return p.PPE;}));
+    h+='<h2>4. Method of Statement (Work Sequence)</h2>';
+    h+='<table><tr><th style="width:36px">Step</th><th style="width:28%">Job Step</th><th>Method / Safe Work Procedure</th></tr>'+
+       steps.map(function(s,i){return '<tr><td>'+(i+1)+'</td><td class="stepname">'+esc(s.step)+'</td><td>'+ul(s.method)+'</td></tr>';}).join('')+'</table>';
+    h+='<h2>5. HIRARC — Risk Assessment</h2>';
+    h+='<table><tr><th style="width:30px">No</th><th>Job Step</th><th>Hazards</th><th>Impacts / Persons at risk</th><th>Existing Controls</th>'+
+       '<th style="width:24px">I</th><th style="width:24px">L</th><th style="width:86px">Risk</th><th>Additional Controls</th></tr>'+
+       steps.map(function(s,i){
+         var r=s.i*s.l, b=riskBand(r);
+         return '<tr><td>'+(i+1)+'</td><td class="stepname">'+esc(s.step)+'</td><td>'+ul(s.haz)+'</td><td>'+ul(s.imp)+'</td><td>'+ul(s.ctrl)+'</td>'+
+                '<td>'+(s.i||'—')+'</td><td>'+(s.l||'—')+'</td><td>'+(r?('<span class="rr" style="background:'+b.c+'">'+r+' '+b.t+'</span>'):'—')+'</td><td>'+ul(s.add)+'</td></tr>';
+       }).join('')+'</table>';
+    h+='<h2>6. Risk Rating Legend (Risk = Impact × Likelihood)</h2><table class="legend"><tr><th style="width:70px">Rating</th><th style="width:110px">Band</th><th>Action</th></tr>'+
+       '<tr><td>20–25</td><td><span class="rr" style="background:#b91c1c">Critical</span></td><td>Operation not permissible; management attention required.</td></tr>'+
+       '<tr><td>15–19</td><td><span class="rr" style="background:#c2410c">Significant</span></td><td>Not permissible; reduce risk by all possible means.</td></tr>'+
+       '<tr><td>10–14</td><td><span class="rr" style="background:#b45309">Moderate</span></td><td>Further risk reduction; remedial action immediately; 14-day review.</td></tr>'+
+       '<tr><td>5–9</td><td><span class="rr" style="background:#a16207">Minor</span></td><td>Tolerable as low as reasonably practicable; 30-day review.</td></tr>'+
+       '<tr><td>1–4</td><td><span class="rr" style="background:#15803d">Negligible</span></td><td>Acceptable; discretionary remedial action.</td></tr></table>';
+    h+='<p class="docmeta" style="margin-top:18px">Prepared by '+v('swBy')+' — HG Services (M) Sdn Bhd. This SWMS must be reviewed at max. 6-month intervals or earlier if site conditions change.</p>';
+    h+='</div>';
+    return h;
+  }
+
+  /* =====================  DOOR 4 — Measurement Requests  ===================== */
+  function fillRequestSelects(){
+    fillSelect('mrMall', D2.malls.map(mallOpt), 'Pick mall');
+    fillSelect('mrAssign', D2.team.map(function(t){return {value:t.Name,label:t.Name};}), '—');
+    var tc=document.getElementById('mrTypes');
+    if(tc) tc.innerHTML=D2.mtypes.map(function(m){
+      return '<label><input type="checkbox" value="'+esc(m.Name)+'" onchange="mrPreview()"> '+esc(m.Name)+'</label>';
+    }).join('') || '<span class="meta">Add types in Lists.</span>';
+  }
+  function attachReqPreview(){
+    ['mrAssign','mrPurpose'].forEach(function(id){
+      var n=document.getElementById(id); if(n){ n.onchange=mrPreview; }
+    });
+    var mm=document.getElementById('mrMall');
+    if(mm) mm.onchange=function(){ mrPreview(); refreshAllRowHints(); };
+    if(!document.querySelectorAll('#mrLots .lotrow').length) addLotRow();
+  }
+  function refreshAllRowHints(){
+    [].slice.call(document.querySelectorAll('#mrLots .lotrow')).forEach(function(el){ rowLotHint(el.id.split('_')[1]); });
+  }
+  function mrCheckedTypes(){
+    return [].slice.call(document.querySelectorAll('#mrTypes input:checked')).map(function(x){return x.value;});
+  }
+
+  var lotSeq=0;
+  function addLotRow(pref){
+    pref=pref||{};
+    var i=++lotSeq;
+    window.__lrFiles=window.__lrFiles||{}; window.__lrFiles[i]=[];
+    var div=document.createElement('div');
+    div.className='lotrow'; div.id='lotrow_'+i;
+    div.style.cssText='border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg)';
+    div.innerHTML=
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">'+
+        '<div style="flex:1;min-width:120px"><input id="lr_lot_'+i+'" placeholder="Lot No. e.g. G118" oninput="mrPreview()" onchange="rowLotHint('+i+')"><div class="meta" id="lr_hint_'+i+'" style="margin-top:4px"></div></div>'+
+        '<div style="flex:1;min-width:140px"><input id="lr_client_'+i+'" placeholder="Client e.g. ABC Sdn Bhd" oninput="mrPreview()"></div>'+
+        '<div style="flex:1.4;min-width:160px"><input id="lr_rem_'+i+'" placeholder="Remarks (optional)" oninput="mrPreview()"></div>'+
+        '<button class="ghost" style="padding:10px 13px" onclick="removeLotRow('+i+')">✕</button>'+
+      '</div>'+
+      '<div style="margin-top:8px">'+
+        '<button class="ghost" style="padding:6px 11px;font-size:0.8rem" onclick="document.getElementById(\'lr_file_'+i+'\').click()">📎 Add reference photos</button>'+
+        '<input type="file" id="lr_file_'+i+'" multiple accept="image/*" style="display:none" onchange="lrFiles('+i+')">'+
+        '<span class="meta" id="lr_files_'+i+'"></span>'+
+      '</div>';
+    document.getElementById('mrLots').appendChild(div);
+    if(pref.lot) document.getElementById('lr_lot_'+i).value=pref.lot;
+    if(pref.client) document.getElementById('lr_client_'+i).value=pref.client;
+    mrPreview();
+  }
+  function lrFiles(i){
+    var input=document.getElementById('lr_file_'+i);
+    window.__lrFiles=window.__lrFiles||{}; window.__lrFiles[i]=window.__lrFiles[i]||[];
+    Array.prototype.forEach.call(input.files,function(file){
+      var rd=new FileReader();
+      rd.onload=function(){ window.__lrFiles[i].push({name:file.name,mimeType:file.type||'image/jpeg',dataBase64:rd.result.split(',')[1]}); renderLrFiles(i); };
+      rd.readAsDataURL(file);
+    });
+    input.value='';
+  }
+  function renderLrFiles(i){
+    var span=document.getElementById('lr_files_'+i); if(!span) return;
+    var arr=(window.__lrFiles||{})[i]||[];
+    span.innerHTML=arr.length?(' &nbsp;'+arr.map(function(f,k){return '📷 '+esc(f.name)+' <a href="#" onclick="lrRm('+i+','+k+');return false;">✕</a>';}).join(' &nbsp; ')):'';
+  }
+  function lrRm(i,k){ ((window.__lrFiles||{})[i]||[]).splice(k,1); renderLrFiles(i); }
+  function removeLotRow(i){
+    var el=document.getElementById('lotrow_'+i); if(el) el.parentNode.removeChild(el);
+    if(window.__lrFiles) delete window.__lrFiles[i];
+    if(!document.querySelectorAll('#mrLots .lotrow').length) addLotRow();
+    mrPreview();
+  }
+  function getLotRows(){
+    return [].slice.call(document.querySelectorAll('#mrLots .lotrow')).map(function(el){
+      var i=el.id.split('_')[1];
+      return { lot:(document.getElementById('lr_lot_'+i).value||'').trim(),
+               client:(document.getElementById('lr_client_'+i).value||'').trim(),
+               remarks:(document.getElementById('lr_rem_'+i).value||'').trim(),
+               photos:(window.__lrFiles||{})[i]||[] };
+    });
+  }
+  function rowLotHint(i){
+    var mall=document.getElementById('mrMall').value;
+    var lotEl=document.getElementById('lr_lot_'+i), hintEl=document.getElementById('lr_hint_'+i);
+    if(!lotEl||!hintEl) return;
+    var lot=lotEl.value.trim();
+    if(!mall||!lot){ hintEl.innerHTML=''; return; }
+    hintEl.innerHTML='<span class="meta">checking…</span>';
+    google.script.run.withSuccessHandler(function(c){
+      var parts=[];
+      if(c.drawings) parts.push('✅ Already measured — '+c.drawings+' drawing'+(c.drawings>1?'s':'')+' in the Vault <a href="#" onclick="viewDrawings(\''+escAttr(mall)+'\',\''+escAttr(lot)+'\');return false;">view</a>');
+      if(c.requests) parts.push(c.requests+' existing request'+(c.requests>1?'s':'')+' for this lot');
+      hintEl.innerHTML = parts.length ? ('<span style="color:var(--accent);font-weight:600">'+parts.join(' &nbsp;·&nbsp; ')+'</span>') : '';
+    }).countMallLot(mall, lot);
+  }
+  function mrPreview(){
+    function val(id){ var n=document.getElementById(id); return n?n.value.trim():''; }
+    var mall=val('mrMall'), assign=val('mrAssign'), types=mrCheckedTypes(), rows=getLotRows();
+    var lines=[];
+    if(rows.length<=1){
+      var r=rows[0]||{lot:'',client:'',remarks:''};
+      lines.push('Please measure '+(r.lot||'____')+(mall?(', '+mall):''));
+      if(r.client) lines.push('Client is '+r.client);
+      if(types.length) lines.push('Measure for: '+types.join(', '));
+      lines.push('Thanks');
+      if(assign) lines.push('@'+assign);
+      if(r.remarks) lines.push('Remarks: '+r.remarks);
+    } else {
+      lines.push('Please measure at '+(mall||'____')+':');
+      rows.forEach(function(r,i){ lines.push((i+1)+'. '+(r.lot||'____')+' — '+(r.client||'____')+(r.remarks?(' ('+r.remarks+')'):'')); });
+      if(types.length) lines.push('Measure for: '+types.join(', '));
+      lines.push('Thanks');
+      if(assign) lines.push('@'+assign);
+    }
+    var el=document.getElementById('mrMsg'); if(el) el.textContent=lines.join('\n');
+  }
+  function copyMsg(){
+    var txt=document.getElementById('mrMsg').textContent;
+    var ta=document.createElement('textarea'); ta.value=txt;
+    ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+    ta.select();
+    try{ document.execCommand('copy'); msg('mrFeedback','ok','Message copied — paste into WhatsApp.'); }
+    catch(e){ msg('mrFeedback','err','Copy failed — select the text manually.'); }
+    document.body.removeChild(ta);
+  }
+  function saveRequest(){
+    var mall=document.getElementById('mrMall').value;
+    if(!mall){ return msg('mrFeedback','err','Pick a mall.'); }
+    var rows=getLotRows().filter(function(r){ return r.lot && r.client; });
+    if(!rows.length){ return msg('mrFeedback','err','Each lot needs a lot no. and a client.'); }
+    var p={ Mall:mall, Assigned:document.getElementById('mrAssign').value,
+            WorkType:mrCheckedTypes().join(', '), Purpose:document.getElementById('mrPurpose').value, rows:rows };
+    google.script.run
+      .withSuccessHandler(function(rs){
+        D2.requests=rs;
+        msg('mrFeedback','ok',rows.length+' request(s) saved. Copy the message to WhatsApp if not done.');
+        document.getElementById('mrLots').innerHTML=''; lotSeq=0; window.__lrFiles={}; addLotRow();
+        document.querySelectorAll('#mrTypes input:checked').forEach(function(x){x.checked=false;});
+        mrPreview(); renderRequests(window.__mrFilter||'all');
+      })
+      .withFailureHandler(function(e){ msg('mrFeedback','err',e.message); })
+      .addMeasureRequests(p);
+  }
+
+  function reqNeedsQuote(r){ return r.Status==='Measured' && r.Purpose!=='Reference only'; }
+  function statusMeta(s){
+    if(s==='Requested')      return {t:'Requested',     c:'#3b82f6'};
+    if(s==='Measured')       return {t:'Measured',      c:'#f59e0b'};
+    if(s==='Quotation Sent') return {t:'Quotation sent', c:'#22c55e'};
+    if(s==='Closed')         return {t:'Closed',        c:'#6b7280'};
+    return {t:s||'—', c:'#6b7280'};
+  }
+
+  function renderRequests(filter){
+    window.__mrFilter=filter||'all';
+    var rows=(D2.requests||[]).slice().reverse(); // newest first
+    var needs=rows.filter(reqNeedsQuote).length;
+    var filters=[['all','All'],['needs','⚠ Needs quotation'],['requested','Requested'],['done','Done']];
+    document.getElementById('mrFilters').innerHTML=filters.map(function(f){
+      return '<button class="'+(window.__mrFilter===f[0]?'active':'')+'" onclick="renderRequests(\''+f[0]+'\')">'+f[1]+(f[0]==='needs'&&needs?(' ('+needs+')'):'')+'</button>';
+    }).join('');
+    document.getElementById('mrBanner').innerHTML = needs
+      ? '<div class="banner">⚠ '+needs+' measurement'+(needs>1?'s':'')+' taken but quotation not sent yet.</div>' : '';
+
+    var view=rows.filter(function(r){
+      if(window.__mrFilter==='needs') return reqNeedsQuote(r);
+      if(window.__mrFilter==='requested') return r.Status==='Requested';
+      if(window.__mrFilter==='done') return r.Status==='Quotation Sent' || r.Status==='Closed';
+      return true;
+    });
+    var box=document.getElementById('mrList');
+    if(!view.length){ box.innerHTML='<div class="empty">Nothing here.</div>'; return; }
+    box.innerHTML=view.map(function(r){
+      var sm=statusMeta(r.Status), flag=reqNeedsQuote(r);
+      var acts='';
+      if(r.Status==='Requested') acts+='<button class="go" onclick="mrSet(\''+r._id+'\',\'Measured\')">✔ Mark measured</button>';
+      else if(r.Status==='Measured' && r.Purpose!=='Reference only') acts+='<button class="go" onclick="mrSet(\''+r._id+'\',\'Quotation Sent\')">✔ Quotation sent</button>';
+      else if(r.Status==='Measured') acts+='<button class="go" onclick="mrSet(\''+r._id+'\',\'Closed\')">✔ Mark done</button>';
+      else acts+='<button onclick="mrSet(\''+r._id+'\',\'Requested\')">↺ Reopen</button>';
+      acts+='<button onclick="viewDrawings(\''+escAttr(r.Mall)+'\',\''+escAttr(r['Lot No'])+'\')">🗂 Drawings</button>';
+      acts+='<button onclick="mrEdit(\''+r._id+'\')">✏ Edit</button>';
+      acts+='<button class="del" onclick="mrDelete(\''+r._id+'\')">Delete</button>';
+      return '<div class="req'+(flag?' flag':'')+'">'+
+        '<div class="rtop"><span class="rtitle">'+esc(r.Mall)+' ▸ '+esc(r['Lot No'])+' &nbsp;·&nbsp; '+esc(r.Client)+'</span>'+
+        '<span class="stbadge" style="background:'+sm.c+';color:#0a0e1a">'+sm.t+'</span></div>'+
+        '<div class="meta" style="margin-top:5px">'+esc(r.Date)+' · req by '+esc(r.Requestor)+
+          (r['Assigned To']?(' · 👷 '+esc(r['Assigned To'])):'')+' · '+esc(r.Purpose||'')+
+          (r['Quote Sent On']?(' · quoted '+esc(r['Quote Sent On'])):'')+'</div>'+
+        (r['Work Type']?('<div class="meta" style="margin-top:3px">Measure for: '+esc(r['Work Type'])+'</div>'):'')+
+        (r.Remarks?('<div class="meta" style="margin-top:3px">📝 '+esc(r.Remarks)+'</div>'):'')+
+        refPhotosHtml(r['Ref Photos'])+
+        '<div class="ractions">'+acts+'</div>'+
+        '<div id="mre_'+r._id+'"></div></div>';
+    }).join('');
+  }
+  function escAttr(s){ return String(s==null?'':s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+  function refPhotosHtml(s){
+    var lines=String(s==null?'':s).split('\n').filter(function(x){return x.trim();});
+    if(!lines.length) return '';
+    return '<div class="meta" style="margin-top:3px">📷 '+lines.map(function(l){
+      var p=l.split('|'); return '<a href="'+esc(p[1]||'')+'" target="_blank">'+esc(p[0]||'photo')+'</a>';
+    }).join(' · ')+'</div>';
+  }
+
+  function mrSet(id,status){
+    google.script.run.withSuccessHandler(function(rows){ D2.requests=rows; renderRequests(window.__mrFilter||'all'); })
+      .withFailureHandler(function(e){ alert(e.message); }).setMeasureStatus(id,status);
+  }
+  function mrDelete(id){
+    if(!confirm('Delete this request?')) return;
+    google.script.run.withSuccessHandler(function(){ D2.requests=D2.requests.filter(function(r){return r._id!==id;}); renderRequests(window.__mrFilter||'all'); })
+      .withFailureHandler(function(e){ alert(e.message); }).crudDelete('MeasureRequests', id);
+  }
+  function mrEdit(id){
+    var r=(D2.requests||[]).filter(function(x){return x._id===id;})[0];
+    var box=document.getElementById('mre_'+id); if(!r||!box) return;
+    var malls=D2.malls.map(function(m){ var lab=m.code?(m.name+' ('+m.code+')'):m.name;
+      return '<option value="'+esc(m.name)+'"'+(m.name===r.Mall?' selected':'')+'>'+esc(lab)+'</option>'; }).join('');
+    var team='<option value="">—</option>'+D2.team.map(function(t){
+      return '<option'+(t.Name===r['Assigned To']?' selected':'')+'>'+esc(t.Name)+'</option>'; }).join('');
+    var cur=String(r['Work Type']||'').split(',').map(function(s){return s.trim();});
+    var types=D2.mtypes.map(function(m){
+      return '<label><input type="checkbox" value="'+esc(m.Name)+'"'+(cur.indexOf(m.Name)>=0?' checked':'')+'> '+esc(m.Name)+'</label>'; }).join('');
+    var purp=['Quotation','Reference only'].map(function(p){return '<option'+(p===r.Purpose?' selected':'')+'>'+p+'</option>';}).join('');
+    box.innerHTML='<div class="form-grid" style="margin-top:10px">'+
+      '<div><label>Mall</label><select id="me_m_'+id+'">'+malls+'</select></div>'+
+      '<div><label>Lot No.</label><input id="me_l_'+id+'" value="'+esc(r['Lot No'])+'"></div>'+
+      '<div><label>Client</label><input id="me_c_'+id+'" value="'+esc(r.Client)+'"></div>'+
+      '<div><label>Attention to</label><select id="me_a_'+id+'">'+team+'</select></div>'+
+      '<div class="full"><label>Measure for</label><div class="chips" id="me_t_'+id+'">'+types+'</div></div>'+
+      '<div><label>Purpose</label><select id="me_p_'+id+'">'+purp+'</select></div>'+
+      '<div class="full"><label>Remarks</label><input id="me_r_'+id+'" value="'+esc(r.Remarks)+'"></div>'+
+      '<div class="form-actions">'+
+        '<button class="primary" style="margin-top:0" onclick="mrSaveEdit(\''+id+'\')">Save changes</button>'+
+        '<button class="ghost" onclick="document.getElementById(\'mre_'+id+'\').innerHTML=\'\'">Cancel</button>'+
+      '</div></div>';
+  }
+  function mrSaveEdit(id){
+    var types=[].slice.call(document.querySelectorAll('#me_t_'+id+' input:checked')).map(function(x){return x.value;});
+    var obj={ ID:id,
+      Mall:document.getElementById('me_m_'+id).value,
+      'Lot No':document.getElementById('me_l_'+id).value.trim(),
+      Client:document.getElementById('me_c_'+id).value.trim(),
+      'Assigned To':document.getElementById('me_a_'+id).value,
+      'Work Type':types.join(', '),
+      Purpose:document.getElementById('me_p_'+id).value,
+      Remarks:document.getElementById('me_r_'+id).value.trim() };
+    if(!obj['Lot No']){ alert('Lot No. is required.'); return; }
+    if(!obj.Client){ alert('Client is required.'); return; }
+    google.script.run
+      .withSuccessHandler(function(){
+        google.script.run.withSuccessHandler(function(rows){ D2.requests=rows; renderRequests(window.__mrFilter||'all'); }).crudList('MeasureRequests');
+      })
+      .withFailureHandler(function(e){ alert(e.message); })
+      .crudSave('MeasureRequests', obj);
+  }
+
+  function viewDrawings(mall, lot){
+    document.querySelectorAll('nav button').forEach(function(x){ x.classList.toggle('active', x.dataset.tab==='vault'); });
+    ['vault','requests','lookup','safety'].forEach(function(id){ document.getElementById(id).style.display=(id==='vault')?'block':'none'; });
+    var fm=document.getElementById('fMall'), fl=document.getElementById('fLot');
+    if(fm) fm.value=mall; if(fl) fl.value=lot;
+    loadSketches(); window.scrollTo(0,0);
+  }
+</script>
+</body>
+</html>

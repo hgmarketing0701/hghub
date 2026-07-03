@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Black Lee — Receipt Claims</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #141926;
+    --surface-2: #1c2335;
+    --border: #2a3245;
+    --text: #ffffff;
+    --text-dim: #a0a8b8;
+    --accent: #f59e0b;
+    --accent-hover: #d97706;
+    --accent-soft: rgba(245, 158, 11, 0.12);
+    --green: #22c55e;
+    --green-soft: rgba(34, 197, 94, 0.15);
+    --red: #ef4444;
+    --red-soft: rgba(239, 68, 68, 0.15);
+    --blue: #3b82f6;
+    --blue-soft: rgba(59, 130, 246, 0.15);
+    --radius: 14px;
+    --shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .container { max-width: 1180px; margin: 0 auto; padding: 24px 20px 80px; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 16px; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 24px;
+  }
+  .brand-block { display: flex; align-items: center; gap: 14px; }
+  .brand-logo {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; color: #0a0e1a; font-weight: 900;
+  }
+  .brand-name { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
+  .brand-sub { font-size: 0.82rem; color: var(--text-dim); margin-top: 3px; }
+  .user-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--green); color: var(--green);
+    padding: 8px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    margin-bottom: 20px;
+  }
+  .panel h2 { font-size: 1.05rem; font-weight: 800; margin-bottom: 14px; letter-spacing: -0.01em; }
+  .panel h3 { font-size: 0.78rem; font-weight: 700; margin: 14px 0 8px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
+  .hint { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 12px; }
+  .warn { color: var(--red); font-size: 0.85rem; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent); color: #0a0e1a;
+    border: none; padding: 10px 18px; border-radius: 10px;
+    font-weight: 700; font-size: 0.92rem; cursor: pointer;
+    font-family: inherit; transition: background 0.15s;
+  }
+  .btn:hover:not(:disabled) { background: var(--accent-hover); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn.secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+  .btn.secondary:hover:not(:disabled) { background: var(--border); }
+  .btn.danger { background: var(--red); color: #fff; }
+  .btn.link { background: transparent; color: var(--accent); padding: 6px 10px; }
+  .btn.small { padding: 6px 12px; font-size: 0.82rem; }
+  .btn.big { padding: 14px 26px; font-size: 1rem; }
+
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    display: block;
+  }
+  .upload-zone:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .upload-zone .big-emoji { font-size: 2rem; margin-bottom: 6px; }
+  .upload-zone input { display: none; }
+
+  .toolbar {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 18px;
+  }
+  .toolbar .count {
+    background: var(--surface-2); border: 1px solid var(--border);
+    padding: 8px 14px; border-radius: 999px; font-size: 0.85rem; color: var(--text-dim);
+  }
+  .toolbar .count b { color: var(--text); }
+
+  /* Receipt card */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px;
+    margin-bottom: 14px;
+    position: relative;
+  }
+  .card.status-extracting { border-color: var(--blue); }
+  .card.status-done { border-color: var(--green); }
+  .card.status-error { border-color: var(--red); }
+  .card-head {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+  .card-title { font-size: 0.95rem; font-weight: 800; flex-shrink: 0; }
+  .badge {
+    font-size: 0.72rem; padding: 3px 9px; border-radius: 999px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .badge.draft { background: var(--surface-2); color: var(--text-dim); }
+  .badge.extracting { background: var(--blue-soft); color: var(--blue); }
+  .badge.extracted { background: var(--accent-soft); color: var(--accent); }
+  .badge.done { background: var(--green-soft); color: var(--green); }
+  .badge.error { background: var(--red-soft); color: var(--red); }
+  .card-spacer { flex: 1; }
+
+  .thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .thumb {
+    position: relative;
+    width: 84px; height: 84px;
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    background: var(--surface-2);
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb .x {
+    position: absolute; top: 3px; right: 3px;
+    background: rgba(0,0,0,0.75); color: #fff;
+    width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 0.75rem; border: none;
+  }
+  .thumb.add-more {
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-dim); cursor: pointer; font-size: 1.4rem;
+    border-style: dashed;
+  }
+  .thumb.add-more:hover { border-color: var(--accent); color: var(--accent); }
+  .thumb.add-more input { display: none; }
+
+  .form-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  @media (max-width: 800px) { .form-grid { grid-template-columns: 1fr; } }
+  .form-field label {
+    display: block; font-weight: 600; font-size: 0.74rem; margin-bottom: 4px;
+    color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .form-field input, .form-field select, .form-field textarea {
+    width: 100%;
+    background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 11px; font-size: 0.92rem; font-family: inherit;
+  }
+  .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+    outline: none; border-color: var(--accent);
+  }
+
+  table.lines { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  table.lines th, table.lines td {
+    padding: 5px 4px; border-bottom: 1px solid var(--border);
+    font-size: 0.84rem; vertical-align: top;
+  }
+  table.lines th { color: var(--text-dim); text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.04em; text-align: left; }
+  table.lines td.r, table.lines th.r { text-align: right; }
+  table.lines input, table.lines select {
+    width: 100%; background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 7px; font-size: 0.84rem; font-family: inherit;
+  }
+  table.lines .col-desc { width: 28%; }
+  table.lines .col-qty { width: 8%; }
+  table.lines .col-up { width: 12%; }
+  table.lines .col-amt { width: 12%; }
+  table.lines .col-cat { width: 13%; }
+  table.lines .col-rmk { width: 17%; }
+  table.lines .col-del { width: 32px; }
+
+  .footer-row {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    flex-wrap: wrap; gap: 16px; margin-top: 12px;
+  }
+  .totals { min-width: 240px; }
+  .totals .row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 0.88rem; }
+  .totals .row.grand { border-top: 2px solid var(--accent); margin-top: 5px; padding-top: 6px; font-size: 1rem; font-weight: 800; color: var(--accent); }
+  .totals .row .k { color: var(--text-dim); }
+  .sst-toggle { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font-size: 0.85rem; }
+  .sst-toggle input { width: 15px; height: 15px; accent-color: var(--accent); }
+
+  .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+  .success-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  .success-links a {
+    color: var(--accent); text-decoration: none;
+    padding: 8px 12px; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; font-weight: 600; font-size: 0.85rem;
+  }
+  .success-links a:hover { background: var(--border); }
+
+  .err-msg { color: var(--red); font-size: 0.85rem; padding: 8px 12px; background: var(--red-soft); border-radius: 8px; margin-top: 8px; }
+
+  .submit-bar {
+    position: sticky; bottom: 0;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin: 24px 0 16px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.4);
+  }
+  .submit-bar .summary { font-size: 0.95rem; }
+  .submit-bar .summary b { color: var(--accent); }
+  .submit-bar .grand { font-size: 1.1rem; font-weight: 800; color: var(--accent); margin-left: 6px; }
+
+  /* History */
+  .history-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  .history-table th, .history-table td {
+    padding: 9px 8px; border-bottom: 1px solid var(--border); text-align: left;
+  }
+  .history-table th { color: var(--text-dim); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .history-table td.r { text-align: right; }
+  .history-table a { color: var(--accent); text-decoration: none; margin-right: 10px; }
+  .history-table a:hover { text-decoration: underline; }
+  .empty { color: var(--text-dim); font-size: 0.88rem; padding: 16px 0; text-align: center; }
+
+  /* Loading overlay + toast */
+  .loading-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(10,14,26,0.85); align-items: center; justify-content: center; z-index: 100;
+    flex-direction: column; gap: 14px;
+  }
+  .loading-overlay.show { display: flex; }
+  .spinner {
+    width: 44px; height: 44px;
+    border: 4px solid var(--surface-2); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-msg { color: var(--text); font-size: 0.95rem; font-weight: 600; }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--green); color: #0a0e1a; padding: 12px 22px; border-radius: 999px;
+    font-weight: 700; font-size: 0.92rem;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--red); color: #fff; }
+
+  /* Summary banner */
+  .summary-banner {
+    background: linear-gradient(135deg, var(--accent-soft), rgba(34, 197, 94, 0.1));
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 16px 20px; margin: 14px 0 18px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  .summary-banner .msg b { color: var(--accent); }
+  .summary-banner .links { display: flex; gap: 10px; flex-wrap: wrap; }
+  .summary-banner a {
+    color: var(--accent); text-decoration: none;
+    padding: 8px 14px; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; font-weight: 600; font-size: 0.88rem;
+  }
+  .summary-banner a:hover { background: var(--border); }
+
+  /* History toolbar (for ad-hoc summaries) */
+  .history-toolbar {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  }
+  .history-toolbar .selcount { color: var(--text-dim); font-size: 0.85rem; }
+  .history-table th.col-pick, .history-table td.col-pick { width: 32px; text-align: center; }
+  .history-table input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+
+  /* Summaries list */
+  .summaries-list { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .summaries-list h3 {
+    font-size: 0.78rem; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;
+  }
+  .summary-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.88rem;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row b { color: var(--accent); }
+  .summary-row .spacer { flex: 1; }
+  .summary-row a { color: var(--accent); text-decoration: none; }
+  .summary-row a:hover { text-decoration: underline; }
+
+  /* Result modal */
+  .modal-back {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 50;
+  }
+  .modal-back.show { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 28px; max-width: 480px; width: calc(100% - 32px); box-shadow: var(--shadow);
+  }
+  .modal h2 { font-size: 1.2rem; margin-bottom: 14px; color: var(--green); }
+  .modal .links { display: flex; flex-direction: column; gap: 10px; margin: 16px 0 18px; }
+  .modal .links a {
+    color: var(--accent); text-decoration: none;
+    padding: 10px 14px; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; font-weight: 600; font-size: 0.92rem;
+  }
+  .modal .links a:hover { background: var(--border); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topbar">
+    <div class="brand-block">
+      <div class="brand-logo">BL</div>
+      <div>
+        <div class="brand-name">Receipt Claims</div>
+        <div class="brand-sub">Snap → Extract → Submit · batch supported</div>
+      </div>
+    </div>
+    <div class="user-pill" id="userPill">…</div>
+  </div>
+
+  <!-- Upload zone -->
+  <div class="panel">
+    <h2>1 · Upload receipts</h2>
+    <div class="hint">Each photo you upload becomes its own claim. Long receipt that needs 2 photos? Use the dashed “+” inside a card to add more photos to <i>that</i> receipt.</div>
+
+    <label class="upload-zone" id="dropZone">
+      <div class="big-emoji">📷</div>
+      <div><b>Tap to take photos</b> · select multiple to batch</div>
+      <div class="hint" style="margin-top:6px;margin-bottom:0;">English / Chinese / Malay receipts all OK</div>
+      <input id="fileInput" type="file" accept="image/*" capture="environment" multiple />
+    </label>
+
+    <div id="extractWarn" class="warn" style="margin-top:10px;display:none;"></div>
+  </div>
+
+  <!-- Cards area -->
+  <div id="cardsWrap" style="display:none;">
+    <div class="toolbar">
+      <div class="count"><b id="cardCount">0</b> receipt(s) ready</div>
+      <button class="btn" id="extractAllBtn">⚡ Extract all</button>
+      <button class="btn secondary" id="addManualBtn">+ Add manual claim</button>
+      <button class="btn secondary" id="clearAllBtn">Clear all</button>
+    </div>
+
+    <div id="cards"></div>
+
+    <div class="submit-bar" id="submitBar" style="display:none;">
+      <div class="summary">
+        <b id="readyCount">0</b> ready to submit ·
+        <span class="grand" id="grandTotal">RM 0.00</span>
+      </div>
+      <button class="btn big" id="submitAllBtn">Submit all &amp; generate PDFs</button>
+    </div>
+
+    <!-- Post-submit summary banner -->
+    <div class="summary-banner" id="postBanner" style="display:none;">
+      <div class="msg" id="postBannerMsg">…</div>
+      <div class="links">
+        <button class="btn" id="genBatchSummaryBtn">📑 Generate summary PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- My claims history -->
+  <div class="panel">
+    <h2>My recent claims</h2>
+
+    <div class="history-toolbar">
+      <button class="btn small secondary" id="histSelectAll">Select all</button>
+      <button class="btn small secondary" id="histSelectNone">Clear</button>
+      <span class="selcount"><b id="histSelCount">0</b> selected</span>
+      <div style="flex:1;"></div>
+      <button class="btn small" id="genSelectedSummaryBtn" disabled>📑 Generate summary of selected</button>
+    </div>
+
+    <table class="history-table" id="historyTable">
+      <thead><tr>
+        <th class="col-pick"></th>
+        <th>Claim No.</th><th>Date</th><th>Vendor</th>
+        <th class="r">Total</th><th>Category</th><th>Links</th>
+      </tr></thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+    <div class="empty" id="historyEmpty" style="display:none;">No claims yet — submit your first one above.</div>
+
+    <!-- Recent summaries -->
+    <div class="summaries-list" id="summariesList" style="display:none;">
+      <h3>Recent summary PDFs</h3>
+      <div id="summariesBody"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Summary result modal -->
+<div class="modal-back" id="sumResultModal">
+  <div class="modal">
+    <h2 id="sumResultTitle">Summary generated</h2>
+    <div id="sumResultBody"></div>
+    <div class="links" id="sumResultLinks"></div>
+    <button class="btn" id="sumResultClose">Done</button>
+  </div>
+</div>
+
+<!-- Loading overlay & toast -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-msg" id="loadingMsg">Working…</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== STATE ===================== */
+var state = {
+  currentUser: '',
+  categories: [],
+  sstRate: 0.06,
+  geminiConfigured: false,
+  myClaims: [],
+  mySummaries: [],
+  cards: [],         // see makeCard()
+  lastBatchNos: [],  // claim numbers from the most recent successful batch
+  histSelected: {},  // { claimNo: true }
+};
+var _cardSeq = 0;
+
+function makeCard(images) {
+  _cardSeq++;
+  return {
+    id: 'c' + _cardSeq,
+    images: images || [],   // [{base64, mimeType, dataUrl, name}]
+    vendor: '',
+    date: todayISO(),
+    currency: 'RM',
+    sstEnabled: false,
+    serviceCharge: 0,         // restaurant service charge (RM)
+    subsidyAmount: 0,         // Budi95 / fuel subsidy deducted from claim (RM)
+    roundingAdjustment: 0,    // 5-sen rounding shown on receipt (signed, RM)
+    remarks: '',
+    lines: [],
+    status: 'draft',          // 'draft' | 'extracting' | 'extracted' | 'submitting' | 'done' | 'error'
+    extractError: '',
+    submitResult: null,
+    detectedLanguage: '',
+  };
+}
+
+/* ===================== SERVER BRIDGE ===================== */
+function hasServerBridge() {
+  return typeof google !== 'undefined' && google.script && google.script.run;
+}
+function gsRun(fn) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  return new Promise(function(resolve, reject) {
+    if (!hasServerBridge()) {
+      reject(new Error('Not running inside the Apps Script web app. Open the deployment URL — opening the HTML file directly will not work.'));
+      return;
+    }
+    try {
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(function(err) { reject(err); })
+        [fn].apply(null, args);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+function showLoading(msg) {
+  document.getElementById('loadingMsg').textContent = msg || 'Working…';
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+function showToast(msg, isError) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.toggle('error', !!isError);
+  el.classList.add('show');
+  clearTimeout(window._toastT);
+  window._toastT = setTimeout(function(){ el.classList.remove('show'); }, 2800);
+}
+function handleErr(err) {
+  hideLoading();
+  console.error(err);
+  var msg = (err && err.message) ? err.message : String(err);
+  showToast(msg, true);
+}
+function showPreviewModeBanner() {
+  var c = document.querySelector('.container');
+  if (!c) return;
+  var b = document.createElement('div');
+  b.style.cssText = 'background:rgba(245,158,11,0.12);border:1px solid #f59e0b;color:#f59e0b;padding:14px 18px;border-radius:12px;margin-bottom:20px;font-size:0.92rem;line-height:1.5;';
+  b.innerHTML = '<b>Preview mode</b> — this page is rendering the layout only. '
+    + 'It cannot extract receipts, submit claims, or generate PDFs from here because there is no Apps Script server attached.<br><br>'
+    + 'To use the tool for real: deploy it inside Apps Script (see <code>DEPLOY.md</code>) and open the deployment URL.';
+  c.insertBefore(b, c.children[1]);
+}
+
+/* ===================== UTILS ===================== */
+function fmtRM(n) {
+  return 'RM ' + (Number(n) || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function todayISO() { return new Date().toISOString().slice(0, 10); }
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function fileToBase64(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function() {
+      var s = reader.result;
+      var comma = s.indexOf(',');
+      resolve({ dataUrl: s, base64: s.slice(comma + 1), mimeType: file.type || 'image/jpeg', name: file.name });
+    };
+    reader.onerror = function() { reject(reader.error); };
+    reader.readAsDataURL(file);
+  });
+}
+function cardSubtotal(c) {
+  var sum = 0;
+  c.lines.forEach(function(l) {
+    var amt = Math.round((Number(l.quantity)||0) * (Number(l.unitPrice)||0) * 100) / 100;
+    sum += amt;
+  });
+  return Math.round(sum * 100) / 100;
+}
+function cardServiceCharge(c) {
+  return Math.max(0, Math.round((Number(c.serviceCharge) || 0) * 100) / 100);
+}
+function cardSubsidy(c) {
+  return Math.max(0, Math.round((Number(c.subsidyAmount) || 0) * 100) / 100);
+}
+function cardRounding(c) {
+  return Math.round((Number(c.roundingAdjustment) || 0) * 100) / 100;
+}
+function cardTaxableBase(c) {
+  return Math.max(0, cardSubtotal(c) + cardServiceCharge(c) - cardSubsidy(c));
+}
+function cardSst(c) {
+  if (!c.sstEnabled) return 0;
+  return Math.round(cardTaxableBase(c) * state.sstRate * 100) / 100;
+}
+function cardTotal(c) {
+  var tot = cardSubtotal(c) + cardServiceCharge(c) - cardSubsidy(c) + cardSst(c) + cardRounding(c);
+  return Math.round(tot * 100) / 100;
+}
+
+/* ===================== INIT ===================== */
+function enterPreviewMode() {
+  hideLoading();
+  showPreviewModeBanner();
+  document.getElementById('userPill').textContent = '● preview mode';
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+  // Case 1: no server bridge at all (file opened directly)
+  if (!hasServerBridge()) {
+    enterPreviewMode();
+    return;
+  }
+  showLoading('Loading…');
+
+  // Case 2: bridge exists but is a sandbox stub that never resolves — fall back to preview mode after 8s
+  var settled = false;
+  var fallbackTimer = setTimeout(function() {
+    if (settled) return;
+    settled = true;
+    enterPreviewMode();
+  }, 8000);
+
+  gsRun('bootstrap')
+    .then(function(data) {
+      if (settled) return;
+      settled = true; clearTimeout(fallbackTimer);
+      // Case 3: bridge exists but returns nothing (sandbox stub that resolves immediately)
+      if (!data || typeof data !== 'object' || !data.currentUser) {
+        enterPreviewMode();
+        return;
+      }
+      state.currentUser = data.currentUser;
+      state.categories = data.categories || [];
+      state.sstRate = data.sstRate || 0.06;
+      state.geminiConfigured = !!data.geminiConfigured;
+      state.myClaims = data.myClaims || [];
+      state.mySummaries = data.mySummaries || [];
+      document.getElementById('userPill').textContent = '● ' + state.currentUser;
+      if (!state.geminiConfigured) {
+        var w = document.getElementById('extractWarn');
+        w.style.display = 'block';
+        w.textContent = 'Gemini API key not set yet. Auto-extract is disabled — use "Add manual claim" instead. Ask Black to add GEMINI_API_KEY in Script Properties.';
+      }
+      renderHistory();
+      renderSummaries();
+      hideLoading();
+    })
+    .catch(function(err) {
+      if (settled) return;
+      settled = true; clearTimeout(fallbackTimer);
+      handleErr(err);
+    });
+
+  document.getElementById('fileInput').addEventListener('change', onUploadAsNewClaims);
+  document.getElementById('extractAllBtn').addEventListener('click', onExtractAll);
+  document.getElementById('addManualBtn').addEventListener('click', onAddManual);
+  document.getElementById('clearAllBtn').addEventListener('click', onClearAll);
+  document.getElementById('submitAllBtn').addEventListener('click', onSubmitAll);
+  document.getElementById('genBatchSummaryBtn').addEventListener('click', onGenerateBatchSummary);
+  document.getElementById('genSelectedSummaryBtn').addEventListener('click', onGenerateSelectedSummary);
+  document.getElementById('histSelectAll').addEventListener('click', function() {
+    state.myClaims.forEach(function(c){ state.histSelected[c.claimNo] = true; });
+    renderHistory();
+  });
+  document.getElementById('histSelectNone').addEventListener('click', function() {
+    state.histSelected = {};
+    renderHistory();
+  });
+  document.getElementById('sumResultClose').addEventListener('click', function() {
+    document.getElementById('sumResultModal').classList.remove('show');
+  });
+});
+
+/* ===================== UPLOAD ===================== */
+function onUploadAsNewClaims(e) {
+  var files = Array.from(e.target.files || []);
+  e.target.value = '';
+  if (!files.length) return;
+  Promise.all(files.map(fileToBase64))
+    .then(function(imgs) {
+      imgs.forEach(function(img) { state.cards.push(makeCard([img])); });
+      renderAll();
+    })
+    .catch(handleErr);
+}
+function onAddMoreToCard(cardId, e) {
+  var files = Array.from(e.target.files || []);
+  e.target.value = '';
+  if (!files.length) return;
+  var card = state.cards.find(function(c){ return c.id === cardId; });
+  if (!card) return;
+  Promise.all(files.map(fileToBase64))
+    .then(function(imgs) {
+      card.images = card.images.concat(imgs);
+      renderAll();
+    })
+    .catch(handleErr);
+}
+function onAddManual() {
+  var c = makeCard([]);
+  c.status = 'extracted'; // skip extract step
+  c.lines = [{ description: '', quantity: 1, unitPrice: 0, lineAmount: 0, category: 'other', remarks: '' }];
+  state.cards.push(c);
+  renderAll();
+}
+function onClearAll() {
+  if (state.cards.length && !confirm('Discard all ' + state.cards.length + ' draft claim(s)?')) return;
+  state.cards = [];
+  renderAll();
+}
+
+/* ===================== EXTRACT ===================== */
+function onExtractAll() {
+  if (!state.geminiConfigured) {
+    showToast('Gemini API key not set — use manual entry', true);
+    return;
+  }
+  var pending = state.cards.filter(function(c){ return c.status === 'draft' && c.images.length; });
+  if (!pending.length) {
+    showToast('Nothing to extract', true);
+    return;
+  }
+  pending.forEach(function(c){ c.status = 'extracting'; c.extractError = ''; });
+  renderAll();
+  showLoading('Reading ' + pending.length + ' receipt(s) with Gemini…');
+
+  Promise.all(pending.map(function(c) {
+    return gsRun('extractReceipt', { images: c.images.map(function(i){ return { base64: i.base64, mimeType: i.mimeType }; }) })
+      .then(function(r) { applyExtraction(c, r); })
+      .catch(function(err) {
+        c.status = 'error';
+        c.extractError = (err && err.message) ? err.message : String(err);
+      });
+  }))
+  .then(function() {
+    hideLoading();
+    renderAll();
+    var okCount = pending.filter(function(c){ return c.status === 'extracted'; }).length;
+    var failCount = pending.length - okCount;
+    if (failCount) showToast(okCount + ' extracted, ' + failCount + ' failed', true);
+    else showToast('Extracted ' + okCount + ' receipt(s)');
+  });
+}
+
+function applyExtraction(card, r) {
+  card.vendor = r.vendor || '';
+  card.date = r.date || todayISO();
+  card.currency = r.currency || 'RM';
+  card.sstEnabled = (Number(r.sstAmount) || 0) > 0;
+  card.serviceCharge = Math.max(0, Number(r.serviceCharge) || 0);
+  card.subsidyAmount = Math.max(0, Number(r.subsidyAmount) || 0);
+  card.roundingAdjustment = Number(r.roundingAdjustment) || 0;
+  card.remarks = r.remarks || '';
+  card.detectedLanguage = r.detectedLanguage || '';
+  card.lines = (r.items || []).map(function(it) {
+    return {
+      description: it.description || '',
+      quantity:    Number(it.quantity) || 1,
+      unitPrice:   Number(it.unitPrice) || 0,
+      lineAmount:  Number(it.lineAmount) || 0,
+      category:    it.category || 'other',
+      remarks:     it.remarks || '',
+    };
+  });
+  if (!card.lines.length) {
+    card.lines.push({ description: '', quantity: 1, unitPrice: 0, lineAmount: 0, category: 'other', remarks: '' });
+  }
+  card.status = 'extracted';
+}
+
+/* ===================== RENDER ===================== */
+function renderAll() {
+  var wrap = document.getElementById('cardsWrap');
+  wrap.style.display = state.cards.length ? 'block' : 'none';
+  document.getElementById('cardCount').textContent = state.cards.length;
+
+  var cont = document.getElementById('cards');
+  cont.innerHTML = '';
+  state.cards.forEach(function(c, idx) {
+    cont.appendChild(renderCard(c, idx + 1));
+  });
+
+  updateSubmitBar();
+}
+
+function renderCard(c, num) {
+  var el = document.createElement('div');
+  el.className = 'card status-' + c.status;
+  el.setAttribute('data-card', c.id);
+
+  var badge = badgeFor(c);
+  var totalRM = fmtRM(cardTotal(c));
+
+  var head = '<div class="card-head">'
+    + '<div class="card-title">Receipt #' + num + '</div>'
+    + '<span class="badge ' + badgeClass(c.status) + '">' + badge + '</span>'
+    + (c.detectedLanguage ? '<span class="badge draft" title="Detected language">' + escapeHtml(c.detectedLanguage) + '</span>' : '')
+    + '<div class="card-spacer"></div>'
+    + (c.status === 'done' ? '<span style="color:var(--green);font-weight:700;">' + escapeHtml(c.submitResult.claimNo) + '</span>' : '')
+    + (c.status !== 'done' && c.status !== 'submitting' ? '<button class="btn link" data-act="remove" data-id="' + c.id + '" title="Remove">✕</button>' : '')
+    + '</div>';
+
+  var thumbsHtml = '<div class="thumbs">';
+  c.images.forEach(function(img, i) {
+    thumbsHtml += '<div class="thumb"><img src="' + img.dataUrl + '" />'
+      + (c.status === 'done' || c.status === 'submitting' ? '' :
+         '<button class="x" data-act="rmphoto" data-id="' + c.id + '" data-i="' + i + '">×</button>')
+      + '</div>';
+  });
+  if (c.status !== 'done' && c.status !== 'submitting') {
+    thumbsHtml += '<label class="thumb add-more" title="Add another photo to this receipt">+'
+      + '<input type="file" accept="image/*" capture="environment" multiple data-act="addmore" data-id="' + c.id + '" />'
+      + '</label>';
+  }
+  thumbsHtml += '</div>';
+
+  var body = '';
+  if (c.status === 'draft') {
+    body = '<div class="hint" style="margin-top:12px;">Click <b>Extract all</b> above, or fill manually after extraction.</div>';
+  } else if (c.status === 'extracting') {
+    body = '<div class="hint" style="margin-top:12px;">Reading with Gemini…</div>';
+  } else if (c.status === 'error') {
+    body = '<div class="err-msg" style="margin-top:12px;">Extract failed: ' + escapeHtml(c.extractError || 'unknown error') + '</div>'
+      + '<div style="margin-top:10px;"><button class="btn small secondary" data-act="retry" data-id="' + c.id + '">Retry extract</button> '
+      + '<button class="btn small secondary" data-act="manual" data-id="' + c.id + '">Enter manually</button></div>';
+  } else if (c.status === 'done') {
+    body = '<div class="success-links">'
+      + '<a href="' + c.submitResult.pdfUrl + '" target="_blank">📄 PDF</a>'
+      + '<a href="' + c.submitResult.folderUrl + '" target="_blank">📁 Drive folder</a>'
+      + '</div>'
+      + '<div class="hint" style="margin-top:8px;">' + escapeHtml(c.vendor) + ' · ' + totalRM + '</div>';
+  } else {
+    // extracted or submitting → show editable form (readonly if submitting)
+    body = renderEditableBody(c);
+  }
+
+  el.innerHTML = head + thumbsHtml + body;
+
+  // bind events
+  el.querySelectorAll('[data-act]').forEach(function(node) {
+    var act = node.getAttribute('data-act');
+    var id = node.getAttribute('data-id');
+    if (act === 'remove') node.addEventListener('click', function(){ removeCard(id); });
+    else if (act === 'rmphoto') node.addEventListener('click', function(){
+      removePhoto(id, Number(node.getAttribute('data-i')));
+    });
+    else if (act === 'addmore') node.addEventListener('change', function(e){ onAddMoreToCard(id, e); });
+    else if (act === 'retry') node.addEventListener('click', function(){ retryExtract(id); });
+    else if (act === 'manual') node.addEventListener('click', function(){ switchToManual(id); });
+    else if (act === 'addline') node.addEventListener('click', function(){ addLine(id); });
+  });
+
+  el.querySelectorAll('[data-card-field]').forEach(function(input) {
+    input.addEventListener('input', function() { onCardFieldChange(c.id, input); });
+    input.addEventListener('change', function() { onCardFieldChange(c.id, input); });
+  });
+  el.querySelectorAll('[data-line-field]').forEach(function(input) {
+    input.addEventListener('input', function() { onLineFieldChange(c.id, input); });
+    input.addEventListener('change', function() { onLineFieldChange(c.id, input); });
+  });
+  el.querySelectorAll('[data-line-del]').forEach(function(btn) {
+    btn.addEventListener('click', function() { removeLine(c.id, Number(btn.getAttribute('data-line-del'))); });
+  });
+
+  // set select values after innerHTML
+  el.querySelectorAll('select[data-line-field="category"]').forEach(function(sel) {
+    var i = Number(sel.getAttribute('data-i'));
+    if (c.lines[i]) sel.value = c.lines[i].category || 'other';
+  });
+
+  return el;
+}
+
+function badgeFor(c) {
+  switch (c.status) {
+    case 'draft': return 'Draft';
+    case 'extracting': return 'Extracting…';
+    case 'extracted': return 'Ready';
+    case 'submitting': return 'Submitting…';
+    case 'done': return '✓ Done';
+    case 'error': return 'Error';
+    default: return c.status;
+  }
+}
+function badgeClass(s) {
+  if (s === 'extracted') return 'extracted';
+  if (s === 'extracting' || s === 'submitting') return 'extracting';
+  if (s === 'done') return 'done';
+  if (s === 'error') return 'error';
+  return 'draft';
+}
+
+function renderEditableBody(c) {
+  var catOpts = state.categories.map(function(cat) {
+    return '<option value="' + cat + '">' + cat + '</option>';
+  }).join('');
+  var disabled = c.status === 'submitting' ? 'disabled' : '';
+
+  var rows = c.lines.map(function(l, i) {
+    var amt = Math.round((Number(l.quantity)||0) * (Number(l.unitPrice)||0) * 100) / 100;
+    return '<tr>'
+      + '<td class="col-desc"><input data-line-field="description" data-i="' + i + '" type="text" value="' + escapeHtml(l.description) + '" ' + disabled + '/></td>'
+      + '<td class="col-qty r"><input data-line-field="quantity" data-i="' + i + '" type="number" step="0.001" value="' + l.quantity + '" ' + disabled + '/></td>'
+      + '<td class="col-up r"><input data-line-field="unitPrice" data-i="' + i + '" type="number" step="0.01" value="' + l.unitPrice + '" ' + disabled + '/></td>'
+      + '<td class="col-amt r"><input data-line-field="lineAmount" data-i="' + i + '" type="number" step="0.01" value="' + amt + '" readonly style="opacity:.7" /></td>'
+      + '<td class="col-cat"><select data-line-field="category" data-i="' + i + '" ' + disabled + '>' + catOpts + '</select></td>'
+      + '<td class="col-rmk"><input data-line-field="remarks" data-i="' + i + '" type="text" value="' + escapeHtml(l.remarks) + '" ' + disabled + '/></td>'
+      + '<td class="col-del"><button class="btn link" data-line-del="' + i + '" title="Remove">✕</button></td>'
+      + '</tr>';
+  }).join('');
+
+  var sub = cardSubtotal(c);
+  var sc = cardServiceCharge(c);
+  var subsidy = cardSubsidy(c);
+  var sst = cardSst(c);
+  var rounding = cardRounding(c);
+  var tot = cardTotal(c);
+
+  return '<div class="form-grid">'
+    + '<div class="form-field"><label>Vendor</label><input data-card-field="vendor" type="text" value="' + escapeHtml(c.vendor) + '" ' + disabled + '/></div>'
+    + '<div class="form-field"><label>Receipt date</label><input data-card-field="date" type="date" value="' + escapeHtml(c.date) + '" ' + disabled + '/></div>'
+    + '<div class="form-field"><label>Currency</label><input data-card-field="currency" type="text" value="' + escapeHtml(c.currency) + '" ' + disabled + '/></div>'
+    + '</div>'
+    + '<div style="overflow-x:auto;margin-top:10px;">'
+    + '<table class="lines"><thead><tr>'
+    + '<th class="col-desc">Description</th><th class="col-qty r">Qty</th>'
+    + '<th class="col-up r">Unit price</th><th class="col-amt r">Amount</th>'
+    + '<th class="col-cat">Category</th><th class="col-rmk">Remarks</th><th class="col-del"></th>'
+    + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+    + '<div style="margin-top:8px;"><button class="btn small secondary" data-act="addline" data-id="' + c.id + '" ' + disabled + '>+ Add line</button></div>'
+    + '<div class="footer-row">'
+      + '<div class="form-field" style="flex:1;min-width:240px;">'
+        + '<label>Remarks (optional)</label>'
+        + '<input data-card-field="remarks" type="text" value="' + escapeHtml(c.remarks) + '" placeholder="site visit to ABC Sdn Bhd · client lunch" ' + disabled + '/>'
+
+        + '<label style="margin-top:10px;">Service charge (RM)</label>'
+        + '<input data-card-field="serviceCharge" type="number" step="0.01" min="0" value="' + sc + '" placeholder="0 — restaurant SC, e.g. 10%" ' + disabled + '/>'
+        + '<div class="hint" style="margin-top:2px;margin-bottom:0;font-size:.74rem;">Restaurants only. Added before SST.</div>'
+
+        + '<label style="margin-top:10px;">Budi95 / fuel subsidy (RM)</label>'
+        + '<input data-card-field="subsidyAmount" type="number" step="0.01" min="0" value="' + subsidy + '" placeholder="0 — petrol receipts only" ' + disabled + '/>'
+        + '<div class="hint" style="margin-top:2px;margin-bottom:0;font-size:.74rem;">Petrol receipts. Deducted from gross.</div>'
+
+        + '<label style="margin-top:10px;">Rounding adjustment (RM)</label>'
+        + '<input data-card-field="roundingAdjustment" type="number" step="0.01" value="' + rounding + '" placeholder="0 — usually ±0.02 for cash" ' + disabled + '/>'
+        + '<div class="hint" style="margin-top:2px;margin-bottom:0;font-size:.74rem;">5-sen cash rounding. Can be negative.</div>'
+      + '</div>'
+      + '<div class="totals">'
+        + '<div class="row"><div class="k">Subtotal</div><div>' + fmtRM(sub) + '</div></div>'
+        + (sc > 0 ? '<div class="row"><div class="k">Service charge</div><div>+ ' + fmtRM(sc) + '</div></div>' : '')
+        + (subsidy > 0 ? '<div class="row"><div class="k">Less: subsidy</div><div style="color:var(--red);">- ' + fmtRM(subsidy) + '</div></div>' : '')
+        + '<div class="row"><label class="sst-toggle"><input data-card-field="sstEnabled" type="checkbox" ' + (c.sstEnabled?'checked':'') + ' ' + disabled + '/> SST 6%</label><div>' + (sst > 0 ? '+ ' : '') + fmtRM(sst) + '</div></div>'
+        + (rounding !== 0 ? '<div class="row"><div class="k">Rounding adj.</div><div>' + (rounding >= 0 ? '+ ' : '- ') + fmtRM(Math.abs(rounding)) + '</div></div>' : '')
+        + '<div class="row grand"><div>NET CLAIM</div><div>' + fmtRM(tot) + '</div></div>'
+      + '</div>'
+    + '</div>';
+}
+
+/* ===================== CARD MUTATIONS ===================== */
+function removeCard(id) {
+  var c = state.cards.find(function(x){ return x.id === id; });
+  if (c && c.lines && c.lines.length && !confirm('Remove this receipt from the batch?')) return;
+  state.cards = state.cards.filter(function(x){ return x.id !== id; });
+  renderAll();
+}
+function removePhoto(id, i) {
+  var c = state.cards.find(function(x){ return x.id === id; });
+  if (!c) return;
+  c.images.splice(i, 1);
+  if (!c.images.length && c.status === 'draft') {
+    state.cards = state.cards.filter(function(x){ return x.id !== id; });
+  }
+  renderAll();
+}
+function retryExtract(id) {
+  var c = state.cards.find(function(x){ return x.id === id; });
+  if (!c) return;
+  c.status = 'draft'; c.extractError = '';
+  renderAll();
+  onExtractAll();
+}
+function switchToManual(id) {
+  var c = state.cards.find(function(x){ return x.id === id; });
+  if (!c) return;
+  c.status = 'extracted'; c.extractError = '';
+  if (!c.lines.length) c.lines = [{ description: '', quantity: 1, unitPrice: 0, lineAmount: 0, category: 'other', remarks: '' }];
+  renderAll();
+}
+function addLine(id) {
+  var c = state.cards.find(function(x){ return x.id === id; });
+  if (!c) return;
+  c.lines.push({ description: '', quantity: 1, unitPrice: 0, lineAmount: 0, category: 'other', remarks: '' });
+  renderAll();
+}
+function removeLine(id, i) {
+  var c = state.cards.find(function(x){ return x.id === id; });
+  if (!c) return;
+  c.lines.splice(i, 1);
+  if (!c.lines.length) c.lines.push({ description: '', quantity: 1, unitPrice: 0, lineAmount: 0, category: 'other', remarks: '' });
+  renderAll();
+}
+
+function onCardFieldChange(id, input) {
+  var c = state.cards.find(function(x){ return x.id === id; });
+  if (!c) return;
+  var f = input.getAttribute('data-card-field');
+  if (input.type === 'checkbox') c[f] = input.checked;
+  else if (f === 'serviceCharge' || f === 'subsidyAmount') c[f] = Math.max(0, Number(input.value) || 0);
+  else if (f === 'roundingAdjustment') c[f] = Number(input.value) || 0;
+  else c[f] = input.value;
+  // Re-render when any math-affecting field changes (totals rows may appear/disappear)
+  if (f === 'sstEnabled' || f === 'serviceCharge' || f === 'subsidyAmount' || f === 'roundingAdjustment') {
+    renderAll();
+  } else {
+    updateSubmitBar();
+  }
+}
+function onLineFieldChange(id, input) {
+  var c = state.cards.find(function(x){ return x.id === id; });
+  if (!c) return;
+  var i = Number(input.getAttribute('data-i'));
+  var f = input.getAttribute('data-line-field');
+  var v = input.value;
+  if (f === 'quantity' || f === 'unitPrice' || f === 'lineAmount') v = Number(v) || 0;
+  c.lines[i][f] = v;
+  if (f === 'quantity' || f === 'unitPrice') {
+    var amt = Math.round((Number(c.lines[i].quantity)||0) * (Number(c.lines[i].unitPrice)||0) * 100) / 100;
+    c.lines[i].lineAmount = amt;
+    var amtInput = document.querySelector('[data-card="' + c.id + '"] input[data-line-field="lineAmount"][data-i="' + i + '"]');
+    if (amtInput) amtInput.value = amt;
+    // update totals area
+    updateCardTotals(c);
+  }
+  updateSubmitBar();
+}
+function updateCardTotals(c) {
+  // Totals layout changes when subsidy is present (extra row appears), so just do a full rerender.
+  renderAll();
+}
+function updateSubmitBar() {
+  var ready = state.cards.filter(isReadyToSubmit);
+  var bar = document.getElementById('submitBar');
+  bar.style.display = ready.length ? 'flex' : 'none';
+  document.getElementById('readyCount').textContent = ready.length;
+  var grand = ready.reduce(function(s, c){ return s + cardTotal(c); }, 0);
+  document.getElementById('grandTotal').textContent = fmtRM(grand);
+}
+function isReadyToSubmit(c) {
+  if (c.status !== 'extracted') return false;
+  var valid = c.lines.filter(function(l){ return l.description && (Number(l.unitPrice) || 0) > 0; });
+  return valid.length > 0;
+}
+
+/* ===================== SUBMIT ALL ===================== */
+function onSubmitAll() {
+  var ready = state.cards.filter(isReadyToSubmit);
+  if (!ready.length) {
+    showToast('Nothing ready to submit', true);
+    return;
+  }
+  if (!confirm('Submit ' + ready.length + ' claim(s)? This will generate PDFs and save to Drive + Sheet.')) return;
+
+  ready.forEach(function(c){ c.status = 'submitting'; });
+  renderAll();
+  showLoading('Submitting ' + ready.length + ' claim(s)…');
+
+  var payload = ready.map(function(c) {
+    return {
+      vendor:             c.vendor,
+      receiptDate:        c.date || todayISO(),
+      currency:           c.currency || 'RM',
+      sstEnabled:         !!c.sstEnabled,
+      serviceCharge:      Math.max(0, Number(c.serviceCharge) || 0),
+      subsidyAmount:      Math.max(0, Number(c.subsidyAmount) || 0),
+      roundingAdjustment: Number(c.roundingAdjustment) || 0,
+      remarks:            c.remarks || '',
+      lines: c.lines.filter(function(l){ return l.description; }).map(function(l) {
+        return {
+          description: l.description,
+          quantity:    Number(l.quantity) || 0,
+          unitPrice:   Number(l.unitPrice) || 0,
+          category:    l.category || 'other',
+          remarks:     l.remarks || '',
+        };
+      }),
+      images: c.images.map(function(i){ return { base64: i.base64, mimeType: i.mimeType }; }),
+    };
+  });
+
+  gsRun('submitClaims', payload)
+    .then(function(results) {
+      hideLoading();
+      var okCount = 0, failCount = 0;
+      var okNos = [];
+      var okTotal = 0;
+      results.forEach(function(r, idx) {
+        var c = ready[idx];
+        if (r.ok) {
+          c.status = 'done';
+          c.submitResult = { claimNo: r.claimNo, pdfUrl: r.pdfUrl, folderUrl: r.folderUrl, sheetUrl: r.sheetUrl, total: r.total };
+          okCount++;
+          okNos.push(r.claimNo);
+          okTotal += Number(r.total) || 0;
+        } else {
+          c.status = 'extracted';
+          c.extractError = r.error || 'Submit failed';
+          failCount++;
+        }
+      });
+      renderAll();
+      if (failCount) showToast(okCount + ' submitted, ' + failCount + ' failed', true);
+      else showToast('Submitted ' + okCount + ' claim(s) ✓');
+      // Show post-submit summary banner if 2+ claims succeeded
+      state.lastBatchNos = okNos;
+      if (okNos.length >= 2) showPostBanner(okNos, okTotal);
+      // refresh history
+      gsRun('bootstrap').then(function(d){
+        state.myClaims = d.myClaims || [];
+        state.mySummaries = d.mySummaries || [];
+        renderHistory();
+        renderSummaries();
+      });
+    })
+    .catch(function(err) {
+      hideLoading();
+      ready.forEach(function(c){ if (c.status === 'submitting') c.status = 'extracted'; });
+      renderAll();
+      handleErr(err);
+    });
+}
+
+/* ===================== HISTORY ===================== */
+function renderHistory() {
+  var body = document.getElementById('historyBody');
+  var empty = document.getElementById('historyEmpty');
+  if (!state.myClaims.length) {
+    body.innerHTML = ''; empty.style.display = 'block';
+    updateHistSelCount();
+    return;
+  }
+  empty.style.display = 'none';
+  body.innerHTML = state.myClaims.map(function(c) {
+    var checked = state.histSelected[c.claimNo] ? 'checked' : '';
+    return '<tr>'
+      + '<td class="col-pick"><input type="checkbox" data-pick="' + escapeHtml(c.claimNo) + '" ' + checked + '/></td>'
+      + '<td><b>' + escapeHtml(c.claimNo) + '</b></td>'
+      + '<td>' + escapeHtml(c.receiptDate || '') + '</td>'
+      + '<td>' + escapeHtml(c.vendor || '') + '</td>'
+      + '<td class="r">' + (c.currency || 'RM') + ' ' + (Number(c.total) || 0).toFixed(2) + '</td>'
+      + '<td>' + escapeHtml(c.primaryCategory || '') + '</td>'
+      + '<td>'
+        + (c.pdfUrl ? '<a href="' + c.pdfUrl + '" target="_blank">PDF</a>' : '')
+        + (c.folderUrl ? '<a href="' + c.folderUrl + '" target="_blank">Folder</a>' : '')
+      + '</td>'
+    + '</tr>';
+  }).join('');
+  body.querySelectorAll('input[data-pick]').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      var no = cb.getAttribute('data-pick');
+      if (cb.checked) state.histSelected[no] = true;
+      else delete state.histSelected[no];
+      updateHistSelCount();
+    });
+  });
+  updateHistSelCount();
+}
+function updateHistSelCount() {
+  var n = Object.keys(state.histSelected).length;
+  document.getElementById('histSelCount').textContent = n;
+  document.getElementById('genSelectedSummaryBtn').disabled = n === 0;
+}
+
+/* ===================== SUMMARY GENERATION ===================== */
+function showPostBanner(claimNos, total) {
+  document.getElementById('postBannerMsg').innerHTML =
+    '<b>' + claimNos.length + ' claim(s)</b> submitted · '
+    + 'total <b>' + fmtRM(total) + '</b>. '
+    + '<span style="color:var(--text-dim);font-size:.85rem;">Bundle them into one summary PDF for approval?</span>';
+  document.getElementById('postBanner').style.display = 'flex';
+}
+function hidePostBanner() {
+  document.getElementById('postBanner').style.display = 'none';
+}
+
+function onGenerateBatchSummary() {
+  if (!state.lastBatchNos || !state.lastBatchNos.length) {
+    showToast('Nothing to summarise yet', true);
+    return;
+  }
+  doGenerateSummary(state.lastBatchNos, 'Batch summary');
+}
+
+function onGenerateSelectedSummary() {
+  var nos = Object.keys(state.histSelected);
+  if (!nos.length) {
+    showToast('Tick at least one claim first', true);
+    return;
+  }
+  doGenerateSummary(nos, '');
+}
+
+function doGenerateSummary(claimNos, defaultTitle) {
+  var title = prompt(
+    'Summary title (optional):\n\nLeave blank for none. Example: "May 2026 site visits — ABC Sdn Bhd"',
+    defaultTitle || ''
+  );
+  if (title === null) return; // cancelled
+  showLoading('Generating summary PDF for ' + claimNos.length + ' claim(s)…');
+  gsRun('generateSummary', { claimNos: claimNos, title: title || '', remarks: '' })
+    .then(function(res) {
+      hideLoading();
+      showToast('Summary ' + res.summaryNo + ' ready ✓');
+      // Show a result modal with Open / Print / Folder buttons
+      showSummaryResultModal(res);
+      // refresh data
+      gsRun('bootstrap').then(function(d){
+        state.mySummaries = d.mySummaries || [];
+        renderSummaries();
+      });
+      // clear selection
+      state.histSelected = {};
+      renderHistory();
+      hidePostBanner();
+    })
+    .catch(handleErr);
+}
+
+function showSummaryResultModal(res) {
+  var back = document.getElementById('sumResultModal');
+  document.getElementById('sumResultTitle').textContent = res.summaryNo + ' generated';
+  document.getElementById('sumResultBody').innerHTML =
+    '<b>' + res.claimCount + ' claim(s)</b> · '
+    + 'Total <b>' + (res.currency || 'RM') + ' ' + (Number(res.grandTotal) || 0).toFixed(2) + '</b>'
+    + (res.periodFrom && res.periodTo ? '<br><span style="color:var(--text-dim);font-size:.85rem;">Period ' + escapeHtml(res.periodFrom) + ' → ' + escapeHtml(res.periodTo) + '</span>' : '');
+  document.getElementById('sumResultLinks').innerHTML =
+      '<a href="' + res.pdfUrl + '" target="_blank">📄 Open summary PDF</a>'
+    + '<a href="' + printableDriveUrl(res.pdfUrl) + '" target="_blank" data-print="1">🖨️ Print</a>'
+    + '<a href="' + res.folderUrl + '" target="_blank">📁 Open Drive folder (PDF + receipt links)</a>';
+  back.classList.add('show');
+}
+
+function printableDriveUrl(url) {
+  // Drive preview URL gives a clean view with print button. Just return the original — the user can press Ctrl+P.
+  if (!url) return '#';
+  return url.replace(/\/view($|\?.*$)/, '/preview');
+}
+
+function renderSummaries() {
+  var wrap = document.getElementById('summariesList');
+  var body = document.getElementById('summariesBody');
+  if (!state.mySummaries || !state.mySummaries.length) {
+    wrap.style.display = 'none'; body.innerHTML = ''; return;
+  }
+  wrap.style.display = 'block';
+  body.innerHTML = state.mySummaries.map(function(s) {
+    var period = (s.periodFrom && s.periodTo)
+      ? (s.periodFrom === s.periodTo ? s.periodFrom : (s.periodFrom + ' → ' + s.periodTo))
+      : '—';
+    return '<div class="summary-row">'
+      + '<b>' + escapeHtml(s.summaryNo) + '</b>'
+      + '<span>· ' + (s.claimCount || 0) + ' claim(s)</span>'
+      + '<span>· ' + escapeHtml(period) + '</span>'
+      + '<span>· ' + escapeHtml(s.currency || 'RM') + ' ' + (Number(s.grandTotal)||0).toFixed(2) + '</span>'
+      + (s.title ? '<span style="color:var(--text-dim);">· ' + escapeHtml(s.title) + '</span>' : '')
+      + '<div class="spacer"></div>'
+      + (s.pdfUrl ? '<a href="' + s.pdfUrl + '" target="_blank">📄 PDF</a> ' : '')
+      + (s.pdfUrl ? '<a href="' + printableDriveUrl(s.pdfUrl) + '" target="_blank">🖨️ Print</a> ' : '')
+      + (s.folderUrl ? '<a href="' + s.folderUrl + '" target="_blank">📁 Folder</a>' : '')
+    + '</div>';
+  }).join('');
+}
+</script>
+</body>
+</html>

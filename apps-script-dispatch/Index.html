@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HG — Daily Job Readiness & Dispatch</title>
+<style>
+  :root {
+    --bg: #0a0e1a; --surface: #141926; --surface-2: #1c2335; --border: #2a3245;
+    --text: #ffffff; --text-dim: #a0a8b8;
+    --accent: #f59e0b; --accent-hover: #d97706; --accent-soft: rgba(245,158,11,0.12);
+    --green: #22c55e; --green-soft: rgba(34,197,94,0.15);
+    --red: #ef4444; --red-soft: rgba(239,68,68,0.15);
+    --amber: #f59e0b; --amber-soft: rgba(245,158,11,0.18);
+    --blue: #3b82f6; --blue-soft: rgba(59,130,246,0.15);
+    --grey: #6b7280;
+    --radius: 14px; --shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+  .container { max-width: 1360px; margin: 0 auto; padding: 24px 20px 90px; }
+  a { color: var(--accent); }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+    padding-bottom: 18px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .brand-block { display: flex; align-items: center; gap: 14px; }
+  .brand-logo { width: 46px; height: 46px; background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: #0a0e1a; font-weight: 900; }
+  .brand-name { font-size: 1.22rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
+  .brand-sub { font-size: 0.8rem; color: var(--text-dim); margin-top: 3px; }
+  .user-pill { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--green);
+    color: var(--green); padding: 7px 14px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+  .tab { padding: 12px 18px; background: transparent; border: none; color: var(--text-dim); font-weight: 600; font-size: 0.92rem;
+    cursor: pointer; border-bottom: 2px solid transparent; font-family: inherit; transition: color .15s, border-color .15s; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .panel-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  .panel-title { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; }
+  .panel-sub { color: var(--text-dim); font-size: 0.9rem; max-width: 760px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .summary-card.warn { border-color: var(--red); } .summary-card.soon { border-color: var(--amber); }
+  .summary-card.ok { border-color: var(--green); } .summary-card.info { border-color: var(--blue); }
+  .summary-card .lbl { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 6px; }
+  .summary-card .val { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.02em; }
+  .summary-card.warn .val { color: var(--red); } .summary-card.soon .val { color: var(--amber); }
+  .summary-card.ok .val { color: var(--green); } .summary-card.info .val { color: var(--blue); }
+
+  .alarm-banner { background: var(--red-soft); border: 1px solid var(--red); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 20px; }
+  .alarm-banner h3 { color: var(--red); font-size: 0.95rem; margin-bottom: 8px; }
+  .alarm-banner .row { font-size: 0.88rem; padding: 4px 0; border-top: 1px solid rgba(239,68,68,0.25); }
+  .alarm-banner .row:first-of-type { border-top: none; }
+
+  .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+  input, textarea, select { background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-family: inherit; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
+  input[type="date"] { color-scheme: dark; }
+  .filter-bar input[type="search"], .filter-bar input[type="text"] { min-width: 220px; flex: 1; }
+
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 16px; border-radius: 10px; font-weight: 600;
+    font-size: 0.88rem; text-decoration: none; border: none; cursor: pointer; font-family: inherit; transition: transform .1s, background .2s; }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--accent); color: #0a0e1a; } .btn-primary:hover { background: var(--accent-hover); }
+  .btn-ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border); } .btn-ghost:hover { border-color: var(--accent); }
+  .btn-danger { background: var(--surface); color: var(--red); border: 1px solid var(--border); } .btn-danger:hover { border-color: var(--red); }
+  .btn-sm { padding: 6px 11px; font-size: 0.8rem; border-radius: 8px; }
+
+  /* JOB CARDS */
+  .job-grid { display: grid; gap: 12px; }
+  .job-card { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--grey); border-radius: var(--radius);
+    padding: 15px 17px; cursor: pointer; transition: border-color .15s, background .15s; }
+  .job-card:hover { background: var(--surface-2); }
+  .job-card.ready { border-left-color: var(--green); }
+  .job-card.at_risk { border-left-color: var(--amber); }
+  .job-card.blocked { border-left-color: var(--red); }
+  .job-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .job-title { font-size: 1.02rem; font-weight: 700; }
+  .job-meta { color: var(--text-dim); font-size: 0.84rem; margin-top: 2px; }
+  .status-badge { font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+  .status-badge.ready { background: var(--green-soft); color: var(--green); }
+  .status-badge.at_risk { background: var(--amber-soft); color: var(--amber); }
+  .status-badge.blocked { background: var(--red-soft); color: var(--red); }
+  .countdown { font-size: 0.8rem; font-weight: 700; padding: 3px 9px; border-radius: 7px; background: var(--surface-2); border: 1px solid var(--border); white-space: nowrap; }
+  .countdown.urgent { color: var(--red); border-color: var(--red); }
+  .countdown.soon { color: var(--amber); border-color: var(--amber); }
+  .gates { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 11px; }
+  .gate-chip { font-size: 0.74rem; font-weight: 600; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); }
+  .gate-chip.ok { background: var(--green-soft); color: var(--green); border-color: rgba(34,197,94,0.4); }
+  .gate-chip.bad { background: var(--red-soft); color: var(--red); border-color: rgba(239,68,68,0.4); }
+  .permit-alarm { display: inline-block; margin-top: 10px; font-size: 0.78rem; font-weight: 700; color: var(--red);
+    background: var(--red-soft); border: 1px solid var(--red); padding: 4px 10px; border-radius: 8px; }
+  .missing-line { margin-top: 9px; font-size: 0.82rem; color: var(--text-dim); }
+  .missing-line b { color: var(--red); }
+  .card-actions { display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap; }
+
+  /* DISPATCH */
+  .disp-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  .disp-cols { display: grid; grid-template-columns: 1fr 360px; gap: 18px; align-items: start; }
+  @media (max-width: 980px) { .disp-cols { grid-template-columns: 1fr; } }
+  .team-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px 16px; margin-bottom: 14px; }
+  .team-card h3 { font-size: 1rem; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .crew-line { color: var(--text-dim); font-size: 0.84rem; margin: 8px 0; }
+  .crew-line b { color: var(--text); font-weight: 600; }
+  .team-jobs { list-style: none; margin-top: 8px; }
+  .team-jobs li { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-top: 1px solid var(--border); font-size: 0.87rem; }
+  .team-jobs li .jtxt { flex: 1; }
+  .team-count { font-size: 0.76rem; color: var(--text-dim); margin-top: 8px; }
+  .team-count.over { color: var(--red); font-weight: 700; }
+  .pool-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px 16px; }
+  .pool-row { display: flex; align-items: center; gap: 8px; padding: 9px 0; border-top: 1px solid var(--border); font-size: 0.86rem; }
+  .pool-row:first-child { border-top: none; }
+  .pool-row .ptxt { flex: 1; }
+  .mini-select { padding: 5px 8px; font-size: 0.8rem; border-radius: 7px; }
+
+  /* TABLES */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  table.grid { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  table.grid th { text-align: left; padding: 11px 14px; color: var(--text-dim); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; background: var(--surface-2); }
+  table.grid td { padding: 11px 14px; border-top: 1px solid var(--border); }
+  table.grid tr:hover td { background: var(--surface-2); }
+  .pill { font-size: 0.72rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+  .pill.driver { background: var(--blue-soft); color: var(--blue); }
+  .pill.worker { background: var(--accent-soft); color: var(--accent); }
+  .pill.off { background: var(--red-soft); color: var(--red); }
+
+  .empty { text-align: center; color: var(--text-dim); padding: 40px 20px; border: 1px dashed var(--border); border-radius: var(--radius); }
+
+  /* MODALS */
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-start; justify-content: center;
+    padding: 40px 16px; z-index: 100; overflow-y: auto; }
+  .modal.open { display: flex; }
+  .modal-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 720px; box-shadow: var(--shadow); }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--border); }
+  .modal-head h2 { font-size: 1.1rem; }
+  .modal-body { padding: 22px; }
+  .modal-foot { display: flex; gap: 10px; justify-content: space-between; padding: 16px 22px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .x-btn { background: transparent; border: none; color: var(--text-dim); font-size: 1.4rem; cursor: pointer; line-height: 1; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+  .form-field label { display: block; font-weight: 600; font-size: 0.74rem; margin-bottom: 5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+  .form-field input, .form-field textarea, .form-field select { width: 100%; }
+  .form-section-title { font-size: 0.74rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; margin: 18px 0 4px; grid-column: 1 / -1; }
+  .preview-box { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 6px; grid-column: 1 / -1; }
+  .help { font-size: 0.76rem; color: var(--text-dim); margin-top: 4px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+  .chip { font-size: 0.78rem; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); cursor: pointer; }
+  .chip:hover { border-color: var(--accent); }
+
+  .out-area { width: 100%; min-height: 320px; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    border-radius: 10px; padding: 14px; font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.86rem; white-space: pre; }
+
+  /* TOAST */
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text); padding: 12px 20px; border-radius: 10px; font-size: 0.88rem; font-weight: 600; box-shadow: var(--shadow);
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 200; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+  #toast.err { border-color: var(--red); color: #fecaca; }
+  .loader { text-align: center; color: var(--text-dim); padding: 60px 20px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topbar">
+    <div class="brand-block">
+      <div class="brand-logo">HG</div>
+      <div>
+        <div class="brand-name">Daily Job Readiness & Dispatch</div>
+        <div class="brand-sub">Eason checks the gates · Calvin loads the teams · everyone sees the same board</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="user-pill" id="userPill">…</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="readiness" onclick="switchTab('readiness')">Readiness</button>
+    <button class="tab" data-tab="dispatch" onclick="switchTab('dispatch')">Dispatch</button>
+    <button class="tab" data-tab="crew" onclick="switchTab('crew')">Crew &amp; Lorries</button>
+    <button class="tab" data-tab="settings" onclick="switchTab('settings')">Settings</button>
+    <button class="tab" data-tab="activity" onclick="switchTab('activity')">Activity</button>
+  </div>
+
+  <div id="loader" class="loader">Loading the board…</div>
+  <div id="app" style="display:none;">
+
+    <!-- READINESS -->
+    <div class="tab-panel active" id="panel-readiness">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Job Readiness Board</div>
+          <div class="panel-sub">Every confirmed job and its checklist. A job goes GREEN only when all required gates pass. Permit alarms float to the top.</div>
+        </div>
+        <button class="btn btn-primary" onclick="openJobModal(null)">+ Add Job</button>
+      </div>
+
+      <div class="summary-grid" id="readinessSummary"></div>
+      <div id="alarmBanner"></div>
+
+      <div class="filter-bar">
+        <input type="search" id="rSearch" placeholder="Search client, mall, lot, job code…" oninput="renderReadiness()">
+        <select id="rStatus" onchange="renderReadiness()">
+          <option value="">All statuses</option>
+          <option value="blocked">Blocked</option>
+          <option value="at_risk">At risk</option>
+          <option value="ready">Ready</option>
+        </select>
+        <select id="rWindow" onchange="renderReadiness()">
+          <option value="open">Active (not done/cancelled)</option>
+          <option value="7">Next 7 days</option>
+          <option value="overdue">Overdue / today</option>
+          <option value="all">Everything</option>
+        </select>
+      </div>
+
+      <div class="job-grid" id="jobGrid"></div>
+    </div>
+
+    <!-- DISPATCH -->
+    <div class="tab-panel" id="panel-dispatch">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Tonight's Dispatch</div>
+          <div class="panel-sub">Pick the night, drop READY jobs into teams, set each crew, then generate the WhatsApp message for the HG Operation group.</div>
+        </div>
+      </div>
+
+      <div class="disp-bar">
+        <div class="form-field" style="margin:0;">
+          <label style="margin-bottom:3px;">Install night</label>
+          <input type="date" id="dispDate" onchange="onDispDate()">
+        </div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.84rem;color:var(--text-dim);">
+          <input type="checkbox" id="dispAllDates" style="width:auto;" onchange="renderDispatch()"> Pool: show all ready jobs (any date)
+        </label>
+        <button class="btn btn-ghost" onclick="openTeamModal(null)">+ Set up team crew</button>
+        <button class="btn btn-primary" onclick="openDispatchMsg()">Generate WhatsApp message</button>
+      </div>
+
+      <div class="summary-grid" id="dispSummary"></div>
+      <div id="dispNotReady"></div>
+
+      <div class="disp-cols">
+        <div>
+          <h3 style="font-size:0.95rem;margin-bottom:10px;">Teams for <span id="dispDateLabel">—</span></h3>
+          <div id="teamsWrap"></div>
+        </div>
+        <div>
+          <h3 style="font-size:0.95rem;margin-bottom:10px;">Ready to assign</h3>
+          <div class="pool-box" id="poolBox"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CREW -->
+    <div class="tab-panel" id="panel-crew">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Crew &amp; Lorries</div>
+          <div class="panel-sub">Master list of drivers cum supervisors, workers, and lorries — these feed the dispatch dropdowns.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="openStaffModal(null)">+ Add staff</button>
+        <button class="btn btn-ghost" onclick="openLorryModal(null)">+ Add lorry</button>
+      </div>
+      <h3 style="font-size:0.9rem;margin:10px 0;">Staff</h3>
+      <div class="table-wrap" style="margin-bottom:24px;"><table class="grid"><thead><tr>
+        <th>Name</th><th>Role</th><th>Phone</th><th>Status</th><th style="text-align:right;">Actions</th>
+      </tr></thead><tbody id="staffBody"></tbody></table></div>
+      <h3 style="font-size:0.9rem;margin:10px 0;">Lorries</h3>
+      <div class="table-wrap"><table class="grid"><thead><tr>
+        <th>Plate</th><th>Label</th><th>Status</th><th style="text-align:right;">Actions</th>
+      </tr></thead><tbody id="lorryBody"></tbody></table></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="tab-panel" id="panel-settings">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Settings</div>
+          <div class="panel-sub">Tune the readiness rules and who gets the daily email. Changes are auto-saved to the Config sheet.</div>
+        </div>
+      </div>
+      <div class="table-wrap" style="padding:22px;">
+        <div class="form-grid">
+          <div class="form-field"><label>Permit lead days</label><input type="number" id="cfgPermitLeadDays"><div class="help">Working days a permit needs before install. Drives the alarm.</div></div>
+          <div class="form-field"><label>At-risk window (days)</label><input type="number" id="cfgAtRiskDays"><div class="help">Install within N days + not ready → AMBER.</div></div>
+          <div class="form-field"><label>Max teams / night</label><input type="number" id="cfgMaxTeams"></div>
+          <div class="form-field"><label>Max jobs / team</label><input type="number" id="cfgMaxJobsPerTeam"></div>
+          <div class="form-field"><label>Max workers / team</label><input type="number" id="cfgMaxWorkersPerTeam"></div>
+          <div class="form-field full"><label>Daily email recipients</label><input type="text" id="cfgEmailRecipients" placeholder="a@hggroup.com.my, b@hggroup.com.my"><div class="help">Comma-separated. Gets the morning permit-alarm + at-risk digest.</div></div>
+        </div>
+        <div style="margin-top:18px;"><button class="btn btn-primary" onclick="saveSettings()">Save settings</button></div>
+        <p class="help" style="margin-top:14px;">The daily email is sent by a time trigger you install once from the Apps Script editor (<code>installDailyTrigger</code>). See DEPLOY.md.</p>
+      </div>
+    </div>
+
+    <!-- ACTIVITY -->
+    <div class="tab-panel" id="panel-activity">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Activity log</div>
+          <div class="panel-sub">Who did what, when. This is your "if it's not in writing it didn't happen" trail — most recent first.</div>
+        </div>
+      </div>
+      <div class="table-wrap"><table class="grid"><thead><tr>
+        <th>When</th><th>Who</th><th>Action</th><th>Type</th><th>Ref</th><th>Detail</th>
+      </tr></thead><tbody id="auditBody"></tbody></table></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- JOB MODAL -->
+<div class="modal" id="mJob"><div class="modal-card">
+  <div class="modal-head"><h2 id="jobModalTitle">Add Job</h2><button class="x-btn" onclick="closeModal('mJob')">&times;</button></div>
+  <div class="modal-body"><div class="form-grid" id="jobFormBody"></div></div>
+  <div class="modal-foot">
+    <button class="btn btn-danger" id="jobDeleteBtn" onclick="deleteJobFromForm()" style="display:none;">Delete</button>
+    <div style="display:flex;gap:10px;margin-left:auto;">
+      <button class="btn btn-ghost" onclick="closeModal('mJob')">Cancel</button>
+      <button class="btn btn-primary" id="jobSaveBtn" onclick="saveJobFromForm()">Save</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- TEAM MODAL -->
+<div class="modal" id="mTeam"><div class="modal-card" style="max-width:560px;">
+  <div class="modal-head"><h2>Team crew</h2><button class="x-btn" onclick="closeModal('mTeam')">&times;</button></div>
+  <div class="modal-body">
+    <div class="form-grid">
+      <div class="form-field"><label>Team number</label><select id="teTeamNo"></select></div>
+      <div class="form-field"><label>Driver cum supervisor</label><input list="driversList" id="teDriver" placeholder="Name"></div>
+      <div class="form-field"><label>Lorry</label><input list="lorriesList" id="teLorry" placeholder="Plate"></div>
+      <div class="form-field full"><label>Workers</label><input type="text" id="teWorkers" placeholder="Ali, Bala, Chong">
+        <div class="chips" id="teWorkerChips"></div></div>
+      <div class="form-field full"><label>Notes</label><input type="text" id="teNotes" placeholder="Route / area note (optional)"></div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-danger" id="teDeleteBtn" onclick="deleteTeamFromForm()" style="display:none;">Delete team</button>
+    <div style="display:flex;gap:10px;margin-left:auto;">
+      <button class="btn btn-ghost" onclick="closeModal('mTeam')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTeamFromForm()">Save crew</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- STAFF MODAL -->
+<div class="modal" id="mStaff"><div class="modal-card" style="max-width:480px;">
+  <div class="modal-head"><h2 id="staffModalTitle">Add staff</h2><button class="x-btn" onclick="closeModal('mStaff')">&times;</button></div>
+  <div class="modal-body"><div class="form-grid">
+    <div class="form-field full"><label>Name</label><input type="text" id="stName"></div>
+    <div class="form-field"><label>Role</label><select id="stRole"><option value="driver">Driver cum supervisor</option><option value="worker">Worker</option></select></div>
+    <div class="form-field"><label>Phone</label><input type="text" id="stPhone"></div>
+    <div class="form-field full"><label><input type="checkbox" id="stActive" style="width:auto;" checked> Active</label></div>
+  </div></div>
+  <div class="modal-foot">
+    <button class="btn btn-danger" id="stDeleteBtn" onclick="deleteStaffFromForm()" style="display:none;">Delete</button>
+    <div style="display:flex;gap:10px;margin-left:auto;">
+      <button class="btn btn-ghost" onclick="closeModal('mStaff')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStaffFromForm()">Save</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- LORRY MODAL -->
+<div class="modal" id="mLorry"><div class="modal-card" style="max-width:480px;">
+  <div class="modal-head"><h2 id="lorryModalTitle">Add lorry</h2><button class="x-btn" onclick="closeModal('mLorry')">&times;</button></div>
+  <div class="modal-body"><div class="form-grid">
+    <div class="form-field"><label>Plate</label><input type="text" id="loPlate"></div>
+    <div class="form-field"><label>Label</label><input type="text" id="loLabel" placeholder="3-tonne / 1-tonne"></div>
+    <div class="form-field full"><label><input type="checkbox" id="loActive" style="width:auto;" checked> Active</label></div>
+  </div></div>
+  <div class="modal-foot">
+    <button class="btn btn-danger" id="loDeleteBtn" onclick="deleteLorryFromForm()" style="display:none;">Delete</button>
+    <div style="display:flex;gap:10px;margin-left:auto;">
+      <button class="btn btn-ghost" onclick="closeModal('mLorry')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveLorryFromForm()">Save</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- DISPATCH MESSAGE MODAL -->
+<div class="modal" id="mMsg"><div class="modal-card">
+  <div class="modal-head"><h2>WhatsApp message — HG Operation group</h2><button class="x-btn" onclick="closeModal('mMsg')">&times;</button></div>
+  <div class="modal-body"><textarea class="out-area" id="msgArea" readonly></textarea></div>
+  <div class="modal-foot"><div style="margin-left:auto;display:flex;gap:10px;">
+    <button class="btn btn-ghost" onclick="closeModal('mMsg')">Close</button>
+    <button class="btn btn-primary" onclick="copyMsg()">Copy</button>
+  </div></div>
+</div></div>
+
+<datalist id="driversList"></datalist>
+<datalist id="lorriesList"></datalist>
+
+<div id="toast"></div>
+
+<script>
+  let DATA = null;
+  let currentJob = null, currentStaff = null, currentLorry = null, currentTeamNo = null;
+  let currentDispatchDate = '';
+
+  const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  /* ---------- server ---------- */
+  function run(method, args, okMsg, after) {
+    const r = google.script.run
+      .withSuccessHandler(d => { DATA = d; renderAll(); if (okMsg) toast(okMsg); if (after) after(d); })
+      .withFailureHandler(e => toast(e.message || String(e), true));
+    r[method].apply(r, args || []);
+  }
+  function loadAll() {
+    google.script.run
+      .withSuccessHandler(d => {
+        DATA = d;
+        currentDispatchDate = d.today;
+        document.getElementById('dispDate').value = d.today;
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('userPill').textContent = '👤 ' + d.currentUser;
+        fillSettings();
+        renderAll();
+      })
+      .withFailureHandler(e => { document.getElementById('loader').textContent = 'Error: ' + (e.message || e); })
+      .getAllData();
+  }
+
+  /* ---------- utils ---------- */
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function parseYMD(s) { const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? new Date(+m[1], +m[2]-1, +m[3]) : null; }
+  function daysUntil(s) { const a = parseYMD(s), b = parseYMD(DATA.today); return (a && b) ? Math.round((a-b)/86400000) : null; }
+  function prettyDate(s) { const d = parseYMD(s); return d ? (d.getDate()+' '+MO[d.getMonth()]+' '+d.getFullYear()+' ('+WD[d.getDay()]+')') : (s||''); }
+  function countdownText(days) {
+    if (days == null) return 'no date';
+    if (days < 0) return (-days)+'d overdue';
+    if (days === 0) return 'TONIGHT';
+    if (days === 1) return 'tomorrow';
+    return 'in '+days+'d';
+  }
+  function labelOf(arr, key) { const f = (arr||[]).find(x => x.key === key); return f ? f.label : key; }
+  function toast(msg, err) { const t = document.getElementById('toast'); t.textContent = msg; t.className = 'show' + (err ? ' err' : ''); setTimeout(() => t.className = '', 2600); }
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+  }
+
+  /* readiness mirror of Code.gs computeJobReadiness_ */
+  function gates(j) {
+    return {
+      sketch:   (j.measureStatus === 'sketch_done' || j.measureStatus === 'not_required'),
+      quote:    (j.quoteStatus === 'confirmed' || j.quoteStatus === 'not_required'),
+      permit:   (j.permitStatus === 'approved' || j.permitBy === 'already_have' || j.permitBy === 'not_required' || j.permitStatus === 'not_required'),
+      visual:   (j.needsVisual !== 'yes' || j.visualStatus === 'approved'),
+      material: (j.materialReady === 'yes'),
+      loc:      !!(j.mall && j.lotNo),
+    };
+  }
+  function computeReadinessJS(j) {
+    const cfg = DATA.config, g = gates(j), missing = [];
+    if (!g.loc) missing.push('Lot / Mall');
+    if (!g.sketch) missing.push('Measurement sketch');
+    if (!g.quote) missing.push('Quotation');
+    if (!g.permit) missing.push('Permit');
+    if (!g.visual) missing.push('Visual artwork');
+    if (!g.material) missing.push('Material / fab');
+    const days = daysUntil(j.installDate);
+    const ready = missing.length === 0;
+    let readiness = 'ready';
+    if (!ready) readiness = (days !== null && days <= Number(cfg.atRiskDays||3)) ? 'at_risk' : 'blocked';
+    const permitAlarm = !g.permit && days !== null && days <= Number(cfg.permitLeadDays||3);
+    return { readiness, missing, daysToInstall: days, permitAlarm };
+  }
+
+  /* ---------- render ---------- */
+  function renderAll() { renderReadiness(); renderDispatch(); renderCrew(); renderActivity(); fillDatalists(); }
+
+  function renderReadiness() {
+    const search = (document.getElementById('rSearch').value || '').toLowerCase();
+    const fStatus = document.getElementById('rStatus').value;
+    const win = document.getElementById('rWindow').value;
+    let jobs = DATA.jobs.slice();
+
+    // window filter
+    jobs = jobs.filter(j => {
+      if (win === 'all') return true;
+      const activeJob = j.jobStatus !== 'done' && j.jobStatus !== 'cancelled';
+      if (win === 'open') return activeJob;
+      if (!activeJob) return false;
+      const d = j.daysToInstall;
+      if (win === '7') return d !== null && d >= 0 && d <= 7;
+      if (win === 'overdue') return d !== null && d <= 0;
+      return true;
+    });
+
+    // summary (over active jobs)
+    const act = DATA.jobs.filter(j => j.jobStatus !== 'done' && j.jobStatus !== 'cancelled');
+    const counts = { ready:0, at_risk:0, blocked:0, alarm:0 };
+    act.forEach(j => { counts[j.readiness]++; if (j.permitAlarm) counts.alarm++; });
+    document.getElementById('readinessSummary').innerHTML =
+      card('info', 'Active jobs', act.length) +
+      card('warn', '🚨 Permit alarms', counts.alarm) +
+      card('soon', 'At risk', counts.at_risk) +
+      card('warn', 'Blocked', counts.blocked) +
+      card('ok', 'Ready', counts.ready);
+
+    // alarm banner
+    const alarms = act.filter(j => j.permitAlarm).sort((a,b) => (a.daysToInstall) - (b.daysToInstall));
+    document.getElementById('alarmBanner').innerHTML = alarms.length ? (
+      '<div class="alarm-banner"><h3>🚨 Permit early-warning — chase these now</h3>' +
+      alarms.map(j => '<div class="row"><b>' + esc(j.mall) + ' · ' + esc(j.lotNo) + '</b> — install ' + esc(j.installDate||'?') +
+        ' (' + countdownText(j.daysToInstall) + ') — permit: ' + esc(labelOf(DATA.enums.permitBy, j.permitBy)) +
+        ' / ' + esc(labelOf(DATA.enums.permitStatus, j.permitStatus)) + '</div>').join('') + '</div>'
+    ) : '';
+
+    // filtered + sorted list
+    jobs = jobs.filter(j => {
+      if (fStatus && j.readiness !== fStatus) return false;
+      if (search) {
+        const hay = [j.jobCode, j.client, j.clientGroup, j.mall, j.lotNo].join(' ').toLowerCase();
+        if (hay.indexOf(search) === -1) return false;
+      }
+      return true;
+    }).sort((a,b) => {
+      const da = a.daysToInstall == null ? 99999 : a.daysToInstall;
+      const db = b.daysToInstall == null ? 99999 : b.daysToInstall;
+      return da - db;
+    });
+
+    document.getElementById('jobGrid').innerHTML = jobs.length
+      ? jobs.map(jobCardHtml).join('')
+      : '<div class="empty">No jobs match. Add one with <b>+ Add Job</b>.</div>';
+  }
+
+  function card(kind, lbl, val) { return '<div class="summary-card ' + kind + '"><div class="lbl">' + lbl + '</div><div class="val">' + val + '</div></div>'; }
+
+  function jobCardHtml(j) {
+    const g = gates(j);
+    const days = j.daysToInstall;
+    let cd = 'countdown';
+    if (days !== null && days <= 0) cd += ' urgent'; else if (days !== null && days <= 3) cd += ' soon';
+    const chip = (ok, txt) => '<span class="gate-chip ' + (ok ? 'ok' : 'bad') + '">' + (ok ? '✓ ' : '✗ ') + txt + '</span>';
+    let chips = chip(g.loc, 'Lot/Mall') + chip(g.sketch, 'Sketch') + chip(g.quote, 'Quote') +
+                chip(g.permit, 'Permit');
+    if (j.needsVisual === 'yes') chips += chip(g.visual, 'Visual');
+    chips += chip(g.material, 'Material');
+
+    const doneTag = (j.jobStatus === 'done') ? ' · <span style="color:var(--green);">DONE</span>'
+                  : (j.jobStatus === 'cancelled') ? ' · <span style="color:var(--red);">CANCELLED</span>'
+                  : (j.jobStatus === 'assigned') ? ' · <span style="color:var(--blue);">Assigned T' + esc(j.teamNo) + '</span>' : '';
+
+    return '<div class="job-card ' + j.readiness + '" onclick="openJobModal(\'' + j.id + '\')">' +
+      '<div class="job-top"><div>' +
+        '<div class="job-title">' + esc(j.mall || '(no mall)') + ' · ' + esc(j.lotNo || '(no lot)') + '</div>' +
+        '<div class="job-meta">' + esc(j.jobCode || '') + ' · ' + esc(labelOf(DATA.enums.jobTypes, j.jobType)) +
+          (j.scope ? ' · ' + esc(j.scope) : '') + ' · ' + esc(j.client || '—') + doneTag + '</div>' +
+      '</div><div style="display:flex;gap:8px;align-items:center;">' +
+        '<span class="countdown ' + cd.replace('countdown','').trim() + '">' + esc(j.installDate || 'no date') + ' · ' + countdownText(days) + '</span>' +
+        '<span class="status-badge ' + j.readiness + '">' + j.readiness.replace('_',' ') + '</span>' +
+      '</div></div>' +
+      '<div class="gates">' + chips + '</div>' +
+      (j.permitAlarm ? '<div class="permit-alarm">🚨 Permit not approved — ' + countdownText(days) + ' to install</div>' : '') +
+      ((j.missing && j.missing.length) ? '<div class="missing-line">Missing: <b>' + esc(j.missing.join(', ')) + '</b></div>' : '') +
+    '</div>';
+  }
+
+  /* ---------- JOB MODAL ---------- */
+  function opt(arr, sel) { return arr.map(o => '<option value="' + o.key + '"' + (o.key === sel ? ' selected' : '') + '>' + esc(o.label) + '</option>').join(''); }
+  function optPlain(arr, sel) { return arr.map(o => '<option value="' + esc(o) + '"' + (o === sel ? ' selected' : '') + '>' + esc(o) + '</option>').join(''); }
+
+  function openJobModal(id) {
+    const j = id ? DATA.jobs.find(x => x.id === id) : null;
+    currentJob = j;
+    const E = DATA.enums;
+    const v = (k, d) => (j && j[k] != null && j[k] !== '') ? j[k] : (d || '');
+    document.getElementById('jobModalTitle').textContent = j ? ('Edit ' + (j.jobCode || 'Job')) : 'Add Job';
+    document.getElementById('jobDeleteBtn').style.display = j ? 'inline-flex' : 'none';
+    document.getElementById('jobFormBody').innerHTML =
+      '<div class="preview-box" id="jfPreview"></div>' +
+      '<div class="form-section-title">Client &amp; location</div>' +
+      field('Client', '<input type="text" id="jf_client" value="' + esc(v('client')) + '">') +
+      field('Client group chat', '<input type="text" id="jf_clientGroup" value="' + esc(v('clientGroup')) + '">') +
+      field('Mall / building', '<input type="text" id="jf_mall" value="' + esc(v('mall')) + '">') +
+      field('Lot number', '<input type="text" id="jf_lotNo" value="' + esc(v('lotNo')) + '">') +
+      field('Job type', '<select id="jf_jobType">' + opt(E.jobTypes, v('jobType','install')) + '</select>') +
+      field('Door type', '<select id="jf_doorType">' + optPlain(E.doorTypes, v('doorType','None')) + '</select>') +
+      field('Scope / quantity', '<input type="text" id="jf_scope" placeholder="e.g. 12m hoarding" value="' + esc(v('scope')) + '">', true) +
+      field('Install night', '<input type="date" id="jf_installDate" value="' + esc(v('installDate')) + '">') +
+      field('Job status', '<select id="jf_jobStatus">' + opt(E.jobStatus, v('jobStatus','open')) + '</select>') +
+
+      '<div class="form-section-title">Readiness gates</div>' +
+      field('Measurement', '<select id="jf_measureStatus">' + opt(E.measureStatus, v('measureStatus','pending')) + '</select>') +
+      field('Sketch link (Drive)', '<input type="text" id="jf_sketchUrl" value="' + esc(v('sketchUrl')) + '">') +
+      field('Quotation', '<select id="jf_quoteStatus">' + opt(E.quoteStatus, v('quoteStatus','pending')) + '</select>') +
+      field('Quote ref', '<input type="text" id="jf_quoteRef" value="' + esc(v('quoteRef')) + '">') +
+      field('Visual work needed?', '<select id="jf_needsVisual"><option value="no"' + (v('needsVisual','no')==='no'?' selected':'') + '>No</option><option value="yes"' + (v('needsVisual')==='yes'?' selected':'') + '>Yes</option></select>') +
+      field('Visual artwork', '<select id="jf_visualStatus">' + opt(E.visualStatus, v('visualStatus','na')) + '</select>') +
+      field('Visual link (Drive)', '<input type="text" id="jf_visualUrl" value="' + esc(v('visualUrl')) + '">', true) +
+      field('Permit responsibility', '<select id="jf_permitBy">' + opt(E.permitBy, v('permitBy','us')) + '</select>') +
+      field('Permit status', '<select id="jf_permitStatus">' + opt(E.permitStatus, v('permitStatus','pending')) + '</select>') +
+      field('Permit approved date', '<input type="date" id="jf_permitApprovedAt" value="' + esc(v('permitApprovedAt')) + '">') +
+      field('Permit copy link (Drive)', '<input type="text" id="jf_permitUrl" value="' + esc(v('permitUrl')) + '">') +
+      field('Material / fab ready?', '<select id="jf_materialReady"><option value="no"' + (v('materialReady','no')==='no'?' selected':'') + '>No</option><option value="yes"' + (v('materialReady')==='yes'?' selected':'') + '>Yes</option></select>') +
+      field('Material notes', '<input type="text" id="jf_materialNotes" value="' + esc(v('materialNotes')) + '">') +
+      field('Notes', '<textarea id="jf_notes" rows="2">' + esc(v('notes')) + '</textarea>', true);
+
+    // live preview
+    document.querySelectorAll('#jobFormBody input, #jobFormBody select, #jobFormBody textarea')
+      .forEach(el => { el.addEventListener('input', updateJobPreview); el.addEventListener('change', updateJobPreview); });
+    updateJobPreview();
+    openModal('mJob');
+  }
+  function field(label, inner, full) {
+    return '<div class="form-field' + (full ? ' full' : '') + '"><label>' + label + '</label>' + inner + '</div>';
+  }
+  function collectJobForm() {
+    const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+    const p = {
+      client: get('jf_client'), clientGroup: get('jf_clientGroup'), mall: get('jf_mall'), lotNo: get('jf_lotNo'),
+      jobType: get('jf_jobType'), doorType: get('jf_doorType'), scope: get('jf_scope'), installDate: get('jf_installDate'),
+      jobStatus: get('jf_jobStatus'), measureStatus: get('jf_measureStatus'), sketchUrl: get('jf_sketchUrl'),
+      quoteStatus: get('jf_quoteStatus'), quoteRef: get('jf_quoteRef'), needsVisual: get('jf_needsVisual'),
+      visualStatus: get('jf_visualStatus'), visualUrl: get('jf_visualUrl'), permitBy: get('jf_permitBy'),
+      permitStatus: get('jf_permitStatus'), permitApprovedAt: get('jf_permitApprovedAt'), permitUrl: get('jf_permitUrl'),
+      materialReady: get('jf_materialReady'), materialNotes: get('jf_materialNotes'), notes: get('jf_notes'),
+    };
+    if (currentJob) { p.id = currentJob.id; p.jobCode = currentJob.jobCode; p.dispatchDate = currentJob.dispatchDate; p.teamNo = currentJob.teamNo; }
+    return p;
+  }
+  function updateJobPreview() {
+    const p = collectJobForm();
+    const r = computeReadinessJS(p);
+    const box = document.getElementById('jfPreview');
+    const badge = '<span class="status-badge ' + r.readiness + '">' + r.readiness.replace('_',' ') + '</span>';
+    box.innerHTML = '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' + badge +
+      (r.permitAlarm ? '<span class="permit-alarm" style="margin:0;">🚨 Permit alarm</span>' : '') +
+      '<span style="color:var(--text-dim);font-size:0.85rem;">' +
+        (r.missing.length ? 'Missing: <b style="color:var(--red);">' + esc(r.missing.join(', ')) + '</b>' : 'All gates green — ready to dispatch') +
+      '</span></div>';
+  }
+  function saveJobFromForm() {
+    const p = collectJobForm();
+    if (!p.mall && !p.lotNo && !p.client) { toast('Add at least a client, mall or lot.', true); return; }
+    run('saveJob', [p], 'Job saved.', () => closeModal('mJob'));
+  }
+  function deleteJobFromForm() {
+    if (!currentJob) return;
+    if (!confirm('Delete ' + (currentJob.jobCode || 'this job') + '? This cannot be undone.')) return;
+    run('deleteJob', [currentJob.id], 'Job deleted.', () => closeModal('mJob'));
+  }
+
+  /* ---------- DISPATCH ---------- */
+  function onDispDate() { currentDispatchDate = document.getElementById('dispDate').value; renderDispatch(); }
+
+  function teamSelectHtml(j) {
+    const max = Number(DATA.config.maxTeams || 12);
+    let o = '<option value="">Unassigned</option>';
+    for (let i = 1; i <= max; i++) o += '<option value="' + i + '"' + (String(j.teamNo) === String(i) ? ' selected' : '') + '>Team ' + i + '</option>';
+    return '<select class="mini-select" onchange="assignTo(\'' + j.id + '\', this.value)" onclick="event.stopPropagation()">' + o + '</select>';
+  }
+  function assignTo(jobId, val) {
+    if (val) {
+      const max = Number(DATA.config.maxJobsPerTeam || 5);
+      const count = DATA.jobs.filter(j => j.dispatchDate === currentDispatchDate && String(j.teamNo) === String(val) && j.id !== jobId).length;
+      if (count >= max && !confirm('Team ' + val + ' already has ' + count + ' job(s) (max ' + max + '). Assign anyway?')) { renderDispatch(); return; }
+    }
+    run('assignJob', [{ jobId: jobId, dispatchDate: currentDispatchDate, teamNo: val }], null);
+  }
+
+  function renderDispatch() {
+    if (!DATA) return;
+    const date = currentDispatchDate;
+    document.getElementById('dispDateLabel').textContent = date ? prettyDate(date) : '—';
+    const active = DATA.jobs.filter(j => j.jobStatus !== 'done' && j.jobStatus !== 'cancelled');
+    const assigned = active.filter(j => j.dispatchDate === date && j.teamNo);
+    const showAll = document.getElementById('dispAllDates').checked;
+    const pool = active.filter(j => j.readiness === 'ready' && !j.teamNo && (showAll || j.installDate === date))
+      .sort((a,b) => (a.mall||'').localeCompare(b.mall||''));
+    const notReady = active.filter(j => j.installDate === date && j.readiness !== 'ready');
+
+    document.getElementById('dispSummary').innerHTML =
+      card('info', 'Assigned tonight', assigned.length) +
+      card('ok', 'Ready in pool', pool.length) +
+      card('warn', 'Scheduled but not ready', notReady.length);
+
+    document.getElementById('dispNotReady').innerHTML = notReady.length ? (
+      '<div class="alarm-banner" style="background:var(--amber-soft);border-color:var(--amber);"><h3 style="color:var(--amber);">⚠️ Scheduled tonight but NOT ready — fix before sharing</h3>' +
+      notReady.map(j => '<div class="row" style="border-color:rgba(245,158,11,0.25);"><b>' + esc(j.mall) + ' · ' + esc(j.lotNo) + '</b> — missing: ' + esc((j.missing||[]).join(', ')) + '</div>').join('') + '</div>'
+    ) : '';
+
+    // teams to show
+    const teamNos = {};
+    DATA.teams.filter(t => t.dispatchDate === date).forEach(t => teamNos[String(t.teamNo)] = true);
+    assigned.forEach(j => teamNos[String(j.teamNo)] = true);
+    const nums = Object.keys(teamNos).sort((a,b) => Number(a) - Number(b));
+    const max = Number(DATA.config.maxJobsPerTeam || 5);
+
+    document.getElementById('teamsWrap').innerHTML = nums.length ? nums.map(n => {
+      const crew = DATA.teams.find(t => t.dispatchDate === date && String(t.teamNo) === n) || {};
+      const jobs = assigned.filter(j => String(j.teamNo) === n);
+      const over = jobs.length > max;
+      const wc = crew.workers ? crew.workers.split(',').map(s => s.trim()).filter(Boolean).length : 0;
+      return '<div class="team-card"><h3>Team ' + n +
+        '<button class="btn btn-ghost btn-sm" onclick="openTeamModal(\'' + n + '\')">Edit crew</button></h3>' +
+        '<div class="crew-line">Driver/SV: <b>' + esc(crew.driver || '—') + '</b> · Lorry: <b>' + esc(crew.lorry || '—') + '</b></div>' +
+        '<div class="crew-line">Workers (' + wc + '): <b>' + esc(crew.workers || '—') + '</b></div>' +
+        (jobs.length ? '<ul class="team-jobs">' + jobs.map((j,i) =>
+          '<li><span class="jtxt">' + (i+1) + '. ' + esc(j.mall) + ' — ' + esc(j.lotNo) + ' — ' + esc(labelOf(DATA.enums.jobTypes, j.jobType)) +
+          (j.scope ? ' — ' + esc(j.scope) : '') + '</span>' + teamSelectHtml(j) + '</li>').join('') + '</ul>'
+          : '<div class="crew-line" style="font-style:italic;">No jobs assigned yet.</div>') +
+        '<div class="team-count' + (over ? ' over' : '') + '">' + jobs.length + ' / ' + max + ' jobs</div>' +
+      '</div>';
+    }).join('') : '<div class="empty">No teams set up for this night yet. Assign a ready job, or click <b>+ Set up team crew</b>.</div>';
+
+    document.getElementById('poolBox').innerHTML = pool.length
+      ? pool.map(j => '<div class="pool-row"><span class="ptxt"><b>' + esc(j.mall) + '</b> · ' + esc(j.lotNo) + '<br><small style="color:var(--text-dim);">' +
+          esc(labelOf(DATA.enums.jobTypes, j.jobType)) + (j.scope ? ' · ' + esc(j.scope) : '') + '</small></span>' + teamSelectHtml(j) + '</div>').join('')
+      : '<div class="empty" style="padding:24px;">No ready &amp; unassigned jobs for this night.<br><small>Tick "show all ready jobs" to pull from other dates.</small></div>';
+  }
+
+  /* TEAM MODAL */
+  function openTeamModal(teamNo) {
+    const date = currentDispatchDate;
+    if (!date) { toast('Pick an install night first.', true); return; }
+    const max = Number(DATA.config.maxTeams || 12);
+    let o = '';
+    for (let i = 1; i <= max; i++) o += '<option value="' + i + '">Team ' + i + '</option>';
+    const sel = document.getElementById('teTeamNo'); sel.innerHTML = o;
+    const crew = teamNo ? (DATA.teams.find(t => t.dispatchDate === date && String(t.teamNo) === String(teamNo)) || {}) : {};
+    currentTeamNo = teamNo;
+    sel.value = teamNo || '1';
+    document.getElementById('teDriver').value = crew.driver || '';
+    document.getElementById('teLorry').value = crew.lorry || '';
+    document.getElementById('teWorkers').value = crew.workers || '';
+    document.getElementById('teNotes').value = crew.notes || '';
+    document.getElementById('teDeleteBtn').style.display = (crew && crew.id) ? 'inline-flex' : 'none';
+    // worker quick-add chips
+    const workers = DATA.staff.filter(s => s.role === 'worker' && s.active !== false);
+    document.getElementById('teWorkerChips').innerHTML = workers.map(w =>
+      '<span class="chip" onclick="addWorkerChip(\'' + esc(w.name).replace(/'/g,"\\'") + '\')">+ ' + esc(w.name) + '</span>').join('')
+      || '<span class="help">No workers in Crew tab yet — type names directly.</span>';
+    openModal('mTeam');
+  }
+  function addWorkerChip(name) {
+    const el = document.getElementById('teWorkers');
+    const list = el.value.split(',').map(s => s.trim()).filter(Boolean);
+    if (list.indexOf(name) === -1) list.push(name);
+    el.value = list.join(', ');
+  }
+  function saveTeamFromForm() {
+    const p = {
+      dispatchDate: currentDispatchDate,
+      teamNo: document.getElementById('teTeamNo').value,
+      driver: document.getElementById('teDriver').value,
+      lorry: document.getElementById('teLorry').value,
+      workers: document.getElementById('teWorkers').value,
+      notes: document.getElementById('teNotes').value,
+    };
+    run('saveTeam', [p], 'Team crew saved.', () => closeModal('mTeam'));
+  }
+  function deleteTeamFromForm() {
+    const date = currentDispatchDate, no = document.getElementById('teTeamNo').value;
+    const crew = DATA.teams.find(t => t.dispatchDate === date && String(t.teamNo) === String(no));
+    if (!crew) { closeModal('mTeam'); return; }
+    if (!confirm('Delete Team ' + no + ' for ' + date + '? Its jobs go back to the pool.')) return;
+    run('deleteTeam', [crew.id], 'Team removed.', () => closeModal('mTeam'));
+  }
+
+  /* WhatsApp message */
+  function buildMessage(date) {
+    const active = DATA.jobs.filter(j => j.jobStatus !== 'done' && j.jobStatus !== 'cancelled');
+    const assigned = active.filter(j => j.dispatchDate === date && j.teamNo);
+    const teamNos = {};
+    DATA.teams.filter(t => t.dispatchDate === date).forEach(t => teamNos[String(t.teamNo)] = true);
+    assigned.forEach(j => teamNos[String(j.teamNo)] = true);
+    const nums = Object.keys(teamNos).sort((a,b) => Number(a) - Number(b));
+    let totalJobs = 0;
+    let out = 'HG Hoarding — Night Install\nDate: ' + prettyDate(date) + '\n';
+    nums.forEach(n => {
+      const crew = DATA.teams.find(t => t.dispatchDate === date && String(t.teamNo) === n) || {};
+      const jobs = assigned.filter(j => String(j.teamNo) === n);
+      totalJobs += jobs.length;
+      const wc = crew.workers ? crew.workers.split(',').map(s => s.trim()).filter(Boolean).length : 0;
+      out += '\nTEAM ' + n + '\n';
+      out += 'Driver/SV: ' + (crew.driver || '-') + '\n';
+      out += 'Workers: ' + (crew.workers || '-') + (wc ? ' (' + wc + ')' : '') + '\n';
+      out += 'Lorry: ' + (crew.lorry || '-') + '\n';
+      out += 'Jobs (' + jobs.length + '):\n';
+      jobs.forEach((j, i) => {
+        const g = gates(j);
+        const door = (j.doorType && j.doorType !== 'None') ? ', ' + j.doorType.toLowerCase() : '';
+        out += (i+1) + '. ' + (j.mall || '?') + ' — ' + (j.lotNo || '?') + ' — ' + labelOf(DATA.enums.jobTypes, j.jobType) +
+          (j.scope ? ' — ' + j.scope : '') + door + ' [' + (g.permit ? 'Permit OK' : 'PERMIT PENDING') + ']\n';
+      });
+      if (crew.notes) out += 'Note: ' + crew.notes + '\n';
+    });
+    out += '\nTotal: ' + nums.length + ' team(s), ' + totalJobs + ' job(s)';
+    return { text: out, teams: nums.length, jobs: totalJobs };
+  }
+  function openDispatchMsg() {
+    if (!currentDispatchDate) { toast('Pick an install night first.', true); return; }
+    const m = buildMessage(currentDispatchDate);
+    if (!m.jobs && !m.teams) { toast('Nothing assigned for this night yet.', true); return; }
+    document.getElementById('msgArea').value = m.text;
+    openModal('mMsg');
+  }
+  function copyMsg() {
+    const ta = document.getElementById('msgArea');
+    ta.select(); ta.setSelectionRange(0, 99999);
+    try { document.execCommand('copy'); toast('Copied — paste into HG Operation group.'); }
+    catch (e) { navigator.clipboard && navigator.clipboard.writeText(ta.value).then(() => toast('Copied.')); }
+  }
+
+  /* ---------- CREW ---------- */
+  function renderCrew() {
+    const staff = DATA.staff.slice().sort((a,b) => (a.role+a.name).localeCompare(b.role+b.name));
+    document.getElementById('staffBody').innerHTML = staff.length ? staff.map(s =>
+      '<tr><td>' + esc(s.name) + '</td><td><span class="pill ' + (s.role === 'driver' ? 'driver' : 'worker') + '">' +
+        (s.role === 'driver' ? 'Driver/SV' : 'Worker') + '</span></td><td>' + esc(s.phone || '—') + '</td>' +
+      '<td>' + (s.active === false ? '<span class="pill off">inactive</span>' : 'active') + '</td>' +
+      '<td style="text-align:right;"><button class="btn btn-ghost btn-sm" onclick="openStaffModal(\'' + s.id + '\')">Edit</button></td></tr>'
+    ).join('') : '<tr><td colspan="5" style="color:var(--text-dim);">No staff yet.</td></tr>';
+
+    const lorries = DATA.lorries.slice();
+    document.getElementById('lorryBody').innerHTML = lorries.length ? lorries.map(l =>
+      '<tr><td>' + esc(l.plate) + '</td><td>' + esc(l.label || '—') + '</td>' +
+      '<td>' + (l.active === false ? '<span class="pill off">inactive</span>' : 'active') + '</td>' +
+      '<td style="text-align:right;"><button class="btn btn-ghost btn-sm" onclick="openLorryModal(\'' + l.id + '\')">Edit</button></td></tr>'
+    ).join('') : '<tr><td colspan="4" style="color:var(--text-dim);">No lorries yet.</td></tr>';
+  }
+  function fillDatalists() {
+    document.getElementById('driversList').innerHTML = DATA.staff.filter(s => s.role === 'driver' && s.active !== false)
+      .map(s => '<option value="' + esc(s.name) + '">').join('');
+    document.getElementById('lorriesList').innerHTML = DATA.lorries.filter(l => l.active !== false)
+      .map(l => '<option value="' + esc(l.plate) + '">' + esc(l.label || '') + '</option>').join('');
+  }
+  function openStaffModal(id) {
+    const s = id ? DATA.staff.find(x => x.id === id) : null;
+    currentStaff = s;
+    document.getElementById('staffModalTitle').textContent = s ? 'Edit staff' : 'Add staff';
+    document.getElementById('stName').value = s ? s.name : '';
+    document.getElementById('stRole').value = s ? s.role : 'worker';
+    document.getElementById('stPhone').value = s ? (s.phone || '') : '';
+    document.getElementById('stActive').checked = s ? (s.active !== false) : true;
+    document.getElementById('stDeleteBtn').style.display = s ? 'inline-flex' : 'none';
+    openModal('mStaff');
+  }
+  function saveStaffFromForm() {
+    const p = { name: document.getElementById('stName').value, role: document.getElementById('stRole').value,
+      phone: document.getElementById('stPhone').value, active: document.getElementById('stActive').checked };
+    if (currentStaff) p.id = currentStaff.id;
+    if (!p.name) { toast('Name required.', true); return; }
+    run('saveStaff', [p], 'Staff saved.', () => closeModal('mStaff'));
+  }
+  function deleteStaffFromForm() {
+    if (!currentStaff) return;
+    if (!confirm('Delete ' + currentStaff.name + '?')) return;
+    run('deleteStaff', [currentStaff.id], 'Staff deleted.', () => closeModal('mStaff'));
+  }
+  function openLorryModal(id) {
+    const l = id ? DATA.lorries.find(x => x.id === id) : null;
+    currentLorry = l;
+    document.getElementById('lorryModalTitle').textContent = l ? 'Edit lorry' : 'Add lorry';
+    document.getElementById('loPlate').value = l ? l.plate : '';
+    document.getElementById('loLabel').value = l ? (l.label || '') : '';
+    document.getElementById('loActive').checked = l ? (l.active !== false) : true;
+    document.getElementById('loDeleteBtn').style.display = l ? 'inline-flex' : 'none';
+    openModal('mLorry');
+  }
+  function saveLorryFromForm() {
+    const p = { plate: document.getElementById('loPlate').value, label: document.getElementById('loLabel').value,
+      active: document.getElementById('loActive').checked };
+    if (currentLorry) p.id = currentLorry.id;
+    if (!p.plate) { toast('Plate required.', true); return; }
+    run('saveLorry', [p], 'Lorry saved.', () => closeModal('mLorry'));
+  }
+  function deleteLorryFromForm() {
+    if (!currentLorry) return;
+    if (!confirm('Delete lorry ' + currentLorry.plate + '?')) return;
+    run('deleteLorry', [currentLorry.id], 'Lorry deleted.', () => closeModal('mLorry'));
+  }
+
+  /* ---------- SETTINGS ---------- */
+  function fillSettings() {
+    const c = DATA.config;
+    document.getElementById('cfgPermitLeadDays').value = c.permitLeadDays || 3;
+    document.getElementById('cfgAtRiskDays').value = c.atRiskDays || 3;
+    document.getElementById('cfgMaxTeams').value = c.maxTeams || 12;
+    document.getElementById('cfgMaxJobsPerTeam').value = c.maxJobsPerTeam || 5;
+    document.getElementById('cfgMaxWorkersPerTeam').value = c.maxWorkersPerTeam || 5;
+    document.getElementById('cfgEmailRecipients').value = c.emailRecipients || '';
+  }
+  function saveSettings() {
+    const p = {
+      permitLeadDays: document.getElementById('cfgPermitLeadDays').value,
+      atRiskDays: document.getElementById('cfgAtRiskDays').value,
+      maxTeams: document.getElementById('cfgMaxTeams').value,
+      maxJobsPerTeam: document.getElementById('cfgMaxJobsPerTeam').value,
+      maxWorkersPerTeam: document.getElementById('cfgMaxWorkersPerTeam').value,
+      emailRecipients: document.getElementById('cfgEmailRecipients').value,
+    };
+    run('saveConfig', [p], 'Settings saved.', () => fillSettings());
+  }
+
+  /* ---------- ACTIVITY ---------- */
+  function renderActivity() {
+    const rows = DATA.audit || [];
+    document.getElementById('auditBody').innerHTML = rows.length ? rows.map(r =>
+      '<tr><td style="white-space:nowrap;color:var(--text-dim);font-size:0.8rem;">' + esc((r.timestamp||'').replace('T',' ').slice(0,16)) + '</td>' +
+      '<td>' + esc(r.userEmail || '') + '</td><td>' + esc(r.action || '') + '</td><td>' + esc(r.recordType || '') + '</td>' +
+      '<td>' + esc(r.recordId || '') + '</td><td style="color:var(--text-dim);">' + esc(r.details || '') + '</td></tr>'
+    ).join('') : '<tr><td colspan="6" style="color:var(--text-dim);">No activity yet.</td></tr>';
+  }
+
+  // close modal on backdrop click
+  document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+  window.addEventListener('DOMContentLoaded', loadAll);
+</script>
+</body>
+</html>

@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<base target="_top">
+<style>
+:root{
+  --bg:#0a0e1a;--panel:#141926;--panel2:#1c2335;--line:#2a3245;
+  --ink:#ffffff;--muted:#a0a8b8;--soft:#6b7280;
+  --accent:#f59e0b;--accent-hover:#d97706;--accent-soft:rgba(245,158,11,.12);
+  --accent2:#3b82f6;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--chip:#1c2335;--radius:14px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+header.topbar{max-width:1440px;margin:0 auto;padding:22px 24px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;border-bottom:1px solid var(--line)}
+.brand-block{display:flex;align-items:center;gap:14px}
+.brand-logo{width:48px;height:48px;background:linear-gradient(135deg,var(--accent),var(--accent-hover));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#0a0e1a;font-weight:900}
+.brand-name{font-size:1.35rem;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.brand-sub{font-size:.82rem;color:var(--muted);margin-top:3px}
+.user-pill{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--good);color:var(--good);padding:8px 14px;border-radius:999px;font-size:.82rem;font-weight:600}
+.user-pill.unknown{border-color:var(--muted);color:var(--muted)}
+nav{max-width:1440px;margin:0 auto;display:flex;gap:4px;padding:14px 24px 0;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+nav button{background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);padding:12px 18px;cursor:pointer;font-size:.92rem;font-weight:600;font-family:inherit}
+nav button:hover{color:var(--ink)}
+nav button.active{color:var(--accent);border-bottom-color:var(--accent)}
+main{padding:24px;max-width:1440px;margin:0 auto 70px}
+.view{display:none}.view.active{display:block}
+h2{margin:0 0 4px;font-size:1.5rem;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--muted);font-size:.85rem;margin-bottom:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:18px}
+.card h3{margin:0 0 12px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:880px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.g2,.g3,.g4{grid-template-columns:1fr}}
+label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:.9rem;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+select option{background:var(--panel2);color:var(--ink)}
+select optgroup{background:var(--panel2);color:var(--muted);font-weight:700}
+.hint{font-size:.68rem;color:var(--soft);margin-top:4px}
+button.btn{background:var(--accent);color:#0a0e1a;border:none;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:.85rem;font-family:inherit}
+button.btn:hover{background:var(--accent-hover)}
+button.btn.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.btn.sec:hover{border-color:var(--accent);color:var(--accent);background:transparent}
+button.btn.bad{background:var(--bad);color:#fff}
+button.btn.blue{background:var(--accent2);color:#fff}
+button.btn.sm{padding:7px 11px;font-size:.78rem}
+button:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;position:sticky;top:0;background:var(--panel)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.tablewrap{overflow:auto;max-height:62vh;border:1px solid var(--line);border-radius:12px}
+tbody tr:hover{background:var(--panel2)}
+.kpi{display:flex;flex-direction:column;gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.kpi:hover{border-color:var(--accent)}
+.kpi .v{font-size:1.5rem;font-weight:800}.kpi .l{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.chip{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:.7rem;color:var(--muted);font-weight:600}
+.chip.good{color:var(--good);background:rgba(34,197,94,.15);border-color:transparent}
+.chip.warn{color:var(--accent);background:var(--accent-soft);border-color:transparent}
+.chip.bad{color:var(--bad);background:rgba(239,68,68,.15);border-color:transparent}
+.totline{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line)}
+.totline.grand{border-bottom:none;font-size:1.15rem;font-weight:800;color:var(--accent);padding-top:10px}
+.editable{background:var(--accent-soft);border-color:rgba(245,158,11,.35)}
+.muted{color:var(--muted)}.small{font-size:.78rem}
+.deltaUp{color:var(--bad)}.deltaDown{color:var(--good)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:30px 16px;overflow:auto}
+.modal.open{display:flex}
+.modal .box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);max-width:880px;width:100%;padding:22px}
+.statusbar{position:fixed;bottom:0;left:0;right:0;background:var(--panel2);border-top:1px solid var(--line);padding:9px 24px;font-size:.75rem;color:var(--muted);display:flex;gap:18px;z-index:60}
+.statusbar b{color:var(--ink)}
+#overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:300;flex-direction:column;gap:14px}
+.spinner{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#busy{position:fixed;top:14px;right:18px;z-index:200;display:none}
+#toast{position:fixed;bottom:48px;left:50%;transform:translateX(-50%);background:var(--good);color:#04240f;padding:11px 20px;border-radius:12px;font-weight:700;z-index:200;display:none}
+#err{position:fixed;bottom:48px;left:50%;transform:translateX(-50%);background:var(--bad);color:#fff;padding:11px 20px;border-radius:12px;font-weight:700;z-index:201;display:none;max-width:80%}
+</style>
+</head>
+<body>
+<div id="overlay"><div class="spinner"></div><div class="muted">Loading HG Hoarding Pricing…</div></div>
+<div id="busy"><span class="chip"><span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;vertical-align:middle"></span> saving…</span></div>
+
+<header class="topbar">
+  <div class="brand-block">
+    <div class="brand-logo">H</div>
+    <div>
+      <div class="brand-name">HG — Hoarding Pricing</div>
+      <div class="brand-sub">Metal Deck · Quote → Record → Audit · @hggroup.com.my</div>
+    </div>
+  </div>
+  <div class="user-pill unknown" id="userPill"><span id="whoami">⌛ Checking access…</span></div>
+</header>
+<nav id="nav"></nav>
+
+<main>
+  <!-- BUILDER -->
+  <section class="view active" data-view="builder">
+    <h2>Quote Builder</h2>
+    <div class="sub">Verified exact port of your Excel calculator. Fill the yellow fields — totals recalc live; saving snapshots the rates into a permanent record.</div>
+    <div class="grid g2">
+      <div class="card"><h3>1. Project & Client</h3>
+        <div class="grid g2">
+          <div><label>Quote No.</label><input id="f_quoteNo"></div>
+          <div><label>Quote Date</label><input id="f_quoteDate" type="date"></div>
+          <div><label>Client</label><input id="f_client" list="clientList" placeholder="ABC Sdn Bhd"><datalist id="clientList"></datalist></div>
+          <div><label>Client Contact / PIC</label><input id="f_contact" placeholder="Name / phone"></div>
+          <div><label>Project Name</label><input id="f_project" value="Metal Deck Hoarding Project"></div>
+          <div><label>Mall</label><input id="f_mall" placeholder="—"></div>
+          <div><label>Lot No.</label><input id="f_lot" placeholder="—"></div>
+          <div><label>Validity (days)</label><input id="f_validity" type="number" value="30"></div>
+          <div style="grid-column:1/-1"><label>Project Location / Address</label><input id="f_location"></div>
+        </div>
+      </div>
+      <div class="card"><h3>2. Hoarding Parameters</h3>
+        <div class="grid g2">
+          <div><label>Hoarding Length (m)</label><input id="p_length" type="number" class="editable" value="160" oninput="App.calc()"></div>
+          <div><label>Hoarding Height (m)</label><input id="p_height" type="number" class="editable" value="2.4" oninput="App.calc()"></div>
+          <div><label>Post C/C Spacing (m)</label><input id="p_cc" type="number" class="editable" value="3" oninput="App.calc()"></div>
+          <div><label>Doors / Gates</label><input id="p_doors" type="number" class="editable" value="1" oninput="App.calc()"></div>
+        </div>
+        <h3 style="margin-top:14px">Material Selection</h3>
+        <div class="grid g2">
+          <div><label>Post Material</label><select id="m_post" class="editable" onchange="App.calc()"></select></div>
+          <div><label>Horizontal Material</label><select id="m_horiz" class="editable" onchange="App.calc()"></select></div>
+          <div><label>Hoarding Panel (GI / Deck)</label><select id="m_panel" class="editable" onchange="App.calc()"></select></div>
+          <div><label>Base / Footing</label><select id="m_found" class="editable" onchange="App.calc()"></select></div>
+          <div><label>Horizontal Lines</label><input id="p_horizLines" type="number" class="editable" value="3" oninput="App.calc()"></div>
+          <div><label>Footings per Post</label><input id="p_footPerPost" type="number" class="editable" value="2" oninput="App.calc()"></div>
+        </div>
+      </div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><h3>3. Productivity & Coefficients</h3>
+        <div class="grid g3">
+          <div><label>Posts/Day Install</label><input id="p_pInstall" type="number" value="8" oninput="App.calc()"></div>
+          <div><label>Posts/Day Fab</label><input id="p_pFab" type="number" value="15" oninput="App.calc()"></div>
+          <div><label>Install Days/Door</label><input id="p_gateDays" type="number" value="2" oninput="App.calc()"></div>
+          <div><label>Sqft Factor /sqm</label><input id="p_sqft" type="number" value="11.16" oninput="App.calc()"></div>
+          <div><label>Gate Struct m/door</label><input id="p_gStruct" type="number" value="40.8" oninput="App.calc()"></div>
+          <div><label>Gate Panel sqft/door</label><input id="p_gPanel" type="number" value="155" oninput="App.calc()"></div>
+          <div><label>Gate Posts/door</label><input id="p_gPosts" type="number" value="2" oninput="App.calc()"></div>
+          <div><label>Gate Footings/door</label><input id="p_gFoot" type="number" value="4" oninput="App.calc()"></div>
+        </div>
+      </div>
+      <div class="card"><h3>4. X-Brace Add-on (optional)</h3>
+        <div class="grid g3">
+          <div><label>X-Brace Material</label><select id="m_xbrace" class="editable" onchange="App.calc()"></select></div>
+          <div><label>X-Brace Length/set (m)</label><input id="o_xbraceLen" type="number" class="editable" value="10.8" oninput="App.calc()"></div>
+          <div><label>X-Brace Sets</label><input id="o_xbrace" type="number" class="editable" value="0" oninput="App.calc()"></div>
+        </div>
+        <div class="hint" style="margin-bottom:14px">Total = length/set × material rate × sets. Leave Sets at 0 if not used.</div>
+        <h3>Labor Rates (RM)</h3>
+        <div class="grid g3">
+          <div><label>Labor Fab/Post</label><input id="l_fabPost" type="number" value="150" oninput="App.calc()"></div>
+          <div><label>Preliminaries/Day</label><input id="l_prelim" type="number" value="1200" oninput="App.calc()"></div>
+          <div><label>Labor Install/Day</label><input id="l_install" type="number" value="1500" oninput="App.calc()"></div>
+          <div><label>Labor Fab/Gate</label><input id="l_fabGate" type="number" value="1200" oninput="App.calc()"></div>
+          <div><label>Labor Install Gate/Day</label><input id="l_installGate" type="number" value="1500" oninput="App.calc()"></div>
+          <div><label>SST %</label><input id="l_sst" type="number" value="6" oninput="App.calc()"></div>
+        </div>
+        <div class="hint">Excel labelled tax "8%" but computed 6% — defaulted to 6%. Set 0 to switch off.</div>
+      </div>
+    </div>
+    <div class="card"><h3>Costing Breakdown (live)</h3>
+      <div class="tablewrap" style="max-height:none"><table><thead><tr>
+        <th>Item</th><th>Code</th><th class="num">Rate</th><th class="num">Per-unit Sub</th><th class="num">Qty</th><th>Unit</th><th class="num">Total (RM)</th>
+      </tr></thead><tbody id="costBody"></tbody></table></div>
+    </div>
+    <div class="grid g3">
+      <div class="card"><h3>Totals</h3>
+        <div class="totline"><span>Hoarding Subtotal</span><b id="t_hoard">RM 0</b></div>
+        <div class="totline"><span>Gate Subtotal</span><b id="t_gate">RM 0</b></div>
+        <div class="totline"><span>Subtotal (ex-tax)</span><b id="t_sub">RM 0</b></div>
+        <div class="totline"><span id="t_sstlbl">SST</span><b id="t_sst">RM 0</b></div>
+        <div class="totline grand"><span>GRAND TOTAL</span><span id="t_grand">RM 0</span></div>
+      </div>
+      <div class="card"><h3>Job Metrics</h3>
+        <div class="grid g2 small">
+          <div>Posts<br><b id="jm_posts">0</b></div><div>Post m/post<br><b id="jm_perpost">0</b></div>
+          <div>Vert material (m)<br><b id="jm_vert">0</b></div><div>Horiz material (m)<br><b id="jm_horiz">0</b></div>
+          <div>Footings<br><b id="jm_foot">0</b></div><div>Deck area (sqft)<br><b id="jm_sqft">0</b></div>
+          <div>Install days<br><b id="jm_idays">0</b></div><div>Project days<br><b id="jm_pdays">0</b></div>
+        </div>
+      </div>
+      <div class="card"><h3>Save / Output</h3>
+        <div style="margin-bottom:8px"><label>Status</label>
+          <select id="f_status"><option>Draft</option><option>Sent</option><option>Won</option><option>Lost</option></select></div>
+        <div class="row"><button class="btn" id="btnSave" onclick="App.saveQuote()">💾 Save to Sheet</button>
+          <button class="btn blue" onclick="App.printQuote()">🖨 Print / PDF</button></div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn sec sm" onclick="App.newQuote()">＋ New / Clear</button></div>
+        <div class="hint" id="editingHint"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RECORDS -->
+  <section class="view" data-view="records">
+    <h2>Quotes & Client Records</h2>
+    <div class="sub">Every saved quote, stored in the Google Sheet with a full pricing snapshot. Shared live with anyone on @hggroup.com.my.</div>
+    <div class="card">
+      <div class="row" style="margin-bottom:12px">
+        <input id="rec_search" placeholder="Search client / project / quote no / mall…" oninput="App.renderRecords()" style="max-width:340px">
+        <select id="rec_status" onchange="App.renderRecords()" style="max-width:140px">
+          <option value="">All status</option><option>Draft</option><option>Sent</option><option>Won</option><option>Lost</option></select>
+        <div class="spacer" style="flex:1"></div>
+        <button class="btn sec sm" onclick="App.exportQuotesCSV()">⬇ Export CSV</button>
+      </div>
+      <div class="tablewrap"><table><thead><tr>
+        <th>Quote No.</th><th>Date</th><th>Client</th><th>Project</th><th>Mall/Lot</th>
+        <th class="num">Grand Total</th><th>Status</th><th>Actions</th>
+      </tr></thead><tbody id="recBody"></tbody></table></div>
+    </div>
+    <div class="grid g3" id="clientCards"></div>
+  </section>
+
+  <!-- MATERIALS -->
+  <section class="view" data-view="materials">
+    <h2>Material Catalog</h2>
+    <div class="sub">Edit <b>Cost Price</b> / <b>Markup %</b> — Cost/Unit & Client Rate auto-calc. Every change is logged with date, operator & reason.</div>
+    <div class="card">
+      <div class="row" style="margin-bottom:12px">
+        <input id="mat_search" placeholder="Search code / type / size…" oninput="App.renderMaterials()" style="max-width:300px">
+        <div class="spacer" style="flex:1"></div>
+        <button class="btn sm" onclick="App.addMaterial()">＋ New Material</button>
+      </div>
+      <div class="tablewrap"><table><thead><tr>
+        <th>Code</th><th>Type</th><th>Size</th><th class="num">Bar/Sheet</th><th>Unit</th>
+        <th class="num">Cost Price</th><th class="num">Cost/Unit</th><th class="num">Markup %</th><th class="num">Client Rate</th><th>Updated</th><th></th>
+      </tr></thead><tbody id="matBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- SUPPLIERS -->
+  <section class="view" data-view="suppliers">
+    <h2>Supplier Price Comparison</h2>
+    <div class="sub"><b>Comparison only</b> — store multiple supplier quotes per material. "Apply" pushes a price into your catalog (logged).</div>
+    <div class="card">
+      <div class="row" style="margin-bottom:12px">
+        <select id="sup_matFilter" onchange="App.renderSuppliers()" style="max-width:260px"><option value="">All materials</option></select>
+        <div class="spacer" style="flex:1"></div>
+        <button class="btn sm" onclick="App.addSupplierPrice()">＋ Add Supplier Price</button>
+      </div>
+      <div class="tablewrap"><table><thead><tr>
+        <th>Material</th><th>Supplier</th><th class="num">Cost Price</th><th>Unit</th><th class="num">Cost/Unit</th><th>Note</th><th>Recorded</th><th></th>
+      </tr></thead><tbody id="supBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- REPORTS -->
+  <section class="view" data-view="reports">
+    <h2>Reports</h2>
+    <div class="sub">Everything inserted & quoted, retrieved from the Sheet.</div>
+    <div class="grid g4" id="reportKpis"></div>
+    <div class="grid g2">
+      <div class="card"><h3>Quotes by Client</h3>
+        <div class="tablewrap" style="max-height:40vh"><table><thead><tr><th>Client</th><th class="num">Quotes</th><th class="num">Total (RM)</th><th class="num">Won (RM)</th></tr></thead><tbody id="rep_client"></tbody></table></div>
+      </div>
+      <div class="card"><h3>Price Change History</h3>
+        <div class="row" style="margin-bottom:8px"><input id="ph_search" placeholder="Filter by material code…" oninput="App.renderPriceHistory()" style="max-width:240px"></div>
+        <div class="tablewrap" style="max-height:40vh"><table><thead><tr><th>When</th><th>Code</th><th>Field</th><th class="num">Old</th><th class="num">New</th><th>By</th><th>Reason</th></tr></thead><tbody id="rep_pricehist"></tbody></table></div>
+      </div>
+    </div>
+    <div class="card"><h3>Material Usage Across Quotes</h3>
+      <div class="tablewrap" style="max-height:40vh"><table><thead><tr><th>Material</th><th class="num">Times Quoted</th><th class="num">Total Qty</th><th class="num">Total Value (RM)</th></tr></thead><tbody id="rep_matusage"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- AUDIT -->
+  <section class="view" data-view="audit">
+    <h2>Audit Log</h2>
+    <div class="sub">Server-stamped record of every action — signed-in email, what, when. Cannot be edited from here.</div>
+    <div class="card">
+      <div class="row" style="margin-bottom:12px">
+        <input id="aud_search" placeholder="Search action / entity / operator…" oninput="App.renderAudit()" style="max-width:340px">
+        <div class="spacer" style="flex:1"></div>
+        <span class="chip" id="audCount"></span>
+        <button class="btn sec sm" onclick="App.exportAuditCSV()">⬇ Export CSV</button>
+      </div>
+      <div class="tablewrap"><table><thead><tr><th>Timestamp</th><th>Operator</th><th>Action</th><th>Entity</th><th>Detail</th></tr></thead><tbody id="audBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="view" data-view="settings">
+    <h2>Settings</h2>
+    <div class="sub">Company header (used on printed quotes) and the fixed costing material codes. Saved to the Config sheet.</div>
+    <div class="card"><h3>Company Header</h3>
+      <div class="grid g2">
+        <div><label>Company Name</label><input id="c_COMPANY_NAME"></div>
+        <div><label>Reg No.</label><input id="c_COMPANY_REG"></div>
+        <div><label>Address</label><input id="c_COMPANY_ADDRESS"></div>
+        <div><label>Email</label><input id="c_COMPANY_EMAIL"></div>
+        <div><label>Website</label><input id="c_COMPANY_WEB"></div>
+        <div><label>Default SST %</label><input id="c_SST_PCT" type="number"></div>
+      </div>
+    </div>
+    <div class="card"><h3>Fixed Costing Material Codes</h3>
+      <div class="grid g3">
+        <div><label>GI Plate</label><input id="c_CODE_GI"></div>
+        <div><label>Deck (main)</label><input id="c_CODE_DECK_MAIN"></div>
+        <div><label>Deck (gate)</label><input id="c_CODE_DECK_GATE"></div>
+        <div><label>Footing</label><input id="c_CODE_FOOTING"></div>
+        <div><label>Base Plate</label><input id="c_CODE_BASE"></div>
+        <div><label>X-Brace</label><input id="c_CODE_XBRACE"></div>
+        <div><label>X-Brace length (m)</label><input id="c_XBRACE_LEN" type="number"></div>
+      </div>
+    </div>
+    <div class="card"><h3>Quotation Terms &amp; Conditions</h3>
+      <label>Terms (one per line — printed exactly as below on every quote)</label>
+      <textarea id="c_TERMS" rows="9" style="font-family:inherit"></textarea>
+      <div class="grid g2" style="margin-top:10px">
+        <div><label>Signatory line (under "Prepared by")</label><input id="c_SIGNATORY"></div>
+      </div>
+      <div class="hint">Number them yourself (1., 2., …) if you want numbering — lines print verbatim. Blank lines are skipped.</div>
+    </div>
+    <div class="card"><div class="row"><button class="btn" onclick="App.saveSettings()">💾 Save Settings</button>
+      <span class="muted small">Saves company header, costing codes, terms &amp; signatory to the Config sheet.</span></div></div>
+    <div class="card"><h3>About</h3>
+      <div class="small muted">Data lives in the bound Google Sheet (6 tabs: Materials, Quotes, SupplierPrices, PriceHistory, Config, AuditLog). Restricted to @hggroup.com.my. Open the Sheet directly for raw backups / pivot tables.</div>
+    </div>
+  </section>
+</main>
+
+<div class="statusbar">
+  <span>Catalog: <b id="sb_mat">0</b></span><span>Quotes: <b id="sb_q">0</b></span>
+  <span>Clients: <b id="sb_c">0</b></span><span>Audit: <b id="sb_a">0</b></span>
+  <span class="spacer" style="flex:1"></span><span class="muted" id="sb_co">HG Services (M) Sdn Bhd</span>
+</div>
+
+<div class="modal" id="modal"><div class="box" id="modalBox"></div></div>
+<div id="toast"></div><div id="err"></div>
+
+<script>
+const App=(function(){
+  const $=id=>document.getElementById(id);
+  const fmt=n=>'RM '+num(n);
+  const num=n=>(Math.round((+n||0)*100)/100).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const todayISO=()=>new Date().toISOString().slice(0,10);
+  const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const termsLines=t=>String(t||'').split('\n').map(x=>x.trim()).filter(Boolean);
+
+  let state={materials:[],quotes:[],suppliers:[],priceHistory:[],audit:[],config:{},stats:{}};
+  let matMap={};
+  let editingId=null;
+
+  /* ---------- server bridge ---------- */
+  function run(method,args,cb){
+    $('busy').style.display='block';
+    google.script.run
+      .withSuccessHandler(function(res){$('busy').style.display='none';if(cb)cb(res);})
+      .withFailureHandler(function(e){$('busy').style.display='none';showErr(e.message||e);})
+      [method].apply(google.script.run,args||[]);
+  }
+  function onBoot(res){
+    state=res;rebuildMatMap();
+    $('userPill').className='user-pill';$('whoami').textContent='● '+state.currentUser;
+    $('sb_co').textContent=(state.config.COMPANY_NAME||'HG');
+    buildClientList();
+    renderAll();
+    $('overlay').style.display='none';
+  }
+  function rebuildMatMap(){matMap={};(state.materials||[]).forEach(m=>matMap[m.code]=m);}
+
+  /* ---------- calc (mirrors server computeQuote_) ---------- */
+  const roundUp=x=>Math.ceil(x-1e-9);
+  const rateOf=code=>matMap[code]?matMap[code].clientRate:0;
+  function gatherInputs(){
+    const v=id=>+($(id).value)||0;const c=state.config||{};
+    return {length:v('p_length'),height:v('p_height'),cc:v('p_cc'),doors:v('p_doors'),
+      postCode:$('m_post').value,horizCode:$('m_horiz').value,panelCode:$('m_panel').value,foundCode:$('m_found').value,
+      horizLines:v('p_horizLines'),footPerPost:v('p_footPerPost'),
+      pInstall:v('p_pInstall'),pFab:v('p_pFab'),gateDays:v('p_gateDays'),sqftF:v('p_sqft'),
+      gStruct:v('p_gStruct'),gPanel:v('p_gPanel'),gPosts:v('p_gPosts'),gFoot:v('p_gFoot'),
+      oXbrace:v('o_xbrace'),xbraceCode:$('m_xbrace').value,xbraceLen:v('o_xbraceLen'),
+      lFabPost:v('l_fabPost'),lPrelim:v('l_prelim'),lInstall:v('l_install'),lFabGate:v('l_fabGate'),lInstallGate:v('l_installGate'),sst:v('l_sst'),
+      deckGate:c.CODE_DECK_GATE||'DECK-0.48'};
+  }
+  function compute(i){
+    const postPerPost=2*Math.sqrt(Math.pow(i.height-0.3,2)+Math.pow(1.2,2))+2.1;
+    const posts=roundUp(i.length/(i.cc||1)),installDays=roundUp(posts/(i.pInstall||1)),fabDays=roundUp(posts/(i.pFab||1));
+    const deckSqft=roundUp(i.length*i.height*i.sqftF);const rPost=rateOf(i.postCode),rHoriz=rateOf(i.horizCode);
+    const unitOf=code=>matMap[code]?matMap[code].unit:'';
+    const L=(item,code,rate,sub,qty,unit)=>({item,code,rate,sub,qty,unit,total:sub*qty});
+    const H=[L('Vertical Post + Brace',i.postCode,rPost,postPerPost*rPost,posts,'set'),
+      L('Horizontal',i.horizCode,rHoriz,rHoriz,i.length*i.horizLines,'m'),
+      L('Labor Fabrication (Post)','—',i.lFabPost,i.lFabPost,posts,'set'),
+      L('Preliminaries','—',i.lPrelim,i.lPrelim,installDays,'day'),
+      L('Labor Installation (Onsite)','—',i.lInstall,i.lInstall,installDays,'day'),
+      L('Hoarding Panel',i.panelCode,rateOf(i.panelCode),rateOf(i.panelCode),deckSqft,unitOf(i.panelCode)),
+      L('Base / Footing',i.foundCode,rateOf(i.foundCode),rateOf(i.foundCode),posts*i.footPerPost,unitOf(i.foundCode)),
+      L('ADD ON: X Brace',i.xbraceCode,rateOf(i.xbraceCode),(i.xbraceLen||0)*rateOf(i.xbraceCode),i.oXbrace,'set')];
+    const hoardTotal=H.reduce((s,r)=>s+r.total,0);
+    const G=[L('Gate Post',i.postCode,rPost,postPerPost*rPost,i.doors*i.gPosts,'nos'),
+      L('Gate Structure',i.horizCode,rHoriz,rHoriz,i.doors*i.gStruct,'m'),
+      L('Gate Panel',i.deckGate,rateOf(i.deckGate),rateOf(i.deckGate),i.doors*i.gPanel,unitOf(i.deckGate)),
+      L('Base / Footing (Gate)',i.foundCode,rateOf(i.foundCode),rateOf(i.foundCode),i.doors*i.gFoot,unitOf(i.foundCode)),
+      L('Labor Fabrication (Post-Gate)','—',i.lFabPost,i.lFabPost,i.doors*i.gPosts,'nos'),
+      L('Labor Fabrication (Gate)','—',i.lFabGate,i.lFabGate,i.doors,'nos'),
+      L('Labor Installation (Gate Onsite)','—',i.lInstallGate,i.lInstallGate,i.doors*i.gateDays,'day')];
+    const gateTotal=G.reduce((s,r)=>s+r.total,0);
+    const sub=hoardTotal+gateTotal,sst=sub*(i.sst/100),grand=sub+sst;
+    return {H,G,hoardTotal,gateTotal,sub,sst,grand,inputs:i,
+      metrics:{posts,postPerPost,vert:posts*postPerPost,horiz:i.length*i.horizLines,foot:posts*i.footPerPost,sqft:deckSqft,installDays,projectDays:Math.max(installDays,fabDays)+i.doors*i.gateDays}};
+  }
+  function calc(){
+    const i=gatherInputs(),r=compute(i);
+    const rowH=x=>`<tr><td>${x.item}</td><td class="muted small">${x.code}</td><td class="num">${num(x.rate)}</td><td class="num">${num(x.sub)}</td><td class="num">${num(x.qty)}</td><td>${x.unit}</td><td class="num">${num(x.total)}</td></tr>`;
+    let h='<tr><td colspan="7" style="color:var(--accent);font-weight:700">HOARDING (MAIN STRUCTURE)</td></tr>'+r.H.map(rowH).join('')+
+      `<tr><td colspan="6" style="text-align:right;font-weight:700">Hoarding Subtotal</td><td class="num" style="font-weight:700">${num(r.hoardTotal)}</td></tr>`+
+      '<tr><td colspan="7" style="color:var(--accent);font-weight:700">GATE / DOOR (× qty)</td></tr>'+r.G.map(rowH).join('')+
+      `<tr><td colspan="6" style="text-align:right;font-weight:700">Gate Subtotal</td><td class="num" style="font-weight:700">${num(r.gateTotal)}</td></tr>`;
+    $('costBody').innerHTML=h;
+    $('t_hoard').textContent=fmt(r.hoardTotal);$('t_gate').textContent=fmt(r.gateTotal);$('t_sub').textContent=fmt(r.sub);
+    $('t_sstlbl').textContent='SST '+i.sst+'%';$('t_sst').textContent=fmt(r.sst);$('t_grand').textContent=fmt(r.grand);
+    const M=r.metrics;
+    $('jm_posts').textContent=M.posts;$('jm_perpost').textContent=M.postPerPost.toFixed(2);$('jm_vert').textContent=M.vert.toFixed(1);
+    $('jm_horiz').textContent=M.horiz.toFixed(0);$('jm_foot').textContent=M.foot;$('jm_sqft').textContent=M.sqft;
+    $('jm_idays').textContent=M.installDays;$('jm_pdays').textContent=M.projectDays;
+    return r;
+  }
+
+  /* ---------- quote save/load ---------- */
+  function saveQuote(){
+    if(!$('f_client').value.trim()){showErr('Enter a client name before saving.');return;}
+    const inputs=gatherInputs();
+    const payload={id:editingId,quoteNo:$('f_quoteNo').value.trim(),date:$('f_quoteDate').value,
+      client:$('f_client').value.trim(),contact:$('f_contact').value.trim(),project:$('f_project').value.trim(),
+      mall:$('f_mall').value.trim(),lot:$('f_lot').value.trim(),location:$('f_location').value.trim(),
+      validity:+$('f_validity').value||0,status:$('f_status').value,inputs:inputs};
+    $('btnSave').disabled=true;
+    run('saveQuote',[payload],function(res){
+      $('btnSave').disabled=false;onBoot(res);
+      const q=(res.quotes||[]).find(x=>x.quoteNo===payload.quoteNo&&x.client===payload.client);
+      if(q){editingId=q.id;$('editingHint').innerHTML='<span class="chip good">Saved ✓ '+q.quoteNo+'</span> editing existing record';}
+      toast('Quote saved to Sheet: '+payload.quoteNo);
+    });
+  }
+  function loadQuote(id){
+    const q=state.quotes.find(x=>x.id===id);if(!q)return;editingId=id;const i=q.inputs||{};
+    setVal('f_quoteNo',q.quoteNo);setVal('f_quoteDate',q.date);setVal('f_client',q.client);setVal('f_contact',q.contact);
+    setVal('f_project',q.project);setVal('f_mall',q.mall);setVal('f_lot',q.lot);setVal('f_location',q.location);
+    setVal('f_validity',q.validity);setVal('f_status',q.status);
+    setVal('p_length',i.length);setVal('p_height',i.height);setVal('p_cc',i.cc);setVal('p_doors',i.doors);
+    buildMatSelects(i.postCode,i.horizCode,
+      i.panelCode||(i.cladding==='gi'?(i.giCode||'GI-4x8-0.4'):(i.deckMain||'DECK-0.23')),
+      i.foundCode||i.footCode||'FOOTING-450x450x750',
+      i.xbraceCode||'MS-50x50x5');
+    setVal('p_horizLines',i.horizLines);setVal('p_footPerPost',i.footPerPost);
+    setVal('p_pInstall',i.pInstall);setVal('p_pFab',i.pFab);setVal('p_gateDays',i.gateDays);setVal('p_sqft',i.sqftF);
+    setVal('p_gStruct',i.gStruct);setVal('p_gPanel',i.gPanel);setVal('p_gPosts',i.gPosts);setVal('p_gFoot',i.gFoot);
+    setVal('o_xbrace',i.oXbrace);setVal('o_xbraceLen',i.xbraceLen!=null&&i.xbraceLen!==''?i.xbraceLen:((state.config||{}).XBRACE_LEN||10.8));
+    setVal('l_fabPost',i.lFabPost);setVal('l_prelim',i.lPrelim);setVal('l_install',i.lInstall);
+    setVal('l_fabGate',i.lFabGate);setVal('l_installGate',i.lInstallGate);setVal('l_sst',i.sst);
+    calc();go('builder');$('editingHint').innerHTML='<span class="chip warn">Editing '+q.quoteNo+'</span>';window.scrollTo(0,0);
+  }
+  function duplicateQuote(id){loadQuote(id);editingId=null;run('nextQuoteNo',[],function(no){setVal('f_quoteNo',no);});
+    $('f_status').value='Draft';$('editingHint').innerHTML='<span class="chip">Duplicated — new quote no.</span>';toast('Duplicated — Save to store as new');}
+  function deleteQuote(id){const q=state.quotes.find(x=>x.id===id);if(!q)return;
+    if(!confirm('Delete quote '+q.quoteNo+' ('+q.client+')? Logged in audit.'))return;
+    run('deleteQuote',[id],function(res){if(editingId===id)editingId=null;onBoot(res);toast('Deleted');});}
+  function setStatus(id,st){run('setQuoteStatus',[id,st],onBoot);}
+  function newQuote(){editingId=null;['f_client','f_contact','f_mall','f_lot','f_location'].forEach(id=>setVal(id,''));
+    setVal('f_project','Metal Deck Hoarding Project');setVal('f_quoteDate',todayISO());setVal('f_validity',30);setVal('f_status','Draft');
+    run('nextQuoteNo',[],function(no){setVal('f_quoteNo',no);});$('editingHint').innerHTML='';calc();}
+
+  /* ---------- print ---------- */
+  function printQuote(){
+    const i=gatherInputs(),r=compute(i),c=state.config||{};
+    const hasGate=i.doors>0;
+    const pm=matMap[i.panelCode]||{};
+    const claddingDesc=pm.type==='GI Sheet'?'GI sheet cladding':((pm.thickness?pm.thickness+'mm ':'')+'metal deck cladding');
+    let rows=`<tr><td>1</td><td>Supply, fabrication &amp; installation of hoarding — ${i.length}m run × ${i.height}m height. Includes ${i.postCode} posts at ${i.cc}m C/C, ${i.horizLines} horizontal lines, ${claddingDesc}, concrete footings &amp; all labor.</td><td style="text-align:center">1</td><td>lot</td><td style="text-align:right">${num(r.hoardTotal)}</td><td style="text-align:right">${num(r.hoardTotal)}</td></tr>`;
+    if(hasGate)rows+=`<tr><td>2</td><td>Door / gate assembly — ${i.doors} unit(s). Includes frame, 0.48mm metal deck panel, concrete footings, fabrication &amp; install.</td><td style="text-align:center">${i.doors}</td><td>unit</td><td style="text-align:right">${num(r.gateTotal/i.doors)}</td><td style="text-align:right">${num(r.gateTotal)}</td></tr>`;
+    const w=window.open('','_blank');
+    w.document.write(`<html><head><title>${$('f_quoteNo').value} — ${$('f_client').value}</title>
+      <style>body{font-family:Arial;color:#111;font-size:13px;padding:24px}h1{font-size:20px;margin:0}
+      table{width:100%;border-collapse:collapse;margin-top:8px}th,td{border-bottom:1px solid #ccc;padding:6px 8px;text-align:left}th{background:#f0f0f0}
+      .head{display:flex;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:14px}
+      .tot{width:320px;margin-left:auto;margin-top:10px}.terms{font-size:11px;margin-top:16px}.sign{margin-top:40px;display:flex;justify-content:space-between}</style></head><body>
+      <div class="head"><div><h1>${c.COMPANY_NAME||''}</h1><div style="font-size:11px">${c.COMPANY_REG||''} · ${c.COMPANY_ADDRESS||''} · ${c.COMPANY_EMAIL||''} · ${c.COMPANY_WEB||''}</div></div>
+      <div style="text-align:right"><h1 style="font-size:16px">QUOTATION</h1><div>Metal Deck Hoarding</div></div></div>
+      <table><tr><td><b>Quote No.:</b> ${$('f_quoteNo').value}</td><td><b>Date:</b> ${$('f_quoteDate').value}</td></tr>
+      <tr><td><b>Client:</b> ${$('f_client').value}</td><td><b>Mall:</b> ${$('f_mall').value||'—'}</td></tr>
+      <tr><td><b>Project:</b> ${$('f_project').value}</td><td><b>Lot No.:</b> ${$('f_lot').value||'—'}</td></tr>
+      <tr><td><b>Location:</b> ${$('f_location').value||'—'}</td><td><b>Validity:</b> ${$('f_validity').value} days</td></tr>
+      <tr><td><b>Hoarding Run:</b> ${i.length}m × ${i.height}m H</td><td></td></tr></table>
+      <table style="margin-top:14px"><thead><tr><th>#</th><th>Description</th><th>Qty</th><th>Unit</th><th style="text-align:right">Unit Price (RM)</th><th style="text-align:right">Amount (RM)</th></tr></thead><tbody>${rows}</tbody></table>
+      <table class="tot"><tr><td>Subtotal (RM)</td><td style="text-align:right">${num(r.sub)}</td></tr>
+      <tr><td>SST ${i.sst}%</td><td style="text-align:right">${num(r.sst)}</td></tr>
+      <tr><td><b>GRAND TOTAL (incl. tax)</b></td><td style="text-align:right"><b>${num(r.grand)}</b></td></tr></table>
+      <div class="terms"><b>TERMS &amp; CONDITIONS</b>
+      ${termsLines(c.TERMS).map(t=>'<div>'+esc(t)+'</div>').join('')}</div>
+      <div class="sign"><div>Prepared by:<br><br>________________________<br>${esc(c.SIGNATORY||'')}</div>
+      <div>Accepted by Client:<br><br>________________________<br>Name &amp; Company Stamp / Date</div></div>
+      </body></html>`);
+    w.document.close();w.focus();setTimeout(()=>w.print(),300);
+    if(editingId)run('getQuoteForPrint',[editingId],function(){});
+  }
+
+  /* ---------- materials ---------- */
+  function renderMaterials(){
+    const term=($('mat_search').value||'').toLowerCase();
+    const rows=state.materials.filter(m=>!term||(m.code+' '+m.type+' '+m.size).toLowerCase().includes(term));
+    $('matBody').innerHTML=rows.map(m=>`<tr>
+      <td><b>${m.code}</b></td><td class="muted small">${m.type}</td><td>${m.size||''}</td>
+      <td class="num">${m.barQty}</td><td>${m.unit}</td>
+      <td class="num"><input class="editable" style="width:90px;text-align:right" type="number" value="${m.costPrice}" onchange="App.editMatPrice('${m.code}','costPrice',this.value)"></td>
+      <td class="num">${num(m.costPerUnit)}</td>
+      <td class="num"><input class="editable" style="width:64px;text-align:right" type="number" value="${(m.markup*100)}" onchange="App.editMatPrice('${m.code}','markup',this.value)"></td>
+      <td class="num"><b>${num(m.clientRate)}</b></td>
+      <td class="muted small">${(m.updatedAt||'').slice(0,10)}</td>
+      <td><button class="btn sec sm" onclick="App.matHistory('${m.code}')">📜</button> <button class="btn bad sm" onclick="App.delMaterial('${m.code}')">✕</button></td>
+    </tr>`).join('');
+  }
+  function editMatPrice(code,field,val){
+    const m=matMap[code];if(!m)return;
+    let nv=+val;const oldFrac=field==='markup'?m.markup:m.costPrice;const newFrac=field==='markup'?nv/100:nv;
+    if(Math.abs(oldFrac-newFrac)<1e-9){return;}
+    const oldD=field==='markup'?(m.markup*100):m.costPrice;
+    const reason=prompt(`Reason for ${field==='markup'?'markup':'cost price'} change on ${code}?\n(${field==='markup'?oldD+'% → '+nv+'%':'RM '+oldD+' → RM '+nv})\n\nOptional but recommended:`,'Supplier price update');
+    if(reason===null){renderMaterials();return;} // cancelled -> revert input
+    run('editMaterialPrice',[code,field,val,reason],function(res){onBoot(res);toast('Price updated & logged');});
+  }
+  function typeOptions(sel){
+    const groups={'Structural (post / horizontal)':['MS Square Hollow','MS Rect Hollow','MS Square Solid','Besi Biru'],
+      'Hoarding Panel (GI / Deck)':['GI Sheet','Metal Deck'],
+      'Base / Footing':['MS Base Plate','Concrete Footing']};
+    const known=new Set([].concat.apply([],Object.keys(groups).map(g=>groups[g])));
+    state.materials.forEach(m=>{const t=(m.type||'').trim();if(t&&!known.has(t)){known.add(t);
+      const g=(t==='GI Sheet'||t==='Metal Deck')?'Hoarding Panel (GI / Deck)':(t==='MS Base Plate'||t==='Concrete Footing')?'Base / Footing':'Structural (post / horizontal)';
+      groups[g].push(t);}});
+    return Object.keys(groups).map(g=>`<optgroup label="${g}">`+groups[g].map(t=>`<option ${t===sel?'selected':''}>${t}</option>`).join('')+`</optgroup>`).join('');
+  }
+  function addMaterial(){
+    modal(`<h3 style="color:var(--accent)">New Material</h3><div class="grid g2">
+      <div><label>Code (unique key)</label><input id="nm_code"></div>
+      <div><label>Type (sets the category)</label><select id="nm_type">${typeOptions('MS Square Hollow')}</select></div>
+      <div><label>Size</label><input id="nm_size"></div><div><label>Thickness (mm)</label><input id="nm_thick" type="number"></div>
+      <div><label>Bar/Sheet Qty</label><input id="nm_qty" type="number" value="6"></div><div><label>Unit</label><input id="nm_unit" value="m"></div>
+      <div><label>Cost Price (RM)</label><input id="nm_cost" type="number"></div><div><label>Markup %</label><input id="nm_markup" type="number" value="40"></div></div>
+      <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn sec" onclick="App.closeModal()">Cancel</button>
+      <button class="btn" onclick="App.saveNewMaterial()">Save Material</button></div>`);
+  }
+  function saveNewMaterial(){
+    const code=$('nm_code').value.trim();if(!code){showErr('Code required');return;}
+    if(matMap[code]){showErr('Code already exists');return;}
+    run('saveMaterial',[{code,type:$('nm_type').value.trim(),size:$('nm_size').value.trim(),thickness:$('nm_thick').value,
+      barQty:$('nm_qty').value,unit:$('nm_unit').value.trim()||'m',costPrice:$('nm_cost').value,markup:$('nm_markup').value}],
+      function(res){onBoot(res);closeModal();toast('Material added');});
+  }
+  function delMaterial(code){if(!confirm('Delete material '+code+'? (logged)'))return;
+    run('deleteMaterial',[code],function(res){onBoot(res);toast('Deleted');});}
+  function matHistory(code){
+    const h=state.priceHistory.filter(p=>p.code===code);
+    const rows=h.length?h.map(p=>`<tr><td class="small">${p.ts}</td><td>${p.field}</td><td class="num">${num(p.oldVal)}</td><td class="num">${num(p.newVal)}</td><td>${p.user}</td><td class="muted small">${p.reason||''}</td></tr>`).join(''):'<tr><td colspan="6" class="muted">No changes recorded yet.</td></tr>';
+    modal(`<h3 style="color:var(--accent)">Price History — ${code}</h3>
+      <div class="tablewrap"><table><thead><tr><th>When</th><th>Field</th><th class="num">Old</th><th class="num">New</th><th>By</th><th>Reason</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn sec" onclick="App.closeModal()">Close</button></div>`);
+  }
+
+  /* ---------- suppliers ---------- */
+  function populateSupplierFilter(){const sel=$('sup_matFilter');const cur=sel.value;
+    sel.innerHTML='<option value="">All materials</option>'+state.materials.map(m=>`<option value="${m.code}">${m.code}</option>`).join('');sel.value=cur;}
+  function addSupplierPrice(){
+    modal(`<h3 style="color:var(--accent)">Add Supplier Price (comparison only)</h3><div class="grid g2">
+      <div><label>Material</label><select id="sp_mat">${state.materials.map(m=>`<option value="${m.code}">${m.code} — ${m.type} ${m.size}</option>`).join('')}</select></div>
+      <div><label>Supplier Name</label><input id="sp_name" placeholder="XYZ Steel Sdn Bhd"></div>
+      <div><label>Cost Price (RM)</label><input id="sp_cost" type="number"></div><div><label>Note (MOQ, lead time…)</label><input id="sp_note"></div></div>
+      <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn sec" onclick="App.closeModal()">Cancel</button>
+      <button class="btn" onclick="App.saveSupplierPrice()">Save</button></div>`);
+  }
+  function saveSupplierPrice(){const name=$('sp_name').value.trim();if(!name){showErr('Supplier name required');return;}
+    run('saveSupplierPrice',[{code:$('sp_mat').value,supplier:name,costPrice:$('sp_cost').value,note:$('sp_note').value.trim()}],
+      function(res){onBoot(res);closeModal();toast('Supplier price saved');});}
+  function delSupplierPrice(id){if(!confirm('Delete this supplier price? (logged)'))return;
+    run('deleteSupplierPrice',[id],function(res){onBoot(res);toast('Deleted');});}
+  function applySupplier(id){const s=state.suppliers.find(x=>x.id===id);if(!s)return;
+    if(!confirm(`Set ${s.code} catalog Cost Price to RM ${s.costPrice} (from ${s.supplier})?`))return;
+    run('applySupplierToCatalog',[id],function(res){onBoot(res);toast('Catalog updated from '+s.supplier);});}
+  function renderSuppliers(){
+    const f=$('sup_matFilter').value;const list=state.suppliers.filter(s=>!f||s.code===f);
+    const cheap={};state.suppliers.forEach(s=>{const m=matMap[s.code];const cpu=m&&m.barQty?s.costPrice/m.barQty:s.costPrice;if(cheap[s.code]===undefined||cpu<cheap[s.code])cheap[s.code]=cpu;});
+    $('supBody').innerHTML=list.length?list.map(s=>{const m=matMap[s.code];const cpu=m&&m.barQty?s.costPrice/m.barQty:s.costPrice;const low=Math.abs(cpu-cheap[s.code])<1e-6;
+      return `<tr><td><b>${s.code}</b></td><td>${s.supplier} ${low?'<span class="chip good">cheapest</span>':''}</td>
+      <td class="num">${num(s.costPrice)}</td><td>${m?m.unit:''}</td><td class="num">${num(cpu)}</td>
+      <td class="muted small">${s.note||''}</td><td class="muted small">${(s.recordedAt||'').slice(0,10)}</td>
+      <td><button class="btn sec sm" onclick="App.applySupplier('${s.id}')">↧ apply</button> <button class="btn bad sm" onclick="App.delSupplierPrice('${s.id}')">✕</button></td></tr>`;
+    }).join(''):'<tr><td colspan="8" class="muted">No supplier prices yet.</td></tr>';
+  }
+
+  /* ---------- records ---------- */
+  function renderRecords(){
+    const term=($('rec_search').value||'').toLowerCase(),st=$('rec_status').value;
+    const list=state.quotes.filter(q=>{const blob=(q.quoteNo+' '+q.client+' '+q.project+' '+q.mall+' '+q.lot).toLowerCase();return (!term||blob.includes(term))&&(!st||q.status===st);});
+    $('recBody').innerHTML=list.length?list.map(q=>`<tr>
+      <td><b>${q.quoteNo}</b></td><td class="small">${q.date}</td><td>${q.client}</td><td class="small">${q.project}</td>
+      <td class="muted small">${q.mall||'—'} / ${q.lot||'—'}</td><td class="num"><b>${num(q.totals.grand)}</b></td>
+      <td>${statusSel(q)}</td>
+      <td class="row" style="gap:4px"><button class="btn sec sm" onclick="App.loadQuote('${q.id}')">Open</button>
+      <button class="btn sec sm" onclick="App.duplicateQuote('${q.id}')">Dup</button>
+      <button class="btn bad sm" onclick="App.deleteQuote('${q.id}')">✕</button></td></tr>`).join(''):'<tr><td colspan="8" class="muted">No quotes saved yet.</td></tr>';
+    const cs=clientSummary();
+    $('clientCards').innerHTML=cs.map(c=>`<div class="card" style="margin-bottom:0"><h3 style="color:var(--ink)">${c.name}</h3>
+      <div class="small muted">${c.count} quote(s) · last ${c.last}</div>
+      <div style="margin-top:8px;font-size:20px;font-weight:800">${fmt(c.total)}</div>
+      <div class="small muted">total quoted · ${fmt(c.won)} won</div></div>`).join('');
+  }
+  function statusSel(q){return `<select onchange="App.setStatus('${q.id}',this.value)" style="padding:4px 6px;font-size:12px">`+
+    ['Draft','Sent','Won','Lost'].map(s=>`<option ${s===q.status?'selected':''}>${s}</option>`).join('')+`</select>`;}
+  function clientSummary(){const map={};state.quotes.forEach(q=>{const k=q.client||'(no name)';map[k]=map[k]||{name:k,count:0,total:0,won:0,last:''};
+    map[k].count++;map[k].total+=q.totals.grand;if(q.status==='Won')map[k].won+=q.totals.grand;if(q.date>map[k].last)map[k].last=q.date;});
+    return Object.values(map).sort((a,b)=>b.total-a.total);}
+
+  /* ---------- reports ---------- */
+  function renderReports(){
+    const s=state.stats||{};
+    $('reportKpis').innerHTML=[['Total Quotes',s.quoteCount||0],['Total Quoted Value',fmt(s.totalValue)],['Won Value',fmt(s.wonValue)],['Open Pipeline',fmt(s.openValue)]]
+      .map(k=>`<div class="kpi"><span class="v">${k[1]}</span><span class="l">${k[0]}</span></div>`).join('');
+    const cs=clientSummary();
+    $('rep_client').innerHTML=cs.length?cs.map(c=>`<tr><td>${c.name}</td><td class="num">${c.count}</td><td class="num">${num(c.total)}</td><td class="num">${num(c.won)}</td></tr>`).join(''):'<tr><td colspan="4" class="muted">No data</td></tr>';
+    const mu={};state.quotes.forEach(q=>[...(q.lines.H||[]),...(q.lines.G||[])].forEach(l=>{if(l.code==='—')return;mu[l.code]=mu[l.code]||{code:l.code,times:0,qty:0,val:0};mu[l.code].times++;mu[l.code].qty+=l.qty;mu[l.code].val+=l.total;}));
+    const arr=Object.values(mu).sort((a,b)=>b.val-a.val);
+    $('rep_matusage').innerHTML=arr.length?arr.map(m=>`<tr><td><b>${m.code}</b></td><td class="num">${m.times}</td><td class="num">${num(m.qty)}</td><td class="num">${num(m.val)}</td></tr>`).join(''):'<tr><td colspan="4" class="muted">No data</td></tr>';
+    renderPriceHistory();
+  }
+  function renderPriceHistory(){
+    const term=($('ph_search').value||'').toLowerCase();
+    const list=state.priceHistory.filter(p=>!term||p.code.toLowerCase().includes(term));
+    $('rep_pricehist').innerHTML=list.length?list.map(p=>{const up=p.newVal>p.oldVal;
+      return `<tr><td class="small">${p.ts}</td><td><b>${p.code}</b></td><td>${p.field}</td><td class="num">${num(p.oldVal)}</td>
+      <td class="num ${up?'deltaUp':'deltaDown'}">${num(p.newVal)} ${up?'▲':'▼'}</td><td>${p.user}</td><td class="muted small">${p.reason||''}</td></tr>`;
+    }).join(''):'<tr><td colspan="7" class="muted">No price changes recorded.</td></tr>';
+  }
+
+  /* ---------- audit ---------- */
+  function renderAudit(){
+    const term=($('aud_search').value||'').toLowerCase();
+    const list=state.audit.filter(a=>!term||(a.action+' '+a.entity+' '+a.user+' '+a.detail).toLowerCase().includes(term));
+    $('audCount').textContent=state.audit.length+' shown (latest 300)';
+    $('audBody').innerHTML=list.length?list.map(a=>`<tr><td class="small">${a.ts}</td><td>${a.user}</td><td><span class="chip">${a.action}</span></td><td>${a.entity}</td><td class="small">${a.detail}</td></tr>`).join(''):'<tr><td colspan="5" class="muted">No audit entries.</td></tr>';
+  }
+
+  /* ---------- settings ---------- */
+  function fillSettings(){const c=state.config||{};
+    ['COMPANY_NAME','COMPANY_REG','COMPANY_ADDRESS','COMPANY_EMAIL','COMPANY_WEB','SST_PCT','CODE_GI','CODE_DECK_MAIN','CODE_DECK_GATE','CODE_FOOTING','CODE_BASE','CODE_XBRACE','XBRACE_LEN','SIGNATORY','TERMS']
+      .forEach(k=>{const e=$('c_'+k);if(e)e.value=c[k]||'';});}
+  function saveSettings(){const obj={};
+    ['COMPANY_NAME','COMPANY_REG','COMPANY_ADDRESS','COMPANY_EMAIL','COMPANY_WEB','SST_PCT','CODE_GI','CODE_DECK_MAIN','CODE_DECK_GATE','CODE_FOOTING','CODE_BASE','CODE_XBRACE','XBRACE_LEN','SIGNATORY','TERMS']
+      .forEach(k=>{obj[k]=$('c_'+k).value;});
+    run('saveConfig',[obj],function(res){onBoot(res);toast('Settings saved');});}
+
+  /* ---------- csv ---------- */
+  function dl(name,content){const b=new Blob([content],{type:'text/csv'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
+  function csv(rows){return rows.map(r=>r.map(c=>{c=(c==null?'':''+c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(',')).join('\n');}
+  function exportQuotesCSV(){const head=['QuoteNo','Date','Client','Contact','Project','Mall','Lot','Location','Length','Height','Doors','Status','Hoarding','Gate','Subtotal','SST','Grand'];
+    const rows=state.quotes.map(q=>[q.quoteNo,q.date,q.client,q.contact,q.project,q.mall,q.lot,q.location,q.length,q.height,q.doors,q.status,q.totals.hoard,q.totals.gate,q.totals.sub,q.totals.sst,q.totals.grand]);
+    dl('hg-quotes-'+todayISO()+'.csv',csv([head,...rows]));}
+  function exportAuditCSV(){dl('hg-audit-'+todayISO()+'.csv',csv([['Timestamp','Operator','Action','Entity','Detail'],...state.audit.map(a=>[a.ts,a.user,a.action,a.entity,a.detail])]));}
+
+  /* ---------- ui plumbing ---------- */
+  function setVal(id,v){const e=$(id);if(e)e.value=(v==null?'':v);}
+  function matCat(m){const t=m.type||'';if(t==='GI Sheet'||t==='Metal Deck')return 'panel';if(t==='MS Base Plate'||t==='Concrete Footing')return 'foundation';return 'structural';}
+  function optList(cat){return state.materials.filter(m=>matCat(m)===cat).map(m=>`<option value="${m.code}">${m.code} — ${m.type} ${m.size} (RM${num(m.clientRate)}/${m.unit})</option>`).join('');}
+  function buildMatSelects(post,horiz,panel,found,xbrace){
+    const struct=optList('structural'),pan=optList('panel'),fnd=optList('foundation');
+    $('m_post').innerHTML=struct;$('m_horiz').innerHTML=struct;$('m_panel').innerHTML=pan;$('m_found').innerHTML=fnd;$('m_xbrace').innerHTML=struct;
+    $('m_post').value=post||'MS-50x75x1.5';$('m_horiz').value=horiz||'MS-50x50x1.5';
+    $('m_panel').value=panel||'DECK-0.23';$('m_found').value=found||'FOOTING-450x450x750';$('m_xbrace').value=xbrace||'MS-50x50x5';}
+  function buildClientList(){$('clientList').innerHTML=clientSummary().map(c=>`<option value="${c.name}">`).join('');}
+  function refreshStatus(){const s=state.stats||{};$('sb_mat').textContent=state.materials.length;$('sb_q').textContent=s.quoteCount||0;$('sb_c').textContent=s.clientCount||0;$('sb_a').textContent=state.audit.length;}
+  function renderAll(){buildMatSelects($('m_post').value,$('m_horiz').value,$('m_panel').value,$('m_found').value,$('m_xbrace').value);calc();renderMaterials();populateSupplierFilter();renderSuppliers();renderRecords();renderReports();renderAudit();fillSettings();buildClientList();refreshStatus();}
+
+  let toastT;function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>t.style.display='none',2200);}
+  let errT;function showErr(m){const e=$('err');e.textContent='⚠ '+m;e.style.display='block';clearTimeout(errT);errT=setTimeout(()=>e.style.display='none',5000);}
+  function modal(html){$('modalBox').innerHTML=html;$('modal').classList.add('open');}
+  function closeModal(){$('modal').classList.remove('open');}
+  $('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
+
+  const VIEWS=[['builder','Quote Builder'],['records','Records'],['materials','Materials'],['suppliers','Suppliers'],['reports','Reports'],['audit','Audit Log'],['settings','Settings']];
+  function buildNav(){$('nav').innerHTML=VIEWS.map(v=>`<button data-go="${v[0]}" onclick="App.go('${v[0]}')">${v[1]}</button>`).join('');
+    $('nav').querySelector('button').classList.add('active');}
+  function go(view){document.querySelectorAll('.view').forEach(s=>s.classList.toggle('active',s.dataset.view===view));
+    document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.go===view));
+    if(view==='records')renderRecords();if(view==='reports')renderReports();if(view==='audit')renderAudit();if(view==='materials')renderMaterials();if(view==='suppliers')renderSuppliers();}
+
+  function init(){buildNav();$('f_quoteDate').value=todayISO();run('bootstrap',[],function(res){onBoot(res);run('nextQuoteNo',[],function(no){setVal('f_quoteNo',no);});});}
+
+  return {init,go,calc,saveQuote,loadQuote,duplicateQuote,deleteQuote,setStatus,newQuote,printQuote,
+    renderRecords,renderMaterials,renderSuppliers,renderReports,renderPriceHistory,renderAudit,
+    editMatPrice,addMaterial,saveNewMaterial,delMaterial,matHistory,
+    addSupplierPrice,saveSupplierPrice,delSupplierPrice,applySupplier,
+    exportQuotesCSV,exportAuditCSV,saveSettings,closeModal};
+})();
+window.addEventListener('DOMContentLoaded',App.init);
+</script>
+</body>
+</html>

@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<base target="_top">
+<style>
+  :root{
+    /* matched to Black Lee house style (operations.html) */
+    --bg:#0a0e1a; --panel:#141926; --panel2:#1c2335; --line:#2a3245;
+    --ink:#ffffff; --mut:#a0a8b8; --acc:#f59e0b; --acc2:#d97706;
+    --acc-soft:rgba(245,158,11,0.12);
+    --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --chip:#1c2335;
+    --radius:14px; --shadow:0 10px 40px rgba(0,0,0,0.4);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:var(--acc)}
+  header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:16px;padding:14px 22px;flex-wrap:wrap}
+  .brand-block{display:flex;align-items:center;gap:14px}
+  .brand-logo{width:46px;height:46px;background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:12px;
+    display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:#0a0e1a;font-weight:900;letter-spacing:.02em}
+  .brand-name{font-size:1.15rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1}
+  .brand-sub{font-size:.8rem;color:var(--mut);margin-top:2px}
+  header .meta-pills{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  header .mpill{background:var(--bg);border:1px solid var(--line);padding:8px 14px;border-radius:999px;
+    font-size:.82rem;color:var(--mut);display:flex;align-items:center;gap:7px}
+  header .mpill strong{color:var(--ink);font-weight:700}
+  nav{display:flex;gap:6px;flex-wrap:wrap;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);
+    position:sticky;top:75px;z-index:19}
+  nav button{background:transparent;border:1px solid transparent;color:var(--mut);padding:8px 15px;border-radius:10px;
+    cursor:pointer;font-size:13px;font-weight:600;font-family:inherit}
+  nav button.active{background:var(--acc);color:#0a0e1a}
+  nav button:hover:not(.active){background:var(--panel2);color:var(--ink);border-color:var(--line)}
+  main{padding:24px;max-width:1280px;margin:0 auto}
+  .view{display:none}
+  .view.active{display:block}
+  h2{font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;margin:0 0 16px}
+  h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:var(--acc);margin:18px 0 8px;font-weight:700}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .row>*{flex:1;min-width:150px}
+  label{display:block;font-size:.82rem;color:var(--mut);margin:0 0 6px;font-weight:600}
+  input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);
+    border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
+  textarea{resize:vertical;min-height:54px}
+  button.btn{display:inline-flex;align-items:center;gap:8px;background:var(--acc);color:#0a0e1a;border:none;border-radius:10px;
+    padding:11px 18px;font-weight:700;cursor:pointer;font-size:14px;font-family:inherit;transition:transform .1s,background .2s}
+  button.btn:hover{background:var(--acc2)}
+  button.btn:active{transform:translateY(1px)}
+  button.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+  button.ghost:hover{background:var(--panel2);border-color:var(--acc)}
+  button.sm{padding:6px 11px;font-size:12px;border-radius:8px}
+  button.danger{background:transparent;border:1px solid var(--bad);color:#fca5a5}
+  button.danger:hover{background:rgba(239,68,68,.12)}
+  .muted{color:var(--mut)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;
+    padding:8px;border-bottom:1px solid var(--line)}
+  td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:hover td{background:var(--panel2)}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+  .p-NEW{background:#1e3a5f;color:#93c5fd}
+  .p-DRAFT_IN{background:#3b2f5e;color:#c4b5fd}
+  .p-SENT_CLIENT{background:#374151;color:#d1d5db}
+  .p-ARTWORK_REJECTED{background:#4c1d24;color:#fca5a5}
+  .p-APPROVED{background:#14432a;color:#86efac}
+  .p-PRINTING{background:#4a3a12;color:#fcd34d}
+  .p-INSTALLED{background:#13343b;color:#7dd3fc}
+  .p-COMPLETED{background:#143524;color:#4ade80}
+  .p-CANCELLED{background:var(--line);color:var(--mut)}
+  .tag{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:11px;color:var(--mut)}
+  .flag-OK{color:var(--ok)} .flag-OVER{color:var(--bad);font-weight:700} .flag-UNDER{color:var(--warn);font-weight:700}
+  .alert{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:9px;margin-bottom:6px;font-size:13px}
+  .alert.expired{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4)}
+  .alert.expiring{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4)}
+  .stat{flex:1;min-width:120px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px;transition:border-color .2s}
+  .stat:hover{border-color:var(--acc)}
+  .stat .n{font-size:1.7rem;font-weight:800;color:var(--acc)}
+  .stat .l{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .toolbar input,.toolbar select{width:auto;flex:0 0 auto}
+  .panelrow{display:grid;grid-template-columns:1.4fr .9fr .9fr .7fr .6fr .9fr .9fr auto;gap:6px;align-items:center;margin-bottom:6px}
+  .panelrow input,.panelrow select{padding:7px 8px;font-size:13px}
+  .panelrow .ro{background:transparent;border:none;color:var(--mut);text-align:right;padding-right:2px}
+  .gridhead{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+  .right{text-align:right}
+  .totbar{display:flex;gap:18px;justify-content:flex-end;align-items:baseline;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+  .totbar .big{font-size:20px;font-weight:800;color:var(--acc)}
+  dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);padding:0;max-width:920px;width:94%;box-shadow:var(--shadow)}
+  dialog::backdrop{background:rgba(0,0,0,.75);backdrop-filter:blur(6px)}
+  .modal-h{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .modal-h h2{margin:0}
+  .modal-h .x{margin-left:auto;background:none;border:none;color:var(--mut);font-size:22px;cursor:pointer}
+  .modal-b{padding:18px;max-height:74vh;overflow:auto}
+  .modal-f{display:flex;gap:8px;justify-content:flex-end;padding:14px 18px;border-top:1px solid var(--line)}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000;border:1px solid var(--line);
+    padding:11px 18px;border-radius:10px;z-index:100;display:none;max-width:90%}
+  #toast.bad{border-color:var(--bad)} #toast.ok{border-color:var(--ok)}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--mut);border-top-color:var(--acc);
+    border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .hint{font-size:12px;color:var(--mut);margin-top:3px}
+  .dz{border:1.5px dashed var(--line);border-radius:9px;padding:12px;text-align:center;cursor:pointer;background:var(--panel2);transition:.15s}
+  .dz:hover,.dz.over{border-color:var(--acc);background:var(--acc-soft)}
+  .dz-label{font-size:12px;color:var(--mut)}
+  .dz-files{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;justify-content:center}
+  .dz-chip{background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:11px}
+  .dz-chip b{color:var(--bad);cursor:pointer;margin-left:4px;font-weight:700}
+  .mng-row{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+  .mng-row input{flex:1}
+  .selrow{display:flex;gap:6px;align-items:stretch}
+  .selrow select{flex:1}
+  .recon-MATCH{color:var(--ok);font-weight:700} .recon-CHECK{color:var(--warn);font-weight:700}
+  @media(max-width:760px){.panelrow{grid-template-columns:1fr 1fr;}.panelrow .gridhead{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand-block">
+    <div class="brand-logo">BL</div>
+    <div>
+      <div class="brand-name">Visual Works Control</div>
+      <div class="brand-sub">Black Lee · Print &amp; Install subcon (B)</div>
+    </div>
+  </div>
+  <div class="meta-pills">
+    <div class="mpill" id="dateNow">—</div>
+    <div class="mpill">👤 <strong id="who">…</strong></div>
+  </div>
+</header>
+<nav id="nav"></nav>
+<main>
+  <div class="view active" id="v-dash"></div>
+  <div class="view" id="v-jobs"></div>
+  <div class="view" id="v-rates"></div>
+  <div class="view" id="v-permits"></div>
+  <div class="view" id="v-workers"></div>
+  <div class="view" id="v-invoices"></div>
+  <div class="view" id="v-audit"></div>
+</main>
+
+<dialog id="modal">
+  <div class="modal-h"><h2 id="m-title">…</h2><button class="x" onclick="closeModal()">×</button></div>
+  <div class="modal-b" id="m-body"></div>
+  <div class="modal-f" id="m-foot"></div>
+</dialog>
+<dialog id="modal2">
+  <div class="modal-h"><h2 id="m2-title">…</h2><button class="x" onclick="closeModal2()">×</button></div>
+  <div class="modal-b" id="m2-body"></div>
+  <div class="modal-f" id="m2-foot"></div>
+</dialog>
+<div id="toast"></div>
+
+<script>
+/* ===================== STATE ===================== */
+var DB = { jobs:[], rates:[], permits:[], workers:[], invoices:[], malls:[], materials:[],
+           statuses:[], units:[], alerts:[], sstRate:0.06, currentUser:'' };
+var STATUS_LABEL = {
+  NEW:'New order', DRAFT_IN:'Draft in', SENT_CLIENT:'Sent to client',
+  ARTWORK_REJECTED:'Artwork rejected', APPROVED:'Approved (PROCEED)',
+  PRINTING:'Printing', INSTALLED:'Installed', COMPLETED:'Completed', CANCELLED:'Cancelled'
+};
+var JOBTYPE_LABEL = { print_install:'Print + Install', print_only:'Print only', install_only:'Install only' };
+var TABS = [
+  ['dash','Dashboard'],['jobs','Jobs'],['rates','Rate Card'],
+  ['permits','Permits'],['workers','B Workers'],['invoices','Invoices & Recon'],['audit','Audit Log']
+];
+
+/* ===================== SERVER BRIDGE ===================== */
+function call(fn, args){
+  return new Promise(function(res,rej){
+    google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fn].apply(google.script.run, args||[]);
+  });
+}
+function toast(msg, kind){
+  var t=document.getElementById('toast'); t.textContent=msg; t.className=kind||''; t.style.display='block';
+  clearTimeout(t._t); t._t=setTimeout(function(){t.style.display='none';}, kind==='bad'?5200:2600);
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function rm(n){return 'RM '+(Number(n)||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function num(n){return (Number(n)||0).toLocaleString('en-MY',{maximumFractionDigits:2});}
+function pill(s){return '<span class="pill p-'+s+'">'+(STATUS_LABEL[s]||s)+'</span>';}
+
+/* ===================== MODAL ===================== */
+function openModal(title, bodyHtml, footHtml){
+  document.getElementById('m-title').textContent=title;
+  document.getElementById('m-body').innerHTML=bodyHtml;
+  document.getElementById('m-foot').innerHTML=footHtml||'';
+  document.getElementById('modal').showModal();
+}
+function closeModal(){document.getElementById('modal').close();}
+/* second (nested) modal — for managing mall / material lists over the job form */
+function openModal2(title, bodyHtml, footHtml){
+  document.getElementById('m2-title').textContent=title;
+  document.getElementById('m2-body').innerHTML=bodyHtml;
+  document.getElementById('m2-foot').innerHTML=footHtml||'';
+  document.getElementById('modal2').showModal();
+}
+function closeModal2(){document.getElementById('modal2').close();}
+
+/* file → base64 (legacy single-input helper, still used for completion photos) */
+function fileToB64(input){
+  return new Promise(function(res){
+    var f=input&&input.files&&input.files[0];
+    if(!f){res(null);return;}
+    var r=new FileReader();
+    r.onload=function(){res({base64:r.result, mime:f.type||'application/octet-stream', name:f.name});};
+    r.readAsDataURL(f);
+  });
+}
+
+/* ===================== DROPZONES (drag/drop + click upload) ===================== */
+var DROPS={};
+function dz(id, multiple, accept, label){
+  DROPS[id]={files:[],multiple:!!multiple};
+  return '<div class="dz" id="dz-'+id+'" ondragover="dzOver(event,\''+id+'\')" ondragleave="dzLeave(\''+id+'\')" ondrop="dzDrop(event,\''+id+'\')" onclick="document.getElementById(\'dzi-'+id+'\').click()">'+
+    '<input type="file" id="dzi-'+id+'" '+(multiple?'multiple':'')+' accept="'+(accept||'')+'" style="display:none" onchange="dzPick(\''+id+'\',this.files)">'+
+    '<div class="dz-label">'+(label||'Drag file here, or click to browse')+'</div>'+
+    '<div class="dz-files" id="dzf-'+id+'"></div></div>';
+}
+function dzOver(e,id){e.preventDefault();var el=document.getElementById('dz-'+id);if(el)el.classList.add('over');}
+function dzLeave(id){var el=document.getElementById('dz-'+id);if(el)el.classList.remove('over');}
+function dzDrop(e,id){e.preventDefault();dzLeave(id);dzPick(id,e.dataTransfer.files);}
+function dzPick(id,fileList){
+  var d=DROPS[id];if(!d)return;
+  var arr=Array.prototype.slice.call(fileList);
+  d.files=d.multiple?d.files.concat(arr):arr.slice(0,1);
+  dzRender(id);
+}
+function dzRender(id){
+  var d=DROPS[id];var el=document.getElementById('dzf-'+id);if(!el)return;
+  el.innerHTML=d.files.map(function(f,i){return '<span class="dz-chip">'+esc(f.name)+'<b onclick="event.stopPropagation();dzRemove(\''+id+'\','+i+')">×</b></span>';}).join('');
+}
+function dzRemove(id,i){DROPS[id].files.splice(i,1);dzRender(id);}
+function dzFiles(id){return (DROPS[id]&&DROPS[id].files)||[];}
+function fileObjB64(f){return new Promise(function(res){var r=new FileReader();r.onload=function(){res({base64:r.result,mime:f.type||'application/octet-stream',name:f.name});};r.readAsDataURL(f);});}
+function dzOne(id){var fs=dzFiles(id);return fs.length?fileObjB64(fs[0]):Promise.resolve(null);}
+function dzAll(id){return Promise.all(dzFiles(id).map(fileObjB64));}
+
+/* ===================== MANAGED MALL / MATERIAL LISTS ===================== */
+function listFor(kind){return kind==='mall'?DB.malls:DB.materials;}
+function optionsFor(kind,current){
+  return '<option value="">— select '+(kind==='mall'?'mall':'material')+' —</option>'+
+    listFor(kind).map(function(m){return '<option'+(m.name===current?' selected':'')+'>'+esc(m.name)+'</option>';}).join('');
+}
+function managedSelect(kind,id,current){
+  return '<div class="selrow"><select id="'+id+'" onchange="liveQuote&&liveQuote()">'+optionsFor(kind,current)+'</select>'+
+    '<button type="button" class="ghost sm" title="Add / edit / delete" onclick="manageList(\''+kind+'\',\''+id+'\')">⚙ Manage</button></div>';
+}
+function refreshManaged(kind,id){
+  var sel=document.getElementById(id);if(!sel)return;
+  var cur=sel.value; sel.innerHTML=optionsFor(kind,cur);
+  if([].slice.call(sel.options).some(function(o){return o.value===cur;})) sel.value=cur;
+}
+function manageList(kind, selId){
+  var items=listFor(kind);
+  var rows=items.map(function(m){
+    return '<div class="mng-row" data-id="'+m.id+'">'+
+      '<input value="'+esc(m.name)+'" id="mng-'+m.id+'">'+
+      '<button class="ghost sm" onclick="mngSave(\''+kind+'\',\''+selId+'\',\''+m.id+'\')">Save</button>'+
+      '<button class="danger sm" onclick="mngDel(\''+kind+'\',\''+selId+'\',\''+m.id+'\')">Delete</button></div>';
+  }).join('');
+  openModal2((kind==='mall'?'Manage malls':'Manage materials'),
+    '<div class="mng-row"><input id="mng-new" placeholder="New '+(kind==='mall'?'mall':'material')+' name"><button class="btn sm" onclick="mngAdd(\''+kind+'\',\''+selId+'\')">+ Add</button></div>'+
+    '<div style="margin-top:10px">'+(rows||'<div class="muted">None yet.</div>')+'</div>',
+    '<button class="ghost" onclick="closeModal2()">Done</button>');
+}
+function mngAfter(kind,selId,list){
+  DB[kind==='mall'?'malls':'materials']=list;
+  manageList(kind,selId);          // re-render the manage modal
+  refreshManaged(kind,selId);      // refresh the underlying select in the job/permit form
+  if(kind==='material') refreshAllMaterialPickers();
+}
+function mngAdd(kind,selId){
+  var name=(document.getElementById('mng-new').value||'').trim();
+  if(!name){toast('Type a name.','bad');return;}
+  call(kind==='mall'?'saveMall':'saveMaterial',[{name:name}]).then(function(list){toast('Added','ok');mngAfter(kind,selId,list);}).catch(function(e){toast(e.message||e,'bad');});
+}
+function mngSave(kind,selId,id){
+  var name=(document.getElementById('mng-'+id).value||'').trim();
+  if(!name){toast('Name cannot be empty.','bad');return;}
+  call(kind==='mall'?'saveMall':'saveMaterial',[{id:id,name:name}]).then(function(list){toast('Saved','ok');mngAfter(kind,selId,list);}).catch(function(e){toast(e.message||e,'bad');});
+}
+function mngDel(kind,selId,id){
+  if(!confirm('Delete this '+(kind==='mall'?'mall':'material')+'? (existing jobs keep their text)'))return;
+  call(kind==='mall'?'deleteMall':'deleteMaterial',[id]).then(function(list){toast('Deleted','ok');mngAfter(kind,selId,list);}).catch(function(e){toast(e.message||e,'bad');});
+}
+function refreshAllMaterialPickers(){
+  ['f-mat'].forEach(function(id){ if(document.getElementById(id)) refreshManaged('material',id); });
+}
+
+/* ===================== BOOT ===================== */
+function boot(){
+  buildNav();
+  call('bootstrap').then(function(d){
+    DB=d; document.getElementById('who').textContent=d.currentUser;
+    try{ document.getElementById('dateNow').textContent=new Date(d.serverTime).toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'}); }catch(_){}
+    renderAll();
+  }).catch(function(e){ document.getElementById('v-dash').innerHTML='<div class="card">⚠️ '+esc(e.message||e)+'</div>'; });
+}
+function buildNav(){
+  var n=document.getElementById('nav');
+  n.innerHTML=TABS.map(function(t,i){return '<button data-t="'+t[0]+'"'+(i===0?' class="active"':'')+'>'+t[1]+'</button>';}).join('');
+  n.querySelectorAll('button').forEach(function(b){ b.onclick=function(){show(b.dataset.t);}; });
+}
+function show(t){
+  document.querySelectorAll('nav button').forEach(function(b){b.classList.toggle('active',b.dataset.t===t);});
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+  document.getElementById('v-'+t).classList.add('active');
+  if(t==='audit') loadAudit();
+}
+function renderAll(){ renderDash(); renderJobs(); renderRates(); renderPermits(); renderWorkers(); renderInvoices(); }
+function refresh(){ return call('bootstrap').then(function(d){ DB=d; renderAll(); }); }
+
+/* ===================== DASHBOARD ===================== */
+function renderDash(){
+  var byStatus={}; DB.jobs.forEach(function(j){byStatus[j.status]=(byStatus[j.status]||0)+1;});
+  var open=DB.jobs.filter(function(j){return ['NEW','DRAFT_IN','SENT_CLIENT','ARTWORK_REJECTED','APPROVED','PRINTING'].indexOf(j.status)>=0;}).length;
+  var toBill=DB.jobs.filter(function(j){return j.status==='INSTALLED'||j.status==='COMPLETED';}).length;
+  var checkInv=DB.invoices.filter(function(i){return i.reconVerdict==='CHECK';}).length;
+  var alertsHtml = DB.alerts.length ? DB.alerts.map(function(a){
+    var who = a.kind==='permit' ? ('Permit · '+esc(a.mall)+' · '+esc(a.label)) : ('Worker doc · '+esc(a.name)+' · '+esc(a.label));
+    var when = a.days<0 ? ('expired '+(-a.days)+'d ago') : ('expires in '+a.days+'d');
+    return '<div class="alert '+a.level+'">'+(a.level==='expired'?'⛔':'⚠️')+' <b>'+who+'</b> — '+when+'</div>';
+  }).join('') : '<div class="muted">No permit or worker-doc expiries coming up. ✅</div>';
+
+  document.getElementById('v-dash').innerHTML =
+    '<h2>Dashboard</h2>'+
+    '<div class="row" style="margin-bottom:14px">'+
+      stat(open,'Open jobs')+stat(byStatus.APPROVED||0,'Approved (PROCEED)')+
+      stat(byStatus.PRINTING||0,'Printing')+stat(toBill,'Ready to bill')+
+      stat(checkInv,'Invoices to check')+
+    '</div>'+
+    '<div class="card"><h3 style="margin-top:0">⏰ Permit & worker-doc early warning</h3>'+alertsHtml+'</div>'+
+    '<div class="card"><div class="toolbar"><h3 style="margin:0;flex:1">Recent jobs</h3>'+
+      '<button class="btn sm" onclick="show(\'jobs\');newJob()">+ New job order</button></div>'+
+      jobsTable(DB.jobs.slice(0,12))+'</div>';
+}
+function stat(n,l){return '<div class="stat"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';}
+
+/* ===================== JOBS ===================== */
+function renderJobs(){
+  var statusOpts='<option value="">All status</option>'+DB.statuses.map(function(s){return '<option value="'+s+'">'+STATUS_LABEL[s]+'</option>';}).join('');
+  var mallOpts='<option value="">All malls</option>'+DB.malls.map(function(m){return '<option>'+esc(m.name)+'</option>';}).join('');
+  document.getElementById('v-jobs').innerHTML=
+    '<h2>Jobs</h2>'+
+    '<div class="toolbar">'+
+      '<input id="j-q" placeholder="Search lot / mall / client / job no" oninput="filterJobs()" style="min-width:240px">'+
+      '<select id="j-status" onchange="filterJobs()">'+statusOpts+'</select>'+
+      '<select id="j-mall" onchange="filterJobs()">'+mallOpts+'</select>'+
+      '<button class="btn" style="margin-left:auto" onclick="newJob()">+ New job order</button>'+
+    '</div>'+
+    '<div class="card" id="j-list">'+jobsTable(DB.jobs)+'</div>';
+}
+function filterJobs(){
+  var q=(document.getElementById('j-q').value||'').toLowerCase();
+  var st=document.getElementById('j-status').value, ml=document.getElementById('j-mall').value;
+  var rows=DB.jobs.filter(function(j){
+    if(st&&j.status!==st)return false;
+    if(ml&&j.mall!==ml)return false;
+    if(q){var s=(j.jobNo+' '+j.mall+' '+j.lotNo+' '+j.client+' '+j.material).toLowerCase();if(s.indexOf(q)<0)return false;}
+    return true;
+  });
+  document.getElementById('j-list').innerHTML=jobsTable(rows);
+}
+function jobsTable(rows){
+  if(!rows.length) return '<div class="muted">No jobs yet.</div>';
+  return '<table><thead><tr><th>Job</th><th>Mall · Lot</th><th>Type</th><th>Status</th>'+
+    '<th class="right">sqft</th><th class="right">Expected RM</th><th>Install</th><th></th></tr></thead><tbody>'+
+    rows.map(function(j){
+      return '<tr>'+
+        '<td><b>'+esc(j.jobNo)+'</b><div class="muted" style="font-size:11px">'+esc(j.client||'')+'</div></td>'+
+        '<td>'+esc(j.mall)+'<div class="muted" style="font-size:11px">Lot '+esc(j.lotNo)+'</div></td>'+
+        '<td><span class="tag">'+(JOBTYPE_LABEL[j.jobType]||j.jobType)+'</span></td>'+
+        '<td>'+pill(j.status)+'</td>'+
+        '<td class="right">'+num(j.totalSqft)+'</td>'+
+        '<td class="right">'+rm(j.expectedAmount)+'</td>'+
+        '<td>'+esc(j.installDate||'—')+'</td>'+
+        '<td class="right"><button class="ghost sm" onclick="openJob(\''+j.id+'\')">Open</button></td>'+
+      '</tr>';
+    }).join('')+'</tbody></table>';
+}
+
+var PANELS=[]; // working panel set for the job form
+function newJob(){ openJobForm(null); }
+function openJob(id){
+  call('getJob',[id]).then(function(j){ openJobForm(j); }).catch(function(e){toast(e.message||e,'bad');});
+}
+function openJobForm(j){
+  var editing=!!j;
+  PANELS = editing && j.panels.length ? j.panels.slice() : [blankPanel()];
+  var typeSel='<select id="f-type">'+['print_install','print_only','install_only'].map(function(t){
+    return '<option value="'+t+'"'+(editing&&j.jobType===t?' selected':(!editing&&t==='print_install'?' selected':''))+'>'+JOBTYPE_LABEL[t]+(t==='install_only'?' (client prints elsewhere)':'')+'</option>';
+  }).join('')+'</select>';
+  var permitOpts='<option value="">— none —</option>'+DB.permits.map(function(p){
+    return '<option value="'+p.id+'"'+(editing&&j.permitId===p.id?' selected':'')+'>'+esc(p.mall)+' · '+esc(p.lotNo||'')+' · '+esc(p.permitNo||p.permitType)+' (to '+esc(p.validTo||'—')+')</option>';
+  }).join('');
+  var body =
+    '<div class="row">'+
+      field('Mall',managedSelect('mall','f-mall',editing?j.mall:''))+
+      field('Lot number','<input id="f-lot" value="'+esc(editing?j.lotNo:'')+'" placeholder="e.g. L6.43.00">')+
+    '</div>'+
+    '<div class="row">'+
+      field('Job type',typeSel)+
+      field('Client (HG\'s client)','<input id="f-client" value="'+esc(editing?j.client:'')+'" placeholder="e.g. ABC Sdn Bhd">')+
+      field('Default material',managedSelect('material','f-mat',editing?j.material:''))+
+    '</div>'+
+    '<div class="row">'+
+      field('Request date','<input id="f-rdate" type="date" value="'+esc(editing?j.requestDate:new Date().toISOString().slice(0,10))+'">')+
+      field('Install date','<input id="f-idate" type="date" value="'+esc(editing?j.installDate:'')+'">')+
+      field('Requested by','<input id="f-reqby" value="'+esc(editing?j.requestedBy:DB.currentUser)+'">')+
+    '</div>'+
+    '<h3>Panels — measurement → sqft</h3>'+
+    '<div class="panelrow gridhead"><div>Label</div><div>Width</div><div>Height</div><div>Unit</div><div>Qty</div><div>Rate/sqft</div><div class="right">sqft · RM</div><div></div></div>'+
+    '<div id="panel-list"></div>'+
+    '<button class="ghost sm" onclick="addPanel()" style="margin-top:4px">+ Add panel</button>'+
+    '<div class="totbar"><span class="muted">Total <b id="t-sqft">0</b> sqft</span>'+
+      '<span class="muted">Expected from B: <span class="big" id="t-amt">RM 0.00</span></span></div>'+
+    '<div id="rate-warn" class="hint"></div>'+
+    '<h3>Artwork & reference</h3>'+
+    '<div class="hint" style="margin-bottom:8px">On Create, a Drive folder <b>Mall → Lot</b> is made automatically and every file below is filed there.</div>'+
+    '<div class="row">'+
+      field('Artwork link (WeTransfer / Drive — the Ai file)','<input id="f-link" value="'+esc(editing?j.artworkLink:'')+'" placeholder="https://we.tl/... (Ai file)">')+
+    '</div>'+
+    '<div class="row">'+
+      field('Measurement sketch — drag/upload'+(editing&&j.sketchUrl?' &nbsp;<a href="'+j.sketchUrl+'" target="_blank">current ↗</a>':''), dz('sketch',false,'image/*,application/pdf','Drag sketch here, or click')+
+        '<input id="f-sketch-url" value="" placeholder="…or paste a URL link" style="margin-top:6px">')+
+      field('Approved artwork proof — drag/upload'+(editing&&j.artworkProofUrl?' &nbsp;<a href="'+j.artworkProofUrl+'" target="_blank">current ↗</a>':''), dz('proof',false,'image/*,application/pdf','Drag proof here, or click')+
+        '<input id="f-proof-url" value="" placeholder="…or paste a URL link" style="margin-top:6px">')+
+    '</div>'+
+    field('Site pictures (reference) — drag/upload multiple'+(editing&&j.sitePhotosUrl?' &nbsp;<a href="'+j.sitePhotosUrl+'" target="_blank">current folder ↗</a>':''), dz('site',true,'image/*','Drag site photos here, or click — multiple allowed'))+
+    '<div class="row">'+
+      field('Work permit for this mall','<select id="f-permit">'+permitOpts+'</select>')+
+    '</div>'+
+    field('Notes / remarks','<textarea id="f-notes">'+esc(editing?j.notes:'')+'</textarea>');
+
+  var foot = (editing
+      ? '<button class="danger" onclick="delJob(\''+j.id+'\')">Delete</button>'
+      : '')+
+    '<button class="ghost" onclick="closeModal()">Cancel</button>'+
+    '<button class="btn" id="save-job">'+(editing?'Save changes':'Create job order')+'</button>';
+  openModal(editing?('Job '+j.jobNo):'New job order', body, foot);
+  if(editing){ document.getElementById('m-title').innerHTML = 'Job '+esc(j.jobNo)+' &nbsp;'+pill(j.status); }
+  renderPanels();
+  document.getElementById('save-job').onclick=function(){ saveJobForm(editing?j.id:null); };
+  // status actions inside the modal title area for editing
+  if(editing) injectStatusBar(j);
+}
+function field(lbl, inner){ return '<div><label>'+lbl+'</label>'+inner+'</div>'; }
+function blankPanel(){ return {label:'',widthVal:'',heightVal:'',unit:'mm',qty:1,ratePerSqft:'',sqft:0,amount:0}; }
+function addPanel(){ PANELS.push(blankPanel()); renderPanels(); }
+function rmPanel(i){ PANELS.splice(i,1); if(!PANELS.length)PANELS.push(blankPanel()); renderPanels(); }
+function readPanelInputs(){
+  PANELS.forEach(function(p,i){
+    p.label=val('p-l-'+i); p.widthVal=val('p-w-'+i); p.heightVal=val('p-h-'+i);
+    p.unit=val('p-u-'+i); p.qty=val('p-q-'+i); p.ratePerSqft=val('p-r-'+i);
+  });
+}
+function val(id){var e=document.getElementById(id);return e?e.value:'';}
+function renderPanels(){
+  var unitOpts=function(u){return DB.units.map(function(x){return '<option'+(x===u?' selected':'')+'>'+x+'</option>';}).join('');};
+  document.getElementById('panel-list').innerHTML=PANELS.map(function(p,i){
+    return '<div class="panelrow">'+
+      '<input id="p-l-'+i+'" value="'+esc(p.label)+'" placeholder="e.g. Main fabric">'+
+      '<input id="p-w-'+i+'" value="'+esc(p.widthVal)+'" placeholder="W" inputmode="decimal" oninput="liveQuote()">'+
+      '<input id="p-h-'+i+'" value="'+esc(p.heightVal)+'" placeholder="H" inputmode="decimal" oninput="liveQuote()">'+
+      '<select id="p-u-'+i+'" onchange="liveQuote()">'+unitOpts(p.unit)+'</select>'+
+      '<input id="p-q-'+i+'" value="'+esc(p.qty)+'" inputmode="decimal" oninput="liveQuote()">'+
+      '<input id="p-r-'+i+'" value="'+esc(p.ratePerSqft||'')+'" placeholder="auto" inputmode="decimal" oninput="liveQuote()">'+
+      '<div class="ro right" id="p-out-'+i+'">'+num(p.sqft)+' · '+rm(p.amount)+'</div>'+
+      '<button class="danger sm" onclick="rmPanel('+i+')">×</button>'+
+    '</div>';
+  }).join('');
+  liveQuote();
+}
+var _qt;
+function liveQuote(){
+  if(!document.getElementById('panel-list'))return; // only when the job form is open
+  readPanelInputs();
+  clearTimeout(_qt);
+  _qt=setTimeout(function(){
+    var mall=val('f-mall'),mat=val('f-mat'),type=val('f-type'),date=val('f-rdate');
+    call('quoteJob',[mall,mat,type,date,PANELS]).then(function(q){
+      q.panels.forEach(function(o,i){var e=document.getElementById('p-out-'+i);if(e)e.textContent=num(o.sqft)+' · '+rm(o.amount);});
+      document.getElementById('t-sqft').textContent=num(q.totalSqft);
+      document.getElementById('t-amt').textContent=rm(q.expectedAmount);
+      var w=document.getElementById('rate-warn');
+      var msgs=[];
+      if(!q.rateFound) msgs.push('⚠️ No rate card matches this mall/material yet — amounts show RM 0 until you add a rate (or type a rate per panel). Add it under <b>Rate Card</b>.');
+      if(type==='install_only') msgs.push('🔧 <b>Install only</b> — priced at the install rate (RM '+num(q.installRate)+'/sqft); B does not print.');
+      else if(q.usePackage) msgs.push('📦 Priced on <b>package rate</b> RM '+num(q.packageRate)+'/sqft (supply + install, all-in).');
+      else if(q.installAmount) msgs.push('Includes install RM '+num(q.installAmount)+' ('+num(q.installRate)+'/sqft × '+num(q.totalSqft)+' sqft).');
+      if(q.minApplied) msgs.push('Minimum charge applied for this mall.');
+      w.innerHTML=msgs.join(' ');
+    });
+  },180);
+}
+function saveJobForm(id){
+  readPanelInputs();
+  var payload={
+    id:id||undefined, mall:val('f-mall'), lotNo:val('f-lot'), jobType:val('f-type'),
+    client:val('f-client'), material:val('f-mat'), requestDate:val('f-rdate'),
+    installDate:val('f-idate'), requestedBy:val('f-reqby'), permitId:val('f-permit'),
+    artworkLink:val('f-link'), notes:val('f-notes'), panels:PANELS
+  };
+  if(!payload.mall||!payload.lotNo){toast('Mall and lot number are required.','bad');return;}
+  payload.sketchLink=val('f-sketch-url'); payload.artworkProofLink=val('f-proof-url');
+  var btn=document.getElementById('save-job'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Saving…';
+  Promise.all([dzOne('sketch'), dzOne('proof'), dzAll('site')])
+  .then(function(r){
+    if(r[0]){payload.sketchBase64=r[0].base64;payload.sketchMime=r[0].mime;payload.sketchName=r[0].name;}
+    if(r[1]){payload.artworkProofBase64=r[1].base64;payload.artworkProofMime=r[1].mime;payload.artworkProofName=r[1].name;}
+    payload.sitePhotos=r[2]||[];
+    return call('saveJob',[payload]);
+  }).then(function(r){
+    toast('Saved '+r.jobNo+' · '+num(r.totalSqft)+' sqft · '+rm(r.expectedAmount),'ok');
+    closeModal(); return refresh();
+  }).catch(function(e){ btn.disabled=false; btn.textContent='Save'; toast(e.message||e,'bad'); });
+}
+function delJob(id){
+  if(!confirm('Delete this job order? This cannot be undone.'))return;
+  call('deleteJob',[id]).then(function(){toast('Deleted','ok');closeModal();return refresh();}).catch(function(e){toast(e.message||e,'bad');});
+}
+/* status flow buttons */
+function injectStatusBar(j){
+  var next={
+    NEW:[['DRAFT_IN','B sent draft']],
+    DRAFT_IN:[['SENT_CLIENT','Sent to client'],['ARTWORK_REJECTED','Artwork rejected']],
+    SENT_CLIENT:[['APPROVED','✓ PROCEED'],['ARTWORK_REJECTED','Artwork rejected']],
+    ARTWORK_REJECTED:[['DRAFT_IN','New draft in']],
+    APPROVED:[['PRINTING','Start printing']],
+    PRINTING:[['INSTALLED','Installed on site']],
+    INSTALLED:[['COMPLETED','Mark completed + photos']],
+  };
+  var acts=next[j.status]||[];
+  if(!acts.length && j.status!=='COMPLETED') return;
+  var bar='<div class="card" style="margin:0 0 14px;background:var(--panel2)"><div class="toolbar" style="margin:0">'+
+    '<span class="muted">Move status:</span>'+
+    acts.map(function(a){
+      var cls=a[0]==='APPROVED'?'btn':(a[0]==='ARTWORK_REJECTED'?'danger':'ghost');
+      return '<button class="'+cls+' sm" onclick="moveStatus(\''+j.id+'\',\''+a[0]+'\')">'+a[1]+'</button>';
+    }).join('')+
+    (j.status==='INSTALLED'?'<button class="btn sm" onclick="photoUpload(\''+j.id+'\')">📷 Completion photos</button>':'')+
+    '<span style="margin-left:auto"></span>'+
+    (j.folderUrl?'<a class="tag" href="'+esc(j.folderUrl)+'" target="_blank">📁 Drive folder ↗</a>':'')+
+    (j.artworkLink?'<a class="tag" href="'+esc(j.artworkLink)+'" target="_blank">artwork link ↗</a>':'')+
+    (j.sitePhotosUrl?'<a class="tag" href="'+esc(j.sitePhotosUrl)+'" target="_blank">site pics ↗</a>':'')+
+    (j.photosUrl?'<a class="tag" href="'+esc(j.photosUrl)+'" target="_blank">completion ↗</a>':'')+
+    '</div></div>';
+  document.getElementById('m-body').insertAdjacentHTML('afterbegin',bar);
+}
+function moveStatus(id,status){
+  var note='';
+  if(status==='ARTWORK_REJECTED') note=prompt('Reason (pixelated / missing font / outline)?')||'';
+  if(status==='APPROVED' && !confirm('Confirm client approved — give B the PROCEED to print?'))return;
+  call('updateJobStatus',[id,status,note]).then(function(){
+    toast('Status → '+(STATUS_LABEL[status]||status),'ok'); closeModal(); return refresh();
+  }).catch(function(e){toast(e.message||e,'bad');});
+}
+function photoUpload(id){
+  openModal('Completion photos',
+    '<p class="muted">Upload the on-site completion photos B shared. Marks the job COMPLETED.</p>'+
+    field('Photos (multiple)','<input id="cp-files" type="file" accept="image/*" multiple>')+
+    field('Remark','<textarea id="cp-remark" placeholder="Optional remark"></textarea>'),
+    '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" id="cp-save">Upload & complete</button>');
+  document.getElementById('cp-save').onclick=function(){
+    var fs=document.getElementById('cp-files').files;
+    if(!fs.length){toast('Pick at least one photo.','bad');return;}
+    var btn=this; btn.disabled=true; btn.innerHTML='<span class="spin"></span> Uploading…';
+    var arr=[]; var pending=fs.length;
+    Array.prototype.forEach.call(fs,function(f){
+      var r=new FileReader();
+      r.onload=function(){arr.push({base64:r.result,mime:f.type,name:f.name}); if(--pending===0) doUp();};
+      r.readAsDataURL(f);
+    });
+    function doUp(){
+      call('addCompletionPhotos',[id,arr,val('cp-remark')]).then(function(){
+        toast('Completed · '+arr.length+' photo(s)','ok'); closeModal(); return refresh();
+      }).catch(function(e){btn.disabled=false;btn.textContent='Upload & complete';toast(e.message||e,'bad');});
+    }
+  };
+}
+
+/* ===================== RATES ===================== */
+function renderRates(){
+  document.getElementById('v-rates').innerHTML=
+    '<h2>Rate Card — B\'s rates per mall / material / job type</h2>'+
+    '<div class="toolbar"><span class="muted" style="flex:1">Most specific match wins: Mall+Material+Type → Material → ALL.</span>'+
+      '<button class="btn" onclick="rateForm(null)">+ Add rate</button></div>'+
+    '<div class="card">'+ratesTable()+'</div>';
+}
+function ratesTable(){
+  if(!DB.rates.length)return '<div class="muted">No rates yet. Add B\'s agreed rates so job amounts auto-calculate.</div>';
+  return '<table><thead><tr><th>Mall</th><th>Material</th><th>Type</th><th class="right">Print RM/sqft</th>'+
+    '<th class="right">Install RM/sqft</th><th class="right">Package RM/sqft</th><th class="right">Min RM</th><th>From</th><th></th></tr></thead><tbody>'+
+    DB.rates.map(function(r){
+      var pkg = r.packageRate ? '<b style="color:var(--ok)">'+num(r.packageRate)+'</b>' : '—';
+      return '<tr><td>'+esc(r.mall)+'</td><td>'+esc(r.material)+'</td><td>'+esc(r.jobType)+'</td>'+
+        '<td class="right">'+(r.ratePerSqft?num(r.ratePerSqft):'—')+'</td><td class="right">'+(r.installRate?num(r.installRate):'—')+'</td>'+
+        '<td class="right">'+pkg+'</td>'+
+        '<td class="right">'+(r.minCharge?num(r.minCharge):'—')+'</td><td>'+esc(r.effectiveFrom||'—')+'</td>'+
+        '<td class="right"><button class="ghost sm" onclick=\'rateForm('+JSON.stringify(r)+')\'>Edit</button></td></tr>';
+    }).join('')+'</tbody></table>';
+}
+function rateForm(r){
+  var e=!!r; r=r||{};
+  var body=
+    '<div class="row">'+
+      field('Mall (or ALL)','<input id="r-mall" value="'+esc(e?r.mall:'ALL')+'" placeholder="ALL or Pavilion KL">')+
+      field('Material (or ALL)','<input id="r-mat" value="'+esc(e?r.material:'ALL')+'" placeholder="ALL or Tarpaulin">')+
+      field('Job type','<select id="r-type"><option>ALL</option><option'+(r.jobType==='print_install'?' selected':'')+'>print_install</option><option'+(r.jobType==='print_only'?' selected':'')+'>print_only</option></select>')+
+    '</div>'+
+    '<div class="row">'+
+      field('Print rate RM/sqft','<input id="r-rate" inputmode="decimal" value="'+esc(e?r.ratePerSqft:'')+'">')+
+      field('Install rate RM/sqft','<input id="r-inst" inputmode="decimal" value="'+esc(e?r.installRate:'')+'" placeholder="0">')+
+      field('Min charge RM','<input id="r-min" inputmode="decimal" value="'+esc(e?r.minCharge:'')+'" placeholder="0">')+
+    '</div>'+
+    field('Package rate RM/sqft (supply + install, all-in)','<input id="r-pkg" inputmode="decimal" value="'+esc(e?r.packageRate:'')+'" placeholder="leave blank to use Print + Install split">'+
+      '<div class="hint">If set, a <b>Print + Install</b> job using this rate is priced at this one all-in figure — the print &amp; install columns are ignored. Leave blank for the usual split.</div>')+
+    '<div class="row">'+
+      field('Effective from','<input id="r-eff" type="date" value="'+esc(e?r.effectiveFrom:'')+'">')+
+      field('Notes','<input id="r-notes" value="'+esc(e?r.notes:'')+'">')+
+    '</div>';
+  var foot=(e?'<button class="danger" onclick="delRate(\''+r.id+'\')">Delete</button>':'')+
+    '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" id="r-save">Save rate</button>';
+  openModal(e?'Edit rate':'Add rate', body, foot);
+  document.getElementById('r-save').onclick=function(){
+    var p={id:e?r.id:undefined,mall:val('r-mall'),material:val('r-mat'),jobType:val('r-type'),
+      ratePerSqft:val('r-rate'),installRate:val('r-inst'),packageRate:val('r-pkg'),minCharge:val('r-min'),effectiveFrom:val('r-eff'),notes:val('r-notes')};
+    call('saveRate',[p]).then(function(){toast('Rate saved','ok');closeModal();return refresh();}).catch(function(er){toast(er.message||er,'bad');});
+  };
+}
+function delRate(id){if(!confirm('Delete this rate?'))return;call('deleteRate',[id]).then(function(){toast('Deleted','ok');closeModal();return refresh();}).catch(function(e){toast(e.message||e,'bad');});}
+
+/* ===================== PERMITS ===================== */
+function renderPermits(){
+  document.getElementById('v-permits').innerHTML=
+    '<h2>Work Permits — by mall, with expiry warning</h2>'+
+    '<div class="toolbar"><span class="muted" style="flex:1">Stored for quick retrieval; flags expiring within '+'14'+' days.</span>'+
+      '<button class="btn" onclick="permitForm(null)">+ Add permit</button></div>'+
+    '<div class="card">'+permitsTable()+'</div>';
+}
+function permitsTable(){
+  if(!DB.permits.length)return '<div class="muted">No permits stored yet.</div>';
+  return '<table><thead><tr><th>Mall</th><th>Lot</th><th>Type</th><th>Permit no</th><th>Valid</th><th>Status</th><th>File</th><th></th></tr></thead><tbody>'+
+    DB.permits.map(function(p){
+      var badge=p.state==='expired'?'<span class="pill p-ARTWORK_REJECTED">expired</span>':
+        p.state==='expiring'?'<span class="pill p-PRINTING">'+p.daysLeft+'d left</span>':
+        '<span class="pill p-COMPLETED">ok</span>';
+      return '<tr><td><b>'+esc(p.mall)+'</b></td><td>'+esc(p.lotNo||'—')+'</td><td>'+esc(p.permitType||'—')+'</td><td>'+esc(p.permitNo||'—')+'</td>'+
+        '<td>'+esc(p.validFrom||'—')+' → '+esc(p.validTo||'—')+'</td><td>'+badge+'</td>'+
+        '<td>'+(p.fileUrl?'<a href="'+p.fileUrl+'" target="_blank">open ↗</a>':'—')+'</td>'+
+        '<td class="right"><button class="ghost sm" onclick=\'permitForm('+JSON.stringify({id:p.id,mall:p.mall,lotNo:p.lotNo,permitType:p.permitType,permitNo:p.permitNo,validFrom:p.validFrom,validTo:p.validTo,notes:p.notes})+')\'>Edit</button></td></tr>';
+    }).join('')+'</tbody></table>';
+}
+function permitForm(p){
+  var e=!!p;p=p||{};
+  var body=
+    '<div class="row">'+
+      field('Mall',managedSelect('mall','pm-mall',e?p.mall:''))+
+      field('Lot number (optional)','<input id="pm-lot" value="'+esc(e?p.lotNo:'')+'" placeholder="e.g. L6.43.00 — leave blank if whole-mall permit">')+
+    '</div>'+
+    '<div class="row">'+
+      field('Permit type','<select id="pm-type"><option value="">—</option>'+['monthly','yearly','one-off'].map(function(t){return '<option'+(p.permitType===t?' selected':'')+'>'+t+'</option>';}).join('')+'</select>')+
+      field('Permit no','<input id="pm-no" value="'+esc(e?p.permitNo:'')+'">')+
+    '</div>'+
+    '<div class="row">'+
+      field('Valid from','<input id="pm-from" type="date" value="'+esc(e?p.validFrom:'')+'">')+
+      field('Valid to','<input id="pm-to" type="date" value="'+esc(e?p.validTo:'')+'">')+
+    '</div>'+
+    field('Permit file — drag/upload',''+dz('permit',false,'image/*,application/pdf','Drag permit here, or click')+(e&&p.fileUrl?'<div class="hint"><a href="'+p.fileUrl+'" target="_blank">current file ↗</a></div>':''))+
+    field('Notes','<textarea id="pm-notes">'+esc(e?p.notes:'')+'</textarea>');
+  var foot=(e?'<button class="danger" onclick="delPermit(\''+p.id+'\')">Delete</button>':'')+
+    '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" id="pm-save">Save permit</button>';
+  openModal(e?'Edit permit':'Add permit',body,foot);
+  document.getElementById('pm-save').onclick=function(){
+    var btn=this;btn.disabled=true;btn.innerHTML='<span class="spin"></span> Saving…';
+    dzOne('permit').then(function(f){
+      var pl={id:e?p.id:undefined,mall:val('pm-mall'),lotNo:val('pm-lot'),permitType:val('pm-type'),permitNo:val('pm-no'),
+        validFrom:val('pm-from'),validTo:val('pm-to'),notes:val('pm-notes')};
+      if(f){pl.fileBase64=f.base64;pl.fileMime=f.mime;pl.fileName=f.name;}
+      return call('savePermit',[pl]);
+    }).then(function(){toast('Permit saved','ok');closeModal();return refresh();})
+    .catch(function(er){btn.disabled=false;btn.textContent='Save permit';toast(er.message||er,'bad');});
+  };
+}
+function delPermit(id){if(!confirm('Delete this permit?'))return;call('deletePermit',[id]).then(function(){toast('Deleted','ok');closeModal();return refresh();}).catch(function(e){toast(e.message||e,'bad');});}
+
+/* ===================== WORKERS ===================== */
+function renderWorkers(){
+  document.getElementById('v-workers').innerHTML=
+    '<h2>B\'s Team — worker name list & documents</h2>'+
+    '<div class="toolbar"><span class="muted" style="flex:1">Flags docs expiring within 30 days.</span>'+
+      '<button class="btn" onclick="workerForm(null)">+ Add worker</button></div>'+
+    '<div class="card">'+workersTable()+'</div>';
+}
+function docChip(label,url,expiry,state,days){
+  if(!url && !expiry) return '';
+  var badge='';
+  if(expiry){
+    badge=state==='expired'?' <span class="pill p-ARTWORK_REJECTED">expired</span>':state==='expiring'?' <span class="pill p-PRINTING">'+days+'d</span>':'';
+  }
+  var link=url?'<a href="'+url+'" target="_blank">'+esc(label)+' ↗</a>':esc(label);
+  return '<div style="font-size:12px">'+link+badge+(expiry?'<span class="muted"> · exp '+esc(expiry)+'</span>':'')+'</div>';
+}
+function workersTable(){
+  if(!DB.workers.length)return '<div class="muted">No workers yet.</div>';
+  return '<table><thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>IC</th><th>Documents</th><th>Status</th><th></th></tr></thead><tbody>'+
+    DB.workers.map(function(w){
+      var docs=docChip('CIDB',w.cidbFileUrl,w.cidbExpiry,w.docState,w.daysLeft)+
+               docChip('WAH',w.wahFileUrl,w.wahExpiry,w.docState,w.daysLeft)+
+               docChip(w.docType||'Other',w.docUrl,w.docExpiry,w.docState,w.daysLeft);
+      var ic=(w.icFileUrl?'<a href="'+w.icFileUrl+'" target="_blank">'+esc(w.icNo||'IC')+' ↗</a>':esc(w.icNo||'—'));
+      return '<tr><td><b>'+esc(w.name)+'</b></td><td>'+esc(w.role||'—')+'</td><td>'+esc(w.phone||'—')+'</td>'+
+        '<td>'+ic+'</td><td>'+(docs||'<span class="muted">—</span>')+'</td>'+
+        '<td>'+(w.status==='inactive'?'<span class="tag">inactive</span>':'<span class="pill p-COMPLETED">active</span>')+'</td>'+
+        '<td class="right"><button class="ghost sm" onclick=\'workerForm('+JSON.stringify(w)+')\'>Edit</button></td></tr>';
+    }).join('')+'</tbody></table>';
+}
+function workerForm(w){
+  var e=!!w;w=w||{};
+  function cur(url){return url?'<div class="hint"><a href="'+url+'" target="_blank">current file ↗</a></div>':'';}
+  var body=
+    '<div class="row">'+
+      field('Name','<input id="w-name" value="'+esc(e?w.name:'')+'">')+
+      field('Role','<input id="w-role" value="'+esc(e?w.role:'')+'" placeholder="Installer / Driver">')+
+      field('Phone','<input id="w-phone" value="'+esc(e?w.phone:'')+'">')+
+      field('Status','<select id="w-status"><option'+(w.status!=='inactive'?' selected':'')+'>active</option><option'+(w.status==='inactive'?' selected':'')+'>inactive</option></select>')+
+    '</div>'+
+    '<h3>IC</h3>'+
+    '<div class="row">'+
+      field('IC number','<input id="w-icno" value="'+esc(e?w.icNo:'')+'">')+
+      field('IC file — drag/upload',dz('w-ic',false,'image/*,application/pdf','Drag IC here, or click')+cur(e?w.icFileUrl:''))+
+    '</div>'+
+    '<h3>CIDB Green Card</h3>'+
+    '<div class="row">'+
+      field('CIDB card no','<input id="w-cidbno" value="'+esc(e?w.cidbNo:'')+'">')+
+      field('CIDB expiry','<input id="w-cidbexp" type="date" value="'+esc(e?w.cidbExpiry:'')+'">')+
+      field('CIDB file — drag/upload',dz('w-cidb',false,'image/*,application/pdf','Drag CIDB card here, or click')+cur(e?w.cidbFileUrl:''))+
+    '</div>'+
+    '<h3>Work at Height (WAH)</h3>'+
+    '<div class="row">'+
+      field('WAH cert no','<input id="w-wahno" value="'+esc(e?w.wahNo:'')+'">')+
+      field('WAH expiry','<input id="w-wahexp" type="date" value="'+esc(e?w.wahExpiry:'')+'">')+
+      field('WAH file — drag/upload',dz('w-wah',false,'image/*,application/pdf','Drag WAH cert here, or click')+cur(e?w.wahFileUrl:''))+
+    '</div>'+
+    '<h3>Other document (optional — passport / permit / insurance)</h3>'+
+    '<div class="row">'+
+      field('Type','<input id="w-doctype" value="'+esc(e?w.docType:'')+'" placeholder="Passport / Permit / Insurance">')+
+      field('Doc no','<input id="w-docno" value="'+esc(e?w.docNo:'')+'">')+
+      field('Expiry','<input id="w-docexp" type="date" value="'+esc(e?w.docExpiry:'')+'">')+
+      field('File — drag/upload',dz('w-doc',false,'image/*,application/pdf','Drag file here, or click')+cur(e?w.docUrl:''))+
+    '</div>'+
+    field('Notes','<textarea id="w-notes">'+esc(e?w.notes:'')+'</textarea>');
+  var foot=(e?'<button class="danger" onclick="delWorker(\''+w.id+'\')">Delete</button>':'')+
+    '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" id="w-save">Save worker</button>';
+  openModal(e?('Edit worker — '+esc(w.name)):'Add worker',body,foot);
+  document.getElementById('w-save').onclick=function(){
+    var btn=this;btn.disabled=true;btn.innerHTML='<span class="spin"></span> Saving…';
+    Promise.all([dzOne('w-ic'),dzOne('w-cidb'),dzOne('w-wah'),dzOne('w-doc')]).then(function(fs){
+      var pl={id:e?w.id:undefined,name:val('w-name'),role:val('w-role'),phone:val('w-phone'),status:val('w-status'),
+        icNo:val('w-icno'),cidbNo:val('w-cidbno'),cidbExpiry:val('w-cidbexp'),
+        wahNo:val('w-wahno'),wahExpiry:val('w-wahexp'),
+        docType:val('w-doctype'),docNo:val('w-docno'),docExpiry:val('w-docexp'),notes:val('w-notes')};
+      if(fs[0]){pl.icBase64=fs[0].base64;pl.icMime=fs[0].mime;pl.icName=fs[0].name;}
+      if(fs[1]){pl.cidbBase64=fs[1].base64;pl.cidbMime=fs[1].mime;pl.cidbName=fs[1].name;}
+      if(fs[2]){pl.wahBase64=fs[2].base64;pl.wahMime=fs[2].mime;pl.wahName=fs[2].name;}
+      if(fs[3]){pl.docBase64=fs[3].base64;pl.docMime=fs[3].mime;pl.docName=fs[3].name;}
+      return call('saveWorker',[pl]);
+    }).then(function(){toast('Worker saved','ok');closeModal();return refresh();})
+    .catch(function(er){btn.disabled=false;btn.textContent='Save worker';toast(er.message||er,'bad');});
+  };
+}
+function delWorker(id){if(!confirm('Delete this worker?'))return;call('deleteWorker',[id]).then(function(){toast('Deleted','ok');closeModal();return refresh();}).catch(function(e){toast(e.message||e,'bad');});}
+
+/* ===================== INVOICES & RECON ===================== */
+function renderInvoices(){
+  document.getElementById('v-invoices').innerHTML=
+    '<h2>B\'s Invoices & Reconciliation</h2>'+
+    '<div class="toolbar"><span class="muted" style="flex:1">Pick the jobs on B\'s invoice → system checks each claimed amount against HG\'s recorded measurement.</span>'+
+      '<button class="btn" onclick="invForm(null)">+ Log B invoice</button></div>'+
+    '<div class="card">'+invTable()+'</div>';
+}
+function invTable(){
+  if(!DB.invoices.length)return '<div class="muted">No invoices logged yet.</div>';
+  return '<table><thead><tr><th>B Inv No</th><th>Date</th><th>Malls</th><th class="right">Claimed</th><th>Recon</th><th>Status</th><th>File</th><th></th></tr></thead><tbody>'+
+    DB.invoices.map(function(i){
+      var v=i.reconVerdict==='MATCH'?'<span class="recon-MATCH">✓ MATCH</span>':i.reconVerdict==='CHECK'?'<span class="recon-CHECK">⚠ CHECK</span>':'<span class="muted">—</span>';
+      return '<tr><td><b>'+esc(i.invNo)+'</b></td><td>'+esc(i.invDate)+'</td><td>'+esc(i.malls||'—')+'</td>'+
+        '<td class="right">'+rm(i.claimedTotal)+'</td><td>'+v+'</td><td><span class="tag">'+esc(i.status||'')+'</span></td>'+
+        '<td>'+(i.fileUrl?'<a href="'+i.fileUrl+'" target="_blank">open ↗</a>':'—')+'</td>'+
+        '<td class="right"><button class="ghost sm" onclick="openInv(\''+i.id+'\')">Open</button></td></tr>';
+    }).join('')+'</tbody></table>';
+}
+var INV_LINES=[]; // {jobId, claimedSqft, claimedAmount}
+function invForm(existing){
+  call('unbilledJobs').then(function(unbilled){
+    INV_LINES = existing&&existing.lines? existing.lines.map(function(l){return {jobId:l.jobId,claimedSqft:l.claimedSqft,claimedAmount:l.claimedAmount};}) : [];
+    var e=!!existing; var inv=existing||{};
+    // job pool = unbilled + any already on this invoice
+    var poolMap={}; unbilled.forEach(function(j){poolMap[j.id]=j;});
+    if(e) inv.lines.forEach(function(l){ if(!poolMap[l.jobId]) poolMap[l.jobId]={id:l.jobId,jobNo:l.jobNo,mall:l.mall,lotNo:l.lotNo,totalSqft:l.recordedSqft,expectedAmount:l.recordedAmount}; });
+    var pool=Object.keys(poolMap).map(function(k){return poolMap[k];});
+    var jobOpts='<option value="">— pick a job to add —</option>'+pool.filter(function(j){
+      return !INV_LINES.some(function(l){return l.jobId===j.id;});
+    }).map(function(j){return '<option value="'+j.id+'">'+esc(j.jobNo)+' · '+esc(j.mall)+' Lot '+esc(j.lotNo)+' · '+num(j.totalSqft)+'sqft · '+rm(j.expectedAmount)+'</option>';}).join('');
+    window._invPool=poolMap;
+    var body=
+      '<div class="row">'+
+        field('B\'s invoice no','<input id="i-no" value="'+esc(e?inv.invNo:'')+'">')+
+        field('Invoice date','<input id="i-date" type="date" value="'+esc(e?inv.invDate:new Date().toISOString().slice(0,10))+'">')+
+        field('Period / ref','<input id="i-period" value="'+esc(e?inv.period:'')+'" placeholder="e.g. May 2026">')+
+      '</div>'+
+      '<h3>Jobs on this invoice</h3>'+
+      '<div class="toolbar"><select id="i-add">'+jobOpts+'</select><button class="ghost sm" onclick="addInvLine()">+ Add</button></div>'+
+      '<div id="i-lines"></div>'+
+      '<div class="row" style="margin-top:10px">'+
+        field('B\'s claimed amount (before SST)','<input id="i-claim" inputmode="decimal" value="'+esc(e?inv.claimedAmount:'')+'" placeholder="auto = sum of lines" oninput="invRecon()">')+
+        field('SST 6%','<select id="i-sst" onchange="invRecon()"><option value="">No SST</option><option value="1"'+(e&&inv.sstEnabled?' selected':'')+'>Add SST 6%</option></select>')+
+      '</div>'+
+      field('B\'s invoice file (PDF/image)','<input id="i-file" type="file" accept="image/*,application/pdf">'+(e&&inv.fileUrl?'<div class="hint"><a href="'+inv.fileUrl+'" target="_blank">current file ↗</a></div>':''))+
+      field('Notes','<textarea id="i-notes">'+esc(e?inv.notes:'')+'</textarea>')+
+      '<div class="card" id="i-recon" style="background:var(--panel2);margin-top:12px"></div>';
+    var foot=(e?'<button class="danger" onclick="delInv(\''+inv.id+'\')">Delete</button>':'')+
+      '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" id="i-save">'+(e?'Save invoice':'Log & reconcile')+'</button>';
+    openModal(e?('Invoice '+inv.invNo):'Log B invoice',body,foot);
+    renderInvLines();
+    document.getElementById('i-save').onclick=function(){ saveInvForm(e?inv.id:null); };
+  }).catch(function(e){toast(e.message||e,'bad');});
+}
+function addInvLine(){
+  var id=val('i-add'); if(!id)return;
+  var j=window._invPool[id]; if(!j)return;
+  INV_LINES.push({jobId:id, claimedSqft:j.totalSqft, claimedAmount:j.expectedAmount});
+  invFormRefreshPool();
+}
+function invFormRefreshPool(){
+  // rebuild the add-dropdown to drop already-added jobs
+  var sel=document.getElementById('i-add');
+  var pool=window._invPool;
+  sel.innerHTML='<option value="">— pick a job to add —</option>'+Object.keys(pool).filter(function(k){
+    return !INV_LINES.some(function(l){return l.jobId===k;});
+  }).map(function(k){var j=pool[k];return '<option value="'+k+'">'+esc(j.jobNo)+' · '+esc(j.mall)+' Lot '+esc(j.lotNo)+' · '+num(j.totalSqft)+'sqft · '+rm(j.expectedAmount)+'</option>';}).join('');
+  renderInvLines();
+}
+function rmInvLine(i){ INV_LINES.splice(i,1); invFormRefreshPool(); }
+function readInvLines(){
+  INV_LINES.forEach(function(l,i){
+    l.claimedAmount=val('il-amt-'+i); l.claimedSqft=val('il-sqft-'+i);
+  });
+}
+function renderInvLines(){
+  var pool=window._invPool;
+  if(!INV_LINES.length){document.getElementById('i-lines').innerHTML='<div class="muted">No jobs added. Pick from the dropdown above.</div>';invRecon();return;}
+  document.getElementById('i-lines').innerHTML=
+    '<table><thead><tr><th>Job</th><th class="right">HG recorded sqft</th><th class="right">HG recorded RM</th>'+
+    '<th class="right">B claimed sqft</th><th class="right">B claimed RM</th><th class="right">Var</th><th></th></tr></thead><tbody>'+
+    INV_LINES.map(function(l,i){
+      var j=pool[l.jobId]||{};
+      return '<tr><td><b>'+esc(j.jobNo||'')+'</b><div class="muted" style="font-size:11px">'+esc(j.mall||'')+' Lot '+esc(j.lotNo||'')+'</div></td>'+
+        '<td class="right">'+num(j.totalSqft)+'</td><td class="right">'+rm(j.expectedAmount)+'</td>'+
+        '<td class="right"><input id="il-sqft-'+i+'" value="'+esc(l.claimedSqft)+'" inputmode="decimal" style="width:80px;text-align:right" oninput="invRecon()"></td>'+
+        '<td class="right"><input id="il-amt-'+i+'" value="'+esc(l.claimedAmount)+'" inputmode="decimal" style="width:96px;text-align:right" oninput="invRecon()"></td>'+
+        '<td class="right" id="il-var-'+i+'">—</td>'+
+        '<td class="right"><button class="danger sm" onclick="rmInvLine('+i+')">×</button></td></tr>';
+    }).join('')+'</tbody></table>';
+  invRecon();
+}
+function invRecon(){
+  readInvLines();
+  var pool=window._invPool, recorded=0, claimed=0, flagged=0;
+  INV_LINES.forEach(function(l,i){
+    var j=pool[l.jobId]||{};
+    var rAmt=Number(j.expectedAmount)||0, cAmt=Number(l.claimedAmount)||0;
+    recorded+=rAmt; claimed+=cAmt;
+    var diff=cAmt-rAmt, ad=Math.abs(diff), pct=rAmt?ad/Math.abs(rAmt):(ad?1:0);
+    var flag=(ad<=5||pct<=0.01)?'OK':(diff>0?'OVER':'UNDER');
+    if(flag!=='OK')flagged++;
+    var cell=document.getElementById('il-var-'+i);
+    if(cell)cell.innerHTML='<span class="flag-'+flag+'">'+(diff>=0?'+':'')+num(diff)+'</span>';
+  });
+  var header=Number(val('i-claim'))||claimed;
+  var sst=val('i-sst')?header*0.06:0;
+  var box=document.getElementById('i-recon');
+  if(!box)return;
+  var verdict=flagged?'CHECK':'MATCH';
+  box.innerHTML='<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:baseline">'+
+    '<div><div class="l muted" style="font-size:11px;text-transform:uppercase">Reconciliation</div>'+
+      '<div class="recon-'+verdict+'" style="font-size:18px">'+(verdict==='MATCH'?'✓ Tallies with HG record':('⚠ '+flagged+' job(s) to check'))+'</div></div>'+
+    '<div class="right"><div class="muted" style="font-size:12px">HG recorded total</div><b>'+rm(recorded)+'</b></div>'+
+    '<div class="right"><div class="muted" style="font-size:12px">B claimed total</div><b>'+rm(claimed)+'</b></div>'+
+    '<div class="right"><div class="muted" style="font-size:12px">Variance</div><b class="'+(Math.abs(claimed-recorded)<=5?'flag-OK':'flag-OVER')+'">'+(claimed-recorded>=0?'+':'')+num(claimed-recorded)+'</b></div>'+
+    (sst?'<div class="right"><div class="muted" style="font-size:12px">+ SST</div><b>'+rm(sst)+'</b></div>':'')+
+    '<div class="right"><div class="muted" style="font-size:12px">Claimed w/ SST</div><b style="font-size:16px">'+rm(header+sst)+'</b></div>'+
+  '</div>'+
+  (Math.abs(header-claimed)>1?'<div class="hint" style="color:var(--warn)">⚠ B\'s header amount ('+rm(header)+') ≠ sum of job lines ('+rm(claimed)+'). Gap '+rm(header-claimed)+'.</div>':'');
+}
+function saveInvForm(id){
+  readInvLines();
+  if(!val('i-no')){toast('Enter B\'s invoice number.','bad');return;}
+  var payload={id:id||undefined,invNo:val('i-no'),invDate:val('i-date'),period:val('i-period'),
+    claimedAmount:val('i-claim'),sstEnabled:!!val('i-sst'),notes:val('i-notes'),
+    lines:INV_LINES.map(function(l){return {jobId:l.jobId,claimedSqft:l.claimedSqft,claimedAmount:l.claimedAmount};})};
+  var btn=document.getElementById('i-save');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Saving…';
+  fileToB64(document.getElementById('i-file')).then(function(f){
+    if(f){payload.fileBase64=f.base64;payload.fileMime=f.mime;payload.fileName=f.name;}
+    return call('saveInvoice',[payload]);
+  }).then(function(r){
+    toast((r.verdict==='MATCH'?'✓ MATCH — ':'⚠ CHECK — ')+r.reconNote, r.verdict==='MATCH'?'ok':'bad');
+    closeModal();return refresh();
+  }).catch(function(e){btn.disabled=false;btn.textContent='Save';toast(e.message||e,'bad');});
+}
+function openInv(id){
+  call('getInvoice',[id]).then(function(inv){
+    var s=inv.summary;
+    var lines='<table><thead><tr><th>Job</th><th>Mall · Lot</th><th>Status</th><th class="right">Rec. sqft</th><th class="right">Rec. RM</th>'+
+      '<th class="right">Claim sqft</th><th class="right">Claim RM</th><th class="right">Var</th></tr></thead><tbody>'+
+      inv.lines.map(function(l){
+        return '<tr><td><b>'+esc(l.jobNo)+'</b></td><td>'+esc(l.mall)+' '+esc(l.lotNo)+'</td><td>'+pill(l.status)+'</td>'+
+          '<td class="right">'+num(l.recordedSqft)+'</td><td class="right">'+rm(l.recordedAmount)+'</td>'+
+          '<td class="right '+(Math.abs(l.sqftGap)>0.5?'flag-OVER':'')+'">'+num(l.claimedSqft)+'</td>'+
+          '<td class="right">'+rm(l.claimedAmount)+'</td>'+
+          '<td class="right"><span class="flag-'+l.flag+'">'+(l.varianceRm>=0?'+':'')+num(l.varianceRm)+'</span></td></tr>';
+      }).join('')+'</tbody></table>';
+    var body=
+      '<div class="card" style="background:var(--panel2);margin-top:0">'+
+        '<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:baseline">'+
+          '<div><div class="muted" style="font-size:11px;text-transform:uppercase">Verdict</div><div class="recon-'+s.verdict+'" style="font-size:18px">'+(s.verdict==='MATCH'?'✓ MATCH':('⚠ CHECK — '+s.flagged+' flagged'))+'</div></div>'+
+          '<div class="right"><div class="muted" style="font-size:12px">HG recorded</div><b>'+rm(s.recordedTotal)+'</b></div>'+
+          '<div class="right"><div class="muted" style="font-size:12px">B claimed</div><b>'+rm(s.claimedTotal)+'</b></div>'+
+          '<div class="right"><div class="muted" style="font-size:12px">Variance</div><b class="'+(Math.abs(s.varianceRm)<=5?'flag-OK':'flag-OVER')+'">'+(s.varianceRm>=0?'+':'')+num(s.varianceRm)+'</b></div>'+
+          (inv.fileUrl?'<div class="right" style="margin-left:auto"><a class="tag" href="'+inv.fileUrl+'" target="_blank">B invoice file ↗</a></div>':'')+
+        '</div>'+
+        '<div class="hint" style="margin-top:8px">'+esc(inv.reconNote||'')+'</div>'+
+      '</div>'+lines+
+      (inv.notes?'<div class="hint" style="margin-top:8px">Notes: '+esc(inv.notes)+'</div>':'');
+    var foot='<button class="ghost" onclick="closeModal()">Close</button>'+
+      '<button class="ghost" onclick="invStatus(\''+inv.id+'\',\'disputed\')">Mark disputed</button>'+
+      '<button class="ghost" onclick="invStatus(\''+inv.id+'\',\'verified\')">Mark verified</button>'+
+      '<button class="btn" onclick="invStatus(\''+inv.id+'\',\'paid\')">Mark paid</button>'+
+      '<button class="ghost" onclick="editInv(\''+inv.id+'\')">Edit</button>';
+    openModal('Invoice '+inv.invNo, body, foot);
+  }).catch(function(e){toast(e.message||e,'bad');});
+}
+function editInv(id){ call('getInvoice',[id]).then(function(inv){invForm(inv);}).catch(function(e){toast(e.message||e,'bad');}); }
+function invStatus(id,status){
+  var note=''; if(status==='disputed')note=prompt('Dispute note (what to query with B)?')||'';
+  call('setInvoiceStatus',[id,status,note]).then(function(){toast('Marked '+status,'ok');closeModal();return refresh();}).catch(function(e){toast(e.message||e,'bad');});
+}
+function delInv(id){if(!confirm('Delete this invoice record?'))return;call('deleteInvoice',[id]).then(function(){toast('Deleted','ok');closeModal();return refresh();}).catch(function(e){toast(e.message||e,'bad');});}
+
+/* ===================== AUDIT ===================== */
+function loadAudit(){
+  document.getElementById('v-audit').innerHTML='<h2>Audit Log</h2><div class="card"><span class="spin"></span> Loading…</div>';
+  call('getAudit',[300]).then(function(rows){
+    document.getElementById('v-audit').innerHTML='<h2>Audit Log</h2>'+
+      '<div class="card"><table><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Record</th><th>Details</th></tr></thead><tbody>'+
+      (rows.length?rows.map(function(r){
+        return '<tr><td class="muted" style="white-space:nowrap">'+esc((r.timestamp||'').replace('T',' ').slice(0,16))+'</td>'+
+          '<td>'+esc(r.userEmail)+'</td><td><span class="tag">'+esc(r.action)+'</span></td>'+
+          '<td>'+esc(r.recordType)+' '+esc(r.recordId)+'</td><td>'+esc(r.details)+'</td></tr>';
+      }).join(''):'<tr><td colspan="5" class="muted">No activity yet.</td></tr>')+'</tbody></table></div>';
+  }).catch(function(e){document.getElementById('v-audit').innerHTML='<div class="card">⚠️ '+esc(e.message||e)+'</div>';});
+}
+
+boot();
+</script>
+</body>
+</html>

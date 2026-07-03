@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HG Group — Master Dashboard</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #141926;
+    --surface-2: #1c2335;
+    --surface-3: #232c42;
+    --border: #2a3245;
+    --text: #ffffff;
+    --text-dim: #a0a8b8;
+    --text-dim2: #6f7b91;
+    --accent: #f59e0b;
+    --accent-hover: #d97706;
+    --accent-soft: rgba(245, 158, 11, 0.12);
+    --green: #22c55e;
+    --green-soft: rgba(34, 197, 94, 0.15);
+    --blue: #3b82f6;
+    --blue-soft: rgba(59, 130, 246, 0.15);
+    --purple: #a855f7;
+    --purple-soft: rgba(168, 85, 247, 0.15);
+    --grey: #6b7280;
+    --grey-soft: rgba(107, 114, 128, 0.18);
+    --red: #ef4444;
+    --sidebar-w: 272px;
+    --radius: 14px;
+    --shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.5;
+    -webkit-font-smoothing: antialiased; overflow: hidden;
+  }
+
+  /* ═══════════ LAYOUT ═══════════ */
+  .shell { display: flex; height: 100vh; }
+  aside {
+    width: var(--sidebar-w); flex: 0 0 var(--sidebar-w);
+    background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; height: 100%;
+    transition: transform 0.22s;
+  }
+  .content { flex: 1; min-width: 0; display: flex; flex-direction: column; height: 100%; }
+
+  /* ═══════════ SIDEBAR ═══════════ */
+  .sb-brand {
+    display: flex; align-items: center; gap: 12px; padding: 18px 16px 14px; cursor: pointer;
+    border-bottom: 1px solid var(--border);
+  }
+  .sb-logo {
+    width: 42px; height: 42px; flex: 0 0 42px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    border-radius: 11px; display: flex; align-items: center; justify-content: center;
+    overflow: hidden; box-shadow: 0 4px 14px rgba(245,158,11,0.25);
+  }
+  .sb-logo img { width: 100%; height: 100%; object-fit: contain; padding: 5px; }
+  .sb-name { font-weight: 800; font-size: 0.98rem; letter-spacing: -0.01em; line-height: 1.15; }
+  .sb-sub { font-size: 0.68rem; color: var(--text-dim2); }
+
+  .sb-search { padding: 12px 14px 8px; }
+  .sb-search-wrap { position: relative; }
+  .sb-search-wrap .ico { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 0.82rem; color: var(--text-dim2); pointer-events: none; }
+  #sbSearch {
+    width: 100%; padding: 9px 10px 9px 32px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 9px;
+    color: var(--text); font-size: 0.83rem; font-family: inherit;
+  }
+  #sbSearch:focus { outline: none; border-color: var(--accent); }
+  #sbSearch::placeholder { color: var(--text-dim2); }
+
+  .sb-nav { flex: 1; overflow-y: auto; padding: 4px 8px 16px; }
+  .sb-nav::-webkit-scrollbar { width: 8px; }
+  .sb-nav::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
+  .sb-cat { margin-top: 12px; }
+  .sb-cat-head {
+    display: flex; align-items: center; gap: 7px;
+    padding: 4px 10px 6px; font-size: 0.66rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim2);
+  }
+  .sb-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 8px 10px; border-radius: 9px; cursor: pointer;
+    font-size: 0.85rem; color: var(--text-dim); position: relative;
+  }
+  .sb-item:hover { background: var(--surface-2); color: var(--text); }
+  .sb-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .sb-item .ic { width: 26px; height: 26px; flex: 0 0 26px; background: var(--surface-2);
+    border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
+  .sb-item.active .ic { background: rgba(245,158,11,0.18); }
+  .sb-item .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sb-item .dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 7px; }
+  .dot-live { background: var(--green); }
+  .dot-cloud { background: var(--blue); }
+  .dot-reference { background: var(--grey); }
+  .dot-prototype { background: var(--purple); }
+  .sb-item .cl {
+    flex: 0 0 auto; font-size: 0.72rem; color: var(--blue); padding: 2px 6px; border-radius: 6px;
+    opacity: 0; transition: opacity 0.15s;
+  }
+  .sb-item:hover .cl { opacity: 1; }
+  .sb-item .cl:hover { background: var(--blue-soft); }
+
+  .sb-foot { border-top: 1px solid var(--border); padding: 10px 14px; }
+  .sb-foot button {
+    width: 100%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim);
+    padding: 9px; border-radius: 9px; cursor: pointer; font-family: inherit; font-size: 0.8rem; font-weight: 600;
+  }
+  .sb-foot button:hover { border-color: var(--accent); color: var(--text); }
+
+  /* ═══════════ TOPBAR ═══════════ */
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 18px; border-bottom: 1px solid var(--border); background: var(--surface);
+    flex: 0 0 auto;
+  }
+  .tb-btn {
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim);
+    width: 34px; height: 34px; border-radius: 9px; cursor: pointer; font-size: 0.95rem;
+    display: flex; align-items: center; justify-content: center; flex: 0 0 34px;
+  }
+  .tb-btn:hover { border-color: var(--accent); color: var(--text); }
+  .tb-title { font-weight: 700; font-size: 0.95rem; flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 9px; }
+  .tb-title .badge {
+    font-size: 0.62rem; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+    text-transform: uppercase; letter-spacing: 0.04em; border: 1px solid transparent;
+  }
+  .badge-live { background: var(--green-soft); color: var(--green); border-color: var(--green); }
+  .badge-cloud { background: var(--blue-soft); color: var(--blue); border-color: var(--blue); }
+  .badge-reference { background: var(--grey-soft); color: #9aa3b2; border-color: var(--grey); }
+  .badge-prototype { background: var(--purple-soft); color: var(--purple); border-color: var(--purple); }
+  #menuBtn { display: none; }
+
+  /* ═══════════ VIEWS ═══════════ */
+  .views { flex: 1; min-height: 0; position: relative; }
+  #homeView { position: absolute; inset: 0; overflow-y: auto; padding: 28px 30px 70px; }
+  #toolView { position: absolute; inset: 0; display: none; }
+  #toolFrame { width: 100%; height: 100%; border: 0; background: #fff; }
+  #toolFrame.dark { background: var(--bg); }
+
+  /* ═══════════ HOME ═══════════ */
+  .home-hero { margin-bottom: 26px; }
+  .home-hero h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; }
+  .home-hero p { color: var(--text-dim); font-size: 0.92rem; margin-top: 4px; }
+  .stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 18px; font-size: 0.82rem; color: var(--text-dim);
+  }
+  .stat b { color: var(--text); font-size: 1.05rem; display: block; }
+
+  section.cat { margin-bottom: 34px; }
+  .cat-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 13px; }
+  .cat-title { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em; }
+  .cat-count { font-size: 0.75rem; color: var(--text-dim2); }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+  .tile {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 17px; display: flex; flex-direction: column; gap: 9px; cursor: pointer;
+    transition: transform 0.14s, border-color 0.2s, box-shadow 0.2s;
+  }
+  .tile:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: var(--shadow); }
+  .tile-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .tile-icon { width: 42px; height: 42px; background: var(--accent-soft); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+  .tile-name { font-size: 0.97rem; font-weight: 700; }
+  .tile-desc { font-size: 0.8rem; color: var(--text-dim); flex: 1; }
+  .tile-foot { display: flex; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .tile-open { font-size: 0.8rem; font-weight: 600; color: var(--accent); }
+  .tile-cloud-link { margin-left: auto; font-size: 0.78rem; color: var(--blue); font-weight: 600; padding: 2px 6px; border-radius: 6px; }
+  .tile-cloud-link:hover { background: var(--blue-soft); }
+  .tile-cloud-link.saved::before { content: "●"; color: var(--green); font-size: 0.55rem; margin-right: 4px; vertical-align: middle; }
+  .no-results { display: none; text-align: center; color: var(--text-dim); padding: 60px 20px; }
+  .no-results.show { display: block; }
+
+  /* ═══════════ MODAL (cloud links manager) ═══════════ */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+    display: none; align-items: flex-start; justify-content: center; padding: 50px 20px;
+    z-index: 1000; overflow-y: auto;
+  }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    max-width: 640px; width: 100%; padding: 28px; box-shadow: var(--shadow); }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .modal-title { font-size: 1.25rem; font-weight: 800; }
+  .modal-sub { font-size: 0.86rem; color: var(--text-dim); margin-bottom: 20px; }
+  .x-btn { background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+    width: 34px; height: 34px; border-radius: 9px; cursor: pointer; font-size: 1rem; }
+  .x-btn:hover { border-color: var(--accent); }
+  .url-row { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .url-row:last-child { border-bottom: none; }
+  .url-info { flex: 1; min-width: 0; }
+  .url-name { font-size: 0.92rem; font-weight: 600; }
+  .url-val { font-size: 0.75rem; color: var(--text-dim2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .url-val.set { color: var(--green); }
+  .url-btns { display: flex; gap: 7px; flex: 0 0 auto; }
+  .mini-btn { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim);
+    padding: 6px 11px; border-radius: 8px; font-size: 0.78rem; cursor: pointer; font-family: inherit; font-weight: 600; }
+  .mini-btn:hover { border-color: var(--accent); color: var(--text); }
+  .mini-btn.danger:hover { border-color: var(--red); color: #f87171; }
+
+  /* toast */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--surface-3); border: 1px solid var(--border); color: var(--text);
+    padding: 11px 20px; border-radius: 10px; font-size: 0.85rem; z-index: 1200;
+    transition: transform 0.25s; box-shadow: var(--shadow); max-width: 90vw;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ═══════════ MOBILE ═══════════ */
+  @media (max-width: 860px) {
+    aside { position: fixed; z-index: 900; transform: translateX(-100%); box-shadow: var(--shadow); }
+    aside.open { transform: translateX(0); }
+    #menuBtn { display: flex; }
+    #homeView { padding: 20px 16px 60px; }
+    .tiles { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ═══════════ SIDEBAR (the directory) ═══════════ -->
+  <aside id="sidebar">
+    <div class="sb-brand" onclick="goHome()">
+      <div class="sb-logo"><img src="hg-logo.png" alt="HG" /></div>
+      <div>
+        <div class="sb-name">HG Group</div>
+        <div class="sb-sub">Master Dashboard</div>
+      </div>
+    </div>
+    <div class="sb-search">
+      <div class="sb-search-wrap">
+        <span class="ico">🔍</span>
+        <input id="sbSearch" type="text" placeholder="Search tools…" autocomplete="off" />
+      </div>
+    </div>
+    <div class="sb-nav" id="sbNav"></div>
+    <div class="sb-foot"><button onclick="openCloudManager()">⚙ Cloud app links</button></div>
+  </aside>
+
+  <!-- ═══════════ CONTENT ═══════════ -->
+  <div class="content">
+    <div class="topbar">
+      <button class="tb-btn" id="menuBtn" onclick="toggleSidebar()">☰</button>
+      <button class="tb-btn" onclick="goHome()" title="Home">🏠</button>
+      <div class="tb-title" id="tbTitle">Welcome</div>
+      <button class="tb-btn" id="tbReload" onclick="reloadTool()" title="Reload tool" style="display:none;">⟳</button>
+      <button class="tb-btn" id="tbPop" onclick="popOut()" title="Open in new tab" style="display:none;">⧉</button>
+    </div>
+
+    <div class="views">
+      <!-- HOME -->
+      <div id="homeView">
+        <div class="home-hero">
+          <h1>Every tool. One door.</h1>
+          <p>Pick a tool from the directory on the left, or browse below. Local tools open right here inside the hub; cloud apps open in a new tab.</p>
+          <div class="stat-row">
+            <div class="stat"><b id="stTools">—</b> tools</div>
+            <div class="stat"><b>6</b> service lines</div>
+            <div class="stat"><b id="stCloud">—</b> cloud apps</div>
+            <div class="stat"><b id="stDocs">—</b> reference docs</div>
+          </div>
+        </div>
+        <div id="catalog"></div>
+        <div class="no-results" id="noResults">No tools match your search.</div>
+      </div>
+
+      <!-- TOOL VIEWER -->
+      <div id="toolView">
+        <iframe id="toolFrame" title="tool"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CLOUD LINKS MANAGER -->
+<div class="modal-bg" id="cloudModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">⚙ Cloud App Links</div>
+      <button class="x-btn" onclick="closeCloudManager()">✕</button>
+    </div>
+    <div class="modal-sub">Each cloud tool is a deployed web app. Links below are pre-configured; you can override or reset any of them (overrides are saved in this browser).</div>
+    <div id="urlList"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  /* ─────────────────────────────────────────────────────────────
+     LIVE DEPLOYMENT URLS (2026-06-30). localStorage override wins.
+     script.google.com links are domain-restricted to @hggroup.com.my.
+  ───────────────────────────────────────────────────────────── */
+  const DEFAULT_URLS = {
+    bl_quotation_url:       "https://script.google.com/a/macros/hggroup.com.my/s/AKfycbxtwRupe2VnYBj5UIsgXoTtwF9cnZ8j7dGCyWRt66p8YQveRDsHBrk_v9PpHn2Udo-bXA/exec",
+    bl_hoarding_url:        "https://script.google.com/a/macros/hggroup.com.my/s/AKfycbzWKSYGr5ap2d2my1HeDFHn8QTW6VfhfDSw8lyFha2ev4CNNRZzVcBYkORU7a_0acTW/exec",
+    bl_visual_url:          "https://script.google.com/a/macros/hggroup.com.my/s/AKfycbz7IRbYH9VW4RZ9UUSldwI_huShX1HRwc_ZZxkc7MZzK8Mgxiw3A7y5LK0abHgudLk/exec",
+    bl_dispatch_url:        "https://script.google.com/a/macros/hggroup.com.my/s/AKfycby1bVTOeqghP9vZU-3iYixYliGsSjdcP-5bLB88_CkTnA8KJ4d8ZK7tXjP4lsIW8ECiew/exec",
+    bl_arrangement_url:     "https://hgservicesmy-schedule.netlify.app/",
+    bl_projectpl_url:       "https://script.google.com/a/macros/hggroup.com.my/s/AKfycbx8YFPlf7ILpOgnm4ysvjnT6hnY55vQiy_WNRs88oY9nmYTvoA2elfjygTSPQVzTw_DSA/exec",
+    bl_expenses_url:        "https://script.google.com/a/macros/hggroup.com.my/s/AKfycbxBNJPJ14e0F9PFjfs7FrvdFP7BxHwmNmgBTB3nTYuzOh09T990f7y1eeCeAF2PvSKd/exec",
+    bl_lorry_url:           "https://script.google.com/a/macros/hggroup.com.my/s/AKfycbwOPiGp21Vc4brEtx53-RGe6xFCEhMzKUXMCxFAnJJq3kE56y50aj9szLFwTjdhWJ0C/exec",
+    bl_scaffold_url:        "https://script.google.com/a/macros/hggroup.com.my/s/AKfycbwZtj59ZNLDLS25F7kWRwfaHLXMDPw6QgbafPrUAqJhN-kh3BzAB9WdXKL6xDkLrtkB/exec",
+    bl_storage_url:         "https://script.google.com/a/macros/hggroup.com.my/s/AKfycbw2xpcwpcNEH_LssLpipHJzTq_w2UhfNqFnjMfbktVDQlWJnJVyuKXkIWTUbfag8kQM/exec",
+    bl_transport_url:       "https://script.google.com/a/macros/hggroup.com.my/s/AKfycbyu5r4fCFduLAzCg8XW-59W7tn1s8IUzw-9FbhSt4VPYvGL2JWoAy2rz-VFxD1UTL4r3g/exec",
+    bl_mall_url:            "https://script.google.com/a/macros/hggroup.com.my/s/AKfycbyzHQSiDGX8zW2fNvrjBeRPqm2T6H-M1UFgqKwmp2GLNTKPWmPnVnvYxRD2AlZTvkk7/exec",
+    bl_workers_docs_url:    "https://script.google.com/a/macros/hggroup.com.my/s/AKfycby0l7FLQzE0QmToGHa7NmcBwWLEPsM5V7264aijqN7Qe4BLGmZCJhqlpxBa0-FFPWKIrQ/exec",
+    bl_cloud_inventory_url: "https://script.google.com/a/macros/hggroup.com.my/s/AKfycbwHhEJP7aKRJKZBlm2zq3GcdBeIlNSjXd0NVP9xlekI3ITYG8jdq1JoBXAqxRyo2_QBBA/exec",
+    bl_blog_url:            "https://script.google.com/a/macros/hggroup.com.my/s/AKfycbzYOg7XLYoe85LYAwtVPyCSkoABFrm2u_M60S_RjP1vKdWZuwSIZjjh0obkvWO_Eo9DKw/exec"
+    // bl_jcr_url    — Job Completion Report cloud: needs a Web-app deployment (/exec), not the editor link.
+    // bl_subcon_url — Subcon Invoice cloud: no deployment supplied yet.
+    // bl_claims_url — Receipt Claims: no separate deployment supplied (may be merged into Expenses).
+  };
+
+  /* ─────────────────────────────────────────────────────────────
+     TOOL CATALOG — every tool in the project, grouped.
+     file  = local html (opens INSIDE the hub via iframe)
+     cloud = web app (opens in a NEW TAB — Google login can't run in a frame)
+  ───────────────────────────────────────────────────────────── */
+  const CATS = [
+    { name: "Sales & Quotation", icon: "💰", tools: [
+      { icon:"⚡", name:"Smart Quotation", type:"live",
+        desc:"Supabase edition — mall-driven quote builder, PriceBook, L×H → sqft, client-type pricing. Google login, audit log, Excel & PDF export.",
+        file:"quotation-supabase.html", dark:true, cloud:{ key:"bl_quotation_url" } },
+      { icon:"🏗️", name:"Hoarding Pricing System", type:"live",
+        desc:"Supabase edition — metal-deck hoarding quoting, calc verified to the cent vs the HG Excel. Materials, suppliers, price history.",
+        file:"hoarding-supabase.html", dark:true, cloud:{ key:"bl_hoarding_url" } },
+      { icon:"🎨", name:"Visual Works Control", type:"live",
+        desc:"Supabase edition — visual print & install tracking. Job sizing, material/rate per job, B's invoice recon, artwork & measurement links.",
+        file:"visual-supabase.html", dark:true, cloud:{ key:"bl_visual_url" } },
+    ]},
+    { name: "Operations & Site", icon: "🚧", tools: [
+      { icon:"🎛️", name:"Operations Command Center", type:"live",
+        desc:"The 18-module ops entrance — quotation builder, playbooks, site & cloud-app launchers.",
+        file:"operations.html", dark:true },
+      { icon:"📊", name:"Daily Site Tracking", type:"live",
+        desc:"Replaces the manual Google Sheet. Add sites, update progress, generate a WhatsApp-ready daily report.",
+        file:"dashboard.html", dark:true },
+      { icon:"🌙", name:"Daily Readiness & Dispatch", type:"live",
+        desc:"Supabase edition — readiness board gates every job (lot/sketch/quote/permit/visual/fab) + night-team dispatch with WhatsApp message.",
+        file:"dispatch-supabase.html", dark:true, cloud:{ key:"bl_dispatch_url" } },
+      { icon:"🗓️", name:"Daily Job Arrangement", type:"cloud",
+        desc:"Night-team job arrangement board (Netlify — opens for anyone, no Google login needed).",
+        cloud:{ key:"bl_arrangement_url" } },
+      { icon:"📸", name:"Job Completion Report", type:"live",
+        desc:"Upload tilted site photos → auto-straighten → fill job details → push PDF + photos to Drive + log to Sheet.",
+        file:"job-report.html", dark:true, cloud:{ key:"bl_jcr_url" } },
+      { icon:"👥", name:"Team Command Center", type:"live",
+        desc:"Internal team ops — task allocation, team coordination and status across departments.",
+        file:"team-command.html", dark:true },
+    ]},
+    { name: "Inventory & Stock", icon: "📦", tools: [
+      { icon:"📦", name:"Inventory, Tools & Purchasing", type:"live",
+        desc:"Supabase edition — materials, tools/equipment, suppliers, purchases, stock in/out with audit log + file uploads.",
+        file:"inventory-supabase.html", dark:true, cloud:{ key:"bl_cloud_inventory_url" } },
+    ]},
+    { name: "Finance & Invoicing", icon: "🧾", tools: [
+      { icon:"🧾", name:"Subcon Invoice Generator", type:"live",
+        desc:"Supabase edition — raise invoices on behalf of subcons / workers, PDF output, record table.",
+        file:"subcon-invoice-supabase.html", dark:true, cloud:{ key:"bl_subcon_url" } },
+      { icon:"📈", name:"Project Revenue vs Expenses (P&L)", type:"live",
+        desc:"Supabase edition — end-to-end project financials, materials, manpower, subcon/supplier payments, RBAC roles.",
+        file:"project-pl-supabase.html", dark:true, cloud:{ key:"bl_projectpl_url" } },
+      { icon:"📷", name:"Receipt Claims", type:"live",
+        desc:"Supabase edition — staff submit expense claims by photo; Gemini (Edge Function) reads the receipt; saved to Storage.",
+        file:"claims-supabase.html", dark:true, cloud:{ key:"bl_claims_url" } },
+      { icon:"💳", name:"Expenses Receipt System", type:"live",
+        desc:"Supabase edition — AI reads receipts; staff tag Business/Personal; privacy-filtered per user (RLS), admin sees all.",
+        file:"expenses-supabase.html", dark:true, cloud:{ key:"bl_expenses_url" } },
+    ]},
+    { name: "Transport & Rental Services", icon: "🚛", tools: [
+      { icon:"🚛", name:"Lorry Fleet Management", type:"live",
+        desc:"Supabase edition — own-vehicle fuel, toll, maintenance and repair history with photo / PDF storage.",
+        file:"lorry-supabase.html", dark:true, cloud:{ key:"bl_lorry_url" } },
+      { icon:"🪜", name:"Scaffold & Green Tag System", type:"live",
+        desc:"Supabase edition — rental / install / inspection, green-tag tracking, onsite inventory, collection reminders, invoicing.",
+        file:"scaffold-supabase.html", dark:true, cloud:{ key:"bl_scaffold_url" } },
+      { icon:"🏬", name:"Temporary Storage Rental", type:"live",
+        desc:"Supabase edition — lot occupancy grid, renewals, deposits, invoices/payments, refunds.",
+        file:"storage-rental-supabase.html", dark:true, cloud:{ key:"bl_storage_url" } },
+      { icon:"📦", name:"Transport / Mover / Rorobin", type:"live",
+        desc:"Supabase edition — 3 services (lorry, mover, Rorobin), rate cards, invoicing, bin inventory, before/after photos.",
+        file:"transport-supabase.html", dark:true, cloud:{ key:"bl_transport_url" } },
+    ]},
+    { name: "HR & Workers", icon: "🪪", tools: [
+      { icon:"🪪", name:"Workers Documentation & Permits", type:"live",
+        desc:"Supabase edition — worker master list, document & work-permit management with expiry alerts, insurance tracking.",
+        file:"workers-supabase.html", dark:true, cloud:{ key:"bl_workers_docs_url" } },
+    ]},
+    { name: "Marketing & Client", icon: "📣", tools: [
+      { icon:"🌐", name:"Contractor Support Hub (Public)", type:"live",
+        desc:"Client-facing site — hero, services, quote form that routes to WhatsApp. Mobile-responsive.",
+        file:"index.html", dark:true },
+      { icon:"✍️", name:"LinkedIn Content Hub", type:"live",
+        desc:"Supabase edition — log the daily 'job done' and generate ready-to-post LinkedIn / blog content.",
+        file:"blog-supabase.html", dark:true, cloud:{ key:"bl_blog_url" } },
+      { icon:"🏢", name:"Mall Platform", type:"live",
+        desc:"Supabase edition — multi-user file upload by Mall → Lot, auto-versions drawings, searchable audit.",
+        file:"mall-platform-supabase.html", dark:true, cloud:{ key:"bl_mall_url" } },
+    ]},
+    { name: "Blueprints, Spec & Safety", icon: "📐", tools: [
+      { icon:"🧠", name:"System Blueprint", type:"reference",
+        desc:"The whole platform on one page — 8 data layers, 10-stage pipeline, one job start to payroll.",
+        file:"system-blueprint.html", dark:true },
+      { icon:"🔗", name:"Integration Map", type:"reference",
+        desc:"How every system reads/writes the shared Job Record — the wiring & data-flow diagram.",
+        file:"integration-map.html", dark:true },
+      { icon:"🖨️", name:"Master Blueprint (Print)", type:"reference",
+        desc:"Print-optimized A3 reference of the full system architecture & process flow.",
+        file:"master-blueprint-print.html" },
+      { icon:"🗂️", name:"CRM Spec", type:"reference",
+        desc:"CRM data structure & specification — the master client record everything hangs off.",
+        file:"crm-spec.html", dark:true },
+      { icon:"🦺", name:"HSE Policy", type:"reference",
+        desc:"Health, Safety & Environment policy document (Ombak KLCC).",
+        file:"hse-policy.html" },
+      { icon:"⚠️", name:"HIRARC & Method Statement", type:"reference",
+        desc:"Hazard identification, risk assessment & method statement for hoarding works.",
+        file:"hirarc-method-statement.html" },
+    ]},
+  ];
+
+  const STATUS_LABEL = { live:"Live", cloud:"Cloud", prototype:"Prototype", reference:"Reference" };
+  let CURRENT = null;   // {ci, ti}
+
+  /* ── URL resolution + launchers (unchanged behavior) ── */
+  function resolveUrl(key) { return localStorage.getItem(key) || DEFAULT_URLS[key] || ""; }
+
+  function openCloudByKey(key, name) {
+    let url = resolveUrl(key);
+    if (!url) {
+      url = (prompt(
+        "Paste the Web App URL for: " + name + "\n\n" +
+        "Looks like: https://script.google.com/a/macros/hggroup.com.my/s/.../exec"
+      ) || "").trim();
+      if (!url) return;
+      if (!/^https:\/\//.test(url)) { alert("That does not look like a valid link. It must start with https://"); return; }
+      localStorage.setItem(key, url);
+      refreshCloudDots();
+    }
+    window.open(url, "_blank");
+    toast("Opened in a new tab — cloud apps need their own tab for Google login.");
+  }
+
+  /* ── Open a tool ── */
+  function openTool(ci, ti) {
+    const t = CATS[ci].tools[ti];
+    if (t.file) {
+      CURRENT = { ci, ti };
+      document.getElementById("homeView").style.display = "none";
+      document.getElementById("toolView").style.display = "block";
+      const fr = document.getElementById("toolFrame");
+      fr.className = t.dark ? "dark" : "";
+      if (fr.getAttribute("src") !== t.file) fr.setAttribute("src", t.file);
+      document.getElementById("tbTitle").innerHTML =
+        esc(t.icon + " " + t.name) + ' <span class="badge badge-' + t.type + '">' + STATUS_LABEL[t.type] + "</span>";
+      document.getElementById("tbReload").style.display = "flex";
+      document.getElementById("tbPop").style.display = "flex";
+      markActive();
+      closeSidebarMobile();
+    } else if (t.cloud) {
+      openCloudByKey(t.cloud.key, t.name);
+    }
+  }
+
+  function goHome() {
+    CURRENT = null;
+    document.getElementById("toolView").style.display = "none";
+    document.getElementById("homeView").style.display = "block";
+    document.getElementById("toolFrame").setAttribute("src", "about:blank");
+    document.getElementById("tbTitle").textContent = "Welcome";
+    document.getElementById("tbReload").style.display = "none";
+    document.getElementById("tbPop").style.display = "none";
+    markActive();
+    closeSidebarMobile();
+  }
+  function reloadTool() {
+    if (!CURRENT) return;
+    const t = CATS[CURRENT.ci].tools[CURRENT.ti];
+    document.getElementById("toolFrame").setAttribute("src", t.file + (t.file.indexOf("?")<0 ? "?r=" : "&r=") + Date.now());
+  }
+  function popOut() {
+    if (!CURRENT) return;
+    window.open(CATS[CURRENT.ci].tools[CURRENT.ti].file, "_blank");
+  }
+
+  /* ── Render sidebar directory ── */
+  function renderSidebar() {
+    document.getElementById("sbNav").innerHTML = CATS.map((cat, ci) =>
+      '<div class="sb-cat" data-ci="' + ci + '">' +
+        '<div class="sb-cat-head">' + cat.icon + " " + esc(cat.name) + "</div>" +
+        cat.tools.map((t, ti) => {
+          const cloudBtn = (t.file && t.cloud)
+            ? '<span class="cl" data-key="' + t.cloud.key + '" onclick="event.stopPropagation();openCloudByKey(\'' + t.cloud.key + '\',\'' + t.name.replace(/'/g,"") + '\')" title="Open cloud version">☁</span>'
+            : "";
+          return '<div class="sb-item" data-ci="' + ci + '" data-ti="' + ti + '" data-search="' +
+              esc((t.name + " " + t.desc).toLowerCase()) + '" onclick="openTool(' + ci + "," + ti + ')">' +
+            '<span class="ic">' + t.icon + "</span>" +
+            '<span class="nm">' + esc(t.name) + "</span>" + cloudBtn +
+            '<span class="dot dot-' + t.type + '" title="' + STATUS_LABEL[t.type] + '"></span>' +
+          "</div>";
+        }).join("") +
+      "</div>"
+    ).join("");
+  }
+
+  function markActive() {
+    document.querySelectorAll(".sb-item").forEach(elm => {
+      elm.classList.toggle("active",
+        !!CURRENT && Number(elm.dataset.ci) === CURRENT.ci && Number(elm.dataset.ti) === CURRENT.ti);
+    });
+  }
+
+  /* ── Render home catalog ── */
+  function cardHTML(t, ci, ti) {
+    const cloudLink = (t.file && t.cloud)
+      ? '<span class="tile-cloud-link" data-key="' + t.cloud.key + '" onclick="event.stopPropagation();openCloudByKey(\'' + t.cloud.key + '\',\'' + t.name.replace(/'/g,"") + '\')">☁ Cloud</span>'
+      : "";
+    const openLbl = t.file ? (t.type === "reference" ? "View here →" : "Open here →") : "Open cloud app ⧉";
+    return '<div class="tile" data-type="' + t.type + '" data-search="' + esc((t.name+" "+t.desc).toLowerCase()) + '" onclick="openTool(' + ci + "," + ti + ')">' +
+      '<div class="tile-head"><div class="tile-icon">' + t.icon + '</div>' +
+      '<span class="badge badge-' + t.type + '">' + STATUS_LABEL[t.type] + "</span></div>" +
+      '<div class="tile-name">' + esc(t.name) + "</div>" +
+      '<div class="tile-desc">' + esc(t.desc) + "</div>" +
+      '<div class="tile-foot"><span class="tile-open">' + openLbl + "</span>" + cloudLink + "</div></div>";
+  }
+
+  function renderCatalog() {
+    let html = "", nTools = 0, nCloud = 0, nDocs = 0;
+    CATS.forEach((cat, ci) => {
+      nTools += cat.tools.length;
+      cat.tools.forEach(t => {
+        if (t.cloud) nCloud++;
+        if (t.type === "reference") nDocs++;
+      });
+      html += '<section class="cat"><div class="cat-head"><div class="cat-title">' + cat.icon + " " + esc(cat.name) +
+        '</div><span class="cat-count">' + cat.tools.length + " tool" + (cat.tools.length>1?"s":"") + "</span></div>" +
+        '<div class="tiles">' + cat.tools.map((t, ti) => cardHTML(t, ci, ti)).join("") + "</div></section>";
+    });
+    document.getElementById("catalog").innerHTML = html;
+    document.getElementById("stTools").textContent = nTools;
+    document.getElementById("stCloud").textContent = nCloud;
+    document.getElementById("stDocs").textContent = nDocs;
+    refreshCloudDots();
+  }
+
+  /* ── Search (filters sidebar AND home) ── */
+  function applySearch() {
+    const q = document.getElementById("sbSearch").value.trim().toLowerCase();
+    // sidebar
+    document.querySelectorAll(".sb-cat").forEach(cat => {
+      let vis = false;
+      cat.querySelectorAll(".sb-item").forEach(item => {
+        const show = !q || item.dataset.search.includes(q);
+        item.style.display = show ? "" : "none";
+        if (show) vis = true;
+      });
+      cat.style.display = vis ? "" : "none";
+    });
+    // home
+    let any = false;
+    document.querySelectorAll("#catalog section.cat").forEach(sec => {
+      let vis = false;
+      sec.querySelectorAll(".tile").forEach(tile => {
+        const show = !q || tile.dataset.search.includes(q);
+        tile.style.display = show ? "" : "none";
+        if (show) vis = true;
+      });
+      sec.style.display = vis ? "" : "none";
+      if (vis) any = true;
+    });
+    document.getElementById("noResults").classList.toggle("show", !any);
+  }
+
+  /* ── Cloud links manager (unchanged behavior) ── */
+  function allCloudEntries() {
+    const out = [];
+    CATS.forEach(c => c.tools.forEach(t => { if (t.cloud) out.push({ name: t.name, key: t.cloud.key }); }));
+    return out;
+  }
+  function openCloudManager() {
+    const list = allCloudEntries().map(e => {
+      const custom = localStorage.getItem(e.key);
+      const def = DEFAULT_URLS[e.key];
+      const url = custom || def || "";
+      const origin = custom ? "custom" : (def ? "default" : "");
+      return '<div class="url-row"><div class="url-info"><div class="url-name">' + esc(e.name) +
+        (origin ? ' <span style="font-size:0.66rem;color:var(--text-dim2);font-weight:600;">· ' + origin + "</span>" : "") +
+        '</div><div class="url-val ' + (url?"set":"") + '">' + (url ? esc(url) : "not set — needs a Web app deployment URL") + "</div></div>" +
+        '<div class="url-btns"><button class="mini-btn" onclick="editCloud(\'' + e.key + '\')">' + (url?"Edit":"Set") + "</button>" +
+        (custom ? '<button class="mini-btn danger" onclick="clearCloud(\'' + e.key + '\')">Reset</button>' : "") +
+        "</div></div>";
+    }).join("");
+    document.getElementById("urlList").innerHTML = list;
+    document.getElementById("cloudModal").classList.add("open");
+  }
+  function closeCloudManager() { document.getElementById("cloudModal").classList.remove("open"); }
+  function editCloud(key) {
+    const cur = resolveUrl(key);
+    const v = (prompt("Web App URL for this tool:", cur) || "").trim();
+    if (!v) return;
+    if (!/^https:\/\//.test(v)) { alert("Must start with https://"); return; }
+    localStorage.setItem(key, v);
+    openCloudManager(); refreshCloudDots();
+  }
+  function clearCloud(key) {
+    if (confirm("Reset to the built-in default URL (remove your custom override)?")) {
+      localStorage.removeItem(key); openCloudManager(); refreshCloudDots();
+    }
+  }
+  function refreshCloudDots() {
+    document.querySelectorAll(".tile-cloud-link[data-key]").forEach(b => {
+      b.classList.toggle("saved", !!resolveUrl(b.dataset.key));
+    });
+  }
+
+  /* ── Small helpers ── */
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c])); }
+  let toastTimer = null;
+  function toast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("show"), 3200);
+  }
+  function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); }
+  function closeSidebarMobile() { if (window.innerWidth <= 860) document.getElementById("sidebar").classList.remove("open"); }
+
+  /* ── Wire up ── */
+  document.getElementById("sbSearch").addEventListener("input", applySearch);
+  document.getElementById("cloudModal").addEventListener("click", e => { if (e.target.id === "cloudModal") closeCloudManager(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeCloudManager(); });
+
+  renderSidebar();
+  renderCatalog();
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# scratch / unrelated working dir (94MB of PDF-processing + node_modules)
+_pdfwork/
+
+# dependencies
+node_modules/
+
+# local machine-specific Claude settings
+.claude/settings.local.json
+
+# OS junk
+Thumbs.db
+.DS_Store

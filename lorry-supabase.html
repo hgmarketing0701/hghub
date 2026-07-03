@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HG Lorry Fleet — Supabase</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335; --border:#2a3245;
+    --text:#ffffff; --text-dim:#a0a8b8; --accent:#f59e0b; --accent-hover:#d97706;
+    --accent-soft:rgba(245,158,11,0.12); --green:#22c55e; --green-soft:rgba(34,197,94,0.15);
+    --red:#ef4444; --red-soft:rgba(239,68,68,0.15); --blue:#3b82f6; --blue-soft:rgba(59,130,246,0.15);
+    --purple:#a855f7; --purple-soft:rgba(168,85,247,0.15); --radius:14px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+         background:var(--bg); color:var(--text); line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+            padding:16px 22px; border-bottom:1px solid var(--border); }
+  .brand-block { display:flex; align-items:center; gap:13px; }
+  .brand-logo { width:44px; height:44px; background:linear-gradient(135deg,var(--accent),var(--accent-hover));
+                border-radius:11px; display:flex; align-items:center; justify-content:center; color:#0a0e1a; font-weight:900; }
+  .brand-name { font-weight:800; font-size:1.15rem; letter-spacing:-0.01em; }
+  .brand-sub { font-size:0.78rem; color:var(--text-dim); }
+  .user-pill { background:var(--surface); border:1px solid var(--border); border-radius:999px;
+               padding:8px 14px; font-size:0.8rem; color:var(--text-dim); display:flex; align-items:center; gap:10px; }
+  .user-pill b { color:var(--text); font-weight:600; }
+  .user-pill button { background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.78rem; font-weight:700; font-family:inherit; }
+  nav { display:flex; gap:6px; padding:14px 22px 0; flex-wrap:wrap; }
+  nav button { background:var(--surface); border:1px solid var(--border); color:var(--text-dim);
+               padding:10px 16px; border-radius:10px 10px 0 0; cursor:pointer; font-family:inherit;
+               font-size:0.88rem; font-weight:600; border-bottom:none; }
+  nav button.active { background:var(--surface-2); color:var(--accent); border-color:var(--accent); }
+  main { padding:18px 22px 70px; max-width:1200px; margin:0 auto; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+          padding:22px; margin-bottom:18px; }
+  h2 { font-size:1.05rem; font-weight:800; margin-bottom:4px; }
+  h3 { font-size:0.95rem; font-weight:700; margin-bottom:4px; }
+  .sub { color:var(--text-dim); font-size:0.85rem; margin-bottom:14px; }
+  label { display:block; font-size:0.72rem; color:var(--text-dim); margin:10px 0 5px; font-weight:600;
+          text-transform:uppercase; letter-spacing:0.04em; }
+  input, select, textarea { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text);
+          border-radius:9px; padding:10px 12px; font-size:0.92rem; font-family:inherit; }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); }
+  input:disabled { opacity:0.6; }
+  textarea { min-height:60px; resize:vertical; }
+  .row { display:flex; gap:14px; flex-wrap:wrap; }
+  .row > div { flex:1 1 190px; min-width:0; }
+  button.primary { background:var(--accent); color:#0a0e1a; border:none; border-radius:10px; padding:11px 20px;
+                   font-weight:700; cursor:pointer; font-family:inherit; font-size:0.92rem; }
+  button.primary:hover { background:var(--accent-hover); }
+  button.primary:disabled { opacity:0.6; cursor:default; }
+  button.ghost { background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:10px;
+                 padding:11px 18px; font-weight:600; cursor:pointer; font-family:inherit; font-size:0.9rem; }
+  button.ghost:hover { border-color:var(--accent); }
+  button.danger { background:var(--red-soft); color:#f87171; border:1px solid var(--red); border-radius:10px;
+                  padding:11px 18px; font-weight:600; cursor:pointer; font-family:inherit; font-size:0.9rem; }
+  .btn-sm { padding:6px 12px !important; font-size:0.78rem !important; }
+  .msg { font-size:0.86rem; margin-top:10px; min-height:20px; opacity:0; transition:opacity 0.2s; }
+  .msg.show { opacity:1; } .msg.ok { color:var(--green); } .msg.err { color:#f87171; }
+  table.grid { width:100%; border-collapse:collapse; font-size:0.85rem; }
+  table.grid th { text-align:left; color:var(--text-dim); font-size:0.68rem; text-transform:uppercase;
+                  letter-spacing:0.05em; padding:8px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  table.grid td { padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+  table.grid tr.click { cursor:pointer; } table.grid tr.click:hover td { background:var(--surface-2); }
+  .tag { display:inline-block; background:var(--surface-2); border:1px solid var(--border); border-radius:8px;
+         padding:2px 9px; font-size:0.74rem; color:var(--text-dim); }
+  .badge { display:inline-block; font-size:0.66rem; font-weight:700; border-radius:999px; padding:3px 9px;
+           text-transform:uppercase; letter-spacing:0.03em; vertical-align:middle; white-space:nowrap; }
+  .badge-green { background:var(--green-soft); color:var(--green); }
+  .badge-red   { background:var(--red-soft); color:#f87171; }
+  .badge-blue  { background:var(--blue-soft); color:#60a5fa; }
+  .badge-amber { background:var(--accent-soft); color:var(--accent); }
+  .badge-purple{ background:var(--purple-soft); color:#c084fc; }
+  .badge-grey  { background:var(--surface-2); color:var(--text-dim); }
+  .kpi-strip { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin-bottom:18px; }
+  .kpi { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; }
+  .kpi.red { border-color:var(--red); }
+  .kpi.purple { border-color:var(--purple); }
+  .kpi .num { font-size:1.4rem; font-weight:800; color:var(--accent); }
+  .kpi .lbl { font-size:0.72rem; color:var(--text-dim); margin-top:2px; }
+  .alertbox { background:var(--surface); border:1px solid var(--accent); border-radius:var(--radius); padding:16px; margin-bottom:18px; }
+  .alertbox .hd { font-weight:800; color:var(--accent); margin-bottom:10px; }
+  .alertrow { display:flex; gap:12px; align-items:center; padding:8px 0; border-top:1px solid var(--border); flex-wrap:wrap; }
+  .alertrow .grow { flex:1; min-width:150px; }
+  .spin { display:inline-block; width:14px; height:14px; border:2px solid var(--accent); border-top-color:transparent;
+          border-radius:50%; animation:s .7s linear infinite; vertical-align:middle; margin-right:6px; }
+  @keyframes s { to { transform:rotate(360deg); } }
+  .loading { text-align:center; color:var(--text-dim); padding:40px; }
+  .empty { text-align:center; color:var(--text-dim); padding:30px; font-size:0.9rem; }
+  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:flex-start;
+              justify-content:center; padding:30px 16px; overflow-y:auto; z-index:50; backdrop-filter:blur(6px); }
+  .modal-bg.show { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+           max-width:820px; width:100%; padding:24px; }
+  .hide { display:none !important; }
+  .muted { color:var(--text-dim); }
+  .thumbs { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .thumb-item { position:relative; width:70px; height:70px; }
+  .thumb-item img { width:70px; height:70px; object-fit:cover; border-radius:8px; border:1px solid var(--border); cursor:pointer; background:var(--surface-2); }
+  .thumb-item .remove { position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%;
+        background:var(--red); color:#fff; border:none; cursor:pointer; font-size:0.7rem; line-height:1; }
+  .filerow { display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap; }
+  .lightbox { position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; flex-direction:column; z-index:60; padding:20px; }
+  .lightbox.show { display:flex; }
+  .lightbox img { max-width:92vw; max-height:82vh; border-radius:8px; }
+  .lightbox a { color:var(--accent); margin-top:14px; font-weight:700; }
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--surface-2);
+           border:1px solid var(--accent); color:var(--text); padding:12px 22px; border-radius:10px; z-index:80;
+           opacity:0; pointer-events:none; transition:opacity .2s; font-size:0.9rem; }
+  .toast.show { opacity:1; } .toast.err { border-color:var(--red); color:#f87171; }
+  .loading-overlay { position:fixed; inset:0; background:rgba(10,14,26,0.7); display:none; align-items:center; justify-content:center; flex-direction:column; z-index:90; }
+  .loading-overlay.show { display:flex; }
+  .grid-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+  .veh-card { background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:14px; }
+  .veh-card h3 { color:var(--accent); }
+  .lineitem-row { display:flex; gap:8px; margin-bottom:8px; align-items:flex-end; flex-wrap:wrap; }
+  .lineitem-row > div { flex:1 1 90px; }
+  /* login + config gates */
+  .gate { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .gate .card { max-width:430px; width:100%; text-align:center; padding:36px 30px; }
+  .gate .brand-logo { margin:0 auto 16px; width:60px; height:60px; font-size:1.4rem; }
+  .gbtn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:18px;
+          background:#fff; color:#1a1a1a; border:none; border-radius:10px; padding:13px; font-weight:700;
+          font-size:0.95rem; cursor:pointer; font-family:inherit; }
+  .gate input { text-align:left; margin-bottom:4px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════ GATE 0 · SUPABASE CONFIG ══════════ -->
+<div class="gate" id="gateConfig" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">HG</div>
+    <h2>Connect to Supabase</h2>
+    <div class="sub" style="margin-top:6px;">Paste your project's URL and anon key once — saved in this browser.<br>
+      Find both in <b>Supabase → Project Settings → API</b>.</div>
+    <label style="text-align:left;">Project URL</label>
+    <input id="cfgUrl" placeholder="https://xxxx.supabase.co">
+    <label style="text-align:left;">Anon / public key</label>
+    <input id="cfgKey" placeholder="eyJhbGciOi...">
+    <div id="cfgMsg" class="msg"></div>
+    <button class="primary" style="width:100%; margin-top:14px;" onclick="saveConfig()">Connect</button>
+  </div>
+</div>
+
+<!-- ══════════ GATE 1 · LOGIN ══════════ -->
+<div class="gate" id="gateLogin" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">HG</div>
+    <h2>HG Lorry Fleet</h2>
+    <div class="sub" style="margin-top:6px;">Sign in with the Google account your admin has allowlisted.</div>
+    <button class="gbtn" onclick="signIn()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41 35.3 44 30.1 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+      Sign in with Google
+    </button>
+    <div id="loginMsg" class="msg"></div>
+  </div>
+</div>
+
+<!-- ══════════ GATE 2 · NOT ON ALLOWLIST ══════════ -->
+<div class="gate" id="gateDenied" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">🔒</div>
+    <h2>Not authorised</h2>
+    <div class="sub" style="margin-top:6px;"><span id="deniedEmail"></span> is not on the access list.<br>
+      Ask your admin to add you under <b>Settings → Team access</b>.</div>
+    <button class="ghost" style="width:100%; margin-top:10px;" onclick="signOut()">Use a different account</button>
+  </div>
+</div>
+
+<!-- ══════════ THE APP ══════════ -->
+<div id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand-block">
+      <div class="brand-logo">HG</div>
+      <div>
+        <div class="brand-name">Lorry Fleet</div>
+        <div class="brand-sub">Supabase edition · fuel · toll · maintenance · compliance · drivers · summons · incidents</div>
+      </div>
+    </div>
+    <div class="user-pill"><b id="userPill">…</b><button onclick="signOut()">Sign out</button></div>
+  </div>
+
+  <nav>
+    <button class="active" data-tab="dashboard" onclick="showTab('dashboard')">📊 Dashboard</button>
+    <button data-tab="lorries" onclick="showTab('lorries')">🚗 Vehicles</button>
+    <button data-tab="compliance" onclick="showTab('compliance')">🪪 Compliance</button>
+    <button data-tab="fuel" onclick="showTab('fuel')">⛽ Fuel</button>
+    <button data-tab="tollpark" onclick="showTab('tollpark')">🛣 Toll &amp; Parking</button>
+    <button data-tab="maint" onclick="showTab('maint')">🔧 Maintenance</button>
+    <button data-tab="incidents" onclick="showTab('incidents')">🚨 Incidents</button>
+    <button data-tab="drivers" onclick="showTab('drivers')">🧑‍✈️ Drivers</button>
+    <button data-tab="summons" onclick="showTab('summons')">🚓 Summons</button>
+    <button data-tab="settings" onclick="showTab('settings')">⚙ Settings</button>
+  </nav>
+
+  <main>
+    <section id="tab-dashboard">
+      <div class="row" style="justify-content:space-between; align-items:flex-end; margin-bottom:12px;">
+        <div style="flex:0 0 auto;"><label>Month</label><input type="month" id="dashMonth" onchange="renderDashboard()" style="width:170px;"></div>
+        <div style="flex:0 0 auto;"><button class="ghost" onclick="renderDashboard()">Refresh</button></div>
+      </div>
+      <div class="kpi-strip" id="kpiStrip"></div>
+      <div id="dashBoard"></div>
+    </section>
+
+    <section id="tab-lorries" class="hide">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div style="flex:1;"><h2>Vehicles</h2><div class="sub" style="margin:0;">Your fleet register.</div></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('lorries')">⬇ Export Excel</button><button class="primary" onclick="openLorryForm()">+ Vehicle</button></div>
+        </div>
+        <div id="lorriesList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+
+    <section id="tab-compliance" class="hide">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div style="flex:1;"><h2>Compliance — Road Tax · Insurance · Puspakom</h2><div class="sub" style="margin:0;">Renewal chain with expiry alerts.</div></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('compliance')">⬇ Export Excel</button><button class="primary" onclick="openComplianceForm()">+ Entry</button></div>
+        </div>
+        <div id="complianceList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+
+    <section id="tab-fuel" class="hide">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div style="flex:1;"><h2>Fuel logs</h2><div class="sub" style="margin:0;">Pump + receipt photos.</div></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('fuel')">⬇ Export Excel</button><button class="primary" onclick="openFuelForm()">+ Fuel</button></div>
+        </div>
+        <div id="fuelList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+
+    <section id="tab-tollpark" class="hide">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div style="flex:1;"><h2>Toll &amp; Parking</h2><div class="sub" style="margin:0;">Toll + parking entries with receipts.</div></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('toll')">⬇ Export Excel</button><button class="primary" onclick="openTollForm()">+ Toll / Parking</button></div>
+        </div>
+        <div id="tollList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+
+    <section id="tab-maint" class="hide">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div style="flex:1;"><h2>Maintenance &amp; Repair</h2><div class="sub" style="margin:0;">Line items, per-line tax, before/after photos, payment slips.</div></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('maint')">⬇ Export Excel</button><button class="primary" onclick="openMaintForm()">+ Maintenance</button></div>
+        </div>
+        <div id="maintList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+
+    <section id="tab-incidents" class="hide">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div style="flex:1;"><h2>Incidents</h2><div class="sub" style="margin:0;">Accidents · theft · vandalism · special cases.</div></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('incidents')">⬇ Export Excel</button><button class="primary" onclick="openIncidentForm()">+ Incident</button></div>
+        </div>
+        <div id="incidentsList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+
+    <section id="tab-drivers" class="hide">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div style="flex:1;"><h2>Drivers</h2><div class="sub" style="margin:0;">Licence + GDL expiry, docs.</div></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('drivers')">⬇ Export Excel</button><button class="primary" onclick="openDriverForm()">+ Driver</button></div>
+        </div>
+        <div id="driversList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+
+    <section id="tab-summons" class="hide">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div style="flex:1;"><h2>Traffic Summonses</h2><div class="sub" style="margin:0;">Discount-deadline logic on payment.</div></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('summons')">⬇ Export Excel</button><button class="primary" onclick="openSummonForm()">+ Summon</button></div>
+        </div>
+        <div id="summonsList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+
+    <section id="tab-settings" class="hide">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div style="flex:1;"><h2>Bulk mark-paid</h2><div class="sub" style="margin:0;">One payment slip clears many bills (compliance · maintenance · summons).</div></div>
+          <div style="flex:0 0 auto;"><button class="primary" onclick="openBulkPay()">Open bulk-pay</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Company email (for alarms)</h2>
+        <div class="sub">The daily-alarms Edge Function sends expiry reminders here.</div>
+        <div class="row"><div><label>Company email</label><input id="setCompanyEmail" placeholder="ops@hggroup.com.my"></div>
+          <div style="flex:0 0 auto; display:flex; align-items:flex-end;"><button class="primary" onclick="saveCompanyEmail()">Save</button></div></div>
+        <div id="setMsg" class="msg"></div>
+      </div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div style="flex:1;"><h2>Alarms preview</h2><div class="sub" style="margin:0;">Exactly what the daily-alarms email would contain.</div></div>
+          <div style="flex:0 0 auto;"><button class="ghost" onclick="loadAlarms()">Refresh</button></div>
+        </div>
+        <div id="alarmsList" class="loading" style="margin-top:12px;"><span class="spin"></span> Loading…</div>
+      </div>
+      <div class="card" id="teamCard" style="display:none;">
+        <h2>Team access (admin)</h2>
+        <div class="sub">Who can sign in.</div>
+        <div class="row">
+          <div><label>Email</label><input id="au_email" placeholder="name@gmail.com"></div>
+          <div><label>Name</label><input id="au_name" placeholder="optional"></div>
+          <div style="flex:0 0 auto; display:flex; align-items:flex-end; gap:8px;">
+            <label style="display:flex; align-items:center; gap:6px; text-transform:none; margin:0 0 10px;"><input type="checkbox" id="au_admin" style="width:auto;"> Admin</label>
+            <button class="primary" onclick="addAllowed()">Add</button>
+          </div>
+        </div>
+        <div id="auMsg" class="msg"></div>
+        <div id="auList" style="margin-top:10px;"></div>
+      </div>
+      <div class="card">
+        <h2>Audit log</h2>
+        <div class="sub">Last 50 actions.</div>
+        <div id="auditList" class="loading"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- generic form modal -->
+<div class="modal-bg" id="formModal"><div class="modal" id="formBody"></div></div>
+<!-- bulk pay modal -->
+<div class="modal-bg" id="bulkModal"><div class="modal" id="bulkBody"></div></div>
+<!-- view modal -->
+<div class="modal-bg" id="viewModal"><div class="modal" id="viewBody"></div></div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" onclick="event.stopPropagation()" />
+  <a id="lightboxOpen" href="#" target="_blank" onclick="event.stopPropagation()">Open full ↗</a>
+</div>
+<div class="loading-overlay" id="loadingOverlay"><div class="spin" style="width:34px;height:34px;border-width:4px;"></div><div id="loadingMsg" style="margin-top:14px;color:var(--text-dim);">Working…</div></div>
+<div class="toast" id="toast">Saved!</div>
+
+<script>
+// ═══════════════════════════ CONFIG (verbatim quotation pattern) ═══════════════════════════
+var SUPABASE_URL = '';
+var SUPABASE_KEY = '';
+if (!SUPABASE_URL) SUPABASE_URL = localStorage.getItem('hg_supabase_url') || '';
+if (!SUPABASE_KEY) SUPABASE_KEY = localStorage.getItem('hg_supabase_key') || '';
+
+var sb = null, SESSION = null, IS_ADMIN = false;
+var BUCKET = 'lorry-files';
+
+// in-memory data
+var state = { lorries:[], fuel:[], toll:[], maint:[], compliance:[], incidents:[], drivers:[], summons:[], settings:{} };
+
+// ═══════════════════════════ HELPERS ═══════════════════════════
+function el(id){ return document.getElementById(id); }
+function rm(n){ if(n==null||n===''||isNaN(n)) return '—'; return 'RM ' + (Number(n)||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtKm(n){ if(n==null||n===''||isNaN(n)) return '—'; return Number(n).toLocaleString('en-MY')+' km'; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function fmtDate(iso){ if(!iso) return '—'; var d=new Date(String(iso).slice(0,10)+'T00:00:00'); return isNaN(d)?String(iso):d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function thisMonthISO(){ return new Date().toISOString().slice(0,7); }
+function openModalEl(id){ el(id).classList.add('show'); }
+function closeModal(id){ el(id).classList.remove('show'); }
+document.addEventListener('click', function(e){ if(e.target.classList && e.target.classList.contains('modal-bg')) e.target.classList.remove('show'); });
+function showMsg(id,t,ok){ var m=el(id); if(!m)return; m.textContent=t; m.className='msg show '+(ok?'ok':'err'); setTimeout(function(){m.classList.remove('show');},4500); }
+function showToast(t,cls){ var e=el('toast'); e.textContent=t; e.className='toast show '+(cls||''); setTimeout(function(){e.classList.remove('show');},3000); }
+function showLoading(m){ el('loadingMsg').textContent=m||'Working…'; el('loadingOverlay').classList.add('show'); }
+function hideLoading(){ el('loadingOverlay').classList.remove('show'); }
+function fail(e){ hideLoading(); var m=(e&&e.message)?e.message:String(e); console.error(e); showToast(m,'err'); alert('Error:\n\n'+m); }
+function num(v){ return v==null||v===''?null:(Number(v)||0); }
+function daysUntil(iso){ if(!iso) return null; var d=new Date(String(iso).slice(0,10)+'T00:00:00'); if(isNaN(d)) return null; return Math.round((d-new Date(todayISO()+'T00:00:00'))/86400000); }
+function plateOptions(sel){ return '<option value="">— select —</option>'+state.lorries.map(function(l){ return '<option'+(l.plate===sel?' selected':'')+'>'+esc(l.plate)+'</option>'; }).join(''); }
+function opts(arr,sel){ return arr.map(function(o){ var v=(typeof o==='object')?o[0]:o, lb=(typeof o==='object')?o[1]:o; return '<option value="'+esc(v)+'"'+(v===sel?' selected':'')+'>'+esc(lb)+'</option>'; }).join(''); }
+
+// ═══════════════════════════ BOOT / AUTH ═══════════════════════════
+function saveConfig(){
+  var u = el('cfgUrl').value.trim().replace(/\/+$/,'');
+  var k = el('cfgKey').value.trim();
+  if(!/^https:\/\/.+\.supabase\.co$/.test(u)){ showMsg('cfgMsg','URL must look like https://xxxx.supabase.co', false); return; }
+  if(!(k.indexOf('eyJ')===0 || k.indexOf('sb_publishable_')===0) || k.length < 30){
+    showMsg('cfgMsg','That does not look like the anon/public key (starts with eyJ… or sb_publishable_…).', false); return; }
+  localStorage.setItem('hg_supabase_url', u);
+  localStorage.setItem('hg_supabase_key', k);
+  location.reload();
+}
+async function start(){
+  if(!SUPABASE_URL || !SUPABASE_KEY){ el('gateConfig').style.display='flex'; return; }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var s = await sb.auth.getSession();
+  SESSION = s.data.session;
+  sb.auth.onAuthStateChange(function(_e, session){ if(!!session !== !!SESSION){ SESSION = session; route(); } });
+  route();
+}
+async function route(){
+  ['gateConfig','gateLogin','gateDenied'].forEach(function(g){ el(g).style.display='none'; });
+  el('app').style.display='none';
+  if(!SESSION){ el('gateLogin').style.display='flex'; return; }
+  var email = (SESSION.user.email||'').toLowerCase();
+  var r = await sb.from('allowed_users').select('email,is_admin').ilike('email', email).maybeSingle();
+  if(r.error){ showMsg('loginMsg', r.error.message, false); el('gateLogin').style.display='flex'; return; }
+  if(!r.data){ el('deniedEmail').textContent = email; el('gateDenied').style.display='flex'; return; }
+  IS_ADMIN = !!r.data.is_admin;
+  el('app').style.display='block';
+  el('userPill').textContent = email;
+  el('teamCard').style.display = IS_ADMIN ? 'block' : 'none';
+  await loadAll();
+}
+// iframe-safe signIn — copied verbatim from quotation-supabase.html
+function signIn(){
+  var here = window.location.href.split('#')[0];
+  var embedded = (window.self !== window.top);
+  sb.auth.signInWithOAuth({ provider:'google',
+      options:{ redirectTo: here, skipBrowserRedirect: embedded } })
+    .then(function(r){
+      if(r.error){ showMsg('loginMsg', r.error.message, false); return; }
+      if(embedded && r.data && r.data.url){ window.top.location.href = r.data.url; }
+    });
+}
+function signOut(){ sb.auth.signOut().then(function(){ location.reload(); }); }
+async function audit(action, details){ try{ await sb.rpc('log_audit', { p_action:action, p_details:String(details||'').slice(0,300) }); }catch(e){} }
+
+// ═══════════════════════════ LOAD ALL DATA ═══════════════════════════
+async function loadAll(){
+  var q = await Promise.all([
+    sb.from('lry_vehicles').select('*').order('plate'),
+    sb.from('lry_fuel_logs').select('*').order('date',{ascending:false}),
+    sb.from('lry_toll_park_logs').select('*').order('date',{ascending:false}),
+    sb.from('lry_maint_logs').select('*').order('date',{ascending:false}),
+    sb.from('lry_compliance_logs').select('*').order('expiry_date',{ascending:false}),
+    sb.from('lry_incident_logs').select('*').order('date',{ascending:false}),
+    sb.from('lry_drivers').select('*').order('name'),
+    sb.from('lry_summon_logs').select('*').order('issued_date',{ascending:false}),
+    sb.from('app_settings').select('*')
+  ]);
+  var errored = q.find(function(x){ return x.error; });
+  if(errored){ fail(errored.error); return; }
+  state.lorries = q[0].data; state.fuel=q[1].data; state.toll=q[2].data; state.maint=q[3].data;
+  state.compliance=q[4].data; state.incidents=q[5].data; state.drivers=q[6].data; state.summons=q[7].data;
+  state.settings={}; q[8].data.forEach(function(r){ state.settings[r.key]=r.value; });
+  var active = el('dashMonth'); if(active && !active.value) active.value = thisMonthISO();
+  renderCurrentTab();
+}
+function renderCurrentTab(){
+  var t = (document.querySelector('nav button.active')||{}).dataset ? document.querySelector('nav button.active').dataset.tab : 'dashboard';
+  showTab(t, true);
+}
+function showTab(t, keep){
+  document.querySelectorAll('nav button').forEach(function(b){ b.classList.toggle('active', b.dataset.tab===t); });
+  ['dashboard','lorries','compliance','fuel','tollpark','maint','incidents','drivers','summons','settings'].forEach(function(x){ el('tab-'+x).classList.toggle('hide', x!==t); });
+  if(t==='dashboard') renderDashboard();
+  if(t==='lorries') renderLorries();
+  if(t==='compliance') renderCompliance();
+  if(t==='fuel') renderFuel();
+  if(t==='tollpark') renderToll();
+  if(t==='maint') renderMaint();
+  if(t==='incidents') renderIncidents();
+  if(t==='drivers') renderDrivers();
+  if(t==='summons') renderSummons();
+  if(t==='settings'){ el('setCompanyEmail').value = state.settings.COMPANY_EMAIL||''; loadAlarms(); loadAudit(); if(IS_ADMIN) loadAllowed(); }
+}
+
+// ═══════════════════════════ PHOTO STORAGE (lorry-files bucket) ═══════════════════════════
+var _signedCache = {};
+async function signedUrl(path){
+  if(!path) return '';
+  if(_signedCache[path]) return _signedCache[path];
+  var r = await sb.storage.from(BUCKET).createSignedUrl(path, 3600);
+  if(r.error || !r.data){ return ''; }
+  _signedCache[path] = r.data.signedUrl;
+  return r.data.signedUrl;
+}
+async function uploadFile(file, plate){
+  var safePlate = String(plate||'misc').replace(/[\\/:?"<>|]/g,'_').trim() || 'misc';
+  var ext = (file.name.split('.').pop()||'bin').toLowerCase();
+  var name = todayISO().replace(/-/g,'') + '_' + Math.random().toString(36).slice(2,8) + '.' + ext;
+  var path = safePlate + '/' + name;
+  var r = await sb.storage.from(BUCKET).upload(path, file, { upsert:false });
+  if(r.error) throw r.error;
+  return path;
+}
+// generic file field: hidden input holds JSON array of paths
+function getIdList(hid){ try{ var a=JSON.parse(el(hid).value||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+function setIdList(hid, arr){ el(hid).value = JSON.stringify(arr); }
+async function onFileInput(inputEl, hid, thumbsId, plateGetter){
+  var files = inputEl.files; if(!files || !files.length) return;
+  var plate = plateGetter ? plateGetter() : null;
+  showLoading('Uploading…');
+  try {
+    var ids = getIdList(hid);
+    for(var i=0;i<files.length;i++){ var p = await uploadFile(files[i], plate); ids.push(p); }
+    setIdList(hid, ids);
+    await renderThumbs(thumbsId, hid);
+  } catch(e){ fail(e); }
+  hideLoading(); inputEl.value='';
+}
+async function renderThumbs(thumbsId, hid){
+  var ids = getIdList(hid); var host = el(thumbsId); if(!host) return;
+  var parts = [];
+  for(var i=0;i<ids.length;i++){
+    var u = await signedUrl(ids[i]);
+    parts.push('<div class="thumb-item"><img src="'+esc(u)+'" onclick="lightboxPath(\''+esc(ids[i])+'\')"/>'+
+      '<button type="button" class="remove" onclick="removeThumb(\''+thumbsId+'\',\''+hid+'\','+i+')">✕</button></div>');
+  }
+  host.innerHTML = parts.join('');
+}
+function removeThumb(thumbsId, hid, idx){ var ids=getIdList(hid); ids.splice(idx,1); setIdList(hid,ids); renderThumbs(thumbsId,hid); }
+async function lightboxPath(path){ var u = await signedUrl(path); el('lightboxImg').src=u; el('lightboxOpen').href=u; el('lightbox').classList.add('show'); }
+function closeLightbox(){ el('lightbox').classList.remove('show'); }
+function fileField(label, hid, thumbsId, plateGetterName, multiple){
+  return '<label>'+label+'</label>'+
+    '<input type="hidden" id="'+hid+'"><input type="file" accept="image/*,application/pdf"'+(multiple?' multiple':'')+
+      ' onchange="onFileInput(this,\''+hid+'\',\''+thumbsId+'\','+(plateGetterName?plateGetterName:'null')+')">'+
+    '<div class="thumbs" id="'+thumbsId+'"></div>';
+}
+
+// ═══════════════════════════ DASHBOARD ═══════════════════════════
+function isActive(l){ return l.active===true||l.active==='TRUE'||l.active===1; }
+function maxOdoFor(plate){ var max=-1; state.fuel.concat(state.maint).forEach(function(r){ var o=Number(r.odometer); if(r.plate===plate&&o>max)max=o; }); return max<0?null:max; }
+function latestNextServiceKm(plate){ var l=state.maint.filter(function(m){return m.plate===plate&&Number(m.next_service_km)>0;}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');}); return l.length?Number(l[0].next_service_km):null; }
+function latestNextServiceDate(plate){ var l=state.maint.filter(function(m){return m.plate===plate&&m.next_service_date;}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');}); return l.length?l[0].next_service_date:null; }
+function complianceOutstanding(c){ return (Number(c.amount_rm)||0)+(Number(c.agency_charges_rm)||0); }
+function maintOutstanding(m){ return Math.max(0,(Number(m.cost_rm)||0)-(Number(m.paid_rm)||0)); }
+function summonOutstandingAmt(s){
+  var fine=Number(s.fine_rm)||0, disc=Number(s.discount_rm)||0;
+  if(disc>0 && s.discount_deadline && todayISO()<=s.discount_deadline) return Math.max(0,fine-disc);
+  return fine;
+}
+function isSummonOutstanding(s){ return s.status==='outstanding'||s.status==='partially-paid'; }
+function listOutstanding(){
+  var out=[];
+  state.compliance.forEach(function(c){ if((c.status==='active'||c.status==='')&&!c.paid_date && complianceOutstanding(c)>0) out.push({kind:'compliance',id:c.id,plate:c.plate,label:(COMP_TYPE_LBL[c.type]||{}).label||c.type,amount:complianceOutstanding(c)}); });
+  state.maint.forEach(function(m){ if(maintOutstanding(m)>0 && (Number(m.paid_rm)||0)<(Number(m.cost_rm)||0)) out.push({kind:'maint',id:m.id,plate:m.plate,label:m.type,amount:maintOutstanding(m)}); });
+  state.summons.forEach(function(s){ if(isSummonOutstanding(s)) out.push({kind:'summon',id:s.id,plate:s.plate,label:s.summon_number,amount:summonOutstandingAmt(s)}); });
+  return out;
+}
+var COMP_TYPE_LBL = { roadtax:{label:'Road Tax',icon:'🪪'}, insurance:{label:'Insurance',icon:'🛡'}, puspakom:{label:'Puspakom',icon:'🔍'} };
+function urgencyBadge(days){
+  if(days==null) return '';
+  if(days<0) return '<span class="badge badge-red">EXPIRED '+Math.abs(days)+'d</span>';
+  if(days<=7) return '<span class="badge badge-red">'+days+'d left</span>';
+  if(days<=30) return '<span class="badge badge-amber">'+days+'d left</span>';
+  return '<span class="badge badge-green">'+days+'d</span>';
+}
+function renderDashboard(){
+  var ym = el('dashMonth').value || thisMonthISO();
+  var mF=state.fuel.filter(function(f){return (f.date||'').startsWith(ym);});
+  var mT=state.toll.filter(function(t){return (t.date||'').startsWith(ym);});
+  var mM=state.maint.filter(function(m){return (m.date||'').startsWith(ym);});
+  var fuelRM=mF.reduce(function(s,f){return s+(Number(f.amount_rm)||0);},0);
+  var tollRM=mT.filter(function(t){return t.type==='toll';}).reduce(function(s,t){return s+(Number(t.amount_rm)||0);},0);
+  var parkRM=mT.filter(function(t){return t.type==='parking';}).reduce(function(s,t){return s+(Number(t.amount_rm)||0);},0);
+  var maintRM=mM.reduce(function(s,m){return s+(Number(m.cost_rm)||0);},0);
+  var activeCount=state.lorries.filter(isActive).length;
+  var serviceDue=0, serviceByDate=0;
+  state.lorries.forEach(function(l){ if(!isActive(l))return;
+    var nk=latestNextServiceKm(l.plate), cur=maxOdoFor(l.plate);
+    if(nk&&cur!=null&&cur>=nk) serviceDue++;
+    var nd=latestNextServiceDate(l.plate); if(nd){ var d=daysUntil(nd); if(d!=null&&d<=30) serviceByDate++; }
+  });
+  var compAlerts={roadtax:0,insurance:0,puspakom:0};
+  state.compliance.forEach(function(c){ if(!(c.status==='active'||c.status===''))return; var d=daysUntil(c.expiry_date); if(d!=null&&d<=30) compAlerts[c.type]=(compAlerts[c.type]||0)+1; });
+  var outstanding=listOutstanding(); var outTotal=outstanding.reduce(function(s,x){return s+x.amount;},0);
+  var openInc=state.incidents.filter(function(i){return i.status!=='settled'&&i.status!=='closed';}).length;
+  var activeDrivers=state.drivers.filter(function(d){return d.status==='active'||d.status==='on-leave';}).length;
+  var licUrgent=0;
+  state.drivers.forEach(function(d){ if(!(d.status==='active'||d.status==='on-leave'))return; ['license_expiry_date','gdl_expiry_date'].forEach(function(f){ var x=daysUntil(d[f]); if(x!=null&&x<=30) licUrgent++; }); });
+  var sumOut=state.summons.filter(isSummonOutstanding); var sumRM=sumOut.reduce(function(s,x){return s+summonOutstandingAmt(x);},0);
+
+  el('kpiStrip').innerHTML =
+    kpi(activeCount,'Active Vehicles')+kpi(rm(fuelRM),'Fuel — '+ym)+kpi(rm(tollRM),'Toll — '+ym)+
+    kpi(rm(parkRM),'Parking — '+ym,'purple')+kpi(rm(maintRM),'Maintenance — '+ym)+
+    kpi(serviceDue,'Service Due Now',serviceDue?'red':'')+kpi(serviceByDate,'Service Date ≤30d',serviceByDate?'red':'')+
+    kpi(compAlerts.roadtax,'Road Tax — Action',compAlerts.roadtax?'red':'')+kpi(compAlerts.insurance,'Insurance — Action',compAlerts.insurance?'red':'')+
+    kpi(compAlerts.puspakom,'Puspakom — Action',compAlerts.puspakom?'red':'')+
+    kpi(rm(outTotal),'Outstanding · '+outstanding.length+' bill'+(outstanding.length!==1?'s':''),outstanding.length?'red':'')+
+    kpi(openInc,'Open Incidents',openInc?'red':'')+kpi(activeDrivers,'Active Drivers')+
+    kpi(licUrgent,'Licence Expiring ≤30d',licUrgent?'red':'')+
+    kpi(sumOut.length+' · '+rm(sumRM),'Outstanding Summons',sumOut.length?'red':'');
+
+  var board=el('dashBoard');
+  if(!state.lorries.length){ board.innerHTML='<div class="empty"><h3>No vehicles yet lah.</h3><p>Go to 🚗 Vehicles and add your fleet.</p></div>'; return; }
+  board.innerHTML = complianceAlertBanner()+outstandingBanner(outstanding,outTotal)+licenceBanner()+summonBanner(sumOut)+
+    '<div class="card"><h2>Fleet</h2><div class="grid-cards" style="margin-top:12px;">'+state.lorries.map(vehCard).join('')+'</div></div>';
+}
+function kpi(num,lbl,cls){ return '<div class="kpi '+(cls||'')+'"><div class="num">'+num+'</div><div class="lbl">'+esc(lbl)+'</div></div>'; }
+function vehCard(l){
+  var cur=maxOdoFor(l.plate), nk=latestNextServiceKm(l.plate);
+  var fuelC=state.fuel.filter(function(f){return f.plate===l.plate;}).length;
+  return '<div class="veh-card"><h3>'+esc(l.plate)+'</h3>'+
+    '<div class="sub" style="margin:2px 0 8px;">'+esc([l.vehicle_code,l.model,l.year].filter(Boolean).join(' · ')||'—')+'</div>'+
+    '<div class="muted" style="font-size:0.82rem;">Odometer: '+(cur!=null?fmtKm(cur):'—')+'<br>Next service: '+(nk?fmtKm(nk):'—')+'<br>'+fuelC+' fuel log(s)</div>'+
+    (isActive(l)?'':'<span class="badge badge-grey" style="margin-top:6px;">inactive</span>')+
+    '<div style="margin-top:10px;"><button class="ghost btn-sm" onclick="openLorryForm(\''+l.id+'\')">Open →</button></div></div>';
+}
+function complianceAlertBanner(){
+  var items=[];
+  state.compliance.forEach(function(c){ if(!(c.status==='active'||c.status===''))return; var d=daysUntil(c.expiry_date); if(d!=null&&d<=30) items.push({c:c,d:d}); });
+  if(!items.length) return '';
+  items.sort(function(a,b){return a.d-b.d;});
+  return alertBox('🪪 COMPLIANCE — '+items.length+' expiring/expired', items.map(function(x){
+    var t=(COMP_TYPE_LBL[x.c.type]||{}).label||x.c.type;
+    return alertRow(urgencyBadge(x.d), '<strong>'+esc(x.c.plate)+'</strong> · '+t+' · expires '+fmtDate(x.c.expiry_date), 'openComplianceForm(\''+x.c.id+'\')');
+  }).join(''));
+}
+function outstandingBanner(list,total){
+  if(!list.length) return '';
+  return alertBox('💰 OUTSTANDING PAYMENTS — '+rm(total)+' · '+list.length+' bill(s)', list.map(function(x){
+    var open = x.kind==='compliance'?'openComplianceForm':x.kind==='maint'?'openMaintForm':'openSummonForm';
+    return alertRow('<span class="badge badge-amber">'+x.kind+'</span>', '<strong>'+esc(x.plate||'—')+'</strong> · '+esc(x.label)+' · '+rm(x.amount), open+'(\''+x.id+'\')');
+  }).join('')+'<div style="margin-top:10px;"><button class="primary btn-sm" onclick="openBulkPay()">Bulk mark-paid →</button></div>');
+}
+function licenceBanner(){
+  var items=[];
+  state.drivers.forEach(function(d){ if(!(d.status==='active'||d.status==='on-leave'))return;
+    [['license_expiry_date','Licence'],['gdl_expiry_date','GDL']].forEach(function(p){ var x=daysUntil(d[p[0]]); if(x!=null&&x<=30) items.push({d:d,k:p[1],days:x,date:d[p[0]]}); }); });
+  if(!items.length) return '';
+  items.sort(function(a,b){return a.days-b.days;});
+  return alertBox('🪪 LICENCE EXPIRING — '+items.length, items.map(function(x){
+    return alertRow(urgencyBadge(x.days)+' <span class="badge badge-grey">'+x.k+'</span>', '<strong>'+esc(x.d.name)+'</strong>'+(x.d.assigned_plate?' · '+esc(x.d.assigned_plate):'')+' · expires '+fmtDate(x.date), 'openDriverForm(\''+x.d.id+'\')');
+  }).join(''));
+}
+function summonBanner(list){
+  var items=list.filter(function(s){var d=daysUntil(s.payment_deadline); return d!=null&&d<=14;});
+  if(!items.length) return '';
+  return alertBox('🚓 SUMMONS DEADLINE — '+items.length, items.map(function(s){
+    return alertRow(urgencyBadge(daysUntil(s.payment_deadline)), '<strong>'+esc(s.plate||'—')+'</strong> · '+esc(s.summon_number)+' · '+rm(summonOutstandingAmt(s))+' · by '+fmtDate(s.payment_deadline), 'openSummonForm(\''+s.id+'\')');
+  }).join(''));
+}
+function alertBox(hd, body){ return '<div class="alertbox"><div class="hd">'+hd+'</div>'+body+'</div>'; }
+function alertRow(badge, text, onclick){ return '<div class="alertrow">'+badge+'<div class="grow">'+text+'</div><button class="ghost btn-sm" onclick="'+onclick+'">Open →</button></div>'; }
+
+// ═══════════════════════════ GENERIC TABLE ═══════════════════════════
+function tbl(head, rows){ if(!rows.length) return '<div class="empty">Nothing here yet.</div>';
+  return '<table class="grid"><thead><tr>'+head.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table>'; }
+
+// ═══════════════════════════ VEHICLES ═══════════════════════════
+var VEHICLE_TYPES=['lorry','van','car','pickup','motorcycle','bus','machinery','other'];
+function renderLorries(){
+  el('lorriesList').innerHTML = tbl(['Plate','Code','Model','Year','Type','Active',''], state.lorries.map(function(l){
+    return '<tr class="click" onclick="openLorryForm(\''+l.id+'\')"><td><b>'+esc(l.plate)+'</b></td><td>'+esc(l.vehicle_code)+'</td>'+
+      '<td>'+esc(l.model)+'</td><td>'+esc(l.year||'')+'</td><td>'+esc(l.vehicle_type)+'</td>'+
+      '<td>'+(isActive(l)?'<span class="badge badge-green">active</span>':'<span class="badge badge-grey">no</span>')+'</td>'+
+      '<td class="muted">'+esc(String(l.created_by||'').split('@')[0])+'</td></tr>';
+  }));
+}
+function openLorryForm(id){
+  var l = id ? state.lorries.find(function(x){return x.id===id;}) : {};
+  el('formBody').innerHTML =
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' vehicle</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<input type="hidden" id="lf_id" value="'+esc(l.id||'')+'">'+
+    '<div class="row"><div><label>Plate *</label><input id="lf_plate" value="'+esc(l.plate||'')+'"></div>'+
+      '<div><label>Vehicle code</label><input id="lf_code" value="'+esc(l.vehicle_code||'')+'"></div></div>'+
+    '<div class="row"><div><label>Model</label><input id="lf_model" value="'+esc(l.model||'')+'"></div>'+
+      '<div><label>Year</label><input id="lf_year" type="number" value="'+esc(l.year||'')+'"></div>'+
+      '<div><label>Type</label><select id="lf_type">'+opts(VEHICLE_TYPES,l.vehicle_type||'lorry')+'</select></div></div>'+
+    '<label style="display:flex;align-items:center;gap:8px;text-transform:none;"><input type="checkbox" id="lf_active" style="width:auto;"'+(l.active===false?'':' checked')+'> Active</label>'+
+    '<label>Notes</label><textarea id="lf_notes">'+esc(l.notes||'')+'</textarea>'+
+    fileField('Vehicle card (geran)','lf_card','lf_cardThumbs','getLorryPlate',false)+
+    '<div id="lfMsg" class="msg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;">'+
+      (id?'<div style="flex:0 0 auto;"><button class="danger" onclick="deleteRow(\'lry_vehicles\',\''+l.id+'\',\'Vehicle\',\''+esc(l.plate)+'\')">Delete</button></div>':'')+
+      '<div style="flex:0 0 auto;"><button class="primary" onclick="saveLorry()">Save</button></div></div>';
+  setIdList('lf_card', l.vehicle_card_path?[l.vehicle_card_path]:[]); renderThumbs('lf_cardThumbs','lf_card');
+  openModalEl('formModal');
+}
+function getLorryPlate(){ return el('lf_plate').value||null; }
+async function saveLorry(){
+  var plate=el('lf_plate').value.trim(); if(!plate){ showMsg('lfMsg','Plate is required.',false); return; }
+  var id=el('lf_id').value;
+  var card=getIdList('lf_card');
+  var rec={ plate:plate, vehicle_code:el('lf_code').value.trim(), model:el('lf_model').value.trim(),
+    year:num(el('lf_year').value), vehicle_type:el('lf_type').value, active:el('lf_active').checked,
+    notes:el('lf_notes').value.trim(), vehicle_card_path:card[0]||'', updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+  showLoading('Saving…');
+  var r = id ? await sb.from('lry_vehicles').update(rec).eq('id',id) : await sb.from('lry_vehicles').insert(Object.assign({created_by:SESSION.user.email},rec));
+  hideLoading();
+  if(r.error){ showMsg('lfMsg',r.error.message,false); return; }
+  await audit((id?'UPDATE':'CREATE')+' Vehicle', plate);
+  closeModal('formModal'); showToast('Saved'); await loadAll();
+}
+
+// ═══════════════════════════ FUEL ═══════════════════════════
+var PAIDBY=['company-card','fleet-card','cash','driver-reimburse','touch-n-go','rfid'];
+function renderFuel(){
+  el('fuelList').innerHTML = tbl(['Date','Plate','Odo','Litres','Amount','Station','Paid by','Driver',''], state.fuel.map(function(f){
+    return '<tr class="click" onclick="openFuelForm(\''+f.id+'\')"><td>'+fmtDate(f.date)+'</td><td><b>'+esc(f.plate)+'</b></td>'+
+      '<td>'+fmtKm(f.odometer)+'</td><td>'+(f.litres!=null?esc(f.litres):'—')+'</td><td>'+rm(f.amount_rm)+'</td>'+
+      '<td>'+esc(f.station)+'</td><td>'+esc(f.paid_by)+'</td><td>'+esc(f.driver)+'</td>'+
+      '<td>'+((f.pump_photo_path||f.receipt_photo_path)?'📎':'')+'</td></tr>';
+  }));
+}
+function openFuelForm(id){
+  var f = id ? state.fuel.find(function(x){return x.id===id;}) : {date:todayISO()};
+  el('formBody').innerHTML =
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' fuel</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<input type="hidden" id="ff_id" value="'+esc(f.id||'')+'">'+
+    '<div class="row"><div><label>Date *</label><input type="date" id="ff_date" value="'+esc(f.date||todayISO())+'"></div>'+
+      '<div><label>Plate *</label><select id="ff_plate">'+plateOptions(f.plate)+'</select></div></div>'+
+    '<div class="row"><div><label>Odometer (km)</label><input type="number" id="ff_odo" value="'+esc(f.odometer||'')+'"></div>'+
+      '<div><label>Litres</label><input type="number" id="ff_litres" value="'+esc(f.litres||'')+'"></div>'+
+      '<div><label>Amount (RM) *</label><input type="number" id="ff_amount" value="'+esc(f.amount_rm||'')+'"></div></div>'+
+    '<div class="row"><div><label>Station</label><input id="ff_station" value="'+esc(f.station||'')+'"></div>'+
+      '<div><label>Paid by</label><select id="ff_paidby">'+opts([''].concat(PAIDBY),f.paid_by||'')+'</select></div>'+
+      '<div><label>Driver</label><input id="ff_driver" value="'+esc(f.driver||'')+'"></div></div>'+
+    '<label>Notes</label><textarea id="ff_notes">'+esc(f.notes||'')+'</textarea>'+
+    fileField('Pump photo','ff_pump','ff_pumpThumbs','getFuelPlate',false)+
+    fileField('Receipt photo','ff_receipt','ff_receiptThumbs','getFuelPlate',false)+
+    '<div id="ffMsg" class="msg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;">'+
+      (id?'<div style="flex:0 0 auto;"><button class="danger" onclick="deleteRow(\'lry_fuel_logs\',\''+f.id+'\',\'Fuel\',\''+esc(f.plate)+'\')">Delete</button></div>':'')+
+      '<div style="flex:0 0 auto;"><button class="primary" onclick="saveFuel()">Save</button></div></div>';
+  setIdList('ff_pump', f.pump_photo_path?[f.pump_photo_path]:[]); renderThumbs('ff_pumpThumbs','ff_pump');
+  setIdList('ff_receipt', f.receipt_photo_path?[f.receipt_photo_path]:[]); renderThumbs('ff_receiptThumbs','ff_receipt');
+  openModalEl('formModal');
+}
+function getFuelPlate(){ return el('ff_plate').value||null; }
+async function saveFuel(){
+  var date=el('ff_date').value, plate=el('ff_plate').value;
+  if(!date||!plate){ showMsg('ffMsg','Date and plate required.',false); return; }
+  var amt=Number(el('ff_amount').value); if(isNaN(amt)||amt<0){ showMsg('ffMsg','Amount (RM) required.',false); return; }
+  var id=el('ff_id').value; var pump=getIdList('ff_pump'), rcpt=getIdList('ff_receipt');
+  var rec={ date:date, plate:plate, odometer:num(el('ff_odo').value), litres:num(el('ff_litres').value),
+    amount_rm:amt, station:el('ff_station').value.trim(), paid_by:el('ff_paidby').value, driver:el('ff_driver').value.trim(),
+    notes:el('ff_notes').value.trim(), pump_photo_path:pump[0]||'', receipt_photo_path:rcpt[0]||'',
+    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+  showLoading('Saving…');
+  var r = id ? await sb.from('lry_fuel_logs').update(rec).eq('id',id) : await sb.from('lry_fuel_logs').insert(Object.assign({created_by:SESSION.user.email},rec));
+  hideLoading();
+  if(r.error){ showMsg('ffMsg',r.error.message,false); return; }
+  await audit((id?'UPDATE':'CREATE')+' Fuel', plate+' '+date+' '+rm(amt));
+  closeModal('formModal'); showToast('Saved'); await loadAll();
+}
+
+// ═══════════════════════════ TOLL & PARKING ═══════════════════════════
+function renderToll(){
+  el('tollList').innerHTML = tbl(['Date','Plate','Type','Amount','Location','Paid by','Driver','Job ref',''], state.toll.map(function(t){
+    var lb=t.type==='parking'?'<span class="badge badge-purple">Parking</span>':'<span class="badge badge-blue">Toll</span>';
+    return '<tr class="click" onclick="openTollForm(\''+t.id+'\')"><td>'+fmtDate(t.date)+'</td><td><b>'+esc(t.plate)+'</b></td>'+
+      '<td>'+lb+'</td><td>'+rm(t.amount_rm)+'</td><td>'+esc(t.location)+'</td><td>'+esc(t.paid_by)+'</td>'+
+      '<td>'+esc(t.driver)+'</td><td>'+esc(t.job_ref)+'</td><td>'+(t.receipt_photo_path?'📎':'')+'</td></tr>';
+  }));
+}
+function openTollForm(id){
+  var t = id ? state.toll.find(function(x){return x.id===id;}) : {date:todayISO(),type:'toll'};
+  el('formBody').innerHTML =
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' toll / parking</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<input type="hidden" id="tf_id" value="'+esc(t.id||'')+'">'+
+    '<div class="row"><div><label>Date *</label><input type="date" id="tf_date" value="'+esc(t.date||todayISO())+'"></div>'+
+      '<div><label>Plate *</label><select id="tf_plate">'+plateOptions(t.plate)+'</select></div>'+
+      '<div><label>Type *</label><select id="tf_type">'+opts([['toll','Toll'],['parking','Parking']],t.type||'toll')+'</select></div></div>'+
+    '<div class="row"><div><label>Amount (RM) *</label><input type="number" id="tf_amount" value="'+esc(t.amount_rm||'')+'"></div>'+
+      '<div><label>Location</label><input id="tf_location" value="'+esc(t.location||'')+'"></div>'+
+      '<div><label>Paid by</label><select id="tf_paidby">'+opts([''].concat(PAIDBY),t.paid_by||'')+'</select></div></div>'+
+    '<div class="row"><div><label>Driver</label><input id="tf_driver" value="'+esc(t.driver||'')+'"></div>'+
+      '<div><label>Job ref</label><input id="tf_jobref" value="'+esc(t.job_ref||'')+'"></div>'+
+      '<div><label>Duration</label><input id="tf_duration" value="'+esc(t.duration||'')+'"></div></div>'+
+    '<label>Notes</label><textarea id="tf_notes">'+esc(t.notes||'')+'</textarea>'+
+    fileField('Receipt photo','tf_receipt','tf_receiptThumbs','getTollPlate',false)+
+    '<div id="tfMsg" class="msg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;">'+
+      (id?'<div style="flex:0 0 auto;"><button class="danger" onclick="deleteRow(\'lry_toll_park_logs\',\''+t.id+'\',\'TollPark\',\''+esc(t.plate)+'\')">Delete</button></div>':'')+
+      '<div style="flex:0 0 auto;"><button class="primary" onclick="saveToll()">Save</button></div></div>';
+  setIdList('tf_receipt', t.receipt_photo_path?[t.receipt_photo_path]:[]); renderThumbs('tf_receiptThumbs','tf_receipt');
+  openModalEl('formModal');
+}
+function getTollPlate(){ return el('tf_plate').value||null; }
+async function saveToll(){
+  var date=el('tf_date').value, plate=el('tf_plate').value, type=el('tf_type').value;
+  if(!date||!plate||!type){ showMsg('tfMsg','Date, plate and type required.',false); return; }
+  var amt=Number(el('tf_amount').value); if(isNaN(amt)||amt<0){ showMsg('tfMsg','Amount (RM) required.',false); return; }
+  var id=el('tf_id').value; var rcpt=getIdList('tf_receipt');
+  var rec={ date:date, plate:plate, type:type, amount_rm:amt, location:el('tf_location').value.trim(),
+    paid_by:el('tf_paidby').value, driver:el('tf_driver').value.trim(), job_ref:el('tf_jobref').value.trim(),
+    duration:el('tf_duration').value.trim(), notes:el('tf_notes').value.trim(), receipt_photo_path:rcpt[0]||'',
+    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+  showLoading('Saving…');
+  var r = id ? await sb.from('lry_toll_park_logs').update(rec).eq('id',id) : await sb.from('lry_toll_park_logs').insert(Object.assign({created_by:SESSION.user.email},rec));
+  hideLoading();
+  if(r.error){ showMsg('tfMsg',r.error.message,false); return; }
+  await audit((id?'UPDATE':'CREATE')+' TollPark', plate+' '+type+' '+rm(amt));
+  closeModal('formModal'); showToast('Saved'); await loadAll();
+}
+
+// ═══════════════════════════ MAINTENANCE (RPC lry_save_maint) ═══════════════════════════
+var MAINT_TYPES=[['service','Service'],['repair','Repair'],['tyre','Tyre'],['battery','Battery'],['other','Other']];
+function renderMaint(){
+  el('maintList').innerHTML = tbl(['Date','Plate','Type','Odo','Items','Workshop','Cost','Paid','Next svc',''], state.maint.map(function(m){
+    var paid=(Number(m.paid_rm)||0)>=(Number(m.cost_rm)||0)&&(Number(m.cost_rm)||0)>0;
+    return '<tr class="click" onclick="openMaintForm(\''+m.id+'\')"><td>'+fmtDate(m.date)+'</td><td><b>'+esc(m.plate)+'</b></td>'+
+      '<td>'+esc(m.type)+'</td><td>'+fmtKm(m.odometer)+'</td><td>'+esc(String(m.items_replaced||'').split('\n')[0])+'</td>'+
+      '<td>'+esc(m.workshop)+'</td><td>'+rm(m.cost_rm)+'</td>'+
+      '<td>'+(paid?'<span class="badge badge-green">paid</span>':(maintOutstanding(m)>0?'<span class="badge badge-amber">'+rm(maintOutstanding(m))+'</span>':'—'))+'</td>'+
+      '<td>'+(m.next_service_km?fmtKm(m.next_service_km):(m.next_service_date?fmtDate(m.next_service_date):'—'))+'</td>'+
+      '<td>'+(hasAnyDoc(m,['receipt_photo_paths','before_photo_paths','after_photo_paths','payment_slip_paths'])?'📎':'')+'</td></tr>';
+  }));
+}
+function hasAnyDoc(row, fields){ return fields.some(function(f){ var a=row[f]; return Array.isArray(a)&&a.length; }); }
+function maintLineRow(li){ li=li||{}; return '<div class="lineitem-row" data-line="1">'+
+  '<div style="flex:2 1 160px;"><label>Description</label><input class="ml-desc" value="'+esc(li.desc||'')+'"></div>'+
+  '<div><label>Qty</label><input class="ml-qty" type="number" value="'+esc(li.qty||'')+'" oninput="recalcMaint()"></div>'+
+  '<div><label>Rate</label><input class="ml-rate" type="number" value="'+esc(li.rate||'')+'" oninput="recalcMaint()"></div>'+
+  '<div><label>Tax %</label><input class="ml-tax" type="number" value="'+esc(li.tax||'')+'" oninput="recalcMaint()"></div>'+
+  '<div style="flex:0 0 auto;"><label>&nbsp;</label><button class="ghost btn-sm" onclick="this.closest(\'.lineitem-row\').remove();recalcMaint();">✕</button></div></div>'; }
+function addMaintLine(){ var h=el('mf_lines'); h.insertAdjacentHTML('beforeend', maintLineRow({})); }
+function collectMaintLines(){
+  return Array.prototype.map.call(document.querySelectorAll('#mf_lines .lineitem-row'), function(r){
+    return { desc:r.querySelector('.ml-desc').value.trim(), qty:r.querySelector('.ml-qty').value,
+             rate:r.querySelector('.ml-rate').value, tax:r.querySelector('.ml-tax').value };
+  }).filter(function(l){ return l.desc||Number(l.qty)>0||Number(l.rate)>0; });
+}
+function recalcMaint(){
+  var lines=collectMaintLines(), sub=0, tax=0;
+  lines.forEach(function(l){ var q=Number(l.qty)||0, ra=Number(l.rate)||0, tx=Math.max(0,Number(l.tax)||0); sub+=q*ra; tax+=q*ra*tx/100; });
+  var disc=Math.max(0,Number(el('mf_disc').value)||0);
+  var hasLines=lines.length>0;
+  el('mf_calc').innerHTML = hasLines ? ('Subtotal '+rm(sub)+' · Tax '+rm(tax)+' · Disc '+rm(disc)+' · <b>Grand '+rm(Math.max(0,sub+tax-disc))+'</b>') : 'No line items — using Cost (RM) field.';
+}
+function openMaintForm(id){
+  var m = id ? state.maint.find(function(x){return x.id===id;}) : {date:todayISO(),type:'service'};
+  var lines = Array.isArray(m.line_items)?m.line_items:[];
+  el('formBody').innerHTML =
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' maintenance</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<input type="hidden" id="mf_id" value="'+esc(m.id||'')+'">'+
+    '<div class="row"><div><label>Date *</label><input type="date" id="mf_date" value="'+esc(m.date||todayISO())+'"></div>'+
+      '<div><label>Plate *</label><select id="mf_plate">'+plateOptions(m.plate)+'</select></div>'+
+      '<div><label>Odometer * (km)</label><input type="number" id="mf_odo" value="'+esc(m.odometer||'')+'"></div></div>'+
+    '<div class="row"><div><label>Type</label><select id="mf_type">'+opts(MAINT_TYPES,m.type||'service')+'</select></div>'+
+      '<div><label>Workshop</label><input id="mf_workshop" value="'+esc(m.workshop||'')+'"></div>'+
+      '<div><label>Invoice number</label><input id="mf_invoice" value="'+esc(m.invoice_number||'')+'"></div></div>'+
+    '<h3 style="margin-top:14px;">Line items</h3><div class="sub">Server recomputes totals. Leave empty and use Cost (RM) for a quick entry.</div>'+
+    '<div id="mf_lines"></div><button class="ghost btn-sm" onclick="addMaintLine()">+ Line</button>'+
+    '<div class="row" style="margin-top:10px;"><div><label>Discount (RM)</label><input type="number" id="mf_disc" value="'+esc(m.discount_amount||'')+'" oninput="recalcMaint()"></div>'+
+      '<div><label>Cost (RM) — if no lines</label><input type="number" id="mf_cost" value="'+esc(m.cost_rm||'')+'"></div>'+
+      '<div><label>Paid (RM)</label><input type="number" id="mf_paid" value="'+esc(m.paid_rm||'')+'"></div></div>'+
+    '<div class="sub" id="mf_calc" style="margin-top:8px;"></div>'+
+    '<div class="row"><div><label>Next service (km)</label><input type="number" id="mf_nextkm" value="'+esc(m.next_service_km||'')+'"></div>'+
+      '<div><label>Next service date</label><input type="date" id="mf_nextdate" value="'+esc(m.next_service_date||'')+'"></div></div>'+
+    '<label>Notes</label><textarea id="mf_notes">'+esc(m.notes||'')+'</textarea>'+
+    fileField('Receipt photos','mf_receipt','mf_receiptThumbs','getMaintPlate',true)+
+    fileField('Before photos','mf_before','mf_beforeThumbs','getMaintPlate',true)+
+    fileField('After photos','mf_after','mf_afterThumbs','getMaintPlate',true)+
+    fileField('Payment slips','mf_slip','mf_slipThumbs','getMaintPlate',true)+
+    '<div id="mfMsg" class="msg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;">'+
+      (id?'<div style="flex:0 0 auto;"><button class="danger" onclick="deleteRow(\'lry_maint_logs\',\''+m.id+'\',\'Maint\',\''+esc(m.plate)+'\')">Delete</button></div>':'')+
+      '<div style="flex:0 0 auto;"><button class="primary" onclick="saveMaint()">Save</button></div></div>';
+  var h=el('mf_lines'); h.innerHTML = lines.length ? lines.map(maintLineRow).join('') : maintLineRow({});
+  setIdList('mf_receipt', m.receipt_photo_paths||[]); renderThumbs('mf_receiptThumbs','mf_receipt');
+  setIdList('mf_before', m.before_photo_paths||[]); renderThumbs('mf_beforeThumbs','mf_before');
+  setIdList('mf_after', m.after_photo_paths||[]); renderThumbs('mf_afterThumbs','mf_after');
+  setIdList('mf_slip', m.payment_slip_paths||[]); renderThumbs('mf_slipThumbs','mf_slip');
+  recalcMaint(); openModalEl('formModal');
+}
+function getMaintPlate(){ return el('mf_plate').value||null; }
+async function saveMaint(){
+  var payload={
+    id:el('mf_id').value||null, date:el('mf_date').value, plate:el('mf_plate').value, odometer:el('mf_odo').value,
+    type:el('mf_type').value, workshop:el('mf_workshop').value.trim(), invoiceNumber:el('mf_invoice').value.trim(),
+    paidRM:el('mf_paid').value, nextServiceKm:el('mf_nextkm').value, nextServiceDate:el('mf_nextdate').value,
+    notes:el('mf_notes').value.trim(), lineItems:collectMaintLines(), taxable:false, taxRate:0.06,
+    discountAmount:el('mf_disc').value, costRM:el('mf_cost').value,
+    receiptPhotoIds:getIdList('mf_receipt'), beforePhotoIds:getIdList('mf_before'),
+    afterPhotoIds:getIdList('mf_after'), paymentSlipIds:getIdList('mf_slip')
+  };
+  if(!payload.date||!payload.plate){ showMsg('mfMsg','Date and plate required.',false); return; }
+  showLoading('Saving…');
+  var r = await sb.rpc('lry_save_maint', { payload: payload });
+  hideLoading();
+  if(r.error){ showMsg('mfMsg', r.error.message, false); return; }
+  closeModal('formModal'); showToast('Saved'); await loadAll();
+}
+
+// ═══════════════════════════ COMPLIANCE ═══════════════════════════
+var COMP_STATUS=['active','renewed','cancelled','lost','archived'];
+function renderCompliance(){
+  el('complianceList').innerHTML = tbl(['Type','Plate','Status','Issued','Expiry','Amount','Insurer / Agency',''], state.compliance.map(function(c){
+    var t=(COMP_TYPE_LBL[c.type]||{}); var d=daysUntil(c.expiry_date);
+    return '<tr class="click" onclick="openComplianceForm(\''+c.id+'\')"><td>'+(t.icon||'')+' '+(t.label||esc(c.type))+'</td>'+
+      '<td><b>'+esc(c.plate)+'</b></td><td>'+esc(c.status)+' '+(c.status==='active'?urgencyBadge(d):'')+'</td>'+
+      '<td>'+fmtDate(c.issued_date)+'</td><td>'+fmtDate(c.expiry_date)+'</td><td>'+rm(c.amount_rm)+'</td>'+
+      '<td>'+esc(c.insurer||c.agency_name||'')+'</td><td>'+(hasAnyDoc(c,['main_doc_paths','receipt_paths','agent_invoice_paths','payment_slip_paths'])?'📎':'')+'</td></tr>';
+  }));
+}
+function openComplianceForm(id, renewOf){
+  var base = id ? state.compliance.find(function(x){return x.id===id;}) : {};
+  var c = renewOf ? { type:renewOf.type, plate:renewOf.plate, insurer:renewOf.insurer, policy_number:renewOf.policy_number, agency_name:renewOf.agency_name, prev_id:renewOf.id } : base;
+  el('formBody').innerHTML =
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(renewOf?'Renew':(id?'Edit':'Add'))+' compliance</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<input type="hidden" id="cf_id" value="'+esc((id&&!renewOf)?c.id:'')+'"><input type="hidden" id="cf_prev" value="'+esc(c.prev_id||'')+'">'+
+    '<div class="row"><div><label>Type *</label><select id="cf_type">'+opts([['roadtax','Road Tax'],['insurance','Insurance'],['puspakom','Puspakom']],c.type||'roadtax')+'</select></div>'+
+      '<div><label>Plate *</label><select id="cf_plate">'+plateOptions(c.plate)+'</select></div>'+
+      '<div><label>Status</label><select id="cf_status">'+opts(COMP_STATUS,c.status||'active')+'</select></div></div>'+
+    '<div class="row"><div><label>Issued date *</label><input type="date" id="cf_issued" value="'+esc(c.issued_date||'')+'"></div>'+
+      '<div><label>Expiry date *</label><input type="date" id="cf_expiry" value="'+esc(c.expiry_date||'')+'"></div>'+
+      '<div><label>Amount (RM)</label><input type="number" id="cf_amount" value="'+esc(c.amount_rm||'')+'"></div></div>'+
+    '<div class="row"><div><label>Coverage (RM)</label><input type="number" id="cf_coverage" value="'+esc(c.coverage_rm||'')+'"></div>'+
+      '<div><label>Insurer</label><input id="cf_insurer" value="'+esc(c.insurer||'')+'"></div>'+
+      '<div><label>Policy number</label><input id="cf_policy" value="'+esc(c.policy_number||'')+'"></div></div>'+
+    '<div class="row"><div><label>Agency name</label><input id="cf_agency" value="'+esc(c.agency_name||'')+'"></div>'+
+      '<div><label>Agency charges (RM)</label><input type="number" id="cf_agencyc" value="'+esc(c.agency_charges_rm||'')+'"></div></div>'+
+    '<label>Notes</label><textarea id="cf_notes">'+esc(c.notes||'')+'</textarea>'+
+    fileField('Main documents','cf_main','cf_mainThumbs','getCompPlate',true)+
+    fileField('Receipts','cf_receipt','cf_receiptThumbs','getCompPlate',true)+
+    fileField('Agent invoices','cf_agentinv','cf_agentinvThumbs','getCompPlate',true)+
+    fileField('Payment slips','cf_slip','cf_slipThumbs','getCompPlate',true)+
+    '<div id="cfMsg" class="msg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;">'+
+      ((id&&!renewOf)?'<div style="flex:0 0 auto;"><button class="ghost" onclick="renewCompliance(\''+c.id+'\')">Renew →</button></div><div style="flex:0 0 auto;"><button class="danger" onclick="deleteRow(\'lry_compliance_logs\',\''+c.id+'\',\'Compliance\',\''+esc(c.plate)+'\')">Delete</button></div>':'')+
+      '<div style="flex:0 0 auto;"><button class="primary" onclick="saveCompliance()">Save</button></div></div>';
+  setIdList('cf_main', renewOf?[]:(c.main_doc_paths||[])); renderThumbs('cf_mainThumbs','cf_main');
+  setIdList('cf_receipt', renewOf?[]:(c.receipt_paths||[])); renderThumbs('cf_receiptThumbs','cf_receipt');
+  setIdList('cf_agentinv', renewOf?[]:(c.agent_invoice_paths||[])); renderThumbs('cf_agentinvThumbs','cf_agentinv');
+  setIdList('cf_slip', renewOf?[]:(c.payment_slip_paths||[])); renderThumbs('cf_slipThumbs','cf_slip');
+  openModalEl('formModal');
+}
+function getCompPlate(){ return el('cf_plate').value||null; }
+function renewCompliance(id){ var c=state.compliance.find(function(x){return x.id===id;}); closeModal('formModal'); setTimeout(function(){ openComplianceForm(null, c); },50); }
+async function saveCompliance(){
+  var type=el('cf_type').value, plate=el('cf_plate').value;
+  var issued=el('cf_issued').value, expiry=el('cf_expiry').value;
+  if(!type||!plate){ showMsg('cfMsg','Plate and type required.',false); return; }
+  if(!issued||!expiry){ showMsg('cfMsg','Issued and expiry date required.',false); return; }
+  var id=el('cf_id').value, prevId=el('cf_prev').value;
+  var rec={ plate:plate, type:type, status:el('cf_status').value, issued_date:issued, expiry_date:expiry,
+    amount_rm:num(el('cf_amount').value)||0, coverage_rm:num(el('cf_coverage').value), insurer:el('cf_insurer').value.trim(),
+    policy_number:el('cf_policy').value.trim(), agency_name:el('cf_agency').value.trim(),
+    agency_charges_rm:num(el('cf_agencyc').value), notes:el('cf_notes').value.trim(), prev_id:prevId,
+    main_doc_paths:getIdList('cf_main'), receipt_paths:getIdList('cf_receipt'),
+    agent_invoice_paths:getIdList('cf_agentinv'), payment_slip_paths:getIdList('cf_slip'),
+    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+  showLoading('Saving…');
+  var r, newId;
+  if(id){ r=await sb.from('lry_compliance_logs').update(rec).eq('id',id); }
+  else { var ins=await sb.from('lry_compliance_logs').insert(Object.assign({created_by:SESSION.user.email},rec)).select('id').single(); r=ins; newId=ins.data&&ins.data.id; }
+  if(!r.error && prevId){
+    // mark the previous entry renewed + link
+    await sb.from('lry_compliance_logs').update({ status:'renewed', renewed_by_id:newId||'', updated_by:SESSION.user.email, updated_at:new Date().toISOString() }).eq('id',prevId);
+  }
+  hideLoading();
+  if(r.error){ showMsg('cfMsg',r.error.message,false); return; }
+  await audit((id?'UPDATE':'CREATE')+' Compliance', plate+' '+type+' exp '+expiry);
+  closeModal('formModal'); showToast('Saved'); await loadAll();
+}
+
+// ═══════════════════════════ DRIVERS ═══════════════════════════
+var DRIVER_STATUS=['active','on-leave','resigned','terminated'];
+var DRIVER_CAT=['in-house','outsourced','relief','contract'];
+function renderDrivers(){
+  el('driversList').innerHTML = tbl(['Name','IC / Staff','Phone','Class','Licence exp','GDL exp','Status','Plate',''], state.drivers.map(function(d){
+    var lu=daysUntil(d.license_expiry_date), gu=daysUntil(d.gdl_expiry_date);
+    return '<tr class="click" onclick="openDriverForm(\''+d.id+'\')"><td><b>'+esc(d.name)+'</b></td>'+
+      '<td>'+esc(d.ic_number||d.staff_id||'')+'</td><td>'+esc(d.phone)+'</td><td>'+esc(d.license_class)+'</td>'+
+      '<td>'+fmtDate(d.license_expiry_date)+' '+((d.status==='active'||d.status==='on-leave')&&lu!=null&&lu<=30?urgencyBadge(lu):'')+'</td>'+
+      '<td>'+fmtDate(d.gdl_expiry_date)+' '+((d.status==='active'||d.status==='on-leave')&&gu!=null&&gu<=30?urgencyBadge(gu):'')+'</td>'+
+      '<td>'+esc(d.status)+'</td><td>'+esc(d.assigned_plate)+'</td>'+
+      '<td>'+(hasAnyDoc(d,['license_doc_paths','ic_doc_paths'])||d.photo_path?'📎':'')+'</td></tr>';
+  }));
+}
+function openDriverForm(id){
+  var d = id ? state.drivers.find(function(x){return x.id===id;}) : {status:'active',category:'in-house'};
+  el('formBody').innerHTML =
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' driver</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<input type="hidden" id="df_id" value="'+esc(d.id||'')+'">'+
+    '<div class="row"><div><label>Name *</label><input id="df_name" value="'+esc(d.name||'')+'"></div>'+
+      '<div><label>IC number</label><input id="df_ic" value="'+esc(d.ic_number||'')+'"></div>'+
+      '<div><label>Staff ID</label><input id="df_staff" value="'+esc(d.staff_id||'')+'"></div></div>'+
+    '<div class="row"><div><label>Phone</label><input id="df_phone" value="'+esc(d.phone||'')+'"></div>'+
+      '<div><label>Email</label><input id="df_email" value="'+esc(d.email||'')+'"></div>'+
+      '<div><label>Category</label><select id="df_cat">'+opts(DRIVER_CAT,d.category||'in-house')+'</select></div></div>'+
+    '<div class="row"><div><label>Licence class</label><input id="df_class" value="'+esc(d.license_class||'')+'"></div>'+
+      '<div><label>Licence number</label><input id="df_licnum" value="'+esc(d.license_number||'')+'"></div>'+
+      '<div><label>Status</label><select id="df_status">'+opts(DRIVER_STATUS,d.status||'active')+'</select></div></div>'+
+    '<div class="row"><div><label>Licence issue</label><input type="date" id="df_licissue" value="'+esc(d.license_issue_date||'')+'"></div>'+
+      '<div><label>Licence expiry</label><input type="date" id="df_licexp" value="'+esc(d.license_expiry_date||'')+'"></div>'+
+      '<div><label>GDL expiry</label><input type="date" id="df_gdl" value="'+esc(d.gdl_expiry_date||'')+'"></div></div>'+
+    '<div class="row"><div><label>Hire date</label><input type="date" id="df_hire" value="'+esc(d.hire_date||'')+'"></div>'+
+      '<div><label>Assigned plate</label><select id="df_plate">'+plateOptions(d.assigned_plate)+'</select></div></div>'+
+    '<label>Address</label><textarea id="df_address">'+esc(d.address||'')+'</textarea>'+
+    '<div class="row"><div><label>Emergency contact name</label><input id="df_ecname" value="'+esc(d.emergency_contact_name||'')+'"></div>'+
+      '<div><label>Emergency contact phone</label><input id="df_ecphone" value="'+esc(d.emergency_contact_phone||'')+'"></div></div>'+
+    '<label>Notes</label><textarea id="df_notes">'+esc(d.notes||'')+'</textarea>'+
+    fileField('Photo','df_photo','df_photoThumbs','null',false)+
+    fileField('Licence docs','df_licdoc','df_licdocThumbs','null',true)+
+    fileField('IC docs','df_icdoc','df_icdocThumbs','null',true)+
+    '<div id="dfMsg" class="msg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;">'+
+      (id?'<div style="flex:0 0 auto;"><button class="danger" onclick="deleteRow(\'lry_drivers\',\''+d.id+'\',\'Driver\',\''+esc(d.name)+'\')">Delete</button></div>':'')+
+      '<div style="flex:0 0 auto;"><button class="primary" onclick="saveDriver()">Save</button></div></div>';
+  setIdList('df_photo', d.photo_path?[d.photo_path]:[]); renderThumbs('df_photoThumbs','df_photo');
+  setIdList('df_licdoc', d.license_doc_paths||[]); renderThumbs('df_licdocThumbs','df_licdoc');
+  setIdList('df_icdoc', d.ic_doc_paths||[]); renderThumbs('df_icdocThumbs','df_icdoc');
+  openModalEl('formModal');
+}
+async function saveDriver(){
+  var name=el('df_name').value.trim(); if(!name){ showMsg('dfMsg','Driver name is required.',false); return; }
+  var id=el('df_id').value; var status=el('df_status').value; var photo=getIdList('df_photo');
+  var rec={ name:name, ic_number:el('df_ic').value.trim(), staff_id:el('df_staff').value.trim(),
+    phone:el('df_phone').value.trim(), email:el('df_email').value.trim(), category:el('df_cat').value,
+    license_class:el('df_class').value.trim(), license_number:el('df_licnum').value.trim(), status:status,
+    active:(status==='active'||status==='on-leave'), license_issue_date:el('df_licissue').value||null,
+    license_expiry_date:el('df_licexp').value||null, gdl_expiry_date:el('df_gdl').value||null,
+    hire_date:el('df_hire').value||null, assigned_plate:el('df_plate').value, address:el('df_address').value.trim(),
+    emergency_contact_name:el('df_ecname').value.trim(), emergency_contact_phone:el('df_ecphone').value.trim(),
+    notes:el('df_notes').value.trim(), photo_path:photo[0]||'',
+    license_doc_paths:getIdList('df_licdoc'), ic_doc_paths:getIdList('df_icdoc'),
+    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+  showLoading('Saving…');
+  var r = id ? await sb.from('lry_drivers').update(rec).eq('id',id) : await sb.from('lry_drivers').insert(Object.assign({created_by:SESSION.user.email},rec));
+  hideLoading();
+  if(r.error){ showMsg('dfMsg',r.error.message,false); return; }
+  await audit((id?'UPDATE':'CREATE')+' Driver', name);
+  closeModal('formModal'); showToast('Saved'); await loadAll();
+}
+
+// ═══════════════════════════ SUMMONS ═══════════════════════════
+var SUMMON_STATUS=['outstanding','paid','partially-paid','disputed','court','cancelled','blacklisted'];
+var SUMMON_ISSUERS=['PDRM','JPJ','MBPJ','DBKL','MPSJ','MBPP','MBSA','AES','Other'];
+var OFFENCE_TYPES=['speeding','illegal-parking','red-light','aes','no-helmet','lane-discipline','wrong-way','no-license','expired-road-tax','overload','other'];
+var RESP_PARTIES=['company','driver','shared'];
+function renderSummons(){
+  el('summonsList').innerHTML = tbl(['Summon #','Issued','By','Plate','Driver','Offence','Fine','Status','Pay by',''], state.summons.map(function(s){
+    var d=daysUntil(s.payment_deadline);
+    return '<tr class="click" onclick="openSummonForm(\''+s.id+'\')"><td><b>'+esc(s.summon_number)+'</b></td><td>'+fmtDate(s.issued_date)+'</td>'+
+      '<td>'+esc(s.issued_by)+'</td><td>'+esc(s.plate)+'</td><td>'+esc(s.driver_name)+'</td><td>'+esc(s.offence_type)+'</td>'+
+      '<td>'+rm(s.fine_rm)+'</td><td>'+esc(s.status)+'</td>'+
+      '<td>'+fmtDate(s.payment_deadline)+' '+(isSummonOutstanding(s)&&d!=null&&d<=14?urgencyBadge(d):'')+'</td>'+
+      '<td>'+(hasAnyDoc(s,['payment_proof_paths','summon_copy_paths'])?'📎':'')+'</td></tr>';
+  }));
+}
+function openSummonForm(id){
+  var s = id ? state.summons.find(function(x){return x.id===id;}) : {issued_date:todayISO(),status:'outstanding',responsible_party:'company'};
+  el('formBody').innerHTML =
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' summon</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<input type="hidden" id="sf_id" value="'+esc(s.id||'')+'">'+
+    '<div class="row"><div><label>Summon number *</label><input id="sf_number" value="'+esc(s.summon_number||'')+'"></div>'+
+      '<div><label>Issued date *</label><input type="date" id="sf_issued" value="'+esc(s.issued_date||todayISO())+'"></div>'+
+      '<div><label>Issued by</label><select id="sf_by">'+opts([''].concat(SUMMON_ISSUERS),s.issued_by||'')+'</select></div></div>'+
+    '<div class="row"><div><label>Plate</label><select id="sf_plate">'+plateOptions(s.plate)+'</select></div>'+
+      '<div><label>Driver name</label><input id="sf_driver" value="'+esc(s.driver_name||'')+'"></div>'+
+      '<div><label>Driver ID</label><input id="sf_driverid" value="'+esc(s.driver_id||'')+'"></div></div>'+
+    '<div class="row"><div><label>Offence type</label><select id="sf_offence">'+opts([''].concat(OFFENCE_TYPES),s.offence_type||'')+'</select></div>'+
+      '<div><label>Location</label><input id="sf_location" value="'+esc(s.location||'')+'"></div></div>'+
+    '<label>Offence details</label><textarea id="sf_details">'+esc(s.offence_details||'')+'</textarea>'+
+    '<div class="row"><div><label>Fine (RM)</label><input type="number" id="sf_fine" value="'+esc(s.fine_rm||'')+'"></div>'+
+      '<div><label>Discount (RM)</label><input type="number" id="sf_disc" value="'+esc(s.discount_rm||'')+'"></div>'+
+      '<div><label>Discount deadline</label><input type="date" id="sf_discdl" value="'+esc(s.discount_deadline||'')+'"></div></div>'+
+    '<div class="row"><div><label>Payment deadline</label><input type="date" id="sf_paydl" value="'+esc(s.payment_deadline||'')+'"></div>'+
+      '<div><label>Court date</label><input type="date" id="sf_court" value="'+esc(s.court_date||'')+'"></div>'+
+      '<div><label>Status</label><select id="sf_status">'+opts(SUMMON_STATUS,s.status||'outstanding')+'</select></div></div>'+
+    '<div class="row"><div><label>Responsible party</label><select id="sf_resp">'+opts(RESP_PARTIES,s.responsible_party||'company')+'</select></div>'+
+      '<div><label>Paid (RM)</label><input type="number" id="sf_paid" value="'+esc(s.paid_rm||'')+'"></div>'+
+      '<div><label>Paid date</label><input type="date" id="sf_paiddate" value="'+esc(s.paid_date||'')+'"></div></div>'+
+    '<label>Payment ref</label><input id="sf_ref" value="'+esc(s.payment_ref||'')+'">'+
+    '<label>Notes</label><textarea id="sf_notes">'+esc(s.notes||'')+'</textarea>'+
+    fileField('Summon copy','sf_copy','sf_copyThumbs','getSummonPlate',true)+
+    fileField('Payment proof','sf_proof','sf_proofThumbs','getSummonPlate',true)+
+    '<div id="sfMsg" class="msg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;">'+
+      (id?'<div style="flex:0 0 auto;"><button class="danger" onclick="deleteRow(\'lry_summon_logs\',\''+s.id+'\',\'Summon\',\''+esc(s.summon_number)+'\')">Delete</button></div>':'')+
+      '<div style="flex:0 0 auto;"><button class="primary" onclick="saveSummon()">Save</button></div></div>';
+  setIdList('sf_copy', s.summon_copy_paths||[]); renderThumbs('sf_copyThumbs','sf_copy');
+  setIdList('sf_proof', s.payment_proof_paths||[]); renderThumbs('sf_proofThumbs','sf_proof');
+  openModalEl('formModal');
+}
+function getSummonPlate(){ return el('sf_plate').value||null; }
+async function saveSummon(){
+  var number=el('sf_number').value.trim(), issued=el('sf_issued').value;
+  if(!number||!issued){ showMsg('sfMsg','Summon number and issued date required.',false); return; }
+  var id=el('sf_id').value;
+  var rec={ summon_number:number, issued_date:issued, issued_by:el('sf_by').value, plate:el('sf_plate').value,
+    driver_name:el('sf_driver').value.trim(), driver_id:el('sf_driverid').value.trim(), location:el('sf_location').value.trim(),
+    offence_type:el('sf_offence').value, offence_details:el('sf_details').value.trim(),
+    fine_rm:num(el('sf_fine').value), discount_rm:num(el('sf_disc').value), discount_deadline:el('sf_discdl').value||null,
+    payment_deadline:el('sf_paydl').value||null, court_date:el('sf_court').value||null, status:el('sf_status').value,
+    responsible_party:el('sf_resp').value, paid_rm:num(el('sf_paid').value), paid_date:el('sf_paiddate').value||null,
+    payment_ref:el('sf_ref').value.trim(), notes:el('sf_notes').value.trim(),
+    summon_copy_paths:getIdList('sf_copy'), payment_proof_paths:getIdList('sf_proof'),
+    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+  showLoading('Saving…');
+  var r = id ? await sb.from('lry_summon_logs').update(rec).eq('id',id) : await sb.from('lry_summon_logs').insert(Object.assign({created_by:SESSION.user.email},rec));
+  hideLoading();
+  if(r.error){ showMsg('sfMsg',r.error.message,false); return; }
+  await audit((id?'UPDATE':'CREATE')+' Summon', (rec.plate||'')+' '+number);
+  closeModal('formModal'); showToast('Saved'); await loadAll();
+}
+
+// ═══════════════════════════ INCIDENTS ═══════════════════════════
+var INCIDENT_TYPES=['accident','theft-vehicle','theft-parts','vandalism','parking-damage','break-in','fire','breakdown','traffic-violation','other'];
+var COLLISION_TYPES=['none','human','car','lorry','bicycle','bus','motorcycle','building','parking-post','divider','animal','other'];
+var FAULT_PARTIES=['ours','third-party','shared','disputed','n-a'];
+var TOW_OPTIONS=['none','by-authority','our-arrangement','third-party'];
+var INJURY_ACTIONS=['none','first-aid','clinic','hospital','deceased'];
+var POLICE_STATUS=['not-filed','to-file','filed','not-required'];
+var CLAIM_STATUSES=['none','to-submit','submitted','approved','paid','rejected'];
+var REPAIR_ACTIONS=['not-required','to-quote','quoted','in-progress','done'];
+var INCIDENT_STATUSES=['open','police-pending','claim-pending','awaiting-payment-out','awaiting-payment-in','repair-pending','settled','closed'];
+function renderIncidents(){
+  el('incidentsList').innerHTML = tbl(['Date','Plate','Type','Driver','Fault','Police','Claim','Status',''], state.incidents.map(function(i){
+    var open=i.status!=='settled'&&i.status!=='closed';
+    return '<tr class="click" onclick="openIncidentForm(\''+i.id+'\')"><td>'+fmtDate(i.date)+'</td><td><b>'+esc(i.plate)+'</b></td>'+
+      '<td>'+esc(i.type)+'</td><td>'+esc(i.driver_name)+'</td><td>'+esc(i.fault_party)+'</td>'+
+      '<td>'+esc(i.police_report_status)+'</td><td>'+esc(i.claim_status)+'</td>'+
+      '<td>'+(open?'<span class="badge badge-red">'+esc(i.status)+'</span>':'<span class="badge badge-green">'+esc(i.status)+'</span>')+'</td>'+
+      '<td>'+(hasAnyDoc(i,['incident_photo_paths','police_report_paths','quotation_paths','compensation_paid_paths','compensation_received_paths'])?'📎':'')+'</td></tr>';
+  }));
+}
+function openIncidentForm(id){
+  var i = id ? state.incidents.find(function(x){return x.id===id;}) : {date:todayISO(),type:'accident',status:'open',fault_party:'n-a',collision_type:'none',towed:'none',injury_action:'none',police_report_status:'not-filed',claim_status:'none',repair_action:'not-required'};
+  el('formBody').innerHTML =
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' incident</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<input type="hidden" id="if_id" value="'+esc(i.id||'')+'">'+
+    '<div class="row"><div><label>Date *</label><input type="date" id="if_date" value="'+esc(i.date||todayISO())+'"></div>'+
+      '<div><label>Time</label><input id="if_time" value="'+esc(i.time||'')+'" placeholder="e.g. 14:30"></div>'+
+      '<div><label>Plate *</label><select id="if_plate">'+plateOptions(i.plate)+'</select></div></div>'+
+    '<div class="row"><div><label>Type *</label><select id="if_type">'+opts(INCIDENT_TYPES,i.type||'accident')+'</select></div>'+
+      '<div><label>Driver name</label><input id="if_driver" value="'+esc(i.driver_name||'')+'"></div>'+
+      '<div><label>Status</label><select id="if_status">'+opts(INCIDENT_STATUSES,i.status||'open')+'</select></div></div>'+
+    '<div class="row"><div><label>Location</label><input id="if_location" value="'+esc(i.location||'')+'"></div>'+
+      '<div><label>GPS</label><input id="if_gps" value="'+esc(i.location_gps||'')+'"></div></div>'+
+    '<h3 style="margin-top:12px;">Collision &amp; fault</h3>'+
+    '<div class="row"><div><label>Collision type</label><select id="if_collision">'+opts(COLLISION_TYPES,i.collision_type||'none')+'</select></div>'+
+      '<div><label>Collision (other)</label><input id="if_collother" value="'+esc(i.collision_other||'')+'"></div>'+
+      '<div><label>Fault party</label><select id="if_fault">'+opts(FAULT_PARTIES,i.fault_party||'n-a')+'</select></div></div>'+
+    '<div class="row"><div><label>Third-party plates</label><input id="if_tpplates" value="'+esc(i.third_party_plates||'')+'"></div>'+
+      '<div><label>Third-party name</label><input id="if_tpname" value="'+esc(i.third_party_name||'')+'"></div>'+
+      '<div><label>Third-party contact</label><input id="if_tpcontact" value="'+esc(i.third_party_contact||'')+'"></div></div>'+
+    '<div class="row"><div><label>Third-party insurer</label><input id="if_tpinsurer" value="'+esc(i.third_party_insurer||'')+'"></div>'+
+      '<div><label>Damaged asset</label><input id="if_damaged" value="'+esc(i.damaged_asset||'')+'"></div></div>'+
+    '<label>Details</label><textarea id="if_details">'+esc(i.details||'')+'</textarea>'+
+    '<label>Witnesses</label><input id="if_witnesses" value="'+esc(i.witnesses||'')+'">'+
+    '<h3 style="margin-top:12px;">Towing &amp; injury</h3>'+
+    '<div class="row"><div><label>Towed</label><select id="if_towed">'+opts(TOW_OPTIONS,i.towed||'none')+'</select></div>'+
+      '<div><label>Tow company</label><input id="if_towco" value="'+esc(i.tow_company||'')+'"></div>'+
+      '<div><label>Tow cost (RM)</label><input type="number" id="if_towcost" value="'+esc(i.tow_cost_rm||'')+'"></div></div>'+
+    '<div class="row"><div><label style="display:flex;align-items:center;gap:6px;text-transform:none;"><input type="checkbox" id="if_injany" style="width:auto;"'+(i.injury_any?' checked':'')+'> Injury?</label></div>'+
+      '<div><label>Injury action</label><select id="if_injaction">'+opts(INJURY_ACTIONS,i.injury_action||'none')+'</select></div>'+
+      '<div><label>Injured person</label><input id="if_injname" value="'+esc(i.injured_person_name||'')+'"></div></div>'+
+    '<div class="row"><div><label>Hospital</label><input id="if_hospital" value="'+esc(i.hospital_name||'')+'"></div>'+
+      '<div style="flex:2;"><label>Injury details</label><input id="if_injdetails" value="'+esc(i.injury_details||'')+'"></div></div>'+
+    '<h3 style="margin-top:12px;">Police</h3>'+
+    '<div class="row"><div><label>Report status</label><select id="if_police">'+opts(POLICE_STATUS,i.police_report_status||'not-filed')+'</select></div>'+
+      '<div><label>Report number</label><input id="if_policenum" value="'+esc(i.police_report_number||'')+'"></div>'+
+      '<div><label>Police station</label><input id="if_policestn" value="'+esc(i.police_station||'')+'"></div></div>'+
+    '<h3 style="margin-top:12px;">Compensation &amp; claim</h3>'+
+    '<div class="row"><div><label>Comp. paid (RM)</label><input type="number" id="if_comppaid" value="'+esc(i.compensation_paid_rm||'')+'"></div>'+
+      '<div><label>Paid to</label><input id="if_comppaidto" value="'+esc(i.compensation_paid_to||'')+'"></div></div>'+
+    '<div class="row"><div><label>Comp. received (RM)</label><input type="number" id="if_comprecv" value="'+esc(i.compensation_received_rm||'')+'"></div>'+
+      '<div><label>Received from</label><input id="if_comprecvfrom" value="'+esc(i.compensation_received_from||'')+'"></div></div>'+
+    '<div class="row"><div><label style="display:flex;align-items:center;gap:6px;text-transform:none;"><input type="checkbox" id="if_claimfiled" style="width:auto;"'+(i.insurance_claim_filed?' checked':'')+'> Claim filed?</label></div>'+
+      '<div><label>Insurance company</label><input id="if_inscompany" value="'+esc(i.insurance_company||'')+'"></div>'+
+      '<div><label>Claim number</label><input id="if_claimnum" value="'+esc(i.claim_number||'')+'"></div></div>'+
+    '<div class="row"><div><label>Claim amount (RM)</label><input type="number" id="if_claimamt" value="'+esc(i.claim_amount_rm||'')+'"></div>'+
+      '<div><label>Claim status</label><select id="if_claimstatus">'+opts(CLAIM_STATUSES,i.claim_status||'none')+'</select></div>'+
+      '<div><label>Repair action</label><select id="if_repair">'+opts(REPAIR_ACTIONS,i.repair_action||'not-required')+'</select></div></div>'+
+    '<label>Notes</label><textarea id="if_notes">'+esc(i.notes||'')+'</textarea>'+
+    fileField('Incident photos','if_photos','if_photosThumbs','getIncidentPlate',true)+
+    fileField('Police report docs','if_policedocs','if_policedocsThumbs','getIncidentPlate',true)+
+    fileField('Quotations','if_quotes','if_quotesThumbs','getIncidentPlate',true)+
+    fileField('Compensation paid proof','if_comppaidp','if_comppaidpThumbs','getIncidentPlate',true)+
+    fileField('Compensation received proof','if_comprecvp','if_comprecvpThumbs','getIncidentPlate',true)+
+    '<div id="ifMsg" class="msg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;">'+
+      (id?'<div style="flex:0 0 auto;"><button class="danger" onclick="deleteRow(\'lry_incident_logs\',\''+i.id+'\',\'Incident\',\''+esc(i.plate)+'\')">Delete</button></div>':'')+
+      '<div style="flex:0 0 auto;"><button class="primary" onclick="saveIncident()">Save</button></div></div>';
+  setIdList('if_photos', i.incident_photo_paths||[]); renderThumbs('if_photosThumbs','if_photos');
+  setIdList('if_policedocs', i.police_report_paths||[]); renderThumbs('if_policedocsThumbs','if_policedocs');
+  setIdList('if_quotes', i.quotation_paths||[]); renderThumbs('if_quotesThumbs','if_quotes');
+  setIdList('if_comppaidp', i.compensation_paid_paths||[]); renderThumbs('if_comppaidpThumbs','if_comppaidp');
+  setIdList('if_comprecvp', i.compensation_received_paths||[]); renderThumbs('if_comprecvpThumbs','if_comprecvp');
+  openModalEl('formModal');
+}
+function getIncidentPlate(){ return el('if_plate').value||null; }
+async function saveIncident(){
+  var date=el('if_date').value, plate=el('if_plate').value, type=el('if_type').value;
+  if(!date||!plate||!type){ showMsg('ifMsg','Date, lorry and type required.',false); return; }
+  var id=el('if_id').value;
+  var rec={ date:date, time:el('if_time').value.trim(), plate:plate, driver_name:el('if_driver').value.trim(),
+    location:el('if_location').value.trim(), location_gps:el('if_gps').value.trim(), type:type,
+    collision_type:el('if_collision').value, collision_other:el('if_collother').value.trim(),
+    third_party_plates:el('if_tpplates').value.trim(), third_party_name:el('if_tpname').value.trim(),
+    third_party_contact:el('if_tpcontact').value.trim(), third_party_insurer:el('if_tpinsurer').value.trim(),
+    fault_party:el('if_fault').value, details:el('if_details').value.trim(), damaged_asset:el('if_damaged').value.trim(),
+    witnesses:el('if_witnesses').value.trim(), towed:el('if_towed').value, tow_company:el('if_towco').value.trim(),
+    tow_cost_rm:num(el('if_towcost').value), injury_any:el('if_injany').checked, injury_action:el('if_injaction').value,
+    injured_person_name:el('if_injname').value.trim(), hospital_name:el('if_hospital').value.trim(),
+    injury_details:el('if_injdetails').value.trim(), police_report_status:el('if_police').value,
+    police_report_number:el('if_policenum').value.trim(), police_station:el('if_policestn').value.trim(),
+    compensation_paid_rm:num(el('if_comppaid').value), compensation_paid_to:el('if_comppaidto').value.trim(),
+    compensation_received_rm:num(el('if_comprecv').value), compensation_received_from:el('if_comprecvfrom').value.trim(),
+    insurance_claim_filed:el('if_claimfiled').checked, insurance_company:el('if_inscompany').value.trim(),
+    claim_number:el('if_claimnum').value.trim(), claim_amount_rm:num(el('if_claimamt').value),
+    claim_status:el('if_claimstatus').value, repair_action:el('if_repair').value, status:el('if_status').value,
+    notes:el('if_notes').value.trim(),
+    incident_photo_paths:getIdList('if_photos'), police_report_paths:getIdList('if_policedocs'),
+    quotation_paths:getIdList('if_quotes'), compensation_paid_paths:getIdList('if_comppaidp'),
+    compensation_received_paths:getIdList('if_comprecvp'),
+    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+  showLoading('Saving…');
+  var r = id ? await sb.from('lry_incident_logs').update(rec).eq('id',id) : await sb.from('lry_incident_logs').insert(Object.assign({created_by:SESSION.user.email},rec));
+  hideLoading();
+  if(r.error){ showMsg('ifMsg',r.error.message,false); return; }
+  await audit((id?'UPDATE':'CREATE')+' Incident', plate+' '+type+' '+date);
+  closeModal('formModal'); showToast('Saved'); await loadAll();
+}
+
+// ═══════════════════════════ DELETE ═══════════════════════════
+async function deleteRow(table, id, kind, label){
+  if(!confirm('Delete this '+kind+'? This cannot be undone.')) return;
+  showLoading('Deleting…');
+  var r = await sb.from(table).delete().eq('id',id);
+  hideLoading();
+  if(r.error){ fail(r.error); return; }
+  await audit('DELETE '+kind, label||id);
+  closeModal('formModal'); showToast('Deleted'); await loadAll();
+}
+
+// ═══════════════════════════ BULK PAY (RPC lry_bulk_mark_paid) ═══════════════════════════
+function openBulkPay(){
+  var list = listOutstanding();
+  el('bulkBody').innerHTML =
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>Bulk mark-paid</h2><button class="ghost btn-sm" onclick="closeModal(\'bulkModal\')">✕</button></div>'+
+    '<div class="sub">Tick the bills this one slip covers. Summons use the discounted amount if the deadline has not passed.</div>'+
+    (list.length? '<table class="grid"><thead><tr><th></th><th>Kind</th><th>Plate</th><th>Ref</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
+      list.map(function(x,idx){ return '<tr><td><input type="checkbox" class="bp-chk" style="width:auto;" data-kind="'+x.kind+'" data-id="'+x.id+'" data-amt="'+x.amount+'" onchange="bulkSum()"></td>'+
+        '<td>'+esc(x.kind)+'</td><td>'+esc(x.plate||'—')+'</td><td>'+esc(x.label)+'</td><td style="text-align:right">'+rm(x.amount)+'</td></tr>'; }).join('')+
+      '</tbody></table>' : '<div class="empty">No outstanding bills.</div>')+
+    '<div class="row" style="margin-top:12px;"><div><label>Payment ref</label><input id="bp_ref" placeholder="e.g. CHQ-2026-0428"></div>'+
+      '<div><label>Paid date</label><input type="date" id="bp_date" value="'+todayISO()+'"></div></div>'+
+    fileField('Payment slip(s) *','bp_slip','bp_slipThumbs','null',true)+
+    '<div class="sub" id="bp_sum" style="margin-top:10px;">0 bill(s) selected.</div>'+
+    '<div id="bpMsg" class="msg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="primary" onclick="submitBulkPay()">Mark paid</button></div></div>';
+  setIdList('bp_slip',[]); renderThumbs('bp_slipThumbs','bp_slip');
+  openModalEl('bulkModal');
+}
+function bulkSum(){
+  var chks=document.querySelectorAll('.bp-chk'); var n=0,t=0;
+  chks.forEach(function(c){ if(c.checked){ n++; t+=Number(c.dataset.amt)||0; } });
+  el('bp_sum').innerHTML = n+' bill(s) selected · <b>'+rm(t)+'</b>';
+}
+async function submitBulkPay(){
+  var entries=[]; document.querySelectorAll('.bp-chk').forEach(function(c){ if(c.checked) entries.push({kind:c.dataset.kind, id:c.dataset.id}); });
+  if(!entries.length){ showMsg('bpMsg','Select at least one bill.',false); return; }
+  var slips=getIdList('bp_slip'); if(!slips.length){ showMsg('bpMsg','Attach at least one payment slip.',false); return; }
+  var payload={ entries:entries, paymentSlipIds:slips, paymentRef:el('bp_ref').value.trim(), paidDate:el('bp_date').value||null };
+  showLoading('Marking paid…');
+  var r = await sb.rpc('lry_bulk_mark_paid', { payload: payload });
+  hideLoading();
+  if(r.error){ showMsg('bpMsg', r.error.message, false); return; }
+  closeModal('bulkModal'); showToast(r.data+' bill(s) marked paid'); await loadAll();
+}
+
+// ═══════════════════════════ ALARMS / SETTINGS / AUDIT / TEAM ═══════════════════════════
+async function loadAlarms(){
+  var r = await sb.from('lry_alarms').select('*').order('due_date');
+  if(r.error){ el('alarmsList').innerHTML='<div class="empty">'+esc(r.error.message)+'</div>'; return; }
+  if(!r.data.length){ el('alarmsList').innerHTML='<div class="empty">No alarms due.</div>'; return; }
+  el('alarmsList').innerHTML = '<table class="grid"><thead><tr><th>Type</th><th>Ref</th><th>Detail</th><th>Due</th><th>Recipient</th></tr></thead><tbody>'+
+    r.data.map(function(a){ return '<tr><td>'+esc(a.alarm_type)+'</td><td>'+esc(a.ref)+'</td><td>'+esc(a.detail)+'</td>'+
+      '<td>'+fmtDate(a.due_date)+'</td><td class="muted">'+esc(a.recipient)+'</td></tr>'; }).join('')+'</tbody></table>';
+}
+async function saveCompanyEmail(){
+  var v=el('setCompanyEmail').value.trim();
+  var r = await sb.from('app_settings').upsert({ key:'COMPANY_EMAIL', value:v });
+  if(r.error){ showMsg('setMsg', r.error.message, false); return; }
+  state.settings.COMPANY_EMAIL=v; await audit('EDIT Settings','COMPANY_EMAIL');
+  showMsg('setMsg','Saved.', true);
+}
+async function loadAudit(){
+  var r = await sb.from('audit_log').select('*').order('at', {ascending:false}).limit(50);
+  if(r.error){ el('auditList').innerHTML='<div class="empty">'+esc(r.error.message)+'</div>'; return; }
+  if(!r.data.length){ el('auditList').innerHTML='<div class="empty">No activity yet.</div>'; return; }
+  el('auditList').innerHTML = '<table class="grid"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>'+
+    r.data.map(function(a){ return '<tr><td class="muted">'+esc(new Date(a.at).toLocaleString('en-MY'))+'</td>'+
+      '<td>'+esc(String(a.user_email||'').split('@')[0])+'</td><td><b>'+esc(a.action)+'</b></td><td class="muted">'+esc(a.details)+'</td></tr>'; }).join('')+'</tbody></table>';
+}
+async function loadAllowed(){
+  var r = await sb.from('allowed_users').select('*').order('added_at');
+  if(r.error){ el('auList').innerHTML='<div class="empty">'+esc(r.error.message)+'</div>'; return; }
+  el('auList').innerHTML = '<table class="grid"><thead><tr><th>Email</th><th>Name</th><th>Role</th><th></th></tr></thead><tbody>'+
+    r.data.map(function(u){ return '<tr><td>'+esc(u.email)+'</td><td>'+esc(u.full_name||'')+'</td>'+
+      '<td>'+(u.is_admin?'<span class="tag">admin</span>':'staff')+'</td>'+
+      '<td style="text-align:right"><button class="danger btn-sm" onclick="removeAllowed(\''+esc(u.email)+'\')">Remove</button></td></tr>'; }).join('')+'</tbody></table>';
+}
+async function addAllowed(){
+  var email=el('au_email').value.trim().toLowerCase();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showMsg('auMsg','Enter a valid email.',false); return; }
+  var r = await sb.from('allowed_users').insert({ email:email, full_name:el('au_name').value.trim(), is_admin:el('au_admin').checked, added_by:SESSION.user.email });
+  if(r.error){ showMsg('auMsg', r.error.message, false); return; }
+  await audit('ADD User', email);
+  el('au_email').value=''; el('au_name').value=''; el('au_admin').checked=false;
+  showMsg('auMsg','Added '+email, true); loadAllowed();
+}
+async function removeAllowed(email){
+  if(email.toLowerCase()===(SESSION.user.email||'').toLowerCase()){ alert('You cannot remove yourself.'); return; }
+  if(!confirm('Remove '+email+' from access?')) return;
+  var r = await sb.from('allowed_users').delete().eq('email', email);
+  if(r.error){ fail(r.error); return; }
+  await audit('REMOVE User', email); loadAllowed();
+}
+
+// ═══════════════════════════ EXCEL EXPORT ═══════════════════════════
+function exportExcel(which){
+  var map = {
+    lorries:['Vehicles', state.lorries, function(l){ return { Plate:l.plate, Code:l.vehicle_code, Model:l.model, Year:l.year, Type:l.vehicle_type, Active:l.active, Notes:l.notes, 'Created By':l.created_by }; }],
+    fuel:['Fuel', state.fuel, function(f){ return { Date:f.date, Plate:f.plate, Odometer:f.odometer, Litres:f.litres, 'Amount RM':Number(f.amount_rm), Station:f.station, 'Paid By':f.paid_by, Driver:f.driver, Notes:f.notes }; }],
+    toll:['TollPark', state.toll, function(t){ return { Date:t.date, Plate:t.plate, Type:t.type, 'Amount RM':Number(t.amount_rm), Location:t.location, 'Paid By':t.paid_by, Driver:t.driver, 'Job Ref':t.job_ref, Duration:t.duration, Notes:t.notes }; }],
+    maint:['Maintenance', state.maint, function(m){ return { Date:m.date, Plate:m.plate, Type:m.type, Odometer:m.odometer, Items:m.items_replaced, Workshop:m.workshop, 'Cost RM':Number(m.cost_rm), 'Paid RM':Number(m.paid_rm), 'Invoice':m.invoice_number, 'Next Svc Km':m.next_service_km, 'Next Svc Date':m.next_service_date, 'Payment Ref':m.payment_ref, 'Paid Date':m.paid_date }; }],
+    compliance:['Compliance', state.compliance, function(c){ return { Type:c.type, Plate:c.plate, Status:c.status, Issued:c.issued_date, Expiry:c.expiry_date, 'Amount RM':Number(c.amount_rm), 'Coverage RM':c.coverage_rm, Insurer:c.insurer, Policy:c.policy_number, Agency:c.agency_name, 'Agency Charges':c.agency_charges_rm, 'Payment Ref':c.payment_ref, 'Paid Date':c.paid_date }; }],
+    incidents:['Incidents', state.incidents, function(i){ return { Date:i.date, Plate:i.plate, Type:i.type, Driver:i.driver_name, Location:i.location, Fault:i.fault_party, Police:i.police_report_status, Claim:i.claim_status, 'Claim RM':i.claim_amount_rm, Status:i.status }; }],
+    drivers:['Drivers', state.drivers, function(d){ return { Name:d.name, IC:d.ic_number, 'Staff ID':d.staff_id, Phone:d.phone, Email:d.email, Class:d.license_class, 'Licence No':d.license_number, 'Licence Exp':d.license_expiry_date, 'GDL Exp':d.gdl_expiry_date, Status:d.status, Category:d.category, Plate:d.assigned_plate }; }],
+    summons:['Summons', state.summons, function(s){ return { 'Summon No':s.summon_number, Issued:s.issued_date, By:s.issued_by, Plate:s.plate, Driver:s.driver_name, Offence:s.offence_type, 'Fine RM':Number(s.fine_rm), 'Discount RM':s.discount_rm, 'Disc Deadline':s.discount_deadline, 'Pay Deadline':s.payment_deadline, Status:s.status, 'Paid RM':s.paid_rm }; }]
+  };
+  var m = map[which]; if(!m) return;
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(m[1].map(m[2])), m[0]);
+  XLSX.writeFile(wb, 'HG-Lorry-'+m[0]+'-'+todayISO()+'.xlsx');
+}
+
+start();
+</script>
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Black Lee — Integration Map</title>
+<style>
+  :root {
+    --bg: #0a0e1a; --surface: #141926; --surface-2: #1c2335; --surface-3: #232c42;
+    --border: #2a3245; --text: #ffffff; --text-dim: #a0a8b8; --text-dim2: #6f7b91;
+    --accent: #f59e0b; --accent-soft: rgba(245,158,11,0.12);
+    --c-blue:#3b82f6; --c-green:#22c55e; --c-turq:#06b6d4; --c-yellow:#eab308;
+    --c-red:#ef4444; --c-beige:#cba36a; --c-pink:#ec4899; --c-grey:#94a3b8;
+    --radius:14px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .container { max-width:1180px; margin:0 auto; padding:32px 24px 80px; }
+
+  .topbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px;
+    padding-bottom:22px; border-bottom:1px solid var(--border); margin-bottom:32px; }
+  .brand-block { display:flex; align-items:center; gap:16px; }
+  .brand-logo { width:54px; height:54px; background:linear-gradient(135deg,var(--accent),#d97706);
+    border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:#0a0e1a; font-weight:900; }
+  .brand-name { font-size:1.4rem; font-weight:800; letter-spacing:-0.02em; line-height:1.1; }
+  .brand-sub { font-size:0.85rem; color:var(--text-dim); margin-top:4px; }
+  .meta-pills { display:flex; gap:10px; flex-wrap:wrap; }
+  .pill { background:var(--surface); border:1px solid var(--border); padding:9px 15px; border-radius:999px;
+    font-size:0.82rem; color:var(--text-dim); display:flex; align-items:center; gap:7px; }
+  .pill strong { color:var(--text); font-weight:700; }
+
+  h2.section-title { font-size:1.25rem; font-weight:800; margin-bottom:4px; }
+  .section-sub { color:var(--text-dim); font-size:0.92rem; margin-bottom:20px; max-width:780px; }
+  section { margin-bottom:48px; }
+
+  .bigidea { background:linear-gradient(135deg,rgba(245,158,11,0.10),rgba(59,130,246,0.06));
+    border:1px solid var(--border); border-left:4px solid var(--accent); border-radius:var(--radius);
+    padding:20px 24px; margin-bottom:40px; }
+  .bigidea h3 { font-size:1.05rem; margin-bottom:6px; }
+  .bigidea p { color:var(--text-dim); font-size:0.93rem; }
+  .bigidea b { color:var(--text); }
+  .bigidea code { background:var(--surface-3); padding:2px 7px; border-radius:6px; font-size:0.85em; color:#fbbf24; }
+
+  /* KEYS */
+  .keys { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .keycard { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 20px; }
+  .keycard .kh { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .keytag { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:0.8rem; font-weight:700; padding:4px 10px;
+    border-radius:7px; background:var(--surface-3); border:1px solid var(--border); }
+  .keycard h4 { font-size:1rem; }
+  .keycard p { color:var(--text-dim); font-size:0.86rem; }
+  .keycard .born { font-size:0.74rem; color:var(--text-dim2); text-transform:uppercase; letter-spacing:0.05em; margin-top:8px; }
+  .keycard.blue { border-top:3px solid var(--c-blue); }
+  .keycard.green { border-top:3px solid var(--c-green); }
+
+  /* MATRIX */
+  .matrix-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); }
+  table.matrix { border-collapse:collapse; width:100%; min-width:760px; font-size:0.82rem; }
+  table.matrix th, table.matrix td { padding:10px 8px; text-align:center; border-bottom:1px solid var(--border); }
+  table.matrix thead th { font-size:0.72rem; text-transform:uppercase; letter-spacing:0.03em; color:var(--text-dim2); position:sticky; top:0; background:var(--surface-2); }
+  table.matrix tbody th { text-align:left; font-weight:700; color:var(--text); white-space:nowrap; padding-left:16px; background:var(--surface); position:sticky; left:0; }
+  .col-dot { display:inline-block; width:11px; height:11px; border-radius:50%; vertical-align:middle; margin-bottom:3px; }
+  .cell-w { font-weight:800; color:#0a0e1a; border-radius:6px; }
+  .cell-r { color:var(--text-dim); font-weight:600; }
+  td.w-blue{background:var(--c-blue);} td.w-green{background:var(--c-green);} td.w-turq{background:var(--c-turq);}
+  td.w-yellow{background:var(--c-yellow);} td.w-red{background:var(--c-red);} td.w-beige{background:var(--c-beige);}
+  td.w-pink{background:var(--c-pink);} td.w-grey{background:var(--c-grey);}
+  .legend-inline { display:flex; gap:18px; flex-wrap:wrap; margin-top:12px; font-size:0.8rem; color:var(--text-dim); }
+  .legend-inline span { display:flex; align-items:center; gap:7px; }
+  .lw { width:18px; height:18px; border-radius:5px; background:var(--accent); display:inline-flex; align-items:center; justify-content:center; color:#0a0e1a; font-weight:800; font-size:0.7rem; }
+  .lr { width:18px; height:18px; border-radius:5px; border:1px solid var(--border); display:inline-flex; align-items:center; justify-content:center; color:var(--text-dim); font-weight:700; font-size:0.7rem; }
+
+  /* TRANSPORT */
+  .trans { display:flex; flex-direction:column; gap:10px; }
+  .hop { display:grid; grid-template-columns:200px 30px 200px 1fr; gap:12px; align-items:center;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 16px; }
+  .hop .node { font-weight:700; font-size:0.85rem; }
+  .hop .node small { display:block; color:var(--text-dim2); font-weight:400; font-size:0.72rem; }
+  .hop .arrow { text-align:center; color:var(--accent); font-weight:800; }
+  .hop .how { font-size:0.82rem; color:var(--text-dim); }
+  .hop .how b { color:var(--text); }
+  .tcode { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:0.78rem; color:#fbbf24; background:var(--surface-3); padding:1px 6px; border-radius:5px; }
+
+  /* BUILD ORDER */
+  .steps { display:flex; flex-direction:column; gap:10px; }
+  .step { display:flex; gap:14px; align-items:flex-start; background:var(--surface); border:1px solid var(--border);
+    border-radius:10px; padding:14px 16px; }
+  .step .num { flex:0 0 auto; width:30px; height:30px; border-radius:8px; background:var(--accent); color:#0a0e1a;
+    font-weight:800; display:flex; align-items:center; justify-content:center; font-size:0.85rem; }
+  .step .body { font-size:0.88rem; color:var(--text-dim); }
+  .step .body b { color:var(--text); }
+  .step.done .num { background:var(--c-green); }
+  .step.now .num { background:var(--accent); }
+  .step.later .num { background:var(--surface-3); color:var(--text-dim); border:1px solid var(--border); }
+  .tag { font-size:0.66rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; padding:2px 8px; border-radius:999px; margin-left:8px; }
+  .tag.t-done{ background:rgba(34,197,94,0.16); color:#4ade80; }
+  .tag.t-now{ background:rgba(245,158,11,0.16); color:#fbbf24; }
+  .tag.t-later{ background:rgba(148,163,184,0.16); color:#cbd5e1; }
+
+  .note { font-size:0.78rem; color:var(--text-dim2); margin-top:14px; }
+  @media (max-width:860px){ .keys{grid-template-columns:1fr;} .hop{grid-template-columns:1fr; gap:6px;} .hop .arrow{display:none;} }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topbar">
+    <div class="brand-block">
+      <div class="brand-logo">BL</div>
+      <div>
+        <div class="brand-name">Integration Map</div>
+        <div class="brand-sub">Black Lee · how every system passes data — the wiring behind the blueprint</div>
+      </div>
+    </div>
+    <div class="meta-pills">
+      <div class="pill">🔌 Read / Write matrix</div>
+      <div class="pill">📅 v1 · 2026-06-23</div>
+    </div>
+  </div>
+
+  <div class="bigidea">
+    <h3>🧩 The architecture in one line</h3>
+    <p>There is <b>one shared Job Record</b>, keyed by <code>Job ID</code>, living in your <b>Sheet + Apps Script</b> backbone.<br>
+    Every system <b>reads the colours it needs and writes only its own colour</b> back to that record.<br>
+    No system talks to another directly — they all talk to <b>the record</b>. That is the whole integration.</p>
+  </div>
+
+  <!-- KEYS -->
+  <section>
+    <h2 class="section-title">1 · The two keys that hold it together</h2>
+    <p class="section-sub">Everything joins on these. Get them right first — the rest is just columns.</p>
+    <div class="keys">
+      <div class="keycard blue">
+        <div class="kh"><span class="keytag">CLIENT-0001</span><h4>Client ID</h4></div>
+        <p>One per client. Carries <b>BLUE</b> (name, tel, contact, comms). A client can have many jobs.</p>
+        <div class="born">Minted at · CRM (Stage 2)</div>
+      </div>
+      <div class="keycard green">
+        <div class="kh"><span class="keytag">JOB-0001-A</span><h4>Job ID</h4></div>
+        <p>One per job / lot. Links back to a Client ID. <b>Every colour from GREEN onward attaches here.</b></p>
+        <div class="born">Minted at · Smart Quotation (Stage 3)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MATRIX -->
+  <section>
+    <h2 class="section-title">2 · Read / Write matrix — who touches which colour</h2>
+    <p class="section-sub">This is the build contract. <b>W</b> = this system creates the colour (writes it once). <b>R</b> = this system reads it. Build each system to honour exactly this row — nothing more.</p>
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding-left:16px;">System</th>
+            <th><span class="col-dot" style="background:var(--c-blue)"></span><br>Blue</th>
+            <th><span class="col-dot" style="background:var(--c-green)"></span><br>Green</th>
+            <th><span class="col-dot" style="background:var(--c-turq)"></span><br>Turq</th>
+            <th><span class="col-dot" style="background:var(--c-yellow)"></span><br>Yellow</th>
+            <th><span class="col-dot" style="background:var(--c-red)"></span><br>Red</th>
+            <th><span class="col-dot" style="background:var(--c-beige)"></span><br>Beige</th>
+            <th><span class="col-dot" style="background:var(--c-pink)"></span><br>Pink</th>
+            <th><span class="col-dot" style="background:var(--c-grey)"></span><br>Grey</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th>2 · CRM</th>
+            <td class="cell-w w-blue">W</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><th>3 · Smart Quotation</th>
+            <td class="cell-r">R</td><td class="cell-w w-green">W</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><th>4 · Job Confirmation</th>
+            <td class="cell-r">R</td><td class="cell-r">R</td><td class="cell-w w-turq">W</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><th>5 · Permit</th>
+            <td class="cell-r">R</td><td class="cell-r">R</td><td></td><td class="cell-w w-yellow">W</td><td></td><td></td><td></td><td></td></tr>
+          <tr><th>6A · Pre-Onsite</th>
+            <td class="cell-r">R</td><td class="cell-r">R</td><td></td><td class="cell-r">R</td><td class="cell-w w-red">W</td><td></td><td></td><td></td></tr>
+          <tr><th>6B · Factory</th>
+            <td></td><td class="cell-r">R</td><td class="cell-r">R</td><td></td><td></td><td class="cell-w w-beige">W</td><td></td><td></td></tr>
+          <tr><th>7 · Onsite</th>
+            <td class="cell-r">R</td><td class="cell-r">R</td><td></td><td class="cell-r">R</td><td class="cell-r">R</td><td></td><td class="cell-w w-pink">W</td><td></td></tr>
+          <tr><th>8A · Job Completion</th>
+            <td class="cell-r">R</td><td class="cell-r">R</td><td class="cell-r">R</td><td></td><td class="cell-r">R</td><td></td><td class="cell-r">R</td><td></td></tr>
+          <tr><th>8B · Backend + Pay</th>
+            <td class="cell-r">R</td><td class="cell-r">R</td><td class="cell-r">R</td><td></td><td class="cell-r">R</td><td class="cell-r">R</td><td></td><td class="cell-w w-grey">W</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="legend-inline">
+      <span><span class="lw">W</span> Writes / creates this colour (once)</span>
+      <span><span class="lr">R</span> Reads this colour (never edits)</span>
+    </div>
+  </section>
+
+  <!-- TRANSPORT -->
+  <section>
+    <h2 class="section-title">3 · Transport — how the data actually moves</h2>
+    <p class="section-sub">Same backbone everywhere: an Apps Script web app endpoint over a shared Google Sheet. The only special hops are WATI in, and email / WhatsApp / external out.</p>
+    <div class="trans">
+
+      <div class="hop">
+        <div class="node">WATI chatbot <small>incoming lead</small></div>
+        <div class="arrow">→</div>
+        <div class="node">CRM <small>Blue born</small></div>
+        <div class="how"><b>WATI webhook</b> → Apps Script <span class="tcode">doPost(e)</span> → append row, mint <span class="tcode">Client ID</span></div>
+      </div>
+
+      <div class="hop">
+        <div class="node">CRM</div>
+        <div class="arrow">→</div>
+        <div class="node">Smart Quotation</div>
+        <div class="how">Reads Blue by <span class="tcode">Client ID</span> · mints <span class="tcode">Job ID</span> · same Sheet, no export</div>
+      </div>
+
+      <div class="hop">
+        <div class="node">Smart Quotation</div>
+        <div class="arrow">→</div>
+        <div class="node">Client <small>quote out</small></div>
+        <div class="how"><b>Auto-send</b> quote + stored measurement via <span class="tcode">MailApp</span> / WATI send-API</div>
+      </div>
+
+      <div class="hop">
+        <div class="node">Any system</div>
+        <div class="arrow">→</div>
+        <div class="node">Job Record</div>
+        <div class="how">Reads by <span class="tcode">Job ID</span> · writes only its own colour columns back</div>
+      </div>
+
+      <div class="hop">
+        <div class="node">Permit system</div>
+        <div class="arrow">→</div>
+        <div class="node">Building mgmt <small>email out</small></div>
+        <div class="how"><b>Auto-email</b> filled permit + worker docs + MOS + HIRARC · replies → version v2, v3…</div>
+      </div>
+
+      <div class="hop">
+        <div class="node">Job Completion</div>
+        <div class="arrow">→</div>
+        <div class="node">Client · Wix · LinkedIn</div>
+        <div class="how">Email to client · <b>draft</b> (save-mode) pushed to Wix blog + LinkedIn for manual post</div>
+      </div>
+
+      <div class="hop">
+        <div class="node">Backend + Pay</div>
+        <div class="arrow">→</div>
+        <div class="node">CIDB CIMS · Infotech <small>manual</small></div>
+        <div class="how">Generates summary → team submits to <b>CIMS</b> by hand · invoice still in <b>Infotech</b> (standalone)</div>
+      </div>
+
+    </div>
+    <p class="note">Anything marked manual (CIMS, Infotech) is a future automation target — for now the system <b>prepares</b> the data, a human submits.</p>
+  </section>
+
+  <!-- BUILD ORDER -->
+  <section>
+    <h2 class="section-title">4 · What to wire first</h2>
+    <p class="section-sub">The platform only "connects" once the keys and the shared record exist. Order matters.</p>
+    <div class="steps">
+      <div class="step now">
+        <div class="num">1</div>
+        <div class="body"><b>Lock the Job Record schema<span class="tag t-now">do first</span></b><br>One Sheet (or one Apps Script data layer) with a column block per colour, keyed by Client ID + Job ID. This is the contract every system signs.</div>
+      </div>
+      <div class="step now">
+        <div class="num">2</div>
+        <div class="body"><b>Build the CRM (Stage 2)<span class="tag t-now">do first</span></b><br>It mints Client ID and writes Blue. Nothing downstream connects until Blue exists in one place. <i>(See the CRM spec.)</i></div>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <div class="body"><b>Wire CRM → Smart Quotation<span class="tag t-later">next</span></b><br>Quotation reads Blue by Client ID, mints Job ID, writes Green. Your first real "two systems talking" win.</div>
+      </div>
+      <div class="step">
+        <div class="num">4</div>
+        <div class="body"><b>Point each existing system at the Job Record<span class="tag t-later">next</span></b><br>Permit, Pre-Onsite, Factory, Onsite, JCR, Backend already exist — retrofit each to read by Job ID and write its one colour per the matrix.</div>
+      </div>
+      <div class="step later">
+        <div class="num">5</div>
+        <div class="body"><b>WATI inbound + outbound<span class="tag t-later">when method decided</span></b><br>Webhook leads into CRM, send quotes / updates out. Slot in once you've chosen the WATI method.</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

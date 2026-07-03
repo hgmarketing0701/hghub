@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Black Lee — Contractor Support | Hoarding · Scaffold · Fit-Out · Reinstatement</title>
+<meta name="description" content="Contractor support services in Malaysia. Hoarding, scaffold, visual print, temporary storage, reinstatement, and full fit-out — all in-house. If contractors are doctors, we're the nurse." />
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #141926;
+    --surface-2: #1c2335;
+    --border: #2a3245;
+    --text: #ffffff;
+    --text-dim: #a0a8b8;
+    --accent: #f59e0b;
+    --accent-hover: #d97706;
+    --accent-soft: rgba(245, 158, 11, 0.12);
+    --wa: #25D366;
+    --wa-hover: #1ebe5d;
+    --radius: 14px;
+    --shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10, 14, 26, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px;
+    max-width: 1200px; margin: 0 auto;
+  }
+  .logo {
+    font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-links a {
+    color: var(--text-dim); text-decoration: none; font-weight: 500; font-size: 0.95rem;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    background: var(--wa); color: white !important;
+    padding: 10px 18px; border-radius: 999px;
+    font-weight: 600; font-size: 0.9rem;
+    transition: background 0.2s;
+  }
+  .nav-cta:hover { background: var(--wa-hover); }
+  @media (max-width: 720px) { .nav-links a:not(.nav-cta) { display: none; } }
+
+  .hero {
+    padding: 96px 0 80px;
+    background:
+      radial-gradient(circle at 20% 20%, var(--accent-soft), transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(37, 211, 102, 0.08), transparent 50%);
+    position: relative;
+  }
+  .hero-tag {
+    display: inline-block;
+    padding: 6px 14px;
+    background: var(--accent-soft);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: var(--accent);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-size: clamp(2.2rem, 5.5vw, 4rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+  }
+  .hero h1 em { color: var(--accent); font-style: normal; }
+  .hero-sub {
+    font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+    color: var(--text-dim);
+    max-width: 620px;
+    margin-bottom: 40px;
+  }
+  .hero-quote {
+    border-left: 3px solid var(--accent);
+    padding: 12px 0 12px 20px;
+    margin: 0 0 40px 0;
+    color: var(--text);
+    font-size: 1.1rem;
+    font-style: italic;
+    max-width: 620px;
+  }
+  .cta-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 16px 28px;
+    border-radius: 999px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.2s;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  .btn-primary { background: var(--accent); color: #0a0e1a; }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .btn-wa { background: var(--wa); color: white; }
+  .btn-wa:hover { background: var(--wa-hover); transform: translateY(-1px); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface); }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 60px;
+    padding: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .stat-num { font-size: 2rem; font-weight: 800; color: var(--accent); letter-spacing: -0.02em; }
+  .stat-label { color: var(--text-dim); font-size: 0.9rem; margin-top: 4px; }
+  @media (max-width: 720px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+
+  section { padding: 96px 0; }
+  .section-tag {
+    display: inline-block;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+    max-width: 720px;
+  }
+  .section-sub {
+    color: var(--text-dim);
+    font-size: 1.05rem;
+    max-width: 640px;
+    margin-bottom: 48px;
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .service-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .service-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+  }
+  .service-icon {
+    width: 48px; height: 48px;
+    background: var(--accent-soft);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+  .service-title {
+    font-size: 1.2rem; font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .service-desc {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+  }
+  .service-list {
+    list-style: none;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+  .service-list li {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    padding: 4px 0;
+    padding-left: 20px;
+    position: relative;
+  }
+  .service-list li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .why {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .why-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+  }
+  .why-item {
+    padding: 24px;
+    background: var(--surface-2);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+  .why-num {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+  .why-text { color: var(--text-dim); font-size: 0.95rem; }
+  .why-text strong { color: var(--text); display: block; margin-bottom: 4px; font-size: 1.05rem; }
+
+  .form-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 40px;
+    box-shadow: var(--shadow);
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .form-grid .full { grid-column: 1 / -1; }
+  @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+  .form-field label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .form-field input, .form-field textarea, .form-field select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.2s;
+  }
+  .form-field input:focus, .form-field textarea:focus, .form-field select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .form-field textarea { resize: vertical; min-height: 100px; }
+  .checkboxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  .checkbox-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    font-size: 0.92rem;
+  }
+  .checkbox-item:hover { border-color: var(--accent); }
+  .checkbox-item input { accent-color: var(--accent); width: auto; }
+  .submit-row {
+    margin-top: 28px;
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  }
+  .submit-note {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+  }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 48px 0 32px;
+    color: var(--text-dim);
+    font-size: 0.92rem;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 720px) { .footer-grid { grid-template-columns: 1fr; } }
+  .footer-grid h4 { color: var(--text); margin-bottom: 14px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .footer-grid a { color: var(--text-dim); text-decoration: none; display: block; padding: 4px 0; }
+  .footer-grid a:hover { color: var(--accent); }
+  .footer-bottom {
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+
+  .wa-float {
+    position: fixed; right: 24px; bottom: 24px;
+    width: 60px; height: 60px;
+    background: var(--wa);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: 1.8rem;
+    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+    text-decoration: none;
+    z-index: 99;
+    transition: transform 0.2s;
+  }
+  .wa-float:hover { transform: scale(1.08); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="logo">Black Lee<span>.</span></a>
+    <div class="nav-links">
+      <a href="#services">Services</a>
+      <a href="#why">Why Us</a>
+      <a href="#quote">Get Quote</a>
+      <a href="#quote" class="nav-cta">WhatsApp Black</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <span class="hero-tag">🛠️ Contractor Support · Malaysia</span>
+    <h1>If contractors are <em>doctors</em>,<br />we're the <em>nurse</em>.</h1>
+    <p class="hero-sub">Hoarding, scaffold, visual print, temporary storage, reinstatement, and full fit-out — all in-house. 40-strong team. Black-and-white communication. No subcontracting, no surprises.</p>
+    <blockquote class="hero-quote">"You handle the build. We handle everything that makes the build possible."</blockquote>
+    <div class="cta-row">
+      <a href="#quote" class="btn btn-primary">Get a Quote in 24 Hours →</a>
+      <a href="#quote" class="btn btn-wa">💬 WhatsApp Black Directly</a>
+    </div>
+    <div class="stats">
+      <div><div class="stat-num">5+</div><div class="stat-label">Years operating</div></div>
+      <div><div class="stat-num">40</div><div class="stat-label">In-house staff</div></div>
+      <div><div class="stat-num">8</div><div class="stat-label">Service lines</div></div>
+      <div><div class="stat-num">0</div><div class="stat-label">Subcontractors</div></div>
+    </div>
+  </div>
+</header>
+
+<section id="services">
+  <div class="container">
+    <span class="section-tag">What We Do</span>
+    <h2 class="section-title">One team. Every job that makes the site work.</h2>
+    <p class="section-sub">Most contractors juggle 6 different vendors for the boring-but-critical stuff. We handle all of it. One WhatsApp, one quotation, one accountable team on site.</p>
+    <div class="services-grid">
+
+      <div class="service-card">
+        <div class="service-icon">🚧</div>
+        <h3 class="service-title">Hoarding — Indoor & Outdoor</h3>
+        <p class="service-desc">PVC and timber hoarding, supply and install. Council-compliant. Mobilisation in 3 working days.</p>
+        <ul class="service-list">
+          <li>Sliding door access</li>
+          <li>Counterweight systems</li>
+          <li>Hoarding dismantling on completion</li>
+        </ul>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">🎨</div>
+        <h3 class="service-title">Visual Print & Install</h3>
+        <p class="service-desc">Full-colour tarpaulin, banners, and site branding. Every wall around your site is free marketing for the client — we make sure it earns its keep.</p>
+        <ul class="service-list">
+          <li>Hoarding visual tarpaulin</li>
+          <li>Brand-spec colour matching</li>
+          <li>Weather-rated install</li>
+        </ul>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">🏗️</div>
+        <h3 class="service-title">Scaffold</h3>
+        <p class="service-desc">Erection, hire, and dismantling. Safe-loading certified. Crew available across Klang Valley.</p>
+        <ul class="service-list">
+          <li>Internal and external scaffold</li>
+          <li>Short-term and project-length hire</li>
+          <li>Daily safety checks</li>
+        </ul>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">📦</div>
+        <h3 class="service-title">Temporary Storage Rental</h3>
+        <p class="service-desc">Need somewhere to park materials, tools, or fit-out items between phases? We've got the space.</p>
+        <ul class="service-list">
+          <li>Secured, accessible storage</li>
+          <li>Short-term and rolling contracts</li>
+          <li>Delivery and pickup support</li>
+        </ul>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">🔄</div>
+        <h3 class="service-title">Reinstatement Work</h3>
+        <p class="service-desc">Project finished? Site needs to look like nothing happened? Our reinstatement crew puts it back better than they found it.</p>
+        <ul class="service-list">
+          <li>Make-good tiling and flooring</li>
+          <li>Wall and ceiling restoration</li>
+          <li>End-of-tenancy handover ready</li>
+        </ul>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">🛠️</div>
+        <h3 class="service-title">Full Fit-Out</h3>
+        <p class="service-desc">Partition. Plaster ceiling. Tiling. Flooring. Brick wall erection. Painting. The whole interior — one team, one accountable point.</p>
+        <ul class="service-list">
+          <li>Partition & plaster ceiling</li>
+          <li>Tiling & flooring</li>
+          <li>Brick wall erection & painting</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="why" class="why">
+  <div class="container">
+    <span class="section-tag">Why Contractors Work With Us</span>
+    <h2 class="section-title">Black-and-white. In writing. On time.</h2>
+    <p class="section-sub">No verbal promises that disappear. No phantom subcontractors. No "I'll get back to you Monday" that becomes Thursday.</p>
+    <div class="why-grid">
+      <div class="why-item">
+        <div class="why-num">01</div>
+        <p class="why-text"><strong>40 in-house staff</strong>Every person on your site is on our payroll. We control the quality, the timeline, and the safety record.</p>
+      </div>
+      <div class="why-item">
+        <div class="why-num">02</div>
+        <p class="why-text"><strong>WhatsApp-first comms</strong>Every update, every issue, every approval — in writing. If it's not in WhatsApp, it didn't happen.</p>
+      </div>
+      <div class="why-item">
+        <div class="why-num">03</div>
+        <p class="why-text"><strong>One quote, one team</strong>Stop chasing 6 vendors. One quotation covers hoarding to handover. One project manager owns it.</p>
+      </div>
+      <div class="why-item">
+        <div class="why-num">04</div>
+        <p class="why-text"><strong>3-day mobilisation</strong>Confirm Monday. Crew on site Thursday. We don't sit on confirmed jobs.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="quote">
+  <div class="container">
+    <span class="section-tag">Get a Quote</span>
+    <h2 class="section-title">Tell us the job. We'll quote in 24 hours.</h2>
+    <p class="section-sub">Fill in the form below. It goes straight to Black on WhatsApp. No call centre, no sales rep, no marketing nurturing sequence.</p>
+    <div class="form-wrap">
+      <form id="quoteForm" onsubmit="return submitQuote(event)">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="company">Your company name</label>
+            <input type="text" id="company" required placeholder="e.g. ABC Sdn Bhd" />
+          </div>
+          <div class="form-field">
+            <label for="contact">Your name</label>
+            <input type="text" id="contact" required placeholder="Project manager / Director" />
+          </div>
+          <div class="form-field">
+            <label for="phone">WhatsApp number</label>
+            <input type="tel" id="phone" required placeholder="+60 12 345 6789" />
+          </div>
+          <div class="form-field">
+            <label for="site">Site location</label>
+            <input type="text" id="site" required placeholder="KL / Selangor / etc." />
+          </div>
+          <div class="form-field full">
+            <label>Services needed (pick all that apply)</label>
+            <div class="checkboxes">
+              <label class="checkbox-item"><input type="checkbox" value="Hoarding" /> Hoarding</label>
+              <label class="checkbox-item"><input type="checkbox" value="Visual Print & Install" /> Visual Print & Install</label>
+              <label class="checkbox-item"><input type="checkbox" value="Scaffold" /> Scaffold</label>
+              <label class="checkbox-item"><input type="checkbox" value="Temporary Storage" /> Temporary Storage</label>
+              <label class="checkbox-item"><input type="checkbox" value="Reinstatement" /> Reinstatement</label>
+              <label class="checkbox-item"><input type="checkbox" value="Fit-Out" /> Fit-Out</label>
+            </div>
+          </div>
+          <div class="form-field">
+            <label for="start">Target start date</label>
+            <input type="date" id="start" />
+          </div>
+          <div class="form-field">
+            <label for="budget">Budget range (optional)</label>
+            <select id="budget">
+              <option value="">— Select —</option>
+              <option>Under RM 10k</option>
+              <option>RM 10k – RM 30k</option>
+              <option>RM 30k – RM 100k</option>
+              <option>RM 100k+</option>
+              <option>Not sure yet</option>
+            </select>
+          </div>
+          <div class="form-field full">
+            <label for="notes">Anything else (scope, deadline, special access)</label>
+            <textarea id="notes" placeholder="Tell us the scope in your own words — like you would on WhatsApp. We prefer it that way."></textarea>
+          </div>
+        </div>
+        <div class="submit-row">
+          <button type="submit" class="btn btn-wa">📤 Send via WhatsApp →</button>
+          <span class="submit-note">Goes straight to Black's WhatsApp. We reply in under 4 working hours.</span>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="logo" style="margin-bottom: 12px;">Black Lee<span>.</span></div>
+        <p>Contractor support services across Malaysia. We do the work nobody posts on Instagram — the boring stuff that lets every other job happen.</p>
+      </div>
+      <div>
+        <h4>Services</h4>
+        <a href="#services">Hoarding</a>
+        <a href="#services">Visual Print</a>
+        <a href="#services">Scaffold</a>
+        <a href="#services">Fit-Out</a>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <a href="#quote">Get a Quote</a>
+        <a href="#quote">WhatsApp Black</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© Black Lee — Contractor Support · Built lean. Run lean.</div>
+      <div>Black-and-white. In writing. On time.</div>
+    </div>
+  </div>
+</footer>
+
+<a href="#quote" class="wa-float" aria-label="WhatsApp Black">💬</a>
+
+<script>
+  // ─── CONFIG: replace with your real WhatsApp number (no '+', no spaces) ───
+  const WA_NUMBER = "60123456789"; // e.g. 60123456789
+
+  function submitQuote(e) {
+    e.preventDefault();
+    const company = document.getElementById('company').value.trim();
+    const contact = document.getElementById('contact').value.trim();
+    const phone   = document.getElementById('phone').value.trim();
+    const site    = document.getElementById('site').value.trim();
+    const start   = document.getElementById('start').value.trim();
+    const budget  = document.getElementById('budget').value.trim();
+    const notes   = document.getElementById('notes').value.trim();
+    const services = Array.from(document.querySelectorAll('.checkboxes input:checked'))
+                         .map(i => i.value);
+
+    const lines = [];
+    lines.push("Hi Black, quotation request from your website.");
+    lines.push("");
+    lines.push("Company: " + company);
+    lines.push("PIC: " + contact);
+    lines.push("WhatsApp: " + phone);
+    lines.push("Site: " + site);
+    if (start)  lines.push("Target start: " + start);
+    if (budget) lines.push("Budget: " + budget);
+    if (services.length) {
+      lines.push("");
+      lines.push("Services needed:");
+      services.forEach((s, i) => lines.push((i+1) + ". " + s));
+    }
+    if (notes) {
+      lines.push("");
+      lines.push("Notes:");
+      lines.push(notes);
+    }
+    lines.push("");
+    lines.push("Thanks");
+
+    const msg = encodeURIComponent(lines.join("\n"));
+    const url = "https://wa.me/" + WA_NUMBER + "?text=" + msg;
+    window.open(url, "_blank");
+    return false;
+  }
+</script>
+
+</body>
+</html>

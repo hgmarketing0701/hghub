@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Black Lee — Subcon Invoices</title>
+<style>
+  :root {
+    --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335;
+    --border:#2a3245; --text:#fff; --text-dim:#a0a8b8;
+    --accent:#f59e0b; --accent-hover:#d97706; --accent-soft:rgba(245,158,11,0.12);
+    --green:#22c55e; --green-soft:rgba(34,197,94,0.15);
+    --blue:#3b82f6; --blue-soft:rgba(59,130,246,0.15);
+    --red:#ef4444; --grey:#6b7280; --grey-soft:rgba(107,114,128,0.18);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.55;min-height:100vh;}
+  .container{max-width:1500px;margin:0 auto;padding:24px 20px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+    gap:16px;padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:20px;}
+  .brand-block{display:flex;align-items:center;gap:14px;}
+  .brand-logo{width:50px;height:50px;background:linear-gradient(135deg,var(--accent),#b45309);
+    border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;}
+  .brand-name{font-size:1.3rem;font-weight:800;line-height:1.1;}
+  .brand-sub{font-size:0.8rem;color:var(--text-dim);margin-top:4px;}
+  .user-pill{font-size:0.8rem;padding:9px 14px;border-radius:999px;
+    border:1px solid var(--border);background:var(--surface);color:var(--text-dim);}
+
+  .banner{background:rgba(239,68,68,0.12);border:1px solid var(--red);color:#fca5a5;
+    border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:0.86rem;display:none;}
+  .banner.show{display:block;}
+
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start;}
+  @media(max-width:980px){.layout{grid-template-columns:1fr;}}
+
+  .panel{background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius);padding:20px;margin-bottom:20px;}
+  .panel-title{font-size:0.95rem;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+  .panel-hint{font-size:0.78rem;color:var(--text-dim);margin-bottom:16px;}
+  .group-label{font-size:0.72rem;color:var(--accent);text-transform:uppercase;
+    font-weight:800;letter-spacing:0.05em;margin:18px 0 10px;padding-bottom:6px;
+    border-bottom:1px dashed var(--border);}
+  .group-label:first-of-type{margin-top:0;}
+
+  label.fld{display:block;margin-bottom:12px;}
+  label.fld>span{display:block;font-size:0.76rem;color:var(--text-dim);margin-bottom:5px;font-weight:600;}
+  input[type=text],input[type=number],input[type=date],textarea,select{
+    width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);
+    padding:9px 11px;border-radius:8px;font-size:0.88rem;font-family:inherit;}
+  textarea{resize:vertical;min-height:62px;line-height:1.4;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+  .seg{display:inline-flex;background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:3px;gap:3px;}
+  .seg button{background:none;border:none;color:var(--text-dim);padding:6px 16px;border-radius:999px;
+    font-size:0.82rem;cursor:pointer;font-family:inherit;font-weight:600;}
+  .seg button.on{background:var(--accent);color:#0a0e1a;}
+
+  .logo-drop{border:1px dashed var(--border);border-radius:10px;padding:14px;text-align:center;
+    cursor:pointer;font-size:0.82rem;color:var(--text-dim);background:var(--bg);}
+  .logo-drop:hover{border-color:var(--accent);color:var(--accent);}
+  .logo-prev{display:flex;align-items:center;gap:12px;margin-top:10px;}
+  .logo-prev img{max-height:54px;max-width:140px;border-radius:6px;background:#fff;padding:4px;}
+
+  table.items{width:100%;border-collapse:collapse;margin-top:6px;}
+  table.items th{font-size:0.7rem;color:var(--text-dim);text-transform:uppercase;text-align:left;
+    padding:6px 6px;font-weight:700;letter-spacing:0.03em;}
+  table.items td{padding:4px 4px;vertical-align:top;}
+  table.items input{padding:7px 8px;font-size:0.84rem;}
+  .ta-right{text-align:right;}
+  .lineamt{font-variant-numeric:tabular-nums;padding-top:9px;font-size:0.86rem;white-space:nowrap;}
+  .x-btn{background:var(--grey-soft);border:1px solid var(--border);color:var(--text-dim);
+    width:30px;height:34px;border-radius:7px;cursor:pointer;font-size:1rem;line-height:1;}
+  .x-btn:hover{color:var(--red);border-color:var(--red);}
+
+  .btn{border:none;border-radius:9px;padding:10px 16px;font-size:0.86rem;font-weight:700;
+    cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:7px;}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .btn-sm{padding:7px 12px;font-size:0.8rem;}
+  .btn-primary{background:var(--accent);color:#0a0e1a;}
+  .btn-primary:hover{background:var(--accent-hover);}
+  .btn-ghost{background:var(--surface-2);color:var(--text-dim);border:1px solid var(--border);}
+  .btn-ghost:hover{color:var(--text);border-color:var(--accent);}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:11px 13px;margin-top:6px;}
+  .switch{position:relative;width:46px;height:26px;flex:0 0 auto;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;inset:0;background:var(--grey);border-radius:999px;transition:.2s;cursor:pointer;}
+  .slider:before{content:"";position:absolute;height:20px;width:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;}
+  .switch input:checked + .slider{background:var(--accent);}
+  .switch input:checked + .slider:before{transform:translateX(20px);}
+
+  .result-box{background:var(--green-soft);border:1px solid var(--green);border-radius:10px;
+    padding:14px 16px;margin-top:16px;display:none;}
+  .result-box.show{display:block;}
+  .result-box a{color:var(--green);font-weight:700;text-decoration:none;margin-right:14px;}
+
+  /* preview */
+  .preview-wrap{position:sticky;top:18px;}
+  #invoiceDoc{background:#fff;color:#1a1a1a;border-radius:10px;padding:34px 36px;
+    font-size:13px;line-height:1.5;box-shadow:0 10px 40px rgba(0,0,0,0.4);}
+  #invoiceDoc .ih{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;
+    border-bottom:2px solid #1a1a1a;padding-bottom:16px;margin-bottom:16px;}
+  #invoiceDoc .ilogo img{max-height:60px;max-width:170px;margin-bottom:8px;}
+  #invoiceDoc .iname{font-size:17px;font-weight:800;}
+  #invoiceDoc .imeta{font-size:11.5px;color:#444;white-space:pre-line;margin-top:4px;}
+  #invoiceDoc .ititle{text-align:right;}
+  #invoiceDoc .ititle h1{font-size:28px;letter-spacing:2px;margin:0;}
+  #invoiceDoc .ititle .m{font-size:11.5px;color:#444;margin-top:8px;line-height:1.7;}
+  #invoiceDoc .ititle .m b{color:#1a1a1a;}
+  #invoiceDoc .bt{margin-bottom:14px;}
+  #invoiceDoc .bt .l{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;font-weight:700;margin-bottom:3px;}
+  #invoiceDoc .bt .w{font-size:13px;font-weight:700;}
+  #invoiceDoc .bt .a{font-size:11.5px;color:#444;white-space:pre-line;}
+  #invoiceDoc table.di{width:100%;border-collapse:collapse;margin:8px 0;}
+  #invoiceDoc table.di th{background:#1a1a1a;color:#fff;font-size:10.5px;text-transform:uppercase;padding:8px 9px;text-align:left;}
+  #invoiceDoc table.di th.r,#invoiceDoc table.di td.r{text-align:right;}
+  #invoiceDoc table.di td{padding:8px 9px;border-bottom:1px solid #e5e5e5;font-size:12px;vertical-align:top;}
+  #invoiceDoc .tt{margin-left:auto;width:260px;margin-top:6px;}
+  #invoiceDoc .tt .r{display:flex;justify-content:space-between;padding:4px 0;font-size:12.5px;}
+  #invoiceDoc .tt .g{border-top:2px solid #1a1a1a;margin-top:6px;padding-top:8px;font-size:15px;font-weight:800;}
+  #invoiceDoc .pay{margin-top:22px;font-size:11.5px;color:#333;border-top:1px solid #e5e5e5;padding-top:12px;white-space:pre-line;}
+  #invoiceDoc .pay .l{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;font-weight:700;margin-bottom:4px;}
+
+  .summary-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
+  .stat-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+  .stat-card{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;min-width:150px;}
+  .stat-card .l{font-size:0.72rem;color:var(--text-dim);text-transform:uppercase;font-weight:700;}
+  .stat-card .v{font-size:1.35rem;font-weight:800;margin-top:3px;}
+  table.rec{width:100%;border-collapse:collapse;}
+  table.rec th{font-size:0.72rem;color:var(--text-dim);text-transform:uppercase;text-align:left;
+    padding:10px 10px;border-bottom:1px solid var(--border);font-weight:700;}
+  table.rec td{padding:10px 10px;border-bottom:1px solid var(--border);font-size:0.86rem;vertical-align:middle;}
+  table.rec tr:hover td{background:var(--surface-2);}
+  .rec-empty{text-align:center;color:var(--text-dim);padding:30px;font-size:0.88rem;}
+  .pill-tag{display:inline-block;background:var(--blue-soft);color:#93c5fd;padding:2px 9px;border-radius:999px;font-size:0.74rem;font-weight:600;}
+  .pill-ind{background:var(--green-soft);color:#86efac;}
+  .mini-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--text-dim);
+    padding:5px 9px;border-radius:7px;cursor:pointer;font-size:0.76rem;font-family:inherit;margin-right:5px;text-decoration:none;display:inline-block;}
+  .mini-btn:hover{color:var(--accent);border-color:var(--accent);}
+  .mini-btn.del:hover{color:var(--red);border-color:var(--red);}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);
+    background:var(--green);color:#0a0e1a;padding:12px 22px;border-radius:10px;font-weight:700;
+    font-size:0.9rem;box-shadow:0 8px 30px rgba(0,0,0,0.4);transition:transform .3s;z-index:999;}
+  .toast.error{background:var(--red);color:#fff;}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+
+  .overlay{position:fixed;inset:0;background:rgba(10,14,26,0.7);display:none;
+    align-items:center;justify-content:center;z-index:1000;}
+  .overlay.show{display:flex;}
+  .overlay .box{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:24px 32px;font-weight:700;display:flex;align-items:center;gap:14px;}
+  .spin{width:22px;height:22px;border:3px solid var(--border);border-top-color:var(--accent);
+    border-radius:50%;animation:spin 0.7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topbar">
+    <div class="brand-block">
+      <div class="brand-logo">🧾</div>
+      <div>
+        <div class="brand-name">Subcon Invoice Generator</div>
+        <div class="brand-sub">For individual workers / subcons who don't issue their own invoice</div>
+      </div>
+    </div>
+    <span class="user-pill" id="userPill">👤 …</span>
+  </div>
+
+  <div class="banner" id="offlineBanner">
+    ⚠ This page isn't connected to the server. Open it via the <b>deployed web-app URL</b> — opening the HTML file directly won't save anything.
+  </div>
+
+  <div class="layout">
+
+    <!-- ============ FORM ============ -->
+    <div>
+      <div class="panel">
+        <div class="panel-title">✏️ Invoice details</div>
+        <div class="panel-hint">Fill in the subcon (who you're paying) and the line items. Preview updates live on the right. <b>Generate</b> creates a PDF in Drive + a row in the Sheet.</div>
+
+        <div class="group-label">Who is claiming (issuer)</div>
+
+        <label class="fld">
+          <span>Type</span>
+          <div class="seg" id="issTypeSeg">
+            <button type="button" class="on" data-t="ind" onclick="setIssType('ind')">Individual</button>
+            <button type="button" data-t="co" onclick="setIssType('co')">Company</button>
+          </div>
+        </label>
+
+        <label class="fld" id="savedWrap" style="display:none;">
+          <span>Load a saved subcon</span>
+          <select id="savedSel" onchange="loadSaved(this.value)">
+            <option value="">— New / type below —</option>
+          </select>
+        </label>
+
+        <label class="fld">
+          <span id="nameLbl">Worker full name</span>
+          <input type="text" id="issName" placeholder="e.g. Ahmad bin Ali" oninput="render()" />
+        </label>
+
+        <label class="fld" id="icWrap">
+          <span>IC / Passport no. (optional)</span>
+          <input type="text" id="issIc" placeholder="e.g. 880101-14-5523" oninput="render()" />
+        </label>
+
+        <label class="fld">
+          <span>Address (optional)</span>
+          <textarea id="issAddr" placeholder="Street, city, postcode" oninput="render()"></textarea>
+        </label>
+
+        <div class="row2">
+          <label class="fld">
+            <span>Phone (optional)</span>
+            <input type="text" id="issPhone" placeholder="012-3456789" oninput="render()" />
+          </label>
+          <label class="fld">
+            <span>Email (optional)</span>
+            <input type="text" id="issEmail" placeholder="name@email.com" oninput="render()" />
+          </label>
+        </div>
+
+        <label class="fld">
+          <span>Logo (optional — company only, or leave blank)</span>
+          <div class="logo-drop" id="logoDrop" onclick="document.getElementById('logoFile').click()">
+            📎 Click to upload logo (PNG / JPG)
+          </div>
+          <input type="file" id="logoFile" accept="image/*" style="display:none" onchange="onLogo(event)" />
+          <div class="logo-prev" id="logoPrev" style="display:none;">
+            <img id="logoImg" alt="logo" />
+            <button type="button" class="btn btn-ghost btn-sm" onclick="clearLogo()">Remove</button>
+          </div>
+        </label>
+
+        <div class="group-label">Bill to (your company)</div>
+        <label class="fld">
+          <span>Your company name</span>
+          <input type="text" id="myName" placeholder="e.g. HG Group Sdn Bhd" oninput="render()" onchange="persistMyCo()" />
+        </label>
+        <label class="fld">
+          <span>Your company address</span>
+          <textarea id="myAddr" placeholder="Your office address" oninput="render()" onchange="persistMyCo()"></textarea>
+        </label>
+
+        <div class="group-label">Invoice info</div>
+        <div class="row3">
+          <label class="fld">
+            <span>Invoice no.</span>
+            <input type="text" id="invNo" placeholder="(auto)" oninput="render()" />
+          </label>
+          <label class="fld">
+            <span>Invoice date</span>
+            <input type="date" id="invDate" oninput="render()" />
+          </label>
+          <label class="fld">
+            <span>Claim ref / period</span>
+            <input type="text" id="invRef" placeholder="e.g. May 2026 / PO-123" oninput="render()" />
+          </label>
+        </div>
+
+        <div class="group-label">Line items</div>
+        <table class="items">
+          <thead>
+            <tr>
+              <th style="width:48%">Description</th>
+              <th style="width:14%">Qty</th>
+              <th style="width:20%">Unit price (RM)</th>
+              <th style="width:14%" class="ta-right">Amount</th>
+              <th style="width:4%"></th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody"></tbody>
+        </table>
+        <button type="button" class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="addItem()">+ Add line</button>
+
+        <div class="group-label">Tax & payment</div>
+        <div class="toggle-row">
+          <div>
+            <div style="font-weight:700;font-size:0.86rem;">Apply SST 6%</div>
+            <div style="font-size:0.76rem;color:var(--text-dim);">Most individual subcons are not SST-registered — leave off if unsure.</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="sstOn" onchange="render()" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <label class="fld" style="margin-top:14px;">
+          <span>Payment / bank details (optional — shown on invoice)</span>
+          <textarea id="payInfo" placeholder="Bank: Maybank&#10;Acc name: Ahmad bin Ali&#10;Acc no: 1234 5678 9012" oninput="render()"></textarea>
+        </label>
+
+        <label class="fld">
+          <span>Notes (optional)</span>
+          <textarea id="notes" placeholder="Any remarks..." oninput="render()"></textarea>
+        </label>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="genBtn" onclick="generate()">🖨 Generate PDF &amp; Save</button>
+          <button class="btn btn-ghost" onclick="resetForm()">↺ New blank</button>
+        </div>
+
+        <div class="result-box" id="resultBox"></div>
+      </div>
+    </div>
+
+    <!-- ============ PREVIEW ============ -->
+    <div class="preview-wrap">
+      <div id="invoiceDoc"></div>
+    </div>
+
+  </div>
+
+  <!-- ============ SUMMARY TABLE ============ -->
+  <div class="panel" style="margin-top:8px;">
+    <div class="summary-head">
+      <div>
+        <div class="panel-title">📒 Invoice records</div>
+        <div class="panel-hint">Shared across staff. Every saved invoice is here with its PDF + Drive folder.</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="exportCsv()">⬇ Export CSV</button>
+    </div>
+    <div class="stat-row" id="statRow"></div>
+    <div style="overflow-x:auto;">
+      <table class="rec">
+        <thead>
+          <tr>
+            <th>Invoice no.</th><th>Date</th><th>Issuer</th><th>Type</th>
+            <th class="ta-right">Subtotal</th><th class="ta-right">SST</th>
+            <th class="ta-right">Total</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="recBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="overlay" id="overlay"><div class="box"><div class="spin"></div><span id="overlayMsg">Working…</span></div></div>
+
+<script>
+var issType='ind';
+var logoData='';      // dataURL for preview + send
+var logoMime='';
+var items=[];
+var subcons=[];       // from server
+var invoices=[];      // from server
+
+/* ---------- helpers ---------- */
+function $(id){return document.getElementById(id);}
+function num(v){var n=parseFloat(v);return isNaN(n)?0:n;}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function rm(n){return 'RM '+num(n).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function toast(msg,err){var t=$('toast');t.textContent=msg;t.classList.toggle('error',!!err);t.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(function(){t.classList.remove('show');},2600);}
+function showLoad(m){$('overlayMsg').textContent=m||'Working…';$('overlay').classList.add('show');}
+function hideLoad(){$('overlay').classList.remove('show');}
+
+/* ---------- server bridge ---------- */
+function hasBridge(){return typeof google!=='undefined'&&google.script&&google.script.run;}
+function gsRun(fn){
+  var args=Array.prototype.slice.call(arguments,1);
+  return new Promise(function(resolve,reject){
+    if(!hasBridge()){reject(new Error('No server bridge. Open the deployed web-app URL.'));return;}
+    try{google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[fn].apply(null,args);}
+    catch(e){reject(e);}
+  });
+}
+
+/* ---------- issuer type ---------- */
+function setIssType(t){
+  issType=t;
+  var btns=document.querySelectorAll('#issTypeSeg button');
+  for(var i=0;i<btns.length;i++)btns[i].classList.toggle('on',btns[i].getAttribute('data-t')===t);
+  $('nameLbl').textContent = t==='ind' ? 'Worker full name' : 'Company name';
+  $('issName').placeholder = t==='ind' ? 'e.g. Ahmad bin Ali' : 'e.g. ABC Subcon Sdn Bhd';
+  $('icWrap').style.display = t==='ind' ? 'block' : 'none';
+  refreshSavedList();
+  render();
+}
+
+/* ---------- logo ---------- */
+function onLogo(e){
+  var f=e.target.files[0];if(!f)return;
+  logoMime=f.type||'image/png';
+  var r=new FileReader();
+  r.onload=function(ev){logoData=ev.target.result;showLogo();render();};
+  r.readAsDataURL(f);
+}
+function showLogo(){
+  if(logoData){$('logoImg').src=logoData;$('logoPrev').style.display='flex';}
+  else{$('logoPrev').style.display='none';}
+}
+function clearLogo(){logoData='';logoMime='';$('logoFile').value='';showLogo();render();}
+
+/* ---------- my company ---------- */
+function persistMyCo(){
+  if(!hasBridge())return;
+  gsRun('setMyCompany',$('myName').value,$('myAddr').value).catch(function(){});
+}
+
+/* ---------- line items ---------- */
+function addItem(desc,qty,price){
+  items.push({desc:desc||'',qty:qty==null?1:qty,price:price==null?'':price});
+  renderItems();render();
+}
+function removeItem(i){items.splice(i,1);renderItems();render();}
+function renderItems(){
+  $('itemsBody').innerHTML=items.map(function(it,i){
+    return '<tr>'+
+      '<td><input type="text" value="'+esc(it.desc)+'" placeholder="e.g. Hoarding install labour" oninput="upd('+i+',\'desc\',this.value)" /></td>'+
+      '<td><input type="number" step="any" value="'+esc(it.qty)+'" oninput="upd('+i+',\'qty\',this.value)" /></td>'+
+      '<td><input type="number" step="0.01" value="'+esc(it.price)+'" placeholder="0.00" oninput="upd('+i+',\'price\',this.value)" /></td>'+
+      '<td class="lineamt ta-right">'+rm(num(it.qty)*num(it.price))+'</td>'+
+      '<td><button type="button" class="x-btn" onclick="removeItem('+i+')">&times;</button></td>'+
+    '</tr>';
+  }).join('');
+}
+function upd(i,k,v){
+  items[i][k]=v;
+  var rows=$('itemsBody').querySelectorAll('tr');
+  if(rows[i])rows[i].querySelector('.lineamt').textContent=rm(num(items[i].qty)*num(items[i].price));
+  render();
+}
+
+/* ---------- totals ---------- */
+function calc(){
+  var sub=items.reduce(function(s,it){return s+num(it.qty)*num(it.price);},0);
+  var sst=$('sstOn').checked?sub*0.06:0;
+  return {sub:sub,sst:sst,total:sub+sst};
+}
+
+/* ---------- live preview ---------- */
+function render(){
+  var t=calc();
+  var issName=$('issName').value.trim();
+  var parts=[];
+  if($('issIc').value.trim() && issType==='ind') parts.push('IC/Passport: '+$('issIc').value.trim());
+  if($('issAddr').value.trim()) parts.push($('issAddr').value.trim());
+  if($('issPhone').value.trim()) parts.push('Tel: '+$('issPhone').value.trim());
+  if($('issEmail').value.trim()) parts.push($('issEmail').value.trim());
+  var issMeta=parts.join('\n');
+
+  var itemRows=items.filter(function(it){return it.desc||num(it.price)||num(it.qty);}).map(function(it){
+    return '<tr><td>'+(esc(it.desc)||'<span style="color:#bbb">—</span>')+'</td>'+
+      '<td class="r">'+(num(it.qty)||'')+'</td>'+
+      '<td class="r">'+(num(it.price)?rm(it.price):'')+'</td>'+
+      '<td class="r">'+rm(num(it.qty)*num(it.price))+'</td></tr>';
+  }).join('') || '<tr><td colspan="4" style="text-align:center;color:#bbb;padding:18px;">No line items yet</td></tr>';
+
+  $('invoiceDoc').innerHTML=
+    '<div class="ih"><div>'+
+      (logoData?'<div class="ilogo"><img src="'+logoData+'"/></div>':'')+
+      '<div class="iname">'+(esc(issName)||'<span style="color:#bbb">Issuer name</span>')+'</div>'+
+      (issMeta?'<div class="imeta">'+esc(issMeta)+'</div>':'')+
+    '</div><div class="ititle"><h1>INVOICE</h1><div class="m">'+
+      '<div><b>No:</b> '+(esc($('invNo').value)||'—')+'</div>'+
+      '<div><b>Date:</b> '+(esc($('invDate').value)||'—')+'</div>'+
+      ($('invRef').value.trim()?'<div><b>Ref:</b> '+esc($('invRef').value)+'</div>':'')+
+    '</div></div></div>'+
+    '<div class="bt"><div class="l">Bill to</div>'+
+      '<div class="w">'+(esc($('myName').value)||'<span style="color:#bbb">Your company</span>')+'</div>'+
+      '<div class="a">'+esc($('myAddr').value)+'</div></div>'+
+    '<table class="di"><thead><tr><th>Description</th><th class="r">Qty</th><th class="r">Unit price</th><th class="r">Amount</th></tr></thead>'+
+    '<tbody>'+itemRows+'</tbody></table>'+
+    '<div class="tt"><div class="r"><span>Subtotal</span><span>'+rm(t.sub)+'</span></div>'+
+      ($('sstOn').checked?'<div class="r"><span>SST 6%</span><span>'+rm(t.sst)+'</span></div>':'')+
+      '<div class="r g"><span>Total</span><span>'+rm(t.total)+'</span></div></div>'+
+    ($('payInfo').value.trim()?'<div class="pay"><div class="l">Payment details</div>'+esc($('payInfo').value)+'</div>':'')+
+    ($('notes').value.trim()?'<div class="pay"><div class="l">Notes</div>'+esc($('notes').value)+'</div>':'');
+}
+
+/* ---------- generate (server) ---------- */
+function generate(){
+  if(!$('issName').value.trim()){toast('Enter the issuer name first',true);return;}
+  if(!items.filter(function(it){return num(it.price)&&it.desc.trim();}).length){toast('Add at least one line item',true);return;}
+  if(!hasBridge()){toast('Not connected to server',true);return;}
+  var payload={
+    invNo:$('invNo').value.trim(), invDate:$('invDate').value, ref:$('invRef').value.trim(),
+    issuerType:issType, issuerName:$('issName').value.trim(), issuerIc:$('issIc').value.trim(),
+    issuerAddr:$('issAddr').value.trim(), issuerPhone:$('issPhone').value.trim(), issuerEmail:$('issEmail').value.trim(),
+    billToName:$('myName').value.trim(), billToAddr:$('myAddr').value.trim(),
+    lines:items.map(function(it){return {description:it.desc,quantity:num(it.qty),unitPrice:num(it.price)};}),
+    sstEnabled:$('sstOn').checked, payInfo:$('payInfo').value, notes:$('notes').value,
+    logoBase64:logoData||'', logoMime:logoMime||''
+  };
+  $('genBtn').disabled=true;
+  showLoad('Generating PDF…');
+  gsRun('saveInvoice',payload).then(function(r){
+    hideLoad();$('genBtn').disabled=false;
+    var box=$('resultBox');
+    box.innerHTML='✅ <b>'+esc(r.invNo)+'</b> generated · '+rm(r.total)+'<br>'+
+      '<a href="'+r.pdfUrl+'" target="_blank">📄 Open PDF</a>'+
+      '<a href="'+r.folderUrl+'" target="_blank">📁 Drive folder</a>';
+    box.classList.add('show');
+    toast('Invoice '+r.invNo+' saved');
+    window.open(r.pdfUrl,'_blank');
+    reloadData();
+    resetForm(true);
+  }).catch(function(e){
+    hideLoad();$('genBtn').disabled=false;
+    toast((e&&e.message)?e.message:'Failed to save',true);
+  });
+}
+
+/* ---------- saved subcons ---------- */
+function refreshSavedList(){
+  var list=subcons.filter(function(s){return s.type===issType;});
+  var sel=$('savedSel');
+  sel.innerHTML='<option value="">— New / type below —</option>'+
+    list.map(function(s,i){return '<option value="'+i+'">'+esc(s.name)+'</option>';}).join('');
+  $('savedWrap').style.display=list.length?'block':'none';
+}
+function loadSaved(v){
+  if(v==='')return;
+  var list=subcons.filter(function(s){return s.type===issType;});
+  var s=list[+v];if(!s)return;
+  $('issName').value=s.name||'';$('issIc').value=s.ic||'';$('issAddr').value=s.addr||'';
+  $('issPhone').value=s.phone||'';$('issEmail').value=s.email||'';$('payInfo').value=s.payInfo||'';
+  logoData=s.logo||'';logoMime=''; showLogo();render();
+}
+
+/* ---------- records table ---------- */
+function renderRecs(){
+  var b=$('recBody');
+  if(!invoices.length){
+    b.innerHTML='<tr><td colspan="8"><div class="rec-empty">No invoices saved yet. Fill the form and hit <b>Generate PDF &amp; Save</b>.</div></td></tr>';
+  }else{
+    b.innerHTML=invoices.map(function(r){
+      return '<tr>'+
+        '<td><b>'+(esc(r.invNo)||'—')+'</b></td>'+
+        '<td>'+esc(r.invDate)+'</td>'+
+        '<td>'+esc(r.issuerName)+(r.ref?'<div style="font-size:0.74rem;color:var(--text-dim)">'+esc(r.ref)+'</div>':'')+'</td>'+
+        '<td><span class="pill-tag '+(r.issuerType==='ind'?'pill-ind':'')+'">'+(r.issuerType==='ind'?'Individual':'Company')+'</span></td>'+
+        '<td class="ta-right">'+rm(r.subtotal)+'</td>'+
+        '<td class="ta-right">'+(r.sstEnabled?rm(r.sstAmount):'—')+'</td>'+
+        '<td class="ta-right"><b>'+rm(r.total)+'</b></td>'+
+        '<td style="white-space:nowrap;">'+
+          (r.pdfUrl?'<a class="mini-btn" href="'+r.pdfUrl+'" target="_blank">PDF</a>':'')+
+          '<button class="mini-btn" onclick="openRec(\''+r.id+'\')">Open</button>'+
+          '<button class="mini-btn del" onclick="delRec(\''+r.id+'\')">Delete</button>'+
+        '</td></tr>';
+    }).join('');
+  }
+  renderStats();
+}
+function renderStats(){
+  var total=invoices.reduce(function(s,r){return s+num(r.total);},0);
+  var mth=todayStr().slice(0,7);
+  var mTotal=invoices.filter(function(r){return String(r.invDate||'').slice(0,7)===mth;}).reduce(function(s,r){return s+num(r.total);},0);
+  $('statRow').innerHTML=
+    '<div class="stat-card"><div class="l">Invoices</div><div class="v">'+invoices.length+'</div></div>'+
+    '<div class="stat-card"><div class="l">This month</div><div class="v">'+rm(mTotal)+'</div></div>'+
+    '<div class="stat-card"><div class="l">All-time total</div><div class="v">'+rm(total)+'</div></div>';
+}
+function openRec(id){
+  showLoad('Loading…');
+  gsRun('getInvoice',id).then(function(r){
+    hideLoad();
+    setIssType(r.issuerType);
+    $('issName').value=r.issuerName;$('issIc').value=r.issuerIc||'';$('issAddr').value=r.issuerAddr||'';
+    $('issPhone').value=r.issuerPhone||'';$('issEmail').value=r.issuerEmail||'';
+    logoData=r.logo||'';logoMime='';showLogo();
+    $('myName').value=r.billToName||'';$('myAddr').value=r.billToAddr||'';
+    $('invNo').value='';  // blank → server assigns a NEW number (this is a copy)
+    $('invDate').value=todayStr();$('invRef').value=r.ref||'';
+    items=(r.lines||[]).map(function(l){return {desc:l.description,qty:l.quantity,price:l.unitPrice};});
+    if(!items.length)items=[{desc:'',qty:1,price:''}];
+    renderItems();
+    $('sstOn').checked=!!r.sstEnabled;$('payInfo').value=r.payInfo||'';$('notes').value=r.notes||'';
+    render();
+    window.scrollTo({top:0,behavior:'smooth'});
+    toast('Loaded as a new copy — Generate to save');
+  }).catch(function(e){hideLoad();toast((e&&e.message)||'Failed to load',true);});
+}
+function delRec(id){
+  if(!confirm('Delete this invoice? The Sheet row and its Drive PDF folder will be removed.'))return;
+  showLoad('Deleting…');
+  gsRun('deleteInvoice',id).then(function(){
+    hideLoad();toast('Deleted');reloadData();
+  }).catch(function(e){hideLoad();toast((e&&e.message)||'Failed to delete',true);});
+}
+
+/* ---------- auto invoice number (display hint only; server is authoritative) ---------- */
+function nextInvNoHint(){
+  var max=0,yr=new Date().getFullYear();
+  invoices.forEach(function(r){var m=String(r.invNo||'').match(/(\d+)\s*$/);if(m)max=Math.max(max,+m[1]);});
+  $('invNo').value='SUB-'+yr+'-'+String(max+1).padStart(4,'0');
+}
+
+/* ---------- reset ---------- */
+function resetForm(keepCompany){
+  $('issName').value='';$('issIc').value='';$('issAddr').value='';$('issPhone').value='';$('issEmail').value='';
+  $('invRef').value='';$('payInfo').value='';$('notes').value='';$('sstOn').checked=false;
+  clearLogo();
+  items=[];addItem();
+  $('savedSel').value='';
+  if(!keepCompany){/* company kept always */}
+  nextInvNoHint();
+  $('invDate').value=todayStr();
+  render();
+}
+
+/* ---------- export csv ---------- */
+function exportCsv(){
+  if(!invoices.length){toast('Nothing to export');return;}
+  var head=['Invoice No','Date','Ref','Type','Issuer','Subtotal','SST','Total','Created by'];
+  var rows=invoices.map(function(r){
+    return [r.invNo,r.invDate,r.ref,r.issuerType==='ind'?'Individual':'Company',r.issuerName,
+      num(r.subtotal).toFixed(2),num(r.sstAmount).toFixed(2),num(r.total).toFixed(2),r.createdBy]
+      .map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(',');
+  });
+  var csv=[head.join(',')].concat(rows).join('\n');
+  var blob=new Blob([csv],{type:'text/csv'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='subcon-invoices-'+todayStr()+'.csv';a.click();
+}
+
+/* ---------- data load ---------- */
+function reloadData(){
+  return gsRun('bootstrap').then(function(d){
+    invoices=d.invoices||[];
+    subcons=d.subcons||[];
+    refreshSavedList();
+    renderRecs();
+    nextInvNoHint();
+    return d;
+  });
+}
+
+/* ---------- banner ---------- */
+function showBanner(html){var b=$('offlineBanner');b.innerHTML=html;b.classList.add('show');}
+function hideBanner(){$('offlineBanner').classList.remove('show');}
+
+/* ---------- init ---------- */
+function init(){
+  items=[];addItem();
+  $('invDate').value=todayStr();
+  render();
+  if(!hasBridge()){
+    showBanner('⚠ This page isn\'t connected to the server. Open it via the <b>deployed web-app URL</b> — opening the HTML file directly won\'t save anything.');
+    $('userPill').textContent='👤 offline';
+    return;
+  }
+  showLoad('Loading…');
+  gsRun('bootstrap').then(function(d){
+    hideLoad();
+    if(!d){
+      showBanner('⚠ Connected, but the server returned <b>no data</b>. Your deployment is serving an <b>old code version</b>.<br>Fix: in Apps Script → <b>Deploy → Manage deployments → ✎ edit → Version: New version → Deploy</b>, then reload this page.');
+      $('userPill').textContent='👤 stale deploy';
+      return;
+    }
+    hideBanner();
+    $('userPill').textContent='👤 '+(d.currentUser||'');
+    if(d.myCompany){$('myName').value=d.myCompany.name||'';$('myAddr').value=d.myCompany.addr||'';}
+    invoices=d.invoices||[];
+    subcons=d.subcons||[];
+    refreshSavedList();
+    renderRecs();
+    nextInvNoHint();
+    render();
+  }).catch(function(e){
+    hideLoad();
+    showBanner('⚠ Couldn\'t load from the server: <b>'+esc((e&&e.message)||'unknown error')+'</b><br>Re-check that <b>Code.gs</b> is saved and you deployed a <b>new version</b>.');
+    $('userPill').textContent='👤 error';
+  });
+}
+init();
+</script>
+</body>
+</html>

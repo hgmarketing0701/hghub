@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Black Lee — Master Blueprint (Print)</title>
+<style>
+  @page { size: A3 landscape; margin: 10mm; }
+  :root {
+    --ink:#0f172a; --ink2:#475569; --ink3:#94a3b8; --line:#cbd5e1; --line2:#e2e8f0;
+    --paper:#ffffff; --panel:#f8fafc; --panel2:#f1f5f9;
+    --accent:#b45309;
+    --c-blue:#2563eb; --c-green:#16a34a; --c-turq:#0891b2; --c-yellow:#ca8a04;
+    --c-red:#dc2626; --c-beige:#a16207; --c-pink:#db2777; --c-grey:#64748b;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { background:var(--paper); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; line-height:1.4; }
+  body { padding:4mm; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .page { page-break-after:always; }
+  .page:last-child { page-break-after:auto; }
+
+  /* HEADER */
+  .head { display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid var(--ink);
+    padding-bottom:6px; margin-bottom:10px; }
+  .head .lhs { display:flex; align-items:center; gap:12px; }
+  .logo { width:38px; height:38px; background:var(--accent); color:#fff; border-radius:9px;
+    display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.1rem; }
+  .title { font-size:1.25rem; font-weight:800; letter-spacing:-0.01em; }
+  .subtitle { font-size:0.72rem; color:var(--ink2); margin-top:1px; }
+  .head .rhs { font-size:0.68rem; color:var(--ink2); text-align:right; }
+  .head .rhs b { color:var(--ink); }
+
+  .rule { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+    border-radius:7px; padding:7px 12px; margin-bottom:10px; font-size:0.74rem; color:var(--ink2); }
+  .rule b { color:var(--ink); }
+  .rule code { background:var(--panel2); border:1px solid var(--line); padding:0 4px; border-radius:4px; color:var(--accent); font-weight:700; }
+
+  .colhead { font-size:0.78rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em;
+    color:var(--ink); margin:0 0 6px; padding-bottom:3px; border-bottom:1px solid var(--line); }
+
+  /* layout: pipeline left, reference right */
+  .body { display:grid; grid-template-columns:1.35fr 1fr; gap:14px; align-items:start; }
+
+  /* PIPELINE */
+  .flow { display:flex; flex-direction:column; gap:3px; }
+  .stg { border:1px solid var(--line); border-left:5px solid var(--accent); border-radius:6px;
+    padding:5px 8px; background:var(--paper); page-break-inside:avoid; }
+  .stg.b-blue{border-left-color:var(--c-blue);} .stg.b-green{border-left-color:var(--c-green);}
+  .stg.b-turq{border-left-color:var(--c-turq);} .stg.b-yellow{border-left-color:var(--c-yellow);}
+  .stg.b-red{border-left-color:var(--c-red);} .stg.b-beige{border-left-color:var(--c-beige);}
+  .stg.b-pink{border-left-color:var(--c-pink);} .stg.b-grey{border-left-color:var(--c-grey);}
+  .stg.b-none{border-left-color:var(--ink3);}
+  .stg-top { display:flex; align-items:baseline; gap:7px; }
+  .stg-no { font-weight:800; font-size:0.72rem; color:#fff; background:var(--ink); border-radius:4px;
+    padding:1px 5px; min-width:24px; text-align:center; }
+  .stg-name { font-weight:800; font-size:0.82rem; flex:1; }
+  .stg-meta { font-size:0.64rem; color:var(--ink2); white-space:nowrap; }
+  .stg-meta b { color:var(--ink); }
+  .stg-desc { font-size:0.66rem; color:var(--ink2); margin-top:2px; line-height:1.35; }
+  .stg-chips { display:flex; gap:5px; flex-wrap:wrap; margin-top:3px; align-items:center; }
+  .clab { font-size:0.55rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink3); }
+  .chip { font-size:0.58rem; font-weight:700; border:1px solid var(--line); border-radius:999px;
+    padding:0 6px 0 4px; display:inline-flex; align-items:center; gap:3px; color:var(--ink); }
+  .chip i { width:7px; height:7px; border-radius:50%; display:inline-block; }
+  .chip.add { border-width:1.5px; font-weight:800; }
+  .ci-blue i{background:var(--c-blue);} .ci-blue{border-color:var(--c-blue);}
+  .ci-green i{background:var(--c-green);} .ci-green{border-color:var(--c-green);}
+  .ci-turq i{background:var(--c-turq);} .ci-turq{border-color:var(--c-turq);}
+  .ci-yellow i{background:var(--c-yellow);} .ci-yellow{border-color:var(--c-yellow);}
+  .ci-red i{background:var(--c-red);} .ci-red{border-color:var(--c-red);}
+  .ci-beige i{background:var(--c-beige);} .ci-beige{border-color:var(--c-beige);}
+  .ci-pink i{background:var(--c-pink);} .ci-pink{border-color:var(--c-pink);}
+  .ci-grey i{background:var(--c-grey);} .ci-grey{border-color:var(--c-grey);}
+  .arrow { text-align:center; color:var(--ink3); font-size:0.6rem; line-height:1; }
+  .branchbar { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .branchnote { text-align:center; font-size:0.6rem; color:var(--ink3); text-transform:uppercase; letter-spacing:0.05em; margin:1px 0; }
+  .badge { font-size:0.56rem; font-weight:700; padding:0 6px; border-radius:999px; border:1px solid; }
+  .ba-live{ color:var(--c-green); border-color:var(--c-green); background:#f0fdf4; }
+  .ba-enh{ color:var(--accent); border-color:var(--accent); background:#fffbeb; }
+  .ba-soon{ color:var(--c-blue); border-color:var(--c-blue); background:#eff6ff; }
+  .ba-tbd{ color:#7c3aed; border-color:#7c3aed; background:#f5f3ff; }
+  .cyc { border:1px dashed var(--accent); border-radius:6px; padding:5px 10px; font-size:0.66rem;
+    color:var(--ink2); margin-top:5px; background:var(--panel); }
+  .cyc b{ color:var(--ink); }
+
+  /* RIGHT: legend */
+  .legend { display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:12px; }
+  .lay { border:1px solid var(--line); border-radius:5px; padding:4px 7px; page-break-inside:avoid; }
+  .lay-top { display:flex; align-items:center; gap:5px; }
+  .sw { width:11px; height:11px; border-radius:3px; }
+  .lay-name { font-weight:800; font-size:0.66rem; }
+  .lay-fld { font-size:0.6rem; color:var(--ink2); margin-top:1px; line-height:1.3; }
+  .sw-blue{background:var(--c-blue);} .sw-green{background:var(--c-green);} .sw-turq{background:var(--c-turq);}
+  .sw-yellow{background:var(--c-yellow);} .sw-red{background:var(--c-red);} .sw-beige{background:var(--c-beige);}
+  .sw-pink{background:var(--c-pink);} .sw-grey{background:var(--c-grey);}
+
+  /* keys */
+  .keys { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:12px; }
+  .key { border:1px solid var(--line); border-radius:5px; padding:5px 8px; }
+  .key.kb{ border-top:2px solid var(--c-blue);} .key.kg{ border-top:2px solid var(--c-green);}
+  .key code { font-family:ui-monospace,Consolas,monospace; font-size:0.6rem; background:var(--panel2);
+    padding:0 4px; border-radius:3px; font-weight:700; }
+  .key h5 { font-size:0.72rem; margin:2px 0; }
+  .key p { font-size:0.6rem; color:var(--ink2); }
+
+  /* matrix */
+  table.mx { border-collapse:collapse; width:100%; font-size:0.58rem; }
+  table.mx th, table.mx td { border:1px solid var(--line); padding:2px 3px; text-align:center; }
+  table.mx thead th { background:var(--panel2); font-size:0.54rem; }
+  table.mx tbody th { text-align:left; font-weight:700; white-space:nowrap; padding-left:5px; font-size:0.58rem; }
+  .mdot{ display:inline-block; width:8px; height:8px; border-radius:50%; }
+  .w{ font-weight:800; color:#fff; }
+  .w.wb{background:var(--c-blue);} .w.wg{background:var(--c-green);} .w.wt{background:var(--c-turq);}
+  .w.wy{background:var(--c-yellow);} .w.wr{background:var(--c-red);} .w.wbe{background:var(--c-beige);}
+  .w.wp{background:var(--c-pink);} .w.wgr{background:var(--c-grey);}
+  .r{ color:var(--ink2); font-weight:700; }
+
+  .trans { font-size:0.62rem; color:var(--ink2); }
+  .trans div { padding:2px 0; border-bottom:1px solid var(--line2); }
+  .trans b { color:var(--ink); }
+  .trans code { font-family:ui-monospace,Consolas,monospace; color:var(--accent); }
+
+  .steps2 { font-size:0.64rem; color:var(--ink2); counter-reset:s; }
+  .steps2 div { padding:3px 0 3px 20px; position:relative; border-bottom:1px solid var(--line2); }
+  .steps2 div::before { counter-increment:s; content:counter(s); position:absolute; left:0; top:3px;
+    width:14px; height:14px; background:var(--accent); color:#fff; border-radius:3px; font-weight:800;
+    font-size:0.55rem; text-align:center; line-height:14px; }
+  .steps2 b { color:var(--ink); }
+
+  /* notes box */
+  .notes { border:1.5px solid var(--ink); border-radius:7px; padding:8px 12px; margin-top:6px; }
+  .notes h4 { font-size:0.8rem; margin-bottom:6px; }
+  .notes .lines { background:repeating-linear-gradient(var(--paper),var(--paper) 23px,var(--line2) 23px,var(--line2) 24px);
+    height:170px; border-radius:4px; }
+
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+  .small { font-size:0.6rem; color:var(--ink3); margin-top:4px; }
+</style>
+</head>
+<body>
+
+<!-- ===================== PAGE 1 — THE FLOW ===================== -->
+<div class="page">
+  <div class="head">
+    <div class="lhs">
+      <div class="logo">BL</div>
+      <div>
+        <div class="title">Master System Blueprint — One Job, Start to Payroll</div>
+        <div class="subtitle">Black Lee · Contractor Support Platform · colours = data layers that stack downstream</div>
+      </div>
+    </div>
+    <div class="rhs"><b>v1 · 2026-06-23</b><br>Page 1 of 2 — the flow</div>
+  </div>
+
+  <div class="rule">
+    <b>The one rule:</b> colours are <b>not status — they are data layers</b>. Each stage inherits every colour from upstream, adds its own,
+    and passes the bigger bundle on. Everything joins on two keys: <code>Client ID</code> (born at CRM) and <code>Job ID</code> (born at Quotation).
+  </div>
+
+  <div class="body">
+
+    <!-- PIPELINE -->
+    <div>
+      <div class="colhead">The Pipeline — 10 stages, top to bottom</div>
+      <div class="flow">
+
+        <div class="stg b-none">
+          <div class="stg-top"><span class="stg-no">0</span><span class="stg-name">Marketing / Demand</span>
+            <span class="badge ba-live">live · mixed</span></div>
+          <div class="stg-desc">Website+SEO · Google · AEO (AI) · Social (IG/FB/LinkedIn/TikTok) → all divert to one door. <b>Tool:</b> Wix + ad channels</div>
+        </div>
+        <div class="arrow">▼</div>
+
+        <div class="stg b-none">
+          <div class="stg-top"><span class="stg-no">1</span><span class="stg-name">WATI Gateway — chatbot filter</span>
+            <span class="badge ba-tbd">method TBD</span></div>
+          <div class="stg-desc">Filters &amp; qualifies leads, routes real ones into CRM. <b>Tool:</b> WATI (WhatsApp API)</div>
+        </div>
+        <div class="arrow">▼</div>
+
+        <div class="stg b-blue">
+          <div class="stg-top"><span class="stg-no">2</span><span class="stg-name">CRM</span>
+            <span class="badge ba-soon">coming soon</span></div>
+          <div class="stg-desc">Captures the lead, mints <b>Client ID</b>. Where BLUE is born — the master client record.</div>
+          <div class="stg-chips"><span class="clab">Adds→</span><span class="chip add ci-blue"><i></i>BLUE</span></div>
+        </div>
+        <div class="arrow">▼</div>
+
+        <div class="stg b-green">
+          <div class="stg-top"><span class="stg-no">3</span><span class="stg-name">Smart Quotation — Commercial &amp; P&amp;L</span>
+            <span class="badge ba-live">live</span><span class="badge ba-enh">enhance</span></div>
+          <div class="stg-desc">Auto-quotes from lot no/size/scope + price list + mall measurements. Sends quote <b>+ our stored measurement</b> (dispute proof). On confirm: Infotech invoice, fires Job Confirmation. Mints <b>Job ID</b>.</div>
+          <div class="stg-chips"><span class="clab">Reads</span><span class="chip ci-blue"><i></i>BLUE</span><span class="clab">Adds→</span><span class="chip add ci-green"><i></i>GREEN</span></div>
+        </div>
+        <div class="arrow">▼</div>
+
+        <div class="stg b-turq">
+          <div class="stg-top"><span class="stg-no">4</span><span class="stg-name">Job Confirmation List</span>
+            <span class="badge ba-live">live</span><span class="stg-meta">tab in Smart Quotation</span></div>
+          <div class="stg-desc">Inherits Blue+Green, keys in TURQUOISE, shows live job-progress status from here on.</div>
+          <div class="stg-chips"><span class="clab">Reads</span><span class="chip ci-blue"><i></i>B</span><span class="chip ci-green"><i></i>G</span><span class="clab">Adds→</span><span class="chip add ci-turq"><i></i>TURQUOISE</span></div>
+        </div>
+        <div class="arrow">▼</div>
+
+        <div class="stg b-yellow">
+          <div class="stg-top"><span class="stg-no">5</span><span class="stg-name">Permit, Mall Req &amp; Workers Library</span>
+            <span class="badge ba-enh">enhance</span><span class="stg-meta">👤<b>Imrah</b></span></div>
+          <div class="stg-desc">Auto-fills permit from Blue+Green, pulls matching worker list, auto-emails permit + docs + Method Statement + HIRARC. Version control on amendments. Approved permit uploaded onward.</div>
+          <div class="stg-chips"><span class="clab">Reads</span><span class="chip ci-blue"><i></i>B</span><span class="chip ci-green"><i></i>G</span><span class="clab">Adds→</span><span class="chip add ci-yellow"><i></i>YELLOW</span></div>
+        </div>
+        <div class="arrow">▼</div>
+
+        <div class="branchnote">— splits into two parallel tracks —</div>
+        <div class="branchbar">
+          <div class="stg b-red">
+            <div class="stg-top"><span class="stg-no">6A</span><span class="stg-name">Pre-Onsite</span>
+              <span class="badge ba-live">live</span><span class="stg-meta">👤<b>Eason</b></span></div>
+            <div class="stg-desc">Hoarding &amp; visual. Adds RED: onsite workers, lorry/supervisor, visual+installer, scaffold, fabric, floor protection.</div>
+            <div class="stg-chips"><span class="clab">Reads</span><span class="chip ci-blue"><i></i></span><span class="chip ci-yellow"><i></i></span><span class="chip ci-green"><i></i></span><span class="clab">Adds→</span><span class="chip add ci-red"><i></i>RED</span></div>
+          </div>
+          <div class="stg b-beige">
+            <div class="stg-top"><span class="stg-no">6B</span><span class="stg-name">Factory Fabrication</span>
+              <span class="badge ba-live">live</span><span class="stg-meta">👤<b>Sohel</b></span></div>
+            <div class="stg-desc">Workshop. Adds BEIGE: fab time, date, worker arrangement + scope → feeds pay calc.</div>
+            <div class="stg-chips"><span class="clab">Reads</span><span class="chip ci-green"><i></i></span><span class="chip ci-turq"><i></i></span><span class="clab">Adds→</span><span class="chip add ci-beige"><i></i>BEIGE</span></div>
+          </div>
+        </div>
+        <div class="arrow">▼</div>
+
+        <div class="stg b-pink">
+          <div class="stg-top"><span class="stg-no">7</span><span class="stg-name">Onsite Mgmt</span>
+            <span class="badge ba-live">live</span><span class="stg-meta">👤<b>Eason</b></span></div>
+          <div class="stg-desc">Field stage. Adds PINK: dilapidation / in-progress / completed photos — direct upload, editable at backend.</div>
+          <div class="stg-chips"><span class="clab">Reads</span><span class="chip ci-blue"><i></i>B</span><span class="chip ci-green"><i></i>G</span><span class="chip ci-red"><i></i>R</span><span class="chip ci-yellow"><i></i>Y</span><span class="clab">Adds→</span><span class="chip add ci-pink"><i></i>PINK</span></div>
+        </div>
+        <div class="arrow">▼</div>
+
+        <div class="branchnote">— converges into two outputs —</div>
+        <div class="branchbar">
+          <div class="stg b-none">
+            <div class="stg-top"><span class="stg-no">8A</span><span class="stg-name">Job Completion Report</span>
+              <span class="badge ba-live">live</span><span class="stg-meta">👤<b>Katm</b></span></div>
+            <div class="stg-desc">Straighten photos, fix status/wording, spell-check, submit. Emails client; drafts Wix blog + LinkedIn (save-mode).</div>
+            <div class="stg-chips"><span class="clab">Reads</span><span class="chip ci-blue"><i></i></span><span class="chip ci-green"><i></i></span><span class="chip ci-red"><i></i></span><span class="chip ci-pink"><i></i></span><span class="chip ci-turq"><i></i></span></div>
+          </div>
+          <div class="stg b-grey">
+            <div class="stg-top"><span class="stg-no">8B</span><span class="stg-name">Backend Reporting + Pay</span>
+              <span class="badge ba-live">live</span><span class="stg-meta">👤<b>Afiqah/Ainaa</b></span></div>
+            <div class="stg-desc">Adds GREY (CIDB) → summary for manual CIMS submit. Stores all job arrangement, who worked, pay, project P&amp;L.</div>
+            <div class="stg-chips"><span class="clab">Reads</span><span class="chip ci-blue"><i></i></span><span class="chip ci-green"><i></i></span><span class="chip ci-red"><i></i></span><span class="chip ci-beige"><i></i></span><span class="chip ci-turq"><i></i></span><span class="clab">Adds→</span><span class="chip add ci-grey"><i></i>GREY</span></div>
+          </div>
+        </div>
+
+        <div class="cyc">🔁 <b>The cycle repeats per job.</b> Backend P&amp;L + completion proof feed the next quote and the next marketing post — loop closes back to Stage 0.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: legend -->
+    <div>
+      <div class="colhead">The 8 Data Layers — shared language</div>
+      <div class="legend">
+        <div class="lay"><div class="lay-top"><span class="sw sw-blue"></span><span class="lay-name">BLUE</span></div><div class="lay-fld">Client — name, tel, contact, comms. <i>born: CRM</i></div></div>
+        <div class="lay"><div class="lay-top"><span class="sw sw-green"></span><span class="lay-name">GREEN</span></div><div class="lay-fld">Commercial — lot no/size, scope, mall, drawing. <i>born: Quotation</i></div></div>
+        <div class="lay"><div class="lay-top"><span class="sw sw-turq"></span><span class="lay-name">TURQUOISE</span></div><div class="lay-fld">Confirmation + live job-progress status. <i>born: Job Confirm</i></div></div>
+        <div class="lay"><div class="lay-top"><span class="sw sw-yellow"></span><span class="lay-name">YELLOW</span></div><div class="lay-fld">Approved permit + worker docs (IC/passport/visa/cert). <i>born: Permit</i></div></div>
+        <div class="lay"><div class="lay-top"><span class="sw sw-red"></span><span class="lay-name">RED</span></div><div class="lay-fld">Resourcing — workers, lorry, visual, scaffold, fabric. <i>born: Pre-Onsite</i></div></div>
+        <div class="lay"><div class="lay-top"><span class="sw sw-beige"></span><span class="lay-name">BEIGE</span></div><div class="lay-fld">Fabrication time/date/workers → pay calc. <i>born: Factory</i></div></div>
+        <div class="lay"><div class="lay-top"><span class="sw sw-pink"></span><span class="lay-name">PINK</span></div><div class="lay-fld">Photos — dilapidation, in-progress, completed. <i>born: Onsite</i></div></div>
+        <div class="lay"><div class="lay-top"><span class="sw sw-grey"></span><span class="lay-name">GREY</span></div><div class="lay-fld">CIDB insertion → manual CIMS summary. <i>born: Backend</i></div></div>
+      </div>
+
+      <div class="colhead">The Two Keys</div>
+      <div class="keys">
+        <div class="key kb"><code>CLIENT-0001</code><h5>Client ID</h5><p>One per client · carries BLUE · many jobs. Born at CRM.</p></div>
+        <div class="key kg"><code>JOB-0001-A</code><h5>Job ID</h5><p>One per job/lot · links to Client ID · every colour from GREEN attaches here. Born at Quotation.</p></div>
+      </div>
+
+      <div class="colhead">Add-on Notes</div>
+      <div class="notes">
+        <div class="lines"></div>
+        <div class="small">Mark new fields, new colours, new stages, or automations to add — bring to next session.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== PAGE 2 — THE REFERENCE ===================== -->
+<div class="page">
+  <div class="head">
+    <div class="lhs">
+      <div class="logo">BL</div>
+      <div>
+        <div class="title">Integration Reference — How the Systems Wire Together</div>
+        <div class="subtitle">Black Lee · one shared Job Record · every system reads colours it needs, writes only its own</div>
+      </div>
+    </div>
+    <div class="rhs"><b>v1 · 2026-06-23</b><br>Page 2 of 2 — the wiring</div>
+  </div>
+
+  <div class="rule">
+    <b>Architecture in one line:</b> one shared <b>Job Record</b> keyed by <code>Job ID</code> in Sheet + Apps Script. No system talks to another directly — they all read &amp; write <b>the record</b>.
+  </div>
+
+  <div class="two">
+
+    <!-- MATRIX -->
+    <div>
+      <div class="colhead">Read / Write Matrix — the build contract</div>
+      <table class="mx">
+        <thead><tr><th style="text-align:left">System</th>
+          <th><span class="mdot sw-blue"></span><br>Blue</th><th><span class="mdot sw-green"></span><br>Green</th>
+          <th><span class="mdot sw-turq"></span><br>Turq</th><th><span class="mdot sw-yellow"></span><br>Yel</th>
+          <th><span class="mdot sw-red"></span><br>Red</th><th><span class="mdot sw-beige"></span><br>Beige</th>
+          <th><span class="mdot sw-pink"></span><br>Pink</th><th><span class="mdot sw-grey"></span><br>Grey</th></tr></thead>
+        <tbody>
+          <tr><th>2 · CRM</th><td class="w wb">W</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><th>3 · Smart Quotation</th><td class="r">R</td><td class="w wg">W</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><th>4 · Job Confirmation</th><td class="r">R</td><td class="r">R</td><td class="w wt">W</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><th>5 · Permit</th><td class="r">R</td><td class="r">R</td><td></td><td class="w wy">W</td><td></td><td></td><td></td><td></td></tr>
+          <tr><th>6A · Pre-Onsite</th><td class="r">R</td><td class="r">R</td><td></td><td class="r">R</td><td class="w wr">W</td><td></td><td></td><td></td></tr>
+          <tr><th>6B · Factory</th><td></td><td class="r">R</td><td class="r">R</td><td></td><td></td><td class="w wbe">W</td><td></td><td></td></tr>
+          <tr><th>7 · Onsite</th><td class="r">R</td><td class="r">R</td><td></td><td class="r">R</td><td class="r">R</td><td></td><td class="w wp">W</td><td></td></tr>
+          <tr><th>8A · Job Completion</th><td class="r">R</td><td class="r">R</td><td class="r">R</td><td></td><td class="r">R</td><td></td><td class="r">R</td><td></td></tr>
+          <tr><th>8B · Backend + Pay</th><td class="r">R</td><td class="r">R</td><td class="r">R</td><td></td><td class="r">R</td><td class="r">R</td><td></td><td class="w wgr">W</td></tr>
+        </tbody>
+      </table>
+      <div class="small"><b>W</b> = creates this colour once · <b>R</b> = reads, never edits. Build each system to honour exactly its row.</div>
+
+      <div class="colhead" style="margin-top:14px">Build Order — wire in this sequence</div>
+      <div class="steps2">
+        <div><b>Lock the Job Record schema</b> — one column block per colour, keyed by Client ID + Job ID. The contract every system signs.</div>
+        <div><b>Build the CRM (Stage 2)</b> — mints Client ID, writes Blue. Nothing connects until Blue lives in one place.</div>
+        <div><b>Wire CRM → Smart Quotation</b> — reads Blue by Client ID, mints Job ID, writes Green. First real win.</div>
+        <div><b>Retrofit existing systems</b> — Permit, Pre-Onsite, Factory, Onsite, JCR, Backend read by Job ID, write one colour each.</div>
+        <div><b>WATI inbound + outbound</b> — webhook leads in, send quotes/updates out. Slot in once method decided.</div>
+      </div>
+    </div>
+
+    <!-- TRANSPORT + NOTES -->
+    <div>
+      <div class="colhead">Transport — how data actually moves</div>
+      <div class="trans">
+        <div><b>WATI → CRM:</b> webhook → Apps Script <code>doPost(e)</code> → append row, mint Client ID</div>
+        <div><b>CRM → Quotation:</b> reads Blue by Client ID, mints Job ID · same Sheet, no export</div>
+        <div><b>Quotation → Client:</b> auto-send quote + stored measurement via <code>MailApp</code> / WATI</div>
+        <div><b>Any system → Job Record:</b> read by Job ID, write only own colour columns</div>
+        <div><b>Permit → Building mgmt:</b> auto-email permit + docs + MOS + HIRARC · replies → v2, v3…</div>
+        <div><b>Job Completion → Client/Wix/LinkedIn:</b> email + save-mode social drafts for manual post</div>
+        <div><b>Backend → CIMS/Infotech:</b> prepares summary, human submits (manual for now)</div>
+      </div>
+
+      <div class="colhead" style="margin-top:14px">Status Today</div>
+      <div class="trans">
+        <div><b>Your own builds</b> (Sheet + Apps Script) — used in place of ClickUp + Odoo</div>
+        <div><b>WATI</b> — method still being decided</div>
+        <div><b>Infotech</b> (invoice) &amp; <b>CIDB CIMS</b> — still manual, future automation targets</div>
+        <div><b>Owner names</b> (Imrah, Eason, Sohel, Katm, Afiqah, Ainaa) — read from sketch, confirm</div>
+      </div>
+
+      <div class="colhead" style="margin-top:14px">Decisions Needed (CRM)</div>
+      <div class="notes">
+        <div class="lines" style="height:120px"></div>
+        <div class="small">1. Client ID format? 2. De-dupe = same phone? 3. Who keys leads now? 4. Migrate existing client list? 5. Repeat client = 1 ID, many jobs?</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

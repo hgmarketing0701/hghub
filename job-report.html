@@ -1,0 +1,2212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HG Services — Job Completion Report</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #141926;
+    --surface-2: #1c2335;
+    --border: #2a3245;
+    --text: #ffffff;
+    --text-dim: #a0a8b8;
+    --text-dimmer: #6b7280;
+    --accent: #f59e0b;
+    --accent-hover: #d97706;
+    --accent-soft: rgba(245, 158, 11, 0.12);
+    --green: #22c55e;
+    --green-soft: rgba(34, 197, 94, 0.15);
+    --red: #ef4444;
+    --red-soft: rgba(239, 68, 68, 0.15);
+    --blue: #3b82f6;
+    --blue-soft: rgba(59, 130, 246, 0.15);
+    --radius: 14px;
+    --shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .container { max-width: 1280px; margin: 0 auto; padding: 28px 22px; }
+
+  /* HEADER */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 16px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+  .brand-block { display: flex; align-items: center; gap: 14px; }
+  .brand-logo {
+    width: 56px; height: 56px;
+    background: #fff;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 7px;
+  }
+  .brand-logo img { max-width: 100%; max-height: 100%; display: block; }
+  .brand-name { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.01em; line-height: 1.1; }
+  .brand-sub { font-size: 0.82rem; color: var(--text-dim); margin-top: 4px; }
+  .meta-pills { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .pill {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 8px 14px; border-radius: 999px;
+    font-size: 0.82rem; color: var(--text-dim);
+    display: inline-flex; align-items: center; gap: 7px;
+    text-decoration: none;
+  }
+  .pill.cloud-on { color: var(--green); border-color: rgba(34,197,94,0.3); }
+  .pill.cloud-off { color: var(--text-dimmer); }
+  .pill.clickable { cursor: pointer; transition: 0.15s; }
+  .pill.clickable:hover { border-color: var(--accent); color: var(--text); }
+  .pill strong { color: var(--text); font-weight: 700; }
+
+  /* SECTION */
+  section { margin-bottom: 32px; }
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .section-title { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.01em; }
+  .section-meta { font-size: 0.82rem; color: var(--text-dim); }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+  }
+  .card + .card { margin-top: 14px; }
+  .card-title {
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--accent); font-weight: 700;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* DROPZONE */
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+    background: var(--surface);
+  }
+  .dropzone:hover, .dropzone.over {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .dropzone-big { font-size: 2.2rem; margin-bottom: 6px; }
+  .dropzone-hint { color: var(--text-dim); font-size: 0.86rem; margin-top: 6px; }
+
+  /* PHOTO GRID */
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-top: 14px;
+  }
+  .photo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .photo-card.excluded { opacity: 0.45; }
+  .photo-canvas-wrap {
+    background: #000;
+    aspect-ratio: 4/3;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .photo-canvas-wrap canvas {
+    max-width: 100%; max-height: 100%;
+    display: block;
+  }
+  .photo-busy {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent); font-size: 0.82rem; font-weight: 600;
+  }
+  .photo-body { padding: 11px 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .photo-name {
+    font-size: 0.76rem; color: var(--text-dim);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .photo-stage-row { display: flex; gap: 6px; }
+  .stage-select {
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text); padding: 6px 8px; border-radius: 6px;
+    font: inherit; font-size: 0.8rem;
+    flex: 0 0 auto;
+    min-width: 84px;
+  }
+  .stage-select.before { color: #60a5fa; }
+  .stage-select.during { color: var(--accent); }
+  .stage-select.after  { color: var(--green); }
+
+  .photo-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .rotate-row { display: flex; align-items: center; gap: 6px; }
+  .rotate-row label { font-size: 0.74rem; color: var(--text-dim); white-space: nowrap; }
+  .rotate-row input[type="range"] { flex: 1; accent-color: var(--accent); min-width: 80px; }
+  .rotate-row .deg {
+    font-size: 0.74rem; min-width: 36px; text-align: right;
+    color: var(--text); font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+  .caption-input {
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text); padding: 7px 9px; border-radius: 6px;
+    font: inherit; font-size: 0.82rem;
+    width: 100%; flex: 1;
+  }
+  .caption-input:focus { outline: none; border-color: var(--accent); }
+
+  /* BUTTONS */
+  .btn {
+    background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 12px; border-radius: 8px;
+    font: inherit; font-size: 0.84rem; font-weight: 600;
+    cursor: pointer; transition: 0.15s;
+    display: inline-flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #0a0e1a; }
+  .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #0a0e1a; }
+  .btn-ghost { background: transparent; }
+  .btn-danger { color: var(--red); border-color: rgba(239,68,68,0.3); }
+  .btn-danger:hover { background: var(--red-soft); border-color: var(--red); color: var(--red); }
+  .btn-sm { padding: 5px 9px; font-size: 0.76rem; }
+  .btn-big { padding: 14px 22px; font-size: 0.95rem; }
+
+  .toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.76rem; color: var(--text-dim); cursor: pointer;
+  }
+  .toggle input { accent-color: var(--accent); }
+
+  /* FORM */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .form-grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .form-grid.full { grid-template-columns: 1fr; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 0.8rem; color: var(--text-dim); font-weight: 600; }
+  .field label .req { color: var(--accent); margin-left: 3px; }
+  .field input[type="text"],
+  .field input[type="date"],
+  .field input[type="url"],
+  .field select,
+  .field textarea {
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text); padding: 9px 11px; border-radius: 8px;
+    font: inherit; font-size: 0.9rem;
+    width: 100%;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .field-hint { font-size: 0.74rem; color: var(--text-dimmer); }
+
+  /* ===== PICKABLE LIST (multi/single-select dropdown with + Add new) ===== */
+  .plist {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 8px 4px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+    min-height: 38px;
+    cursor: text;
+    position: relative;
+    transition: 0.15s;
+  }
+  .plist:hover { border-color: var(--text-dimmer); }
+  .plist.open { border-color: var(--accent); }
+  .plist-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--accent-soft);
+    color: var(--text);
+    border: 1px solid rgba(245,158,11,0.35);
+    padding: 3px 4px 3px 10px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    line-height: 1;
+  }
+  .plist-chip button {
+    background: transparent; border: none;
+    color: var(--text-dim); cursor: pointer;
+    font-size: 1.1rem; line-height: 1;
+    padding: 0 4px;
+  }
+  .plist-chip button:hover { color: var(--red); }
+  .plist-input {
+    background: transparent; border: none; outline: none;
+    color: var(--text); font: inherit; font-size: 0.88rem;
+    flex: 1; min-width: 90px;
+    padding: 4px 2px;
+  }
+  .plist-input::placeholder { color: var(--text-dimmer); }
+  .plist-dropdown {
+    position: absolute;
+    top: calc(100% + 4px); left: 0; right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    max-height: 260px; overflow-y: auto;
+    z-index: 50;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    display: none;
+  }
+  .plist.open .plist-dropdown { display: block; }
+  .plist-item {
+    padding: 8px 12px;
+    font-size: 0.86rem;
+    cursor: pointer;
+    color: var(--text);
+  }
+  .plist-item:hover { background: var(--accent-soft); color: var(--accent); }
+  .plist-item.selected { color: var(--accent); }
+  .plist-item.selected::before { content: '✓  '; font-weight: 700; }
+  .plist-empty {
+    padding: 10px 12px;
+    font-size: 0.84rem;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+  .plist-add {
+    padding: 8px 12px;
+    font-size: 0.84rem;
+    color: var(--accent);
+    border-top: 1px solid var(--border);
+    cursor: pointer;
+    font-weight: 600;
+    background: rgba(245,158,11,0.04);
+  }
+  .plist-add:hover { background: var(--accent-soft); }
+
+  .scope-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .scope-group { margin-bottom: 10px; }
+  .scope-group-title {
+    font-size: 0.78rem; font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    margin: 4px 0 6px;
+  }
+  .scope-sub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+  }
+  .scope-add-row {
+    display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+    margin-top: 12px; padding-top: 10px;
+    border-top: 1px dashed var(--border);
+  }
+  .scope-add-row input {
+    flex: 1; min-width: 140px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 10px; border-radius: 6px;
+    font: inherit; font-size: 0.85rem;
+  }
+  .scope-add-row input:focus { outline: none; border-color: var(--accent); }
+  .scope-add-sep { color: var(--text-dim); font-size: 1rem; }
+  .scope-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    padding: 9px 11px; border-radius: 8px;
+    cursor: pointer; transition: 0.15s;
+    font-size: 0.86rem;
+  }
+  .scope-chip:hover { border-color: var(--accent); }
+  .scope-chip input { accent-color: var(--accent); }
+  .scope-chip.checked {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  /* PREVIEW (THE ACTUAL HG TEMPLATE) */
+  .preview-wrap {
+    background: #fff;
+    color: #111;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .hg-doc {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    color: #111;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 32px 38px 48px;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    /* Force backgrounds (table headers, key cells, banner border) to render in
+       printed PDF — otherwise Chrome strips them to save ink. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  .hg-head {
+    display: flex; align-items: flex-start; gap: 18px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #2d2d2d;
+    margin-bottom: 0;
+  }
+  .hg-head .logo {
+    width: 70px; flex-shrink: 0;
+  }
+  .hg-head .logo img { width: 100%; height: auto; display: block; }
+  .hg-head .titles { flex: 1; min-width: 0; }
+  .hg-head .company {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    font-size: 13pt; font-weight: 700; letter-spacing: 0;
+    color: #111; margin-bottom: 2px;
+  }
+  .hg-head .tagline {
+    font-size: 9.5pt; color: #555; font-weight: 400;
+  }
+  .hg-banner {
+    background: #fff;
+    color: #111;
+    padding: 6px 0 14px;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 4px;
+  }
+  .hg-banner .b-title {
+    font-size: 20pt; font-weight: 700; letter-spacing: 0;
+    color: #111;
+    margin-bottom: 4px;
+  }
+  .hg-banner .b-sub {
+    font-size: 11pt; font-weight: 400;
+    color: #555; margin-bottom: 2px;
+  }
+  .hg-banner .b-meta {
+    font-size: 10pt; color: #555; font-weight: 400;
+  }
+
+  .hg-section {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    font-size: 11pt; font-weight: 700; letter-spacing: 0;
+    color: #111; margin: 18px 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #222;
+  }
+  .hg-table {
+    width: 100%; border-collapse: collapse;
+    margin-bottom: 8px;
+    font-size: 10pt;
+  }
+  .hg-table th, .hg-table td {
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    vertical-align: top;
+    text-align: left;
+  }
+  .hg-table th {
+    background: #2d2d2d;
+    color: #fff;
+    font-weight: 700;
+    font-size: 9.5pt;
+    letter-spacing: 0.02em;
+  }
+  .hg-table td.k {
+    background: #f5f5f5; font-weight: 700; color: #444;
+    width: 40%;
+  }
+  .hg-table td.v { color: #222; }
+
+  .hg-photo-desc {
+    font-size: 10pt; color: #444; font-style: italic;
+    margin: 6px 0 12px;
+  }
+  .hg-photos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .hg-photo {
+    border: 1px solid #ddd;
+    overflow: hidden;
+    background: #fff;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .hg-photo .img-wrap {
+    background: #fff;
+    aspect-ratio: 4/3;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .hg-photo .img-wrap img {
+    width: 100%; height: 100%; object-fit: contain; display: block;
+  }
+  .hg-photo .cap {
+    padding: 6px 10px;
+    font-size: 9pt;
+    color: #333;
+    background: #fafafa;
+    border-top: 1px solid #eee;
+  }
+  .hg-photo .cap .stage {
+    font-weight: 700; color: #111; text-transform: uppercase;
+    font-size: 8.5pt; letter-spacing: 0.04em;
+  }
+  .hg-photo .cap .stage.before { color: #1d4ed8; }
+  .hg-photo .cap .stage.during { color: #b45309; }
+  .hg-photo .cap .stage.after  { color: #15803d; }
+
+  .hg-foot {
+    margin-top: 30px;
+    padding-top: 10px;
+    border-top: 1px solid #ccc;
+    font-size: 8.5pt; color: #777;
+    text-align: center;
+  }
+
+  .preview-empty {
+    background: var(--surface); border: 1px dashed var(--border);
+    padding: 40px 20px; text-align: center;
+    border-radius: var(--radius); color: var(--text-dim);
+  }
+
+  /* STATUS BANNER */
+  .status {
+    padding: 12px 16px; border-radius: 10px;
+    font-size: 0.88rem; font-weight: 500;
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 14px;
+  }
+  .status.info { background: var(--blue-soft); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
+  .status.ok { background: var(--green-soft); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .status.err { background: var(--red-soft); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .status.warn { background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(245,158,11,0.3); }
+  .status a { color: inherit; text-decoration: underline; }
+
+  /* SETTINGS MODAL */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000; padding: 20px;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius);
+    max-width: 660px; width: 100%;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: var(--shadow);
+  }
+  .modal-head {
+    padding: 18px 22px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  }
+  .modal-title { font-weight: 700; font-size: 1.1rem; }
+  .modal-body { padding: 22px; }
+  .modal-foot {
+    padding: 16px 22px; border-top: 1px solid var(--border);
+    display: flex; justify-content: flex-end; gap: 10px;
+  }
+  .x-btn {
+    background: transparent; border: none; color: var(--text-dim);
+    font-size: 1.4rem; cursor: pointer; padding: 4px 8px;
+  }
+  .x-btn:hover { color: var(--text); }
+
+  .setup-steps { padding-left: 22px; }
+  .setup-steps li { margin-bottom: 8px; font-size: 0.9rem; color: var(--text-dim); }
+  .setup-steps li strong { color: var(--text); }
+  .setup-steps code {
+    background: var(--surface-2); padding: 2px 6px; border-radius: 4px;
+    font-size: 0.82rem; color: var(--accent);
+  }
+
+  /* ===== MANAGE LISTS MODAL ===== */
+  .lm-picker {
+    display: flex; gap: 10px; align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .lm-picker label {
+    font-weight: 600; color: var(--text-dim); font-size: 0.86rem;
+    white-space: nowrap;
+  }
+  .lm-picker select {
+    flex: 1;
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text); padding: 9px 11px; border-radius: 8px;
+    font: inherit; font-size: 0.9rem;
+  }
+  .lm-picker select:focus { outline: none; border-color: var(--accent); }
+  .lm-items {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    max-height: 320px; overflow-y: auto;
+    min-height: 80px;
+    padding: 8px;
+    margin-bottom: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .lm-item {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 5px 6px 5px 12px;
+    border-radius: 999px;
+    font-size: 0.84rem;
+    color: var(--text);
+  }
+  .lm-item button {
+    background: transparent; border: none;
+    color: var(--text-dim); cursor: pointer;
+    font-size: 1.1rem; line-height: 1;
+    padding: 0 4px;
+  }
+  .lm-item button:hover { color: var(--red); }
+  .lm-item button.lm-edit { font-size: 0.85rem; padding: 0 4px 0 6px; }
+  .lm-item button.lm-edit:hover { color: var(--accent); }
+  .lm-empty {
+    color: var(--text-dim); font-style: italic;
+    padding: 12px; font-size: 0.86rem;
+    width: 100%; text-align: center;
+  }
+  .lm-add {
+    display: flex; gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .lm-add input {
+    flex: 1;
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text); padding: 9px 11px; border-radius: 8px;
+    font: inherit; font-size: 0.9rem;
+  }
+  .lm-add input:focus { outline: none; border-color: var(--accent); }
+
+  /* SUBMIT BAR */
+  .submit-bar {
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+    margin-top: 18px;
+  }
+  .submit-bar .spacer { flex: 1; }
+
+  /* PRINT */
+  #printRoot { display: none; }
+  @media print {
+    body { background: #fff; color: #111; }
+    .container.app, header, footer { display: none !important; }
+    #printRoot { display: block !important; }
+    #printRoot .preview-wrap {
+      border: none; border-radius: 0;
+    }
+    #printRoot .hg-doc {
+      max-width: 100%; padding: 0 8mm;
+    }
+    @page { size: A4; margin: 14mm 12mm; }
+    .hg-photo, .hg-table tr, .hg-section { page-break-inside: avoid; break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container app">
+
+  <!-- HEADER -->
+  <div class="topbar">
+    <div class="brand-block">
+      <div class="brand-logo"><img src="hg-logo.png" alt="HG" /></div>
+      <div>
+        <div class="brand-name">HG Services — Job Completion Report</div>
+        <div class="brand-sub">Upload → auto-straighten → fill fields → push to Drive + Sheet</div>
+      </div>
+    </div>
+    <div class="meta-pills">
+      <a class="pill clickable" href="operations.html">← Ops</a>
+      <span class="pill clickable" onclick="openListManager()">⚙ Manage Lists</span>
+      <span class="pill" id="photoCountPill"><strong>0</strong> photos</span>
+      <span class="pill cloud-off clickable" id="cloudPill" onclick="openSettings()">☁ Not connected</span>
+    </div>
+  </div>
+
+  <!-- STEP 1: PHOTOS -->
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="section-title">1. Upload Site Photos</div>
+        <div class="section-meta">Each photo auto-straightens. Tag each one Before / During / After so the report reads correctly.</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('fileInput').click()">＋ Add Photos</button>
+    </div>
+
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+      <div class="dropzone-big">📷</div>
+      <div><strong>Drop photos here</strong> or click to browse</div>
+      <div class="dropzone-hint">JPG / PNG / HEIC · multiple at a time · max 12 MB each</div>
+      <input type="file" id="fileInput" accept="image/*" multiple style="display:none" />
+    </div>
+
+    <div class="photo-grid" id="photoGrid"></div>
+  </section>
+
+  <!-- STEP 2: JOB DETAILS -->
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="section-title">2. Job Details</div>
+        <div class="section-meta">Lot number = Drive folder name. Trade Name = what shows on the dark banner.</div>
+      </div>
+    </div>
+
+    <!-- 2a. PROJECT INFORMATION -->
+    <div class="card">
+      <div class="card-title">Project Information</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Job Date <span class="req">*</span></label>
+          <input type="date" id="jobDate" />
+        </div>
+        <div class="field">
+          <label>Mall / Site <span class="req">*</span></label>
+          <div class="plist" id="jobMall"></div>
+        </div>
+        <div class="field">
+          <label>Lot Number <span class="req">*</span></label>
+          <input type="text" id="jobLot" placeholder="e.g. GK-13" autocomplete="off" />
+          <span class="field-hint">Used as the Drive folder name.</span>
+        </div>
+        <div class="field">
+          <label>Trade Name <span class="req">*</span></label>
+          <input type="text" id="jobTrade" placeholder="e.g. The Raw" autocomplete="off" />
+          <span class="field-hint">If no trade name, please write NA.</span>
+        </div>
+        <div class="field">
+          <label>Completion Status <span class="req">*</span></label>
+          <div class="plist" id="jobStatus"></div>
+        </div>
+        <div class="field">
+          <label>Client (optional)</label>
+          <input type="text" id="jobClient" placeholder="e.g. ABC Sdn Bhd" autocomplete="off" />
+          <span class="field-hint">Billing entity. Leave blank to hide row from report.</span>
+        </div>
+        <div class="field">
+          <label>Reference / PO No. (optional)</label>
+          <input type="text" id="jobRef" placeholder="optional" autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="field" style="margin-top: 16px;">
+        <label>Job Scope <span class="req">*</span></label>
+        <div class="scope-grid" id="scopeGrid"></div>
+        <div class="scope-add-row">
+          <input type="text" id="scopeAddCat" placeholder="Category (e.g. Hoarding)" autocomplete="off" />
+          <span class="scope-add-sep">›</span>
+          <input type="text" id="scopeAddSub" placeholder="Sub-scope (e.g. Inspection)" autocomplete="off" />
+          <button class="btn btn-sm" onclick="addNewScope()">＋ Add scope</button>
+        </div>
+        <span class="field-hint">Tick everything that applies. Need a new scope? Type a Category and Sub-scope above and click <strong>+ Add scope</strong>.</span>
+      </div>
+
+      <div class="field" style="margin-top: 14px;">
+        <label>Custom Job Scope (overrides checkboxes if filled)</label>
+        <input type="text" id="jobScopeOther" placeholder="e.g. Hoarding and visual sticker installation" autocomplete="off" />
+      </div>
+    </div>
+
+    <!-- 2b. ON-SITE MANPOWER -->
+    <div class="card">
+      <div class="card-title">On-Site Manpower</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Lorry</label>
+          <div class="plist" id="mpLorry"></div>
+          <span class="field-hint">Format: <code>ST02 - VCA7999</code>. Manage via <strong>⚙ Manage Lists → Lorries</strong>.</span>
+        </div>
+        <div class="field">
+          <label>Supervisor</label>
+          <div class="plist" id="mpHoardSup"></div>
+        </div>
+        <div class="field">
+          <label>Visual Supervisor(s)</label>
+          <div class="plist" id="mpVisSup"></div>
+          <span class="field-hint">Pick multiple. Add notes like "(own transport)" as a new item if needed.</span>
+        </div>
+      </div>
+      <div class="form-grid full" style="margin-top: 14px;">
+        <div class="field">
+          <label>Hoarding Workers</label>
+          <div class="plist" id="mpHoardWk"></div>
+          <span class="field-hint">Pick multiple. To add a new name, click <strong>⚙ Manage Lists</strong> (top right).</span>
+        </div>
+        <div class="field">
+          <label>Visual Workers (optional)</label>
+          <div class="plist" id="mpVisWk"></div>
+        </div>
+        <div class="field">
+          <label>Other Workers (optional)</label>
+          <div class="plist" id="mpOtherWk"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2c. MATERIALS USED -->
+    <div class="card">
+      <div class="card-title">Materials Used</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Hoarding Type</label>
+          <div class="plist" id="matType"></div>
+        </div>
+        <div class="field">
+          <label>Hoarding Panel</label>
+          <div class="plist" id="matPanel"></div>
+        </div>
+        <div class="field">
+          <label>Hoarding Door</label>
+          <div class="plist" id="matDoor"></div>
+        </div>
+        <div class="field">
+          <label>Counterweight</label>
+          <div class="plist" id="matCounter"></div>
+        </div>
+        <div class="field">
+          <label>Floor Protection within Hoarding Area</label>
+          <div class="plist" id="matFloor"></div>
+        </div>
+        <div class="field">
+          <label>Fabric</label>
+          <div class="plist" id="matFabric"></div>
+        </div>
+        <div class="field">
+          <label>Visual Material</label>
+          <div class="plist" id="matVisual"></div>
+        </div>
+        <div class="field">
+          <label>Skirting</label>
+          <div class="plist" id="matSkirt"></div>
+        </div>
+      </div>
+      <div class="form-grid full" style="margin-top: 14px;">
+        <div class="field">
+          <label>Other Materials (optional)</label>
+          <div class="plist" id="matOther"></div>
+          <span class="field-hint">Pick multiple. Manage the list via <strong>⚙ Manage Lists → Other Materials</strong>.</span>
+        </div>
+      </div>
+      <span class="field-hint" style="display:block; margin-top: 10px;">Leave any field blank to show "–" in the report. To add a new option to any list, click <strong>⚙ Manage Lists</strong> (top right).</span>
+    </div>
+
+    <!-- 2d. EXTRA TEXT -->
+    <div class="card">
+      <div class="card-title">Notes</div>
+      <div class="form-grid full">
+        <div class="field">
+          <label>Photo Description Line (auto-generated — edit if needed)</label>
+          <textarea id="jobPhotoDesc" placeholder="Will auto-generate from your other fields. Edit here to customise."></textarea>
+        </div>
+        <div class="field">
+          <label>Remarks (optional — appears after photos)</label>
+          <textarea id="jobRemarks" placeholder="Defects, follow-ups, site conditions."></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3: REPORT + SUBMIT -->
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="section-title">3. Report Preview</div>
+        <div class="section-meta">This is the exact layout that gets generated as the PDF.</div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-sm" onclick="window.print()">🖨 Print / Save PDF</button>
+      </div>
+    </div>
+
+    <div id="previewSlot">
+      <div class="preview-empty">Fill in the details above and the report preview will appear here.</div>
+    </div>
+
+    <div class="submit-bar">
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" onclick="resetForm()">Reset</button>
+      <button class="btn btn-primary btn-big" id="submitBtn" onclick="submitToCloud()">☁ Submit to Drive + Sheet</button>
+    </div>
+
+    <div id="submitStatus"></div>
+  </section>
+
+</div>
+
+<!-- HIDDEN PRINT VIEW -->
+<div id="printRoot"></div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">☁ Cloud Sync — Apps Script</div>
+      <button class="x-btn" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">
+        Paste the Web App URL from your <code>apps-script-jobs.gs</code> deployment.
+        This lets the page push the report PDF + photos to Drive and append a row to the summary Sheet.
+      </p>
+
+      <div class="field">
+        <label>Apps Script Web App URL</label>
+        <input type="url" id="settingsUrl" placeholder="https://script.google.com/macros/s/.../exec" />
+        <span class="field-hint">Saved locally on this device only.</span>
+      </div>
+
+      <div class="field" style="margin-top: 14px;">
+        <label>Folder Name (Drive root)</label>
+        <input type="text" id="settingsRoot" placeholder="HG Services — Job Reports" />
+        <span class="field-hint">All lot folders are created inside this folder.</span>
+      </div>
+
+      <h3 style="margin: 20px 0 10px; font-size: 0.95rem;">First-time setup</h3>
+      <ol class="setup-steps">
+        <li>Create a Google Sheet → name it <code>HG Services — Job Completion Reports</code>.</li>
+        <li><strong>Extensions → Apps Script</strong>.</li>
+        <li>Paste the contents of <code>apps-script-jobs.gs</code>.</li>
+        <li>Run the <code>setup</code> function → approve permissions.</li>
+        <li><strong>Deploy → New deployment → Web app</strong>. Execute as: Me. Access: Anyone.</li>
+        <li>Copy the <code>/exec</code> URL → paste above → <strong>Save</strong>.</li>
+      </ol>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="testConnection()">Test connection</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGE LISTS MODAL -->
+<div class="modal-bg" id="listModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">⚙ Manage Lists</div>
+      <button class="x-btn" onclick="closeListManager()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color: var(--text-dim); font-size: 0.86rem; margin-bottom: 14px;">
+        Add or remove items in the dropdown lists. Saved locally on this device.
+      </p>
+      <div class="lm-picker">
+        <label for="lmListSelect">Edit list:</label>
+        <select id="lmListSelect"></select>
+      </div>
+      <div class="lm-items" id="lmItems"></div>
+      <div class="lm-add">
+        <input type="text" id="lmAddInput" placeholder="Add new item to this list..." autocomplete="off" />
+        <button class="btn btn-primary" onclick="ListManager.addItem()">+ Add</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeListManager()">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== CONFIG ===================== */
+const LS = {
+  url:  'jcr.appsScriptUrl',
+  root: 'jcr.driveRoot',
+  malls:'jcr.mallList'
+};
+
+const COMPANY = {
+  name: 'HG SERVICES (M) SDN BHD',
+  tagline: 'Facilities Management & Fit-Out Contractor Support',
+  logoPath: 'hg-logo.png'
+};
+
+/* (Scope and Mall defaults now live in LIST_DEFAULTS below, alongside all other dropdown lists.) */
+
+/* ===================== STATE ===================== */
+const state = {
+  photos: [],
+  busy: false,
+  submitting: false
+};
+
+const pickers = {}; // PickableList instances, keyed by field id
+
+/* ===================== LIST DEFAULTS + LOCAL STORE ===================== */
+const LIST_DEFAULTS = {
+  supervisors: [
+    'Tim','Wai','Mion','Tuck','Arel','Red','Hadi','Baan',
+    'Balan (Outsource)','Driver (Outsource)','Gabriel (Back Up)','Cheang','Thong'
+  ],
+  workers: [
+    'Abu Bakkor','Akash','Alamin-2','Angarshah','Anwar','Arif Hossain','Azizul','Based',
+    'Bijoy','Billal','Deen Islam','Ekram Shardar','Eleyas','Forid','Hasan Bepari','Hazrat Bepari',
+    'Ibrahim','Ifran','Iqbal','Ismail','Liton Khan','Mahimur','Mamun','Manik',
+    'Md Arif','Md Jomir','Mokarom','Nasir Uddin','Rabu Biswas','Rayhan','Sahidul','Sapan',
+    'Shafiqul','Shah Ali','Shakil','Shakil-2','Shakil-3','Sohag','Sohel Sikder','Uzzal Gazi'
+  ],
+  lorries: [
+    'ST02 - VCA7999','ST03 - VBK7999','ST04 - VDW7999','ST05 - VED7999',
+    'ST06 - JUF7999','ST07 - NDQ7999','ST08 - TCP7999','ST09 - VKC7999',
+    'ST10 - DEY7999','ST11 - QM7999R','ST12 - BSE7999','ST13 - PRW7999','ST14 - QS7999X'
+  ],
+  malls: [
+    'Central i-City','AEON Mid Valley','AEON Bukit Raja','AEON Cheras Selatan',
+    'AEON One Utama','AEON Sunway Pyramid','AEON Setia Alam','AEON Shah Alam',
+    'AEON Taman Maluri','AEON Tebrau City','AEON Quill City KL','AEON Wangsa Maju',
+    'Mid Valley Megamall','Sunway Pyramid','Sunway Velocity','Sunway Putra Mall',
+    'Pavilion KL','Pavilion Bukit Jalil','Suria KLCC','1 Utama','The Curve',
+    'TRX Exchange 106','Setia City Mall','Paradigm Mall PJ','IOI City Mall','MyTown Cheras'
+  ],
+  scopes: [
+    'Hoarding > Installation','Hoarding > Modification','Hoarding > Rectification',
+    'Hoarding > Dismantling','Hoarding > Repair','Hoarding > Relocation',
+    'Hoarding > Reconfiguration (Push-In)','Hoarding > Reconfiguration (Push-Out)',
+    'Hoarding > Additional Counterweight','Hoarding > Skirting Installation',
+    'Visual > Sticker Installation','Visual > Tarpaulin Installation','Visual > Removal',
+    'Scaffold > Installation','Scaffold > Dismantling',
+    'Reinstatement > Reinstatement Work','Reinstatement > Touch Up Work',
+    'Fit Out > Partition Work','Fit Out > Plaster Ceiling',
+    'Fit Out > Tiling - Wall','Fit Out > Tiling - Floor',
+    'Fit Out > Flooring - Cement Screeding','Fit Out > Brick Wall',
+    'Fit Out > Painting Work','Fit Out > Others',
+    'Sprinkler > Installation','Sprinkler > Dismantling',
+    'Sprinkler > Modification','Sprinkler > Rectification',
+    'Others > Project / Construction Hoarding - Installation',
+    'Others > Collect Board','Others > Flushing Services',
+    'Others > Wet Chemical Dismantling','Others > Temporary Storage'
+  ],
+  statuses:         ['COMPLETE','PARTIAL','IN PROGRESS','PENDING','DEFECT'],
+  hoardingTypes:    ['Kiosk','Island','Inline','Perimeter','Corridor','Mixed'],
+  panels:           ['MDF','Plywood','Particle Board','Metal','Fingerjoint'],
+  doors:            ['Swing','Double Swing','Sliding','Double Sliding','None'],
+  counterweights:   ['Yes','No','N/A'],
+  floorProtections: ['Yes','No','N/A'],
+  fabrics:          ['Top cover','Side cover','Full cover','None'],
+  visualMaterials:  ['Sticker','Tarpaulin','Vinyl','Mesh','Wallpaper','None'],
+  skirtings:        ['Aluminium','Timber','N/A'],
+  otherMaterials:   [],
+  photoStages:      ['Before','During','After','Other']
+};
+
+let cachedPhotoStages = ['Before','During','After','Other'];
+
+const ListStore = {
+  cache: {},
+  async preloadAll() {
+    Object.keys(LIST_DEFAULTS).forEach(k => { this.cache[k] = this._read(k); });
+    return this.cache;
+  },
+  _read(key) {
+    const stored = localStorage.getItem('jcr.list.' + key);
+    if (stored) {
+      try { return JSON.parse(stored); } catch (e) { /* fall through */ }
+    }
+    return (LIST_DEFAULTS[key] || []).slice();
+  },
+  _write(key, items) {
+    localStorage.setItem('jcr.list.' + key, JSON.stringify(items));
+    this.cache[key] = items;
+  },
+  async getList(key) { return this._read(key).slice(); },
+  async addToList(key, value) {
+    const list = this._read(key);
+    const v = String(value || '').trim();
+    if (v && !list.some(x => String(x).toLowerCase() === v.toLowerCase())) {
+      list.push(v);
+      this._write(key, list);
+    }
+    return list.slice();
+  },
+  async removeFromList(key, value) {
+    const list = this._read(key);
+    const v = String(value || '').trim();
+    const filtered = list.filter(x => String(x).toLowerCase() !== v.toLowerCase());
+    this._write(key, filtered);
+    return filtered.slice();
+  },
+  async renameItem(key, oldValue, newValue) {
+    const list = this._read(key);
+    const oldV = String(oldValue || '').trim();
+    const newV = String(newValue || '').trim();
+    if (!oldV || !newV) throw new Error('Both old and new values required.');
+    const idx = list.findIndex(x => String(x).trim().toLowerCase() === oldV.toLowerCase());
+    if (idx < 0) throw new Error('Item not found: "' + oldV + '"');
+    if (oldV.toLowerCase() !== newV.toLowerCase()) {
+      const dup = list.findIndex((x, i) => i !== idx && String(x).trim().toLowerCase() === newV.toLowerCase());
+      if (dup >= 0) throw new Error('"' + newV + '" already exists in this list.');
+    }
+    list[idx] = newV;
+    this._write(key, list);
+    return list.slice();
+  }
+};
+
+/* ===================== PICKABLE LIST COMPONENT ===================== */
+// Only one picker open at a time across the whole page
+let _currentPicker = null;
+let _pickerDocHandlerInstalled = false;
+function _installPickerDocHandler() {
+  if (_pickerDocHandlerInstalled) return;
+  _pickerDocHandlerInstalled = true;
+  document.addEventListener('pointerdown', (e) => {
+    const p = _currentPicker;
+    if (p && !p.root.contains(e.target)) p.close();
+  }, true);
+}
+
+class PickableList {
+  constructor(rootEl, opts) {
+    this.root = rootEl;
+    this.opts = Object.assign({ multi: false, allowAdd: false, sorted: false, placeholder: 'Click to select…' }, opts);
+    this.selected = [];
+    this.options = [];
+    this.filter = '';
+    this.isOpen = false;
+    _installPickerDocHandler();
+    this.render();
+    this.refresh();
+  }
+  async refresh() {
+    this.options = await this.opts.store.getList(this.opts.key);
+    this.render();
+  }
+  setValue(v) {
+    this.selected = this.opts.multi
+      ? (Array.isArray(v) ? v.slice() : (v ? String(v).split(',').map(s => s.trim()).filter(Boolean) : []))
+      : (v ? [String(v)] : []);
+    this.render();
+  }
+  get value() {
+    return this.opts.multi ? this.selected.slice() : (this.selected[0] || '');
+  }
+  clear() { this.selected = []; this.filter = ''; this.close(); }
+  openMenu() {
+    if (this.isOpen) return;
+    if (_currentPicker && _currentPicker !== this) _currentPicker.close();
+    this.isOpen = true;
+    _currentPicker = this;
+    this.render();
+  }
+  close() {
+    const wasOpen = this.isOpen;
+    this.isOpen = false;
+    if (_currentPicker === this) _currentPicker = null;
+    if (wasOpen) this.render();
+  }
+  toggle(v) {
+    if (!v) return;
+    if (this.opts.multi) {
+      const i = this.selected.findIndex(s => s.toLowerCase() === v.toLowerCase());
+      if (i >= 0) this.selected.splice(i, 1);
+      else this.selected.push(v);
+      this.filter = '';
+      this.render();
+    } else {
+      this.selected = [v];
+      this.filter = '';
+      this.close();
+    }
+    this.fireChange();
+  }
+  remove(v) {
+    this.selected = this.selected.filter(s => s.toLowerCase() !== v.toLowerCase());
+    this.render();
+    this.fireChange();
+  }
+  async addNew(v) {
+    v = String(v || '').trim();
+    if (!v) return;
+    try {
+      const list = await this.opts.store.addToList(this.opts.key, v);
+      this.options = list;
+      this.toggle(v);
+    } catch (e) {
+      alert('Failed to add: ' + (e.message || e));
+    }
+  }
+  fireChange() { if (this.opts.onChange) this.opts.onChange(this.value); renderPreview(); }
+  render() {
+    const chips = this.selected.map(v =>
+      `<span class="plist-chip">${escapeHtml(v)}<button type="button" data-rm="${escapeHtml(v)}" aria-label="Remove">×</button></span>`
+    ).join('');
+    const f = this.filter.toLowerCase();
+    const baseOpts = (this.options || []);
+    const sourceOpts = this.opts.sorted
+      ? baseOpts.slice().sort((a, b) => String(a).localeCompare(String(b), 'en', { sensitivity: 'base' }))
+      : baseOpts;
+    const filtered = sourceOpts.filter(o => !f || String(o).toLowerCase().includes(f));
+    const items = filtered.length
+      ? filtered.map(o => {
+          const sel = this.selected.some(s => s.toLowerCase() === String(o).toLowerCase());
+          return `<div class="plist-item${sel ? ' selected' : ''}" data-val="${escapeHtml(o)}">${escapeHtml(o)}</div>`;
+        }).join('')
+      : '<div class="plist-empty">No matches</div>';
+    const trimmedFilter = this.filter.trim();
+    const showAdd = this.opts.allowAdd && trimmedFilter &&
+      !this.options.some(o => String(o).toLowerCase() === trimmedFilter.toLowerCase());
+    const addRow = showAdd
+      ? `<div class="plist-add" data-add="${escapeHtml(trimmedFilter)}">＋ Add "${escapeHtml(trimmedFilter)}" to the list</div>`
+      : '';
+    this.root.classList.toggle('open', this.isOpen);
+    this.root.innerHTML =
+      chips +
+      `<input type="text" class="plist-input" placeholder="${escapeHtml(this.opts.placeholder)}" value="${escapeHtml(this.filter)}" />` +
+      (this.isOpen
+        ? `<div class="plist-dropdown">${items}${addRow}</div>`
+        : '');
+    const input = this.root.querySelector('.plist-input');
+    input.addEventListener('input', e => {
+      this.filter = e.target.value;
+      if (!this.isOpen) this.openMenu();
+      else this.render();
+      const ip2 = this.root.querySelector('.plist-input');
+      if (ip2) { ip2.focus(); ip2.setSelectionRange(this.filter.length, this.filter.length); }
+    });
+    input.addEventListener('focus', () => { this.openMenu(); });
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const v = this.filter.trim();
+        if (!v) return;
+        const exact = this.options.find(o => String(o).toLowerCase() === v.toLowerCase());
+        if (exact) this.toggle(exact);
+        else if (this.opts.allowAdd) this.addNew(v);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        this.close();
+        e.target.blur();
+      } else if (e.key === 'Backspace' && !this.filter && this.selected.length) {
+        this.remove(this.selected[this.selected.length - 1]);
+      }
+    });
+    if (this.isOpen) {
+      setTimeout(() => {
+        if (!this.isOpen) return;
+        const ip = this.root.querySelector('.plist-input');
+        if (ip && document.activeElement !== ip) { try { ip.focus(); } catch (e) {} }
+      }, 0);
+    }
+    this.root.querySelectorAll('.plist-item[data-val]').forEach(el => {
+      el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); this.toggle(el.dataset.val); });
+    });
+    this.root.querySelectorAll('.plist-chip button[data-rm]').forEach(el => {
+      el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); this.remove(el.dataset.rm); });
+    });
+    const addEl = this.root.querySelector('.plist-add');
+    if (addEl) {
+      addEl.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); this.addNew(addEl.dataset.add); });
+    }
+  }
+}
+
+/* ===================== MANAGE LISTS (admin UI) ===================== */
+const ListManager = {
+  current: 'supervisors',
+  labels: {
+    supervisors:      'Supervisors',
+    workers:          'Workers',
+    lorries:          'Lorries (Code - Plate)',
+    malls:            'Malls / Sites',
+    scopes:           'Job Scopes',
+    statuses:         'Completion Status options',
+    hoardingTypes:    'Hoarding Types',
+    panels:           'Hoarding Panels',
+    doors:            'Hoarding Doors',
+    counterweights:   'Counterweight options',
+    floorProtections: 'Floor Protection options',
+    fabrics:          'Fabrics',
+    visualMaterials:  'Visual Materials',
+    skirtings:        'Skirtings',
+    otherMaterials:   'Other Materials',
+    photoStages:      'Photo Stages (Before / During / After)'
+  },
+  wired: false,
+  open() {
+    $('listModal').classList.add('open');
+    this.renderSelect();
+    this.renderItems();
+    if (!this.wired) {
+      $('lmAddInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); this.addItem(); }
+      });
+      $('lmListSelect').addEventListener('change', e => this.switchTo(e.target.value));
+      this.wired = true;
+    }
+    setTimeout(() => { try { $('lmAddInput').focus(); } catch (e) {} }, 50);
+  },
+  close() { $('listModal').classList.remove('open'); },
+  switchTo(key) {
+    this.current = key;
+    this.renderItems();
+    $('lmAddInput').value = '';
+    setTimeout(() => { try { $('lmAddInput').focus(); } catch (e) {} }, 50);
+  },
+  renderSelect() {
+    $('lmListSelect').innerHTML = Object.keys(this.labels).map(k =>
+      `<option value="${k}"${k===this.current?' selected':''}>${this.labels[k]}</option>`
+    ).join('');
+  },
+  async renderItems() {
+    const items = await ListStore.getList(this.current);
+    if (!items.length) {
+      $('lmItems').innerHTML = '<div class="lm-empty">No items yet. Add one below.</div>';
+      return;
+    }
+    $('lmItems').innerHTML = items.map(item =>
+      '<span class="lm-item">' + escapeHtml(item) +
+        '<button class="lm-edit" data-edit="' + escapeHtml(item) + '" title="Edit">✎</button>' +
+        '<button data-rm="' + escapeHtml(item) + '" title="Remove">×</button>' +
+      '</span>'
+    ).join('');
+    $('lmItems').querySelectorAll('button[data-edit]').forEach(b =>
+      b.addEventListener('click', () => this.editItem(b.dataset.edit))
+    );
+    $('lmItems').querySelectorAll('button[data-rm]').forEach(b =>
+      b.addEventListener('click', () => this.removeItem(b.dataset.rm))
+    );
+  },
+  async editItem(oldValue) {
+    const newValue = prompt('Fix the spelling for this item:\n\n(Press Cancel to keep as-is)', oldValue);
+    if (newValue === null) return;
+    const trimmed = String(newValue || '').trim();
+    if (!trimmed || trimmed === oldValue) return;
+    try {
+      await ListStore.renameItem(this.current, oldValue, trimmed);
+      this.renderItems();
+      await this.refreshDependents();
+    } catch (e) {
+      alert('Failed to rename: ' + (e.message || e));
+    }
+  },
+  async addItem() {
+    const input = $('lmAddInput');
+    const v = input.value.trim();
+    if (!v) return;
+    try {
+      await ListStore.addToList(this.current, v);
+      input.value = '';
+      try { input.focus(); } catch (e) {}
+      this.renderItems();
+      await this.refreshDependents();
+    } catch (e) {
+      alert('Failed to add: ' + (e.message || e));
+    }
+  },
+  async removeItem(value) {
+    if (!confirm('Remove "' + value + '" from ' + this.labels[this.current] + '?')) return;
+    try {
+      await ListStore.removeFromList(this.current, value);
+      this.renderItems();
+      await this.refreshDependents();
+    } catch (e) {
+      alert('Failed to remove: ' + (e.message || e));
+    }
+  },
+  async refreshDependents() {
+    Object.values(pickers).forEach(p => p.refresh());
+    if (this.current === 'scopes') await renderScopes();
+    if (this.current === 'photoStages') {
+      const stages = await ListStore.getList('photoStages');
+      if (stages && stages.length) cachedPhotoStages = stages;
+      renderPhotos();
+    }
+  }
+};
+function openListManager() { ListManager.open(); }
+function closeListManager() { ListManager.close(); }
+
+/* ===================== UTIL ===================== */
+const $ = (id) => document.getElementById(id);
+const uid = () => Math.random().toString(36).slice(2, 10);
+const todayISO = () => {
+  const d = new Date();
+  const tz = d.getTimezoneOffset() * 60000;
+  return new Date(d - tz).toISOString().slice(0, 10);
+};
+
+function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+
+function setStatus(el, type, html) {
+  if (!html) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="status ${type}">${html}</div>`;
+}
+
+function escapeHtml(s) {
+  return (s ?? '').toString()
+    .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+    .replaceAll('"','&quot;').replaceAll("'",'&#39;');
+}
+function nl2br(s) { return escapeHtml(s).replace(/\n/g, '<br>'); }
+
+function formatDateLong(iso) {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso + 'T00:00');
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  } catch (e) { return iso; }
+}
+
+/* ===================== PHOTO PIPELINE ===================== */
+const MAX_LONG_EDGE = 1600;
+const JPEG_QUALITY  = 0.85;
+
+async function fileToOrientedBitmap(file) {
+  try {
+    return await createImageBitmap(file, { imageOrientation: 'from-image' });
+  } catch (e) {
+    return await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }
+}
+
+function makeOriginalCanvas(bitmap) {
+  const W = bitmap.width, H = bitmap.height;
+  const scale = Math.min(1, MAX_LONG_EDGE / Math.max(W, H));
+  const w = Math.round(W * scale), h = Math.round(H * scale);
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(bitmap, 0, 0, w, h);
+  return c;
+}
+
+function rotatedInnerRect(W, H, angle) {
+  const absCos = Math.abs(Math.cos(angle));
+  const absSin = Math.abs(Math.sin(angle));
+  const longSide  = Math.max(W, H);
+  const shortSide = Math.min(W, H);
+  let w, h;
+  if (shortSide <= 2 * absSin * absCos * longSide ||
+      Math.abs(absSin - absCos) < 1e-10) {
+    const x = 0.5 * shortSide;
+    if (W >= H) { w = x / absSin; h = x / absCos; }
+    else        { w = x / absCos; h = x / absSin; }
+  } else {
+    const cos2 = absCos * absCos - absSin * absSin;
+    w = (W * absCos - H * absSin) / cos2;
+    h = (H * absCos - W * absSin) / cos2;
+  }
+  return { w: Math.max(20, Math.floor(w * 0.995)), h: Math.max(20, Math.floor(h * 0.995)) };
+}
+
+function renderRotated(srcCanvas, degrees) {
+  const rad = (degrees * Math.PI) / 180;
+  const W = srcCanvas.width, H = srcCanvas.height;
+  const { w, h } = rotatedInnerRect(W, H, rad);
+  const dst = document.createElement('canvas');
+  dst.width = w; dst.height = h;
+  const ctx = dst.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, w, h);
+  ctx.translate(w / 2, h / 2);
+  ctx.rotate(rad);
+  ctx.drawImage(srcCanvas, -W / 2, -H / 2);
+  return dst;
+}
+
+async function detectStraightenAngle(srcCanvas) {
+  const N = 280;
+  const tmp = document.createElement('canvas');
+  tmp.width = N; tmp.height = N;
+  const tctx = tmp.getContext('2d');
+  tctx.drawImage(srcCanvas, 0, 0, N, N);
+  const img = tctx.getImageData(0, 0, N, N).data;
+
+  const gray = new Float32Array(N * N);
+  for (let i = 0; i < N * N; i++) {
+    gray[i] = 0.299 * img[i * 4] + 0.587 * img[i * 4 + 1] + 0.114 * img[i * 4 + 2];
+  }
+
+  const edges = new Float32Array(N * N);
+  for (let y = 1; y < N - 1; y++) {
+    for (let x = 1; x < N - 1; x++) {
+      const i = y * N + x;
+      const gy =
+        -gray[i - N - 1] - 2 * gray[i - N] - gray[i - N + 1]
+        + gray[i + N - 1] + 2 * gray[i + N] + gray[i + N + 1];
+      const gx =
+        -gray[i - N - 1] - 2 * gray[i - 1] - gray[i + N - 1]
+        + gray[i - N + 1] + 2 * gray[i + 1] + gray[i + N + 1];
+      edges[i] = Math.abs(gy) * 1.5 + Math.abs(gx) * 0.6;
+    }
+  }
+
+  const score = (a) => {
+    const rad = (a * Math.PI) / 180;
+    const cs = Math.cos(rad), sn = Math.sin(rad);
+    const cx = (N - 1) / 2, cy = (N - 1) / 2;
+    const proj = new Float32Array(N);
+    for (let y = 0; y < N; y++) {
+      const dy = y - cy;
+      for (let x = 0; x < N; x++) {
+        const dx = x - cx;
+        const sx = cs * dx + sn * dy + cx;
+        const sy = -sn * dx + cs * dy + cy;
+        if (sx >= 0 && sx < N && sy >= 0 && sy < N) {
+          proj[y] += edges[(sy | 0) * N + (sx | 0)];
+        }
+      }
+    }
+    let mean = 0;
+    for (let i = 0; i < N; i++) mean += proj[i];
+    mean /= N;
+    let v = 0;
+    for (let i = 0; i < N; i++) { const d = proj[i] - mean; v += d * d; }
+    return v;
+  };
+
+  let bestA = 0, bestScore = -Infinity;
+  for (let a = -10; a <= 10.001; a += 0.4) {
+    const s = score(a);
+    if (s > bestScore) { bestScore = s; bestA = a; }
+  }
+  let refinedBest = bestA, refinedScore = bestScore;
+  for (let a = bestA - 0.4; a <= bestA + 0.4; a += 0.1) {
+    const s = score(a);
+    if (s > refinedScore) { refinedScore = s; refinedBest = a; }
+  }
+  return Math.round(refinedBest * 10) / 10;
+}
+
+/* ===================== PHOTO STATE OPS ===================== */
+
+async function addFiles(files) {
+  for (const file of files) {
+    if (!file.type.startsWith('image/') && !/\.(heic|heif)$/i.test(file.name)) continue;
+    if (file.size > 12 * 1024 * 1024) {
+      alert(`"${file.name}" is over 12 MB — skipped.`);
+      continue;
+    }
+    const photo = {
+      id: uid(),
+      name: file.name,
+      original: null,
+      display: null,
+      rotation: 0,
+      include: true,
+      stage: 'After',
+      caption: '',
+      busy: true
+    };
+    state.photos.push(photo);
+    renderPhotos();
+    try {
+      const bmp = await fileToOrientedBitmap(file);
+      photo.original = makeOriginalCanvas(bmp);
+      photo.display = renderRotated(photo.original, 0);
+      photo.busy = false;
+      renderPhotos();
+      autoStraightenPhoto(photo.id, /*silent*/ true);
+    } catch (err) {
+      console.error('Failed to load', file.name, err);
+      photo.busy = false;
+      photo.error = err.message || 'Failed to load';
+      renderPhotos();
+    }
+  }
+}
+
+async function autoStraightenPhoto(id, silent) {
+  const p = state.photos.find(x => x.id === id);
+  if (!p || !p.original) return;
+  p.busy = true; renderPhotos();
+  await new Promise(r => setTimeout(r, 30));
+  const angle = await detectStraightenAngle(p.original);
+  p.rotation = clamp(angle, -15, 15);
+  p.display = renderRotated(p.original, p.rotation);
+  p.busy = false;
+  renderPhotos();
+}
+
+function setPhotoRotation(id, deg) {
+  const p = state.photos.find(x => x.id === id);
+  if (!p || !p.original) return;
+  p.rotation = clamp(parseFloat(deg) || 0, -15, 15);
+  p.display = renderRotated(p.original, p.rotation);
+  renderPhotos();
+}
+
+function setPhotoStage(id, stage) {
+  const p = state.photos.find(x => x.id === id);
+  if (p) p.stage = stage;
+  renderPhotos();
+}
+
+function setPhotoCaption(id, text) {
+  const p = state.photos.find(x => x.id === id);
+  if (p) p.caption = text;
+  renderPreview();
+}
+
+function togglePhotoInclude(id) {
+  const p = state.photos.find(x => x.id === id);
+  if (p) p.include = !p.include;
+  renderPhotos();
+}
+
+function removePhoto(id) {
+  state.photos = state.photos.filter(x => x.id !== id);
+  renderPhotos();
+}
+
+/* ===================== RENDER ===================== */
+
+function movePhoto(id, dir) {
+  const idx = state.photos.findIndex(p => p.id === id);
+  if (idx < 0) return;
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= state.photos.length) return;
+  const tmp = state.photos[idx];
+  state.photos[idx] = state.photos[newIdx];
+  state.photos[newIdx] = tmp;
+  renderPhotos();
+}
+
+function renderPhotos() {
+  const grid = $('photoGrid');
+  grid.innerHTML = '';
+  state.photos.forEach((p, idx) => {
+    const card = document.createElement('div');
+    card.className = 'photo-card' + (p.include ? '' : ' excluded');
+
+    const wrap = document.createElement('div');
+    wrap.className = 'photo-canvas-wrap';
+
+    if (p.display) {
+      wrap.appendChild(p.display);
+    } else if (p.error) {
+      wrap.innerHTML = `<div class="photo-busy" style="color: var(--red)">⚠ ${escapeHtml(p.error)}</div>`;
+    } else {
+      wrap.innerHTML = `<div class="photo-busy">Loading…</div>`;
+    }
+    if (p.busy && p.display) {
+      const b = document.createElement('div');
+      b.className = 'photo-busy';
+      b.textContent = 'Auto-straightening…';
+      wrap.appendChild(b);
+    }
+    card.appendChild(wrap);
+
+    const stageClass = p.stage ? p.stage.toLowerCase() : '';
+    const body = document.createElement('div');
+    body.className = 'photo-body';
+    body.innerHTML = `
+      <div class="photo-name" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
+      <div class="photo-stage-row">
+        <select class="stage-select ${stageClass}" onchange="setPhotoStage('${p.id}', this.value)">
+          ${cachedPhotoStages.map(s => `<option ${p.stage===s?'selected':''}>${escapeHtml(s)}</option>`).join('')}
+        </select>
+        <input class="caption-input" placeholder="Caption (no need to repeat ‘Before/During/After’)"
+               value="${escapeHtml(p.caption)}"
+               oninput="setPhotoCaption('${p.id}', this.value)" />
+      </div>
+      <div class="rotate-row">
+        <label>Rotate</label>
+        <input type="range" min="-15" max="15" step="0.1" value="${p.rotation}"
+               oninput="setPhotoRotation('${p.id}', this.value)" />
+        <span class="deg">${p.rotation.toFixed(1)}°</span>
+      </div>
+      <div class="photo-controls">
+        <button class="btn btn-sm" onclick="movePhoto('${p.id}', -1)" ${idx === 0 ? 'disabled' : ''} title="Move earlier in the report">←</button>
+        <button class="btn btn-sm" onclick="movePhoto('${p.id}', 1)" ${idx === state.photos.length - 1 ? 'disabled' : ''} title="Move later in the report">→</button>
+        <button class="btn btn-sm" onclick="autoStraightenPhoto('${p.id}')" ${p.busy || !p.original ? 'disabled' : ''}>🪄 Auto</button>
+        <button class="btn btn-sm" onclick="setPhotoRotation('${p.id}', 0)" ${p.busy || !p.original ? 'disabled' : ''}>↺ Reset</button>
+        <label class="toggle">
+          <input type="checkbox" ${p.include ? 'checked' : ''} onchange="togglePhotoInclude('${p.id}')" />
+          Use
+        </label>
+        <span style="flex:1"></span>
+        <button class="btn btn-sm btn-danger" onclick="removePhoto('${p.id}')">✕</button>
+      </div>
+    `;
+    card.appendChild(body);
+    grid.appendChild(card);
+  });
+
+  $('photoCountPill').innerHTML = `<strong>${state.photos.length}</strong> photo${state.photos.length === 1 ? '' : 's'}`;
+  refreshPhotoDescDefault();
+  renderPreview();
+}
+
+/* ===================== SCOPE / SUBTITLE BUILDERS ===================== */
+
+function checkedScopes() {
+  return Array.from(document.querySelectorAll('#scopeGrid input[type=checkbox]:checked')).map(cb => cb.value);
+}
+
+/** Adds a new "Category > Subscope" to the scopes list and auto-checks it. */
+async function addNewScope() {
+  const cat = $('scopeAddCat').value.trim();
+  const sub = $('scopeAddSub').value.trim();
+  if (!cat || !sub) {
+    alert('Both Category and Sub-scope are required.\n\nExample: Category = "Hoarding", Sub-scope = "Inspection"');
+    return;
+  }
+  const full = cat + ' > ' + sub;
+  try {
+    await ListStore.addToList('scopes', full);
+    $('scopeAddCat').value = '';
+    $('scopeAddSub').value = '';
+    await renderScopes();
+    document.querySelectorAll('#scopeGrid input[type=checkbox]').forEach(cb => {
+      if (cb.value === full) {
+        cb.checked = true;
+        cb.closest('label').classList.add('checked');
+      }
+    });
+    refreshPhotoDescDefault();
+    renderPreview();
+  } catch (e) {
+    alert('Failed to add: ' + (e.message || e));
+  }
+}
+
+function buildScopeString() {
+  const custom = $('jobScopeOther').value.trim();
+  if (custom) return custom;
+  const ck = checkedScopes();
+  if (!ck.length) return '';
+  const display = ck.map(s => {
+    const idx = String(s).indexOf(' > ');
+    if (idx <= 0) return s;
+    const cat = s.slice(0, idx).trim();
+    const sub = s.slice(idx + 3).trim();
+    return sub.toLowerCase().startsWith(cat.toLowerCase()) ? sub : (cat + ' ' + sub);
+  });
+  if (display.length === 1) return display[0];
+  return display.slice(0, -1).join(', ') + ' and ' + display[display.length - 1];
+}
+
+function buildSubtitle() {
+  const scope = buildScopeString();
+  if (!scope) return '';
+  // Title-case the first letter of each major word for the dark banner
+  return scope.replace(/\b([a-z])/g, (m, c) => c.toUpperCase())
+              .replace(/\bAnd\b/g, '&');
+}
+
+function buildPhotoDescDefault() {
+  const job = getJob();
+  const photos = state.photos.filter(p => p.include);
+  if (!photos.length) return '';
+  const stages = [...new Set(photos.map(p => p.stage).filter(s => s && s !== 'Other'))];
+  const stagesPhrase = stages.length
+    ? (stages.length === 1 ? stages[0] : stages.slice(0, -1).join(', ') + ' and ' + stages[stages.length - 1])
+    : '';
+  const scope = job.scope || 'works';
+  const where = job.mall ? `at ${job.mall}` : '';
+  const lot   = job.lot ? ` – Lot ${job.lot}` : '';
+  const trade = job.trade ? ` (${job.trade})` : '';
+  const when  = job.date ? `, taken on ${formatDateLong(job.date)}` : '';
+  const prog  = stagesPhrase ? `, showing the ${stagesPhrase} progression` : '';
+  return `Photographs documenting the ${scope.toLowerCase()} works ${where}${lot}${trade}${when}${prog}.`
+    .replace(/\s+/g, ' ').trim();
+}
+
+function refreshPhotoDescDefault() {
+  // Only auto-fill if the user hasn't customised it
+  const el = $('jobPhotoDesc');
+  if (el.dataset.touched === '1') return;
+  el.value = buildPhotoDescDefault();
+}
+
+/* ===================== READ FORM ===================== */
+
+function getJob() {
+  const pv = (id) => pickers[id] ? pickers[id].value : '';
+  return {
+    date:   $('jobDate').value,
+    lot:    $('jobLot').value.trim(),
+    mall:   pv('jobMall'),
+    trade:  $('jobTrade').value.trim(),
+    status: pv('jobStatus') || 'COMPLETE',
+    client: $('jobClient').value.trim(),
+    ref:    $('jobRef').value.trim(),
+    scope:  buildScopeString(),
+    scopes: checkedScopes(),
+    manpower: {
+      lorry:      pv('mpLorry'),
+      hoardSup:   pv('mpHoardSup'),
+      hoardWk:    pickers.mpHoardWk   ? pickers.mpHoardWk.value.join(', ')  : '',
+      visSup:     pickers.mpVisSup    ? pickers.mpVisSup.value.join(', ')    : '',
+      visWk:      pickers.mpVisWk     ? pickers.mpVisWk.value.join(', ')     : '',
+      otherWk:    pickers.mpOtherWk   ? pickers.mpOtherWk.value.join(', ')   : ''
+    },
+    materials: {
+      type:    pv('matType'),
+      panel:   pv('matPanel'),
+      door:    pv('matDoor'),
+      counter: pv('matCounter'),
+      floor:   pv('matFloor'),
+      fabric:  pv('matFabric'),
+      visual:  pv('matVisual'),
+      skirt:   pv('matSkirt'),
+      other:   pickers.matOther ? pickers.matOther.value.join(', ') : ''
+    },
+    photoDesc: $('jobPhotoDesc').value.trim(),
+    remarks:   $('jobRemarks').value.trim()
+  };
+}
+
+/* ===================== BUILD REPORT HTML ===================== */
+
+function dashIfEmpty(v) { return (v && v.trim()) ? v : '–'; }
+
+function buildReportHtml() {
+  const job = getJob();
+  const photos = state.photos.filter(p => p.include && p.display);
+  const hasAnything = job.date || job.lot || job.mall || job.trade || photos.length;
+  if (!hasAnything) return null;
+
+  const subtitle = buildSubtitle();
+  const banner = [job.mall, formatDateLong(job.date), 'Status: ' + (job.status || 'COMPLETE')]
+    .filter(Boolean).join('  |  ');
+
+  // === SECTION 1: PROJECT INFORMATION ===
+  const piRows = [];
+  piRows.push(['Mall Name',          job.mall]);
+  piRows.push(['Lot Number',         job.lot]);
+  piRows.push(['Trade Name',         job.trade]);
+  piRows.push(['Job Scope',          job.scope]);
+  piRows.push(['Job Date',           formatDateLong(job.date)]);
+  piRows.push(['Completion Status',  job.status]);
+  if (job.client) piRows.push(['Client', job.client]);
+  if (job.ref)    piRows.push(['Reference', job.ref]);
+
+  // === SECTION 2: ON-SITE MANPOWER ===
+  const m = job.manpower;
+  const mpRows = [];
+  const lorryDisplay = (m.lorry || '').trim()
+    || [m.lorryCode, m.lorryNo].filter(x => x && String(x).trim()).join(' - ');
+  if (lorryDisplay) mpRows.push(['Lorry',             lorryDisplay]);
+  if (m.hoardSup)   mpRows.push(['Supervisor',        m.hoardSup]);
+  if (m.hoardWk)   mpRows.push(['Hoarding Workers',    m.hoardWk]);
+  if (m.visSup)    mpRows.push(['Visual Supervisor(s)', m.visSup]);
+  if (m.visWk)     mpRows.push(['Visual Worker(s)',    m.visWk]);
+  if (m.otherWk)   mpRows.push(['Other Worker(s)',     m.otherWk]);
+
+  // === SECTION 3: MATERIALS USED ===
+  const mt = job.materials;
+  const mtRows = [];
+  const showRow = (k, v) => { if (v && v.trim()) mtRows.push([k, v]); };
+  // Show all 8 standard rows — fill with – when empty (mirrors sample)
+  const anyMat = Object.values(mt).some(v => v && v.trim());
+  if (anyMat) {
+    mtRows.push(['Hoarding Type',                          dashIfEmpty(mt.type)]);
+    mtRows.push(['Hoarding Panel',                         dashIfEmpty(mt.panel)]);
+    mtRows.push(['Hoarding Door',                          dashIfEmpty(mt.door)]);
+    mtRows.push(['Counterweight',                          dashIfEmpty(mt.counter)]);
+    mtRows.push(['Floor Protection within Hoarding Area',  dashIfEmpty(mt.floor)]);
+    mtRows.push(['Fabric',                                 dashIfEmpty(mt.fabric)]);
+    mtRows.push(['Visual Material',                        dashIfEmpty(mt.visual)]);
+    mtRows.push(['Skirting',                               dashIfEmpty(mt.skirt)]);
+    if (mt.other) mtRows.push(['Other Materials',          mt.other]);
+  }
+
+  // === PHOTOS ===
+  let photoBlock = '';
+  if (photos.length) {
+    const desc = job.photoDesc || buildPhotoDescDefault();
+    const items = photos.map((p, i) => {
+      if (!p.display._dataUrl) p.display._dataUrl = p.display.toDataURL('image/jpeg', JPEG_QUALITY);
+      const url = p.display._dataUrl;
+      const stage = p.stage && p.stage !== 'Other' ? p.stage : '';
+      const stageClass = stage.toLowerCase();
+      const cap = (p.caption || '').trim();
+      const capLine = stage
+        ? `<span class="stage ${stageClass}">${escapeHtml(stage)}</span>${cap ? ' — ' + escapeHtml(cap) : ''}`
+        : escapeHtml(cap || `Photo ${i + 1}`);
+      return `<div class="hg-photo"><div class="img-wrap"><img src="${url}"/></div><div class="cap">${capLine}</div></div>`;
+    }).join('');
+    photoBlock = `
+      <div class="hg-section">4. SITE PHOTOGRAPHS</div>
+      ${desc ? `<div class="hg-photo-desc">${nl2br(desc)}</div>` : ''}
+      <div class="hg-photos">${items}</div>
+    `;
+  }
+
+  // === HTML ASSEMBLY ===
+  const tbl = (rows, headK, headV) => {
+    if (!rows.length) return '';
+    const head = (headK || headV)
+      ? `<tr><th style="width:40%">${escapeHtml(headK || 'Field')}</th><th>${escapeHtml(headV || 'Details')}</th></tr>`
+      : '';
+    const body = rows.map(([k, v]) =>
+      `<tr><td class="k">${escapeHtml(k)}</td><td class="v">${escapeHtml(v || '–')}</td></tr>`
+    ).join('');
+    return `<table class="hg-table">${head}${body}</table>`;
+  };
+
+  return `
+    <div class="hg-doc">
+      <div class="hg-head">
+        <div class="logo"><img src="${COMPANY.logoPath}" alt="${escapeHtml(COMPANY.name)}" /></div>
+        <div class="titles">
+          <div class="company">${escapeHtml(COMPANY.name)}</div>
+          <div class="tagline">${escapeHtml(COMPANY.tagline)}</div>
+        </div>
+      </div>
+      <div class="hg-banner">
+        <div class="b-title">JOB COMPLETION REPORT</div>
+        ${subtitle ? `<div class="b-sub">${escapeHtml(subtitle)}</div>` : ''}
+        <div class="b-meta">${escapeHtml(banner)}</div>
+      </div>
+
+      <div class="hg-section">1. PROJECT INFORMATION</div>
+      ${tbl(piRows, 'Field', 'Details')}
+
+      ${mpRows.length ? `<div class="hg-section">2. ON-SITE MANPOWER</div>${tbl(mpRows, 'Role', 'Name(s)')}` : ''}
+
+      ${mtRows.length ? `<div class="hg-section">3. MATERIALS USED</div>${tbl(mtRows, 'Item', 'Specification / Details')}` : ''}
+
+      ${photoBlock}
+
+      ${job.remarks ? `<div class="hg-section">${photos.length ? '5' : '4'}. REMARKS</div><div style="font-size:10pt; color:#222; white-space:pre-wrap;">${nl2br(job.remarks)}</div>` : ''}
+
+      <div class="hg-foot">${escapeHtml(COMPANY.name)}  |  Confidential  |  Generated ${new Date().toLocaleString('en-GB')}</div>
+    </div>
+  `;
+}
+
+function renderPreview() {
+  const html = buildReportHtml();
+  const slot = $('previewSlot');
+  if (!html) {
+    slot.innerHTML = `<div class="preview-empty">Fill in the details above and the report preview will appear here.</div>`;
+    $('printRoot').innerHTML = '';
+  } else {
+    slot.innerHTML = `<div class="preview-wrap">${html}</div>`;
+    $('printRoot').innerHTML = `<div class="preview-wrap">${html}</div>`;
+  }
+}
+
+/* ===================== FORM SETUP ===================== */
+
+async function renderScopes() {
+  const grid = $('scopeGrid');
+  const wasChecked = new Set();
+  grid.querySelectorAll('input[type=checkbox]:checked').forEach(cb => wasChecked.add(cb.value));
+  const scopes = await ListStore.getList('scopes');
+  // Group by "Category > Subscope". Legacy flat entries go into "Other".
+  const groups = {};
+  const order  = [];
+  scopes.forEach(s => {
+    const idx = String(s).indexOf(' > ');
+    let cat, sub;
+    if (idx > 0) { cat = s.slice(0, idx).trim(); sub = s.slice(idx + 3).trim(); }
+    else         { cat = 'Other'; sub = s; }
+    if (!groups[cat]) { groups[cat] = []; order.push(cat); }
+    groups[cat].push({ full: s, sub });
+  });
+  grid.innerHTML = '';
+  order.forEach(cat => {
+    const g = document.createElement('div'); g.className = 'scope-group';
+    const h = document.createElement('div'); h.className = 'scope-group-title'; h.textContent = cat;
+    g.appendChild(h);
+    const sub = document.createElement('div'); sub.className = 'scope-sub-grid';
+    groups[cat].forEach(item => {
+      const isChecked = wasChecked.has(item.full);
+      const label = document.createElement('label');
+      label.className = 'scope-chip' + (isChecked ? ' checked' : '');
+      label.innerHTML = `<input type="checkbox" value="${escapeHtml(item.full)}"${isChecked?' checked':''}/> ${escapeHtml(item.sub)}`;
+      const cb = label.querySelector('input');
+      cb.addEventListener('change', () => {
+        label.classList.toggle('checked', cb.checked);
+        refreshPhotoDescDefault();
+        renderPreview();
+      });
+      sub.appendChild(label);
+    });
+    g.appendChild(sub);
+    grid.appendChild(g);
+  });
+}
+
+// (Mall now uses the picker component sourced from the 'malls' list,
+// so the old datalist helpers are no longer needed.)
+
+const FIELD_IDS = [
+  'jobDate','jobLot','jobTrade','jobClient','jobRef','jobScopeOther',
+  'jobRemarks'
+];
+
+const PICKER_IDS = [
+  'jobMall','jobStatus',
+  'mpLorry','mpHoardSup','mpHoardWk','mpVisSup','mpVisWk','mpOtherWk',
+  'matType','matPanel','matDoor','matCounter','matFloor','matFabric','matVisual','matSkirt','matOther'
+];
+
+function initPickers() {
+  pickers.jobMall     = new PickableList($('jobMall'),     { key: 'malls',           multi: false, store: ListStore, sorted: true, allowAdd: true, placeholder: 'Pick a mall or type a new one' });
+  pickers.jobStatus   = new PickableList($('jobStatus'),   { key: 'statuses',        multi: false, store: ListStore, placeholder: 'Pick status' });
+  pickers.mpLorry     = new PickableList($('mpLorry'),     { key: 'lorries',         multi: false, store: ListStore, placeholder: 'e.g. ST02 - VCA7999' });
+  pickers.mpHoardSup  = new PickableList($('mpHoardSup'),  { key: 'supervisors',     multi: false, store: ListStore, sorted: true, allowAdd: true, placeholder: 'Pick or type new (e.g. Balan)' });
+  pickers.mpHoardWk   = new PickableList($('mpHoardWk'),   { key: 'workers',         multi: true,  store: ListStore, placeholder: 'Pick names…' });
+  pickers.mpVisSup    = new PickableList($('mpVisSup'),    { key: 'supervisors',     multi: true,  store: ListStore, sorted: true, allowAdd: true, placeholder: 'Pick or type new names' });
+  pickers.mpVisWk     = new PickableList($('mpVisWk'),     { key: 'workers',         multi: true,  store: ListStore, placeholder: 'Pick names…' });
+  pickers.mpOtherWk   = new PickableList($('mpOtherWk'),   { key: 'workers',         multi: true,  store: ListStore, placeholder: 'Pick names…' });
+  pickers.matType     = new PickableList($('matType'),     { key: 'hoardingTypes',   multi: false, store: ListStore, sorted: true, allowAdd: true, placeholder: 'Pick or type new (e.g. Kiosk)' });
+  pickers.matPanel    = new PickableList($('matPanel'),    { key: 'panels',          multi: false, store: ListStore, sorted: true, allowAdd: true, placeholder: 'Pick or type new (e.g. MDF)' });
+  pickers.matDoor     = new PickableList($('matDoor'),     { key: 'doors',           multi: false, store: ListStore, placeholder: 'e.g. Swing' });
+  pickers.matCounter  = new PickableList($('matCounter'),  { key: 'counterweights',  multi: false, store: ListStore, placeholder: 'Yes / No / N/A' });
+  pickers.matFloor    = new PickableList($('matFloor'),    { key: 'floorProtections',multi: false, store: ListStore, placeholder: 'Yes / No / N/A' });
+  pickers.matFabric   = new PickableList($('matFabric'),   { key: 'fabrics',         multi: false, store: ListStore, placeholder: 'e.g. Top cover' });
+  pickers.matVisual   = new PickableList($('matVisual'),   { key: 'visualMaterials', multi: false, store: ListStore, sorted: true, allowAdd: true, placeholder: 'Pick or type new (e.g. Sticker)' });
+  pickers.matSkirt    = new PickableList($('matSkirt'),    { key: 'skirtings',       multi: false, store: ListStore, placeholder: 'e.g. Aluminium' });
+  pickers.matOther    = new PickableList($('matOther'),    { key: 'otherMaterials',  multi: true,  store: ListStore, placeholder: 'Pick items or add via Manage Lists…' });
+  pickers.jobStatus.setValue('COMPLETE');
+}
+
+function wireForm() {
+  FIELD_IDS.forEach(id => $(id).addEventListener('input', () => {
+    refreshPhotoDescDefault();
+    renderPreview();
+  }));
+  const pd = $('jobPhotoDesc');
+  pd.addEventListener('input', () => {
+    pd.dataset.touched = pd.value.trim() ? '1' : '';
+    renderPreview();
+  });
+  $('jobDate').value = todayISO();
+}
+
+function resetForm() {
+  if (!confirm('Clear all photos and form data?')) return;
+  state.photos = [];
+  FIELD_IDS.forEach(id => { const el = $(id); if (el) el.value = ''; });
+  PICKER_IDS.forEach(id => { if (pickers[id]) pickers[id].clear(); });
+  $('jobPhotoDesc').value = '';
+  $('jobPhotoDesc').dataset.touched = '';
+  document.querySelectorAll('#scopeGrid input[type=checkbox]').forEach(cb => {
+    cb.checked = false; cb.closest('label').classList.remove('checked');
+  });
+  $('jobDate').value = todayISO();
+  if (pickers.jobStatus) pickers.jobStatus.setValue('COMPLETE');
+  setStatus($('submitStatus'), '', '');
+  renderPhotos();
+}
+
+/* ===================== UPLOAD / DROP ===================== */
+
+function wireUpload() {
+  const dz = $('dropzone');
+  $('fileInput').addEventListener('change', e => {
+    addFiles(Array.from(e.target.files));
+    e.target.value = '';
+  });
+  ['dragenter','dragover'].forEach(t => dz.addEventListener(t, e => {
+    e.preventDefault(); dz.classList.add('over');
+  }));
+  ['dragleave','drop'].forEach(t => dz.addEventListener(t, e => {
+    e.preventDefault(); dz.classList.remove('over');
+  }));
+  dz.addEventListener('drop', e => {
+    const files = Array.from(e.dataTransfer.files);
+    addFiles(files);
+  });
+  window.addEventListener('paste', e => {
+    const items = Array.from(e.clipboardData?.items || []);
+    const files = items.map(it => it.getAsFile()).filter(f => f && f.type.startsWith('image/'));
+    if (files.length) addFiles(files);
+  });
+}
+
+/* ===================== SETTINGS ===================== */
+
+function openSettings() {
+  $('settingsUrl').value  = localStorage.getItem(LS.url)  || '';
+  $('settingsRoot').value = localStorage.getItem(LS.root) || 'HG Services — Job Reports';
+  $('settingsModal').classList.add('open');
+}
+function closeSettings() { $('settingsModal').classList.remove('open'); }
+function saveSettings() {
+  const url  = $('settingsUrl').value.trim();
+  const root = $('settingsRoot').value.trim() || 'HG Services — Job Reports';
+  if (url && !/^https:\/\/script\.google\.com\/.+\/exec$/.test(url)) {
+    if (!confirm("That URL doesn't look like an Apps Script /exec URL. Save anyway?")) return;
+  }
+  localStorage.setItem(LS.url, url);
+  localStorage.setItem(LS.root, root);
+  closeSettings();
+  refreshCloudPill();
+}
+async function testConnection() {
+  const url = $('settingsUrl').value.trim();
+  if (!url) return alert('Paste the URL first.');
+  try {
+    const res = await fetch(url + '?ping=1', { method: 'GET' });
+    const txt = await res.text();
+    alert('Response: ' + txt.slice(0, 300));
+  } catch (e) {
+    alert('Failed: ' + e.message);
+  }
+}
+function refreshCloudPill() {
+  const url = localStorage.getItem(LS.url) || '';
+  const pill = $('cloudPill');
+  if (url) {
+    pill.classList.remove('cloud-off'); pill.classList.add('cloud-on');
+    pill.innerHTML = '☁ Connected';
+  } else {
+    pill.classList.add('cloud-off'); pill.classList.remove('cloud-on');
+    pill.innerHTML = '☁ Not connected';
+  }
+}
+
+/* ===================== SUBMIT ===================== */
+
+function validate() {
+  const job = getJob();
+  const errs = [];
+  if (!job.date)  errs.push('Installation date');
+  if (!job.lot)   errs.push('Lot number');
+  if (!job.mall)  errs.push('Mall / site');
+  if (!job.trade) errs.push('Trade name');
+  if (!job.scope) errs.push('Job scope');
+  const incl = state.photos.filter(p => p.include && p.display);
+  if (!incl.length) errs.push('At least one photo');
+  return { job, errs, photos: incl };
+}
+
+async function canvasToDataUrl(canvas) {
+  return canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+}
+
+async function submitToCloud() {
+  if (state.submitting) return;
+  const url = localStorage.getItem(LS.url) || '';
+  if (!url) {
+    setStatus($('submitStatus'), 'warn', 'Apps Script URL not set. <a href="#" onclick="openSettings();return false;">Open settings</a> to connect.');
+    return;
+  }
+  const { job, errs, photos } = validate();
+  if (errs.length) {
+    setStatus($('submitStatus'), 'err', 'Missing: ' + errs.join(', '));
+    return;
+  }
+
+  state.submitting = true;
+  $('submitBtn').disabled = true;
+  $('submitBtn').textContent = '☁ Uploading…';
+
+  setStatus($('submitStatus'), 'info',
+    `Preparing ${photos.length} photo${photos.length === 1 ? '' : 's'}…`);
+
+  const payload = {
+    action: 'submitReport',
+    job,
+    root: localStorage.getItem(LS.root) || 'HG Services — Job Reports',
+    photos: []
+  };
+
+  for (let i = 0; i < photos.length; i++) {
+    const p = photos[i];
+    setStatus($('submitStatus'), 'info', `Encoding photo ${i + 1}/${photos.length}…`);
+    await new Promise(r => setTimeout(r, 10));
+    payload.photos.push({
+      name: sanitizeName(`${String(i + 1).padStart(2, '0')}_${p.stage || 'Photo'}_${p.name}`),
+      stage: p.stage || '',
+      caption: p.caption || '',
+      dataUrl: await canvasToDataUrl(p.display)
+    });
+  }
+
+  setStatus($('submitStatus'), 'info', 'Uploading to Google Drive…');
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+      redirect: 'follow'
+    });
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); }
+    catch (e) {
+      throw new Error('Server returned non-JSON: ' + text.slice(0, 200));
+    }
+    if (!data.ok) throw new Error(data.error || 'Unknown error');
+    const r = data.result;
+    setStatus($('submitStatus'), 'ok',
+      `✓ Done — ${photos.length} photo${photos.length === 1 ? '' : 's'} + PDF saved to lot folder <strong>${escapeHtml(job.lot)}</strong>. ` +
+      `<a href="${r.folderUrl}" target="_blank">Open folder</a> · ` +
+      `<a href="${r.pdfUrl}" target="_blank">Open PDF</a> · ` +
+      `<a href="${r.sheetUrl}" target="_blank">Open Sheet</a>`);
+  } catch (err) {
+    console.error(err);
+    setStatus($('submitStatus'), 'err', '✗ Upload failed: ' + (err.message || err));
+  } finally {
+    state.submitting = false;
+    $('submitBtn').disabled = false;
+    $('submitBtn').textContent = '☁ Submit to Drive + Sheet';
+  }
+}
+
+function sanitizeName(n) {
+  return n.replace(/[\/\\:*?"<>|]+/g, '_').slice(0, 120);
+}
+
+/* ===================== INIT ===================== */
+
+window.addEventListener('DOMContentLoaded', async () => {
+  wireForm();
+  wireUpload();
+  renderPhotos();
+  refreshCloudPill();
+  await ListStore.preloadAll();
+  const stages = await ListStore.getList('photoStages');
+  if (stages && stages.length) cachedPhotoStages = stages;
+  await renderScopes();
+  initPickers();
+  renderPhotos();
+});
+</script>
+</body>
+</html>

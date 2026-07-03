@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root {
+    --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335; --border:#2a3245;
+    --text:#ffffff; --text-dim:#a0a8b8;
+    --accent:#f59e0b; --accent-hover:#d97706; --accent-soft:rgba(245,158,11,0.12);
+    --green:#22c55e; --green-soft:rgba(34,197,94,0.15);
+    --red:#ef4444; --red-soft:rgba(239,68,68,0.14);
+    --blue:#3b82f6; --blue-soft:rgba(59,130,246,0.15);
+    --radius:14px; --shadow:0 10px 40px rgba(0,0,0,0.4);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+         background:var(--bg); color:var(--text); line-height:1.55; -webkit-font-smoothing:antialiased;
+         min-height:100vh; font-size:15px; }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+
+  .topbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+            max-width:1040px; margin:0 auto; padding:24px 20px 18px; }
+  .brand-block { display:flex; align-items:center; gap:14px; }
+  .brand-logo { width:48px; height:48px; background:linear-gradient(135deg,var(--accent),var(--accent-hover));
+                border-radius:12px; display:flex; align-items:center; justify-content:center;
+                font-size:1.4rem; color:#0a0e1a; font-weight:900; }
+  .brand-name { font-size:1.25rem; font-weight:800; letter-spacing:-0.02em; line-height:1.1; }
+  .brand-sub { font-size:0.8rem; color:var(--text-dim); margin-top:3px; }
+  .user-pill { background:var(--surface); border:1px solid var(--border); padding:8px 14px;
+               border-radius:999px; font-size:0.82rem; color:var(--text-dim); display:flex; align-items:center; gap:8px; }
+  .user-pill::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--green); }
+
+  nav { max-width:1040px; margin:0 auto; padding:0 20px; display:flex; gap:6px; flex-wrap:wrap;
+        border-bottom:1px solid var(--border); }
+  nav button { border:0; background:none; padding:13px 16px; font-size:0.92rem; color:var(--text-dim);
+               border-bottom:2px solid transparent; cursor:pointer; white-space:nowrap; font-family:inherit; }
+  nav button:hover { color:var(--text); }
+  nav button.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:700; }
+
+  main { max-width:1040px; margin:0 auto; padding:24px 20px 80px; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+          padding:22px; margin-bottom:18px; }
+  h2 { font-size:1.15rem; font-weight:800; letter-spacing:-0.01em; margin-bottom:4px; }
+  .sub { color:var(--text-dim); font-size:0.88rem; margin-bottom:18px; }
+
+  label { display:block; font-size:0.78rem; font-weight:700; color:var(--text-dim);
+          text-transform:uppercase; letter-spacing:0.04em; margin:14px 0 6px; }
+  .addlink { float:right; text-transform:none; letter-spacing:0; font-weight:700; font-size:0.78rem; }
+  input, select, textarea { width:100%; padding:11px 12px; border:1px solid var(--border); border-radius:10px;
+                            font-size:0.95rem; font-family:inherit; background:var(--bg); color:var(--text); }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); }
+  textarea { resize:vertical; min-height:62px; }
+  select option { background:var(--surface); }
+  .row { display:flex; gap:14px; flex-wrap:wrap; }
+  .row > div { flex:1; min-width:160px; }
+
+  .btn, button.primary, button.ghost, button.danger {
+    display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 20px; border-radius:10px;
+    font-weight:700; font-size:0.92rem; border:none; cursor:pointer; font-family:inherit;
+    transition:transform 0.1s, background 0.2s, border-color 0.2s; }
+  button.primary { background:var(--accent); color:#0a0e1a; }
+  button.primary:hover { background:var(--accent-hover); }
+  button.primary:disabled { opacity:.5; cursor:default; }
+  button.ghost { background:var(--surface-2); color:var(--text); border:1px solid var(--border); }
+  button.ghost:hover { border-color:var(--accent); }
+  button.danger { background:var(--red-soft); color:#fca5a5; border:1px solid var(--red); }
+  button:active { transform:translateY(1px); }
+  .btn.sm { padding:7px 12px; font-size:0.82rem; }
+
+  /* segmented client type */
+  .seg { display:flex; gap:0; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+  .seg button { flex:1; background:var(--bg); color:var(--text-dim); border:0; padding:11px;
+                font-weight:700; font-size:0.9rem; cursor:pointer; font-family:inherit; }
+  .seg button.active { background:var(--accent); color:#0a0e1a; }
+
+  .msg { padding:11px 14px; border-radius:10px; font-size:0.9rem; margin-top:16px; display:none; }
+  .msg.show { display:block; }
+  .msg.ok  { background:var(--green-soft); color:var(--green); border:1px solid var(--green); }
+  .msg.err { background:var(--red-soft);   color:#fca5a5;      border:1px solid var(--red); }
+
+  .badge { font-size:0.66rem; font-weight:800; padding:2px 8px; border-radius:999px; text-transform:uppercase;
+           letter-spacing:0.04em; vertical-align:middle; }
+  .badge.req { background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent); }
+  .badge.opt { background:var(--blue-soft);  color:#93c5fd;      border:1px solid var(--blue); }
+  .badge.min { background:var(--red-soft);   color:#fca5a5;      border:1px solid var(--red); }
+
+  /* scope block */
+  .scope { border:1px solid var(--border); border-radius:12px; margin-bottom:14px; overflow:hidden; background:var(--bg); }
+  .scope .head { background:var(--surface-2); padding:11px 14px; font-weight:700; display:flex;
+                 justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap; }
+  .scope .head .x { color:var(--text-dim); cursor:pointer; font-weight:700; }
+  .scope .head .x:hover { color:var(--red); }
+
+  .lineitem { padding:12px 14px; border-top:1px solid var(--border); }
+  .lineitem .it-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .lineitem .it-name { font-weight:600; font-size:0.95rem; }
+  .lineitem .it-note { color:var(--text-dim); font-size:0.78rem; margin-top:2px; }
+  .lineitem .rm { color:var(--text-dim); cursor:pointer; font-size:1.1rem; line-height:1; }
+  .lineitem .rm:hover { color:var(--red); }
+  .meas { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; margin-top:10px; }
+  .meas .f { display:flex; flex-direction:column; }
+  .meas .f label { margin:0 0 4px; }
+  .meas input { width:84px; padding:8px 9px; text-align:right; }
+  .meas .wide input { width:120px; }
+  .meas .amt { margin-left:auto; text-align:right; }
+  .meas .amt .v { font-weight:800; font-size:1.05rem; color:var(--accent); }
+  .meas .amt .lbl { font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.04em; }
+  .x-sym { color:var(--text-dim); padding:0 2px 9px; align-self:flex-end; }
+
+  .optbar { padding:10px 14px; border-top:1px dashed var(--border); display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .optbar .lbl { font-size:0.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.04em; margin-right:4px; }
+  .chip { background:var(--surface); border:1px solid var(--border); color:var(--text-dim);
+          padding:6px 12px; border-radius:999px; font-size:0.82rem; cursor:pointer; }
+  .chip:hover { border-color:var(--accent); color:var(--text); }
+  .chip::before { content:"+ "; color:var(--accent); font-weight:800; }
+
+  .totals { display:flex; flex-direction:column; gap:8px; align-items:flex-end; margin-top:8px; }
+  .totals .ln { display:flex; gap:24px; font-size:0.95rem; align-items:center; }
+  .totals .ln .k { color:var(--text-dim); }
+  .totals .ln .v { min-width:120px; text-align:right; font-weight:700; }
+  .totals .grand .v { font-size:1.35rem; color:var(--accent); font-weight:900; }
+  .switch { display:inline-flex; align-items:center; gap:8px; cursor:pointer; user-select:none; font-size:0.9rem; }
+  .switch input { width:auto; }
+
+  table.list { width:100%; border-collapse:collapse; font-size:0.88rem; }
+  table.list th { text-align:left; color:var(--text-dim); font-size:0.72rem; text-transform:uppercase;
+                  letter-spacing:0.04em; padding:8px 10px; border-bottom:1px solid var(--border); }
+  table.list td { padding:10px; border-bottom:1px solid var(--border); }
+  table.list tr:hover td { background:var(--surface-2); }
+  .right { text-align:right; }
+  .empty { text-align:center; color:var(--text-dim); padding:34px; }
+  .pillbtn { font-size:0.76rem; padding:5px 10px; border-radius:8px; cursor:pointer; border:1px solid var(--border);
+             background:var(--surface-2); color:var(--text-dim); margin-left:4px; }
+  .pillbtn:hover { border-color:var(--accent); color:var(--text); }
+
+  .spin { display:inline-block; width:14px; height:14px; border:2px solid #0a0e1a;
+          border-top-color:transparent; border-radius:50%; animation:s .7s linear infinite;
+          vertical-align:middle; margin-right:6px; }
+  @keyframes s { to { transform:rotate(360deg); } }
+  .loading { text-align:center; color:var(--text-dim); padding:40px; }
+
+  /* modal */
+  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:flex-start;
+              justify-content:center; padding:30px 16px; overflow-y:auto; z-index:50; }
+  .modal-bg.show { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+           max-width:780px; width:100%; padding:24px; }
+  .hide { display:none !important; }
+  .muted { color:var(--text-dim); }
+  .tag { display:inline-block; background:var(--surface-2); border:1px solid var(--border); border-radius:8px;
+         padding:2px 9px; font-size:0.76rem; color:var(--text-dim); }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand-block">
+      <div class="brand-logo">HG</div>
+      <div>
+        <div class="brand-name">Smart Quotation</div>
+        <div class="brand-sub">Mall → scope → measure → price → quote</div>
+      </div>
+    </div>
+    <div class="user-pill" id="userPill">…</div>
+  </div>
+
+  <nav>
+    <button class="active" data-tab="build" onclick="showTab('build')">New Quote</button>
+    <button data-tab="saved" onclick="showTab('saved')">Saved Quotes</button>
+    <button data-tab="prices" onclick="showTab('prices')">Price Book</button>
+    <button data-tab="settings" onclick="showTab('settings')">Settings</button>
+  </nav>
+
+  <main>
+    <!-- ============ NEW QUOTE ============ -->
+    <section id="tab-build">
+      <div class="card">
+        <h2>1 · Client &amp; Mall</h2>
+        <div class="sub">Pick the mall — its price book pre-fills every scope below.</div>
+        <div class="row">
+          <div>
+            <label>Mall <a href="#" class="addlink" onclick="openMallModal();return false;">+ new mall</a></label>
+            <select id="mall" onchange="onMallChange()"></select>
+          </div>
+          <div>
+            <label>Client name</label>
+            <input id="client" placeholder="e.g. ABC Sdn Bhd">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Attention (PIC)</label>
+            <input id="attention" placeholder="e.g. Mr. Tan">
+          </div>
+          <div>
+            <label>Project / location</label>
+            <input id="project" placeholder="e.g. Lot 2.15 renovation">
+          </div>
+        </div>
+        <label>Client type — sets which price column is used</label>
+        <div class="seg" id="clientTypeSeg"></div>
+      </div>
+
+      <div class="card">
+        <h2>2 · Add scope</h2>
+        <div class="sub">Choose a service and sub-scope. Compulsory items load automatically — remove what the client doesn't need.</div>
+        <div class="row">
+          <div>
+            <label>Service <a href="#" class="addlink" onclick="openSvcModal();return false;">+ new service</a></label>
+            <select id="svc" onchange="onServiceChange()"></select>
+          </div>
+          <div>
+            <label>Sub-scope</label>
+            <select id="subscope"></select>
+          </div>
+          <div style="flex:0 0 auto; display:flex; align-items:flex-end;">
+            <button class="primary" onclick="addScope()">Add to quote</button>
+          </div>
+        </div>
+        <div id="extraHint" class="sub" style="margin:12px 0 0;"></div>
+      </div>
+
+      <div class="card" id="quoteCard">
+        <h2>3 · Quotation</h2>
+        <div class="sub">Enter measurements — sqft auto-calculates. Rates come from the price book (editable).</div>
+        <div id="scopes"></div>
+        <div id="noScopes" class="empty">No scope added yet. Add one above ↑</div>
+
+        <div class="totals" id="totals" style="display:none;">
+          <label class="switch"><input type="checkbox" id="sstToggle" checked onchange="renderTotals()"> Apply SST <span id="sstPctLbl"></span></label>
+          <div class="ln"><span class="k">Subtotal</span><span class="v" id="tSub">RM 0.00</span></div>
+          <div class="ln"><span class="k" id="tSstK">SST</span><span class="v" id="tSst">RM 0.00</span></div>
+          <div class="ln grand"><span class="k">Total</span><span class="v" id="tTotal">RM 0.00</span></div>
+        </div>
+
+        <div id="buildMsg" class="msg"></div>
+        <div class="row" style="margin-top:18px; justify-content:flex-end;">
+          <div style="flex:0 0 auto;"><button class="ghost" onclick="resetBuilder()">Clear</button></div>
+          <div style="flex:0 0 auto;"><button class="ghost" onclick="previewPrint()">Print / PDF</button></div>
+          <div style="flex:0 0 auto;"><button class="ghost" onclick="copyWhatsApp()">Copy WhatsApp</button></div>
+          <div style="flex:0 0 auto;"><button class="primary" id="saveBtn" onclick="saveQuote()">Save quote</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SAVED QUOTES ============ -->
+    <section id="tab-saved" class="hide">
+      <div class="card">
+        <h2>Saved quotes</h2>
+        <div class="sub">Most recent first.</div>
+        <div id="savedList" class="loading"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+
+    <!-- ============ PRICE BOOK ============ -->
+    <section id="tab-prices" class="hide">
+      <div class="card">
+        <h2>Price book</h2>
+        <div class="sub">One master list. Rows under <span class="tag">(All Malls)</span> apply everywhere; a mall-specific row overrides them. Replace the sample RM rates with your real numbers.</div>
+        <div class="row">
+          <div>
+            <label>Filter mall</label>
+            <select id="pbMall" onchange="renderPriceBook()"></select>
+          </div>
+          <div>
+            <label>Filter service</label>
+            <select id="pbSvc" onchange="renderPriceBook()"></select>
+          </div>
+          <div style="flex:0 0 auto; display:flex; align-items:flex-end; gap:8px;">
+            <button class="ghost" onclick="openPriceForm()">+ Add item</button>
+            <button class="ghost" onclick="cloneDefaults()">Clone defaults → mall</button>
+          </div>
+        </div>
+        <div id="pbList" style="margin-top:16px;" class="loading"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+
+    <!-- ============ SETTINGS ============ -->
+    <section id="tab-settings" class="hide">
+      <div class="card">
+        <h2>Company &amp; quote settings</h2>
+        <div class="sub">Shown on every printed quotation.</div>
+        <div id="setForm" class="loading"><span class="spin"></span> Loading…</div>
+      </div>
+      <div class="card">
+        <h2>Spreadsheet</h2>
+        <div class="sub">All data lives here. Edit prices directly if you prefer.</div>
+        <a id="sheetLink" href="#" target="_blank">Open the database spreadsheet ↗</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- price form modal -->
+  <div class="modal-bg" id="pbModal">
+    <div class="modal">
+      <h2 id="pbModalTitle">Add price item</h2>
+      <div class="sub">Leave a price 0 if it doesn't apply to that client type.</div>
+      <input type="hidden" id="pf_id">
+      <div class="row">
+        <div><label>Mall</label><select id="pf_mall"></select></div>
+        <div><label>Service</label><input id="pf_service" list="svcDatalist"></div>
+      </div>
+      <div class="row">
+        <div><label>Sub-scope</label><input id="pf_subscope" placeholder="e.g. Installation"></div>
+        <div><label>Unit</label>
+          <select id="pf_unit"><option>sqft</option><option>ft</option><option>m</option><option>nos</option><option>lot</option><option>day</option><option>month</option><option>trip</option><option>item</option></select>
+        </div>
+      </div>
+      <label>Item</label><input id="pf_item" placeholder="e.g. Hoarding panel">
+      <div class="row">
+        <div><label>Compulsory?</label><select id="pf_comp"><option value="Y">Yes — auto-load</option><option value="N">No — optional</option></select></div>
+        <div><label>Min qty</label><input id="pf_minqty" type="number" step="any" value="0"></div>
+        <div><label>Min charge (RM)</label><input id="pf_mincharge" type="number" step="any" value="0"></div>
+      </div>
+      <div class="row">
+        <div><label>Price — Mall</label><input id="pf_pm" type="number" step="any" value="0"></div>
+        <div><label>Price — Contractor</label><input id="pf_pc" type="number" step="any" value="0"></div>
+        <div><label>Price — Tenant</label><input id="pf_pt" type="number" step="any" value="0"></div>
+      </div>
+      <div class="row">
+        <div><label>Sort</label><input id="pf_sort" type="number" value="1"></div>
+        <div style="flex:2;"><label>Notes</label><input id="pf_notes"></div>
+      </div>
+      <div id="pbMsg" class="msg"></div>
+      <div class="row" style="margin-top:16px; justify-content:flex-end;">
+        <div style="flex:0 0 auto;"><button class="danger" id="pbDelBtn" onclick="deletePrice()">Delete</button></div>
+        <div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal('pbModal')">Cancel</button></div>
+        <div style="flex:0 0 auto;"><button class="primary" onclick="savePrice()">Save</button></div>
+      </div>
+    </div>
+  </div>
+  <datalist id="svcDatalist"></datalist>
+
+  <!-- add mall modal -->
+  <div class="modal-bg" id="mallModal">
+    <div class="modal">
+      <h2>Add mall</h2>
+      <div class="sub">It instantly uses every (All Malls) price — add override rows only where it differs.</div>
+      <label>Mall name</label><input id="m_name" placeholder="e.g. The Gardens Mall">
+      <div class="row">
+        <div><label>Code (optional)</label><input id="m_code" placeholder="e.g. TGM"></div>
+        <div><label>Location (optional)</label><input id="m_loc" placeholder="e.g. Mid Valley City"></div>
+      </div>
+      <div id="mallMsg" class="msg"></div>
+      <div class="row" style="margin-top:16px; justify-content:flex-end;">
+        <div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal('mallModal')">Cancel</button></div>
+        <div style="flex:0 0 auto;"><button class="primary" onclick="saveMall()">Add mall</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- add service modal -->
+  <div class="modal-bg" id="svcModal">
+    <div class="modal">
+      <h2>Add service</h2>
+      <div class="sub">Then add its items under Price Book. Sub-scopes appear automatically once priced.</div>
+      <label>Service name</label><input id="s_name" placeholder="e.g. Demolition">
+      <label>Type</label>
+      <select id="s_extra">
+        <option value="N">Main scope</option>
+        <option value="Y">Extra work (like Fit-Out / Scaffold)</option>
+      </select>
+      <div id="svcMsg" class="msg"></div>
+      <div class="row" style="margin-top:16px; justify-content:flex-end;">
+        <div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal('svcModal')">Cancel</button></div>
+        <div style="flex:0 0 auto;"><button class="primary" onclick="saveSvc()">Add service</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- view quote modal -->
+  <div class="modal-bg" id="viewModal">
+    <div class="modal" id="viewBody"></div>
+  </div>
+
+<script>
+// ============================ STATE ============================
+var BOOT = null;
+var CLIENT_TYPE = 'Mall';
+var SCOPES = [];          // [{key, service, subScope, items:[lineObj], optional:[itemObj]}]
+var SAVED = [];
+var PRICEBOOK = [];
+var PB_VIEW = [];
+
+function rm(n){ return 'RM ' + (Number(n)||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function uid(){ return 'u'+Math.random().toString(36).slice(2,9); }
+function el(id){ return document.getElementById(id); }
+
+// ============================ INIT ============================
+google.script.run.withSuccessHandler(onBoot).withFailureHandler(fail).getBootstrap();
+google.script.run.withSuccessHandler(function(c){ if(c&&c.sheetUrl) el('sheetLink').href=c.sheetUrl; }).getConfigLinks();
+
+function onBoot(b){
+  var prevMall = el('mall').value, prevSvc = el('svc').value;   // preserve across refresh
+  BOOT = b;
+  el('userPill').textContent = b.user || 'unknown';
+  el('sstPctLbl').textContent = '(' + (b.settings.SST_PERCENT||6) + '%)';
+  // malls
+  var mopts = b.malls.map(function(m){ return '<option>'+esc(m.name)+'</option>'; }).join('');
+  el('mall').innerHTML = mopts;
+  el('pbMall').innerHTML = '<option value="">— all malls —</option><option>(All Malls)</option>' + mopts;
+  el('pf_mall').innerHTML = '<option>(All Malls)</option>' + mopts;
+  // services
+  el('svc').innerHTML = b.services.map(function(s){ return '<option>'+esc(s.name)+'</option>'; }).join('');
+  el('pbSvc').innerHTML = '<option value="">— all services —</option>' + b.services.map(function(s){ return '<option>'+esc(s.name)+'</option>'; }).join('');
+  el('svcDatalist').innerHTML = b.services.map(function(s){ return '<option value="'+esc(s.name)+'">'; }).join('');
+  if(prevMall) el('mall').value = prevMall;
+  if(prevSvc)  el('svc').value = prevSvc;
+  // client type seg
+  el('clientTypeSeg').innerHTML = b.clientTypes.map(function(t){
+    return '<button class="'+(t===CLIENT_TYPE?'active':'')+'" onclick="setClientType(\''+t+'\')">'+t+'</button>';
+  }).join('');
+  onServiceChange();
+}
+function fail(e){ alert('Error: ' + (e.message||e)); }
+
+// ============================ TABS ============================
+function showTab(t){
+  ['build','saved','prices','settings'].forEach(function(x){ el('tab-'+x).classList.toggle('hide', x!==t); });
+  document.querySelectorAll('nav button').forEach(function(b){ b.classList.toggle('active', b.dataset.tab===t); });
+  if(t==='saved') loadSaved();
+  if(t==='prices') loadPriceBook();
+  if(t==='settings') loadSettings();
+}
+
+// ============================ CLIENT / MALL ============================
+function setClientType(t){
+  CLIENT_TYPE = t;
+  document.querySelectorAll('#clientTypeSeg button').forEach(function(b){ b.classList.toggle('active', b.textContent===t); });
+  // refresh rates on every line that wasn't manually edited
+  SCOPES.forEach(function(sc){ sc.items.forEach(function(li){ if(!li.rateEdited){ li.rate = li.rates[t]||0; } }); });
+  renderScopes();
+}
+function onMallChange(){
+  // re-load any already-added scopes for the new mall prices
+  if(SCOPES.length && !confirm('Switching mall will reload prices for the scopes you already added. Continue?')){
+    return;
+  }
+  var toReload = SCOPES.slice();
+  SCOPES = [];
+  renderScopes();
+  toReload.forEach(function(sc){ loadScope(sc.service, sc.subScope, true); });
+}
+
+// ============================ ADD MALL / SERVICE ============================
+function openMallModal(){ el('m_name').value=''; el('m_code').value=''; el('m_loc').value=''; el('mallMsg').className='msg'; el('mallModal').classList.add('show'); el('m_name').focus(); }
+function saveMall(){
+  var name = el('m_name').value.trim();
+  if(!name){ showMsg('mallMsg','Enter a mall name.',false); return; }
+  google.script.run.withSuccessHandler(function(b){
+    onBoot(b); el('mall').value = name; onMallChangeSilent();
+    closeModal('mallModal'); buildMsg('Mall added: '+name, true);
+  }).withFailureHandler(function(e){ showMsg('mallMsg', e.message||e, false); }).addMall(name, el('m_code').value, el('m_loc').value);
+}
+function openSvcModal(){ el('s_name').value=''; el('s_extra').value='N'; el('svcMsg').className='msg'; el('svcModal').classList.add('show'); el('s_name').focus(); }
+function saveSvc(){
+  var name = el('s_name').value.trim();
+  if(!name){ showMsg('svcMsg','Enter a service name.',false); return; }
+  google.script.run.withSuccessHandler(function(b){
+    onBoot(b); el('svc').value = name; onServiceChange();
+    closeModal('svcModal'); buildMsg('Service added: '+name+' — now add its items in Price Book.', true);
+  }).withFailureHandler(function(e){ showMsg('svcMsg', e.message||e, false); }).addService(name, el('s_extra').value==='Y');
+}
+function showMsg(id,t,ok){ var m=el(id); m.textContent=t; m.className='msg show '+(ok?'ok':'err'); }
+// switch mall without the confirm prompt (used right after adding a mall)
+function onMallChangeSilent(){ var keep=SCOPES.slice(); SCOPES=[]; renderScopes(); keep.forEach(function(sc){ loadScope(sc.service, sc.subScope, true); }); }
+
+// ============================ ADD SCOPE ============================
+function onServiceChange(){
+  var mall = el('mall').value, svc = el('svc').value;
+  var sObj = (BOOT.services||[]).find(function(s){return s.name===svc;});
+  el('extraHint').innerHTML = sObj && sObj.isExtra ? '<span class="badge opt">Extra work</span> Added on top of the main scope.' : '';
+  el('subscope').innerHTML = '<option>Loading…</option>';
+  google.script.run.withSuccessHandler(function(subs){
+    el('subscope').innerHTML = subs.length ? subs.map(function(s){return '<option>'+esc(s)+'</option>';}).join('')
+                                           : '<option value="">— none in price book —</option>';
+  }).withFailureHandler(fail).getSubScopes(mall, svc);
+}
+
+function addScope(){
+  var svc = el('svc').value, sub = el('subscope').value;
+  if(!sub){ buildMsg('No sub-scope to add. Add items to the price book first.', false); return; }
+  if(SCOPES.some(function(s){return s.service===svc && s.subScope===sub;})){ buildMsg('That scope is already in the quote.', false); return; }
+  loadScope(svc, sub, false);
+}
+
+function loadScope(svc, sub, silent){
+  google.script.run.withSuccessHandler(function(items){
+    var lines = [], opt = [];
+    items.forEach(function(it){
+      if(it.compulsory) lines.push(newLine(svc, sub, it));
+      else opt.push(it);
+    });
+    SCOPES.push({ key:uid(), service:svc, subScope:sub, items:lines, optional:opt });
+    renderScopes();
+    if(!silent) buildMsg('Added: ' + svc + ' · ' + sub, true);
+  }).withFailureHandler(fail).getItems(el('mall').value, svc, sub, CLIENT_TYPE);
+}
+
+function newLine(svc, sub, it){
+  return { uid:uid(), service:svc, subScope:sub, item:it.item, unit:it.unit,
+           compulsory:it.compulsory, minQty:it.minQty, minCharge:it.minCharge,
+           rate:it.rates[CLIENT_TYPE]||0, rates:it.rates, rateEdited:false,
+           L:'', H:'', count:'', qty:'', notes:it.notes };
+}
+
+function addOptional(scopeKey, idx){
+  var sc = SCOPES.find(function(s){return s.key===scopeKey;});
+  var it = sc.optional[idx];
+  sc.items.push(newLine(sc.service, sc.subScope, it));
+  sc.optional.splice(idx,1);
+  renderScopes();
+}
+
+function removeScope(key){
+  SCOPES = SCOPES.filter(function(s){return s.key!==key;});
+  renderScopes();
+}
+function removeLine(scopeKey, lineUid){
+  var sc = SCOPES.find(function(s){return s.key===scopeKey;});
+  sc.items = sc.items.filter(function(l){return l.uid!==lineUid;});
+  renderScopes();
+}
+
+// ============================ QTY / AMOUNT MATH ============================
+function isArea(u){ return u==='sqft'; }
+function isLinear(u){ return u==='ft' || u==='m'; }
+function lineQty(li){
+  if(isArea(li.unit)) return (parseFloat(li.L)||0)*(parseFloat(li.H)||0)*(parseFloat(li.count)||1);
+  if(isLinear(li.unit)) return (parseFloat(li.L)||0)*(parseFloat(li.count)||1);
+  return parseFloat(li.qty)||0;
+}
+function lineCompute(li){
+  var qty = lineQty(li), rate = parseFloat(li.rate)||0, notes=[];
+  var eff = qty;
+  if(li.minQty>0 && qty>0 && qty<li.minQty){ eff = li.minQty; notes.push('min '+li.minQty+' '+li.unit); }
+  var amt = Math.round(eff*rate*100)/100;
+  if(li.minCharge>0 && amt<li.minCharge){ amt = li.minCharge; notes.push('min charge RM'+li.minCharge); }
+  return { qty:eff, amount:amt, note:notes.join('; ') };
+}
+
+// ============================ RENDER SCOPES ============================
+function renderScopes(){
+  var host = el('scopes');
+  el('noScopes').style.display = SCOPES.length ? 'none' : 'block';
+  el('totals').style.display = SCOPES.length ? 'flex' : 'none';
+  host.innerHTML = SCOPES.map(function(sc){
+    var lines = sc.items.map(function(li){ return lineHtml(sc.key, li); }).join('');
+    var opts = sc.optional.length ? (
+      '<div class="optbar"><span class="lbl">Optional</span>' +
+      sc.optional.map(function(it,i){ return '<span class="chip" onclick="addOptional(\''+sc.key+'\','+i+')">'+esc(it.item)+'</span>'; }).join('') +
+      '</div>') : '';
+    return '<div class="scope"><div class="head"><span>'+esc(sc.service)+' · '+esc(sc.subScope)+'</span>'+
+           '<span class="x" title="Remove scope" onclick="removeScope(\''+sc.key+'\')">Remove ✕</span></div>'+
+           (lines||'<div class="lineitem muted">All items removed.</div>')+opts+'</div>';
+  }).join('');
+  renderTotals();
+}
+
+function lineHtml(scopeKey, li){
+  var c = lineCompute(li);
+  var meas;
+  if(isArea(li.unit)){
+    meas = field('Length (ft)','number',li.L,scopeKey,li.uid,'L') + xsym() +
+           field('Height (ft)','number',li.H,scopeKey,li.uid,'H') + xsym() +
+           field('Count',     'number',li.count,scopeKey,li.uid,'count','84','1') +
+           '<div class="f"><label>Sqft</label><input id="sqft_'+li.uid+'" value="'+(c.qty?c.qty.toFixed(2):'0')+'" disabled></div>';
+  } else if(isLinear(li.unit)){
+    meas = field('Length ('+li.unit+')','number',li.L,scopeKey,li.uid,'L','120') + xsym() +
+           field('Count','number',li.count,scopeKey,li.uid,'count','84','1');
+  } else {
+    meas = field('Qty ('+li.unit+')','number',li.qty,scopeKey,li.uid,'qty','120');
+  }
+  var rateInp = '<div class="f"><label>Rate (RM)</label><input class="wide" type="number" step="any" value="'+esc(li.rate)+
+                '" oninput="setLine(\''+scopeKey+'\',\''+li.uid+'\',\'rate\',this.value)"></div>';
+  var noteBadge = '<span class="badge min" id="note_'+li.uid+'"'+(c.note?'':' style="display:none"')+'>'+esc(c.note)+'</span>';
+  return '<div class="lineitem"><div class="it-top"><div>'+
+           '<span class="it-name">'+esc(li.item)+'</span> '+
+           (li.compulsory?'<span class="badge req">required</span>':'<span class="badge opt">added</span>')+ ' ' + noteBadge +
+           (li.notes?'<div class="it-note">'+esc(li.notes)+'</div>':'')+
+         '</div><span class="rm" title="Remove" onclick="removeLine(\''+scopeKey+'\',\''+li.uid+'\')">✕</span></div>'+
+         '<div class="meas">'+meas+rateInp+
+           '<div class="amt"><div class="lbl">Amount</div><div class="v" id="amt_'+li.uid+'">'+rm(c.amount)+'</div></div>'+
+         '</div></div>';
+}
+function field(label,type,val,sk,uid,prop,w,ph){
+  return '<div class="f"><label>'+label+'</label><input type="'+type+'" step="any" '+(w?'style="width:'+w+'px"':'')+
+         ' value="'+esc(val)+'" '+(ph?'placeholder="'+ph+'"':'')+
+         ' oninput="setLine(\''+sk+'\',\''+uid+'\',\''+prop+'\',this.value)"></div>';
+}
+function xsym(){ return '<span class="x-sym">×</span>'; }
+
+function setLine(scopeKey, lineUid, prop, val){
+  var sc = SCOPES.find(function(s){return s.key===scopeKey;});
+  var li = sc.items.find(function(l){return l.uid===lineUid;});
+  li[prop] = val;
+  if(prop==='rate') li.rateEdited = true;
+  // in-place update so the input keeps focus while typing (no full re-render)
+  var c = lineCompute(li);
+  var sq = el('sqft_'+li.uid); if(sq) sq.value = c.qty ? c.qty.toFixed(2) : '0';
+  var amt = el('amt_'+li.uid); if(amt) amt.textContent = rm(c.amount);
+  var note = el('note_'+li.uid);
+  if(note){ note.textContent = c.note; note.style.display = c.note ? '' : 'none'; }
+  renderTotals();
+}
+
+// ============================ TOTALS ============================
+function allLines(){ var out=[]; SCOPES.forEach(function(s){ s.items.forEach(function(l){ out.push(l); }); }); return out; }
+function renderTotals(){
+  var sub = 0;
+  allLines().forEach(function(li){ sub += lineCompute(li).amount; });
+  sub = Math.round(sub*100)/100;
+  var pct = el('sstToggle').checked ? (parseFloat(BOOT.settings.SST_PERCENT)||6) : 0;
+  var sst = Math.round(sub*pct/100*100)/100;
+  el('tSub').textContent = rm(sub);
+  el('tSstK').textContent = 'SST ('+pct+'%)';
+  el('tSst').textContent = rm(sst);
+  el('tTotal').textContent = rm(sub+sst);
+}
+
+function buildMsg(t, ok){
+  var m = el('buildMsg'); m.textContent = t; m.className = 'msg show ' + (ok?'ok':'err');
+  setTimeout(function(){ m.classList.remove('show'); }, 4000);
+}
+
+// ============================ SAVE ============================
+function collectPayload(){
+  var lines = [];
+  SCOPES.forEach(function(sc){
+    sc.items.forEach(function(li){
+      lines.push({ service:li.service, subScope:li.subScope, item:li.item, unit:li.unit,
+                   qty:lineQty(li), rate:parseFloat(li.rate)||0, minQty:li.minQty, minCharge:li.minCharge, note:'' });
+    });
+  });
+  return { mall:el('mall').value, client:el('client').value.trim(), clientType:CLIENT_TYPE,
+           attention:el('attention').value.trim(), project:el('project').value.trim(),
+           applySST:el('sstToggle').checked, notes:'', lines:lines };
+}
+function saveQuote(){
+  var p = collectPayload();
+  if(!p.client){ buildMsg('Enter the client name.', false); return; }
+  if(!p.lines.length){ buildMsg('Add at least one item.', false); return; }
+  var btn = el('saveBtn'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Saving…';
+  google.script.run.withSuccessHandler(function(q){
+    btn.disabled = false; btn.textContent = 'Save quote';
+    buildMsg('Saved as ' + q.quoteNo, true);
+    LAST = q;
+    showTab('saved');
+  }).withFailureHandler(function(e){ btn.disabled=false; btn.textContent='Save quote'; buildMsg(e.message||e, false); }).saveQuote(p);
+}
+
+function resetBuilder(){
+  if(SCOPES.length && !confirm('Clear the current quote?')) return;
+  SCOPES=[]; el('client').value=''; el('attention').value=''; el('project').value='';
+  renderScopes();
+}
+
+// ============================ PRINT / WHATSAPP ============================
+var LAST = null;
+function currentQuoteForOutput(){
+  var p = collectPayload();
+  var lines = [], sub=0;
+  SCOPES.forEach(function(sc){ sc.items.forEach(function(li){
+    var c = lineCompute(li);
+    lines.push({ service:li.service, subScope:li.subScope, item:li.item, unit:li.unit, qty:c.qty, rate:parseFloat(li.rate)||0, amount:c.amount, note:c.note });
+    sub += c.amount;
+  });});
+  sub = Math.round(sub*100)/100;
+  var pct = el('sstToggle').checked ? (parseFloat(BOOT.settings.SST_PERCENT)||6) : 0;
+  var sst = Math.round(sub*pct/100*100)/100;
+  return { quoteNo:'(unsaved draft)', date:new Date().toLocaleDateString('en-MY'), mall:p.mall, client:p.client,
+           clientType:p.clientType, attention:p.attention, project:p.project, lines:lines,
+           subtotal:sub, sstPct:pct, sst:sst, total:sub+sst, company:BOOT.settings, notes:'' };
+}
+function copyWhatsApp(){
+  var q = currentQuoteForOutput();
+  if(!q.lines.length){ buildMsg('Nothing to copy.', false); return; }
+  navigator.clipboard.writeText(whatsAppText(q)).then(function(){ buildMsg('WhatsApp text copied — paste into chat.', true); },
+    function(){ buildMsg('Copy failed — long-press to copy manually.', false); });
+}
+function whatsAppText(q){
+  var L = [];
+  L.push('*Quotation* — ' + (q.company.COMPANY_NAME||'HG Group'));
+  L.push(q.mall + (q.project?(' · '+q.project):''));
+  L.push('Client: ' + q.client + (q.attention?(' (Attn: '+q.attention+')'):''));
+  L.push('Type: ' + q.clientType);
+  L.push('');
+  var n=0, lastScope='';
+  q.lines.forEach(function(li){
+    var scope = li.service+' · '+li.subScope;
+    if(scope!==lastScope){ L.push('— '+scope+' —'); lastScope=scope; }
+    n++;
+    L.push(n+'. '+li.item+'  '+ (li.qty? (fmtQty(li.qty)+li.unit+' × '+rm(li.rate).replace('RM ','RM')+'  ') : '') + '= '+rm(li.amount) + (li.note?(' ('+li.note+')'):''));
+  });
+  L.push('');
+  L.push('Subtotal: '+rm(q.subtotal));
+  if(q.sstPct) L.push('SST ('+q.sstPct+'%): '+rm(q.sst));
+  L.push('*Total: '+rm(q.total)+'*');
+  if(q.company.QUOTE_FOOTER) { L.push(''); L.push(q.company.QUOTE_FOOTER); }
+  return L.join('\n');
+}
+function fmtQty(n){ return (Math.round(n*100)/100).toString(); }
+
+function previewPrint(){ doPrint(currentQuoteForOutput()); }
+function doPrint(q){
+  var rows = q.lines.map(function(li,i){
+    return '<tr><td>'+(i+1)+'</td><td>'+esc(li.item)+'<br><small style="color:#666">'+esc(li.service+' · '+li.subScope)+(li.note?(' — '+esc(li.note)):'')+'</small></td>'+
+           '<td style="text-align:right">'+(li.qty?fmtQty(li.qty)+' '+esc(li.unit):'-')+'</td>'+
+           '<td style="text-align:right">'+rm(li.rate)+'</td>'+
+           '<td style="text-align:right">'+rm(li.amount)+'</td></tr>';
+  }).join('');
+  var c = q.company||{};
+  var html = '<html><head><title>'+esc(q.quoteNo)+'</title><style>'+
+    'body{font-family:Arial,Helvetica,sans-serif;color:#111;max-width:800px;margin:24px auto;padding:0 16px;font-size:13px}'+
+    'h1{font-size:20px;margin:0}.muted{color:#666}.hd{display:flex;justify-content:space-between;border-bottom:2px solid #f59e0b;padding-bottom:12px;margin-bottom:16px}'+
+    'table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top}'+
+    'th{background:#faf6ee;font-size:11px;text-transform:uppercase;color:#666}tfoot td{border:0;text-align:right}'+
+    '.tot{font-size:17px;font-weight:bold;color:#b8860b}.box{background:#faf6ee;padding:10px 14px;border-radius:8px;margin-bottom:14px}'+
+    '</style></head><body>'+
+    '<div class="hd"><div><h1>'+esc(c.COMPANY_NAME||'HG Group')+'</h1><div class="muted">'+esc(c.COMPANY_ADDRESS||'')+'<br>'+esc(c.COMPANY_PHONE||'')+' · '+esc(c.COMPANY_EMAIL||'')+'<br>'+esc(c.COMPANY_REG||'')+'</div></div>'+
+    '<div style="text-align:right"><h1 style="color:#b8860b">QUOTATION</h1><div class="muted">'+esc(q.quoteNo)+'<br>'+esc(q.date)+'</div></div></div>'+
+    '<div class="box"><b>To:</b> '+esc(q.client)+(q.attention?(' (Attn: '+esc(q.attention)+')'):'')+'<br>'+
+    '<b>Mall:</b> '+esc(q.mall)+(q.project?(' &nbsp; <b>Project:</b> '+esc(q.project)):'')+' &nbsp; <b>Rate type:</b> '+esc(q.clientType)+'</div>'+
+    '<table><thead><tr><th>#</th><th>Description</th><th style="text-align:right">Qty</th><th style="text-align:right">Rate</th><th style="text-align:right">Amount</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody>'+
+    '<tfoot><tr><td colspan="4">Subtotal</td><td>'+rm(q.subtotal)+'</td></tr>'+
+    (q.sstPct?'<tr><td colspan="4">SST ('+q.sstPct+'%)</td><td>'+rm(q.sst)+'</td></tr>':'')+
+    '<tr><td colspan="4" class="tot">TOTAL</td><td class="tot">'+rm(q.total)+'</td></tr></tfoot></table>'+
+    '<p class="muted" style="margin-top:18px">'+esc(c.QUOTE_FOOTER||'')+'</p>'+
+    '<script>window.onload=function(){window.print();}<\/script></body></html>';
+  var w = window.open('', '_blank'); w.document.write(html); w.document.close();
+}
+
+// ============================ SAVED QUOTES ============================
+function loadSaved(){
+  el('savedList').innerHTML = '<div class="loading"><span class="spin"></span> Loading…</div>';
+  google.script.run.withSuccessHandler(function(rows){ SAVED=rows; renderSaved(); }).withFailureHandler(fail).listQuotes();
+}
+function renderSaved(){
+  if(!SAVED.length){ el('savedList').innerHTML='<div class="empty">No quotes saved yet.</div>'; return; }
+  var rows = SAVED.map(function(q){
+    return '<tr><td><b>'+esc(q.quoteNo)+'</b><br><small class="muted">'+esc(q.date)+'</small></td>'+
+           '<td>'+esc(q.client)+'<br><small class="muted">'+esc(q.mall)+(q.project?(' · '+esc(q.project)):'')+'</small></td>'+
+           '<td><span class="tag">'+esc(q.clientType)+'</span></td>'+
+           '<td class="right"><b>'+rm(q.total)+'</b></td>'+
+           '<td class="right"><span class="pillbtn" onclick="viewQuote(\''+q.id+'\')">View</span>'+
+           '<span class="pillbtn" onclick="delQuote(\''+q.id+'\')">Delete</span></td></tr>';
+  }).join('');
+  el('savedList').innerHTML = '<table class="list"><thead><tr><th>Quote</th><th>Client</th><th>Type</th><th class="right">Total</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+function viewQuote(id){
+  google.script.run.withSuccessHandler(function(q){
+    LAST = q;
+    var rows = q.lines.map(function(li,i){
+      return '<tr><td>'+(i+1)+'</td><td>'+esc(li.item)+'<br><small class="muted">'+esc(li.service+' · '+li.subScope)+(li.note?(' — '+esc(li.note)):'')+'</small></td>'+
+             '<td class="right">'+(li.qty?fmtQty(li.qty)+' '+esc(li.unit):'-')+'</td><td class="right">'+rm(li.rate)+'</td><td class="right">'+rm(li.amount)+'</td></tr>';
+    }).join('');
+    el('viewBody').innerHTML =
+      '<h2>'+esc(q.quoteNo)+' <span class="tag">'+esc(q.clientType)+'</span></h2>'+
+      '<div class="sub">'+esc(q.date)+' · '+esc(q.mall)+'</div>'+
+      '<p><b>'+esc(q.client)+'</b>'+(q.attention?(' (Attn: '+esc(q.attention)+')'):'')+(q.project?('<br><span class="muted">'+esc(q.project)+'</span>'):'')+'</p>'+
+      '<table class="list" style="margin-top:12px"><thead><tr><th>#</th><th>Item</th><th class="right">Qty</th><th class="right">Rate</th><th class="right">Amount</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<div class="totals" style="margin-top:14px"><div class="ln"><span class="k">Subtotal</span><span class="v">'+rm(q.subtotal)+'</span></div>'+
+      (q.sstPct?'<div class="ln"><span class="k">SST ('+q.sstPct+'%)</span><span class="v">'+rm(q.sst)+'</span></div>':'')+
+      '<div class="ln grand"><span class="k">Total</span><span class="v">'+rm(q.total)+'</span></div></div>'+
+      '<div class="row" style="justify-content:flex-end;margin-top:16px">'+
+        '<div style="flex:0 0 auto"><button class="ghost" onclick="closeModal(\'viewModal\')">Close</button></div>'+
+        '<div style="flex:0 0 auto"><button class="ghost" onclick="doPrint(LAST)">Print / PDF</button></div>'+
+        '<div style="flex:0 0 auto"><button class="primary" onclick="copyWhatsAppSaved()">Copy WhatsApp</button></div>'+
+      '</div>';
+    el('viewModal').classList.add('show');
+  }).withFailureHandler(fail).getQuote(id);
+}
+function copyWhatsAppSaved(){
+  navigator.clipboard.writeText(whatsAppText(LAST)).then(function(){ alert('WhatsApp text copied.'); });
+}
+function delQuote(id){
+  if(!confirm('Delete this quote permanently?')) return;
+  google.script.run.withSuccessHandler(function(){ loadSaved(); }).withFailureHandler(fail).deleteQuote(id);
+}
+
+// ============================ PRICE BOOK ============================
+function loadPriceBook(){
+  el('pbList').innerHTML = '<div class="loading"><span class="spin"></span> Loading…</div>';
+  google.script.run.withSuccessHandler(function(rows){ PRICEBOOK=rows; renderPriceBook(); }).withFailureHandler(fail).crudList('PriceBook');
+}
+function renderPriceBook(){
+  var fm = el('pbMall').value, fs = el('pbSvc').value;
+  var rows = PRICEBOOK.filter(function(r){
+    return (!fm || String(r.Mall)===fm) && (!fs || String(r.Service)===fs);
+  }).sort(function(a,b){ return String(a.Service+a.SubScope).localeCompare(String(b.Service+b.SubScope)) || (Number(a.Sort)-Number(b.Sort)); });
+  PB_VIEW = rows;
+  if(!rows.length){ el('pbList').innerHTML='<div class="empty">No price rows match. <a href="#" onclick="openPriceForm();return false;">Add one</a>.</div>'; return; }
+  var html = rows.map(function(r,idx){
+    return '<tr onclick="editPrice('+idx+')" style="cursor:pointer">'+
+      '<td><span class="tag">'+esc(r.Mall)+'</span></td>'+
+      '<td>'+esc(r.Service)+'<br><small class="muted">'+esc(r.SubScope)+'</small></td>'+
+      '<td>'+esc(r.Item)+(yesv(r.Compulsory)?' <span class="badge req">req</span>':'')+
+        ((Number(r.MinQty)||Number(r.MinCharge))?(' <span class="badge min">min</span>'):'')+'</td>'+
+      '<td class="right">'+esc(r.Unit)+'</td>'+
+      '<td class="right">'+rm(r.PriceMall)+'</td><td class="right">'+rm(r.PriceContractor)+'</td><td class="right">'+rm(r.PriceTenant)+'</td></tr>';
+  }).join('');
+  el('pbList').innerHTML = '<table class="list"><thead><tr><th>Mall</th><th>Service</th><th>Item</th><th class="right">Unit</th><th class="right">Mall</th><th class="right">Contractor</th><th class="right">Tenant</th></tr></thead><tbody>'+html+'</tbody></table>';
+}
+function yesv(v){ return String(v).trim().toUpperCase()==='Y'; }
+
+function openPriceForm(){
+  el('pbModalTitle').textContent='Add price item';
+  el('pf_id').value=''; el('pf_mall').value='(All Malls)'; el('pf_service').value=el('pbSvc').value||'';
+  el('pf_subscope').value=''; el('pf_unit').value='sqft'; el('pf_item').value=''; el('pf_comp').value='Y';
+  el('pf_minqty').value='0'; el('pf_mincharge').value='0'; el('pf_pm').value='0'; el('pf_pc').value='0'; el('pf_pt').value='0';
+  el('pf_sort').value='1'; el('pf_notes').value=''; el('pbDelBtn').style.display='none';
+  el('pbMsg').className='msg'; el('pbModal').classList.add('show');
+}
+function editPrice(idx){
+  var r = PB_VIEW[idx];
+  el('pbModalTitle').textContent='Edit price item';
+  el('pf_id').value=r.ID; el('pf_mall').value=r.Mall; el('pf_service').value=r.Service;
+  el('pf_subscope').value=r.SubScope; el('pf_unit').value=r.Unit||'sqft'; el('pf_item').value=r.Item;
+  el('pf_comp').value=yesv(r.Compulsory)?'Y':'N'; el('pf_minqty').value=r.MinQty||0; el('pf_mincharge').value=r.MinCharge||0;
+  el('pf_pm').value=r.PriceMall||0; el('pf_pc').value=r.PriceContractor||0; el('pf_pt').value=r.PriceTenant||0;
+  el('pf_sort').value=r.Sort||1; el('pf_notes').value=r.Notes||''; el('pbDelBtn').style.display='inline-flex';
+  el('pbMsg').className='msg'; el('pbModal').classList.add('show');
+}
+function savePrice(){
+  var obj = { Mall:el('pf_mall').value, Service:el('pf_service').value.trim(), SubScope:el('pf_subscope').value.trim(),
+    Item:el('pf_item').value.trim(), Unit:el('pf_unit').value, Compulsory:el('pf_comp').value,
+    MinQty:el('pf_minqty').value, MinCharge:el('pf_mincharge').value, PriceMall:el('pf_pm').value,
+    PriceContractor:el('pf_pc').value, PriceTenant:el('pf_pt').value, Sort:el('pf_sort').value, Notes:el('pf_notes').value };
+  if(el('pf_id').value) obj.ID = el('pf_id').value;
+  if(!obj.Service||!obj.SubScope||!obj.Item){ pbMsgShow('Service, sub-scope and item are required.', false); return; }
+  google.script.run.withSuccessHandler(function(){ closeModal('pbModal'); loadPriceBook(); }).withFailureHandler(function(e){ pbMsgShow(e.message||e,false); }).crudSave('PriceBook', obj);
+}
+function deletePrice(){
+  if(!confirm('Delete this price row?')) return;
+  google.script.run.withSuccessHandler(function(){ closeModal('pbModal'); loadPriceBook(); }).withFailureHandler(fail).crudDelete('PriceBook', el('pf_id').value);
+}
+function cloneDefaults(){
+  var m = el('pbMall').value;
+  if(!m || m==='(All Malls)'){ alert('Pick a specific mall in the filter first, then clone the (All Malls) defaults into it.'); return; }
+  if(!confirm('Copy every (All Malls) default into '+m+' as editable rows? Existing '+m+' rows are kept.')) return;
+  google.script.run.withSuccessHandler(function(n){ alert(n+' rows copied into '+m+'.'); loadPriceBook(); }).withFailureHandler(fail).cloneDefaultsToMall(m);
+}
+function pbMsgShow(t,ok){ var m=el('pbMsg'); m.textContent=t; m.className='msg show '+(ok?'ok':'err'); }
+
+// ============================ SETTINGS ============================
+var SET_KEYS = [['COMPANY_NAME','Company name'],['COMPANY_REG','SSM reg no.'],['COMPANY_ADDRESS','Address'],
+  ['COMPANY_PHONE','Phone'],['COMPANY_EMAIL','Email'],['SST_PERCENT','SST %'],['QUOTE_PREFIX','Quote no. prefix'],
+  ['VALIDITY_DAYS','Validity (days)'],['QUOTE_FOOTER','Quote footer text']];
+function loadSettings(){
+  google.script.run.withSuccessHandler(function(rows){
+    var o={}; rows.forEach(function(r){ o[r.Key]=r.Value; });
+    el('setForm').innerHTML = SET_KEYS.map(function(k){
+      var big = k[0]==='QUOTE_FOOTER'||k[0]==='COMPANY_ADDRESS';
+      return '<label>'+k[1]+'</label>'+(big?'<textarea id="set_'+k[0]+'">'+esc(o[k[0]]||'')+'</textarea>'
+        :'<input id="set_'+k[0]+'" value="'+esc(o[k[0]]||'')+'">');
+    }).join('') + '<div id="setMsg" class="msg"></div>'+
+    '<button class="primary" style="margin-top:16px" onclick="saveSettings()">Save settings</button>';
+  }).withFailureHandler(fail).crudList('Settings');
+}
+function saveSettings(){
+  var calls = SET_KEYS.length, done=0, err=null;
+  SET_KEYS.forEach(function(k){
+    var v = el('set_'+k[0]).value;
+    google.script.run.withSuccessHandler(function(){ if(++done===calls) finishSet(err); })
+      .withFailureHandler(function(e){ err=e; if(++done===calls) finishSet(err); }).saveSetting(k[0], v);
+  });
+}
+function finishSet(err){
+  var m=el('setMsg');
+  if(err){ m.textContent='Error: '+(err.message||err); m.className='msg show err'; }
+  else { m.textContent='Saved.'; m.className='msg show ok';
+    google.script.run.withSuccessHandler(function(b){ BOOT.settings=b.settings; el('sstPctLbl').textContent='('+(b.settings.SST_PERCENT||6)+'%)'; }).getBootstrap();
+  }
+}
+
+// ============================ MODAL ============================
+function closeModal(id){ el(id).classList.remove('show'); }
+document.querySelectorAll('.modal-bg').forEach(function(bg){
+  bg.addEventListener('click', function(e){ if(e.target===bg) bg.classList.remove('show'); });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HG Blog &amp; LinkedIn Posting — Supabase</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335; --border:#2a3245;
+    --text:#ffffff; --text-dim:#a0a8b8; --accent:#f59e0b; --accent-hover:#d97706;
+    --accent-soft:rgba(245,158,11,0.12); --green:#22c55e; --green-soft:rgba(34,197,94,0.15);
+    --red:#ef4444; --red-soft:rgba(239,68,68,0.15); --blue:#3b82f6; --blue-soft:rgba(59,130,246,0.15);
+    --radius:14px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+         background:var(--bg); color:var(--text); line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+            padding:16px 22px; border-bottom:1px solid var(--border); }
+  .brand-block { display:flex; align-items:center; gap:13px; }
+  .brand-logo { width:44px; height:44px; background:linear-gradient(135deg,var(--accent),var(--accent-hover));
+                border-radius:11px; display:flex; align-items:center; justify-content:center; color:#0a0e1a; font-weight:900; }
+  .brand-name { font-weight:800; font-size:1.15rem; letter-spacing:-0.01em; }
+  .brand-sub { font-size:0.78rem; color:var(--text-dim); }
+  .user-pill { background:var(--surface); border:1px solid var(--border); border-radius:999px;
+               padding:8px 14px; font-size:0.8rem; color:var(--text-dim); display:flex; align-items:center; gap:10px; }
+  .user-pill b { color:var(--text); font-weight:600; }
+  .user-pill button { background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.78rem; font-weight:700; font-family:inherit; }
+  nav { display:flex; gap:6px; padding:14px 22px 0; flex-wrap:wrap; }
+  nav button { background:var(--surface); border:1px solid var(--border); color:var(--text-dim);
+               padding:10px 18px; border-radius:10px 10px 0 0; cursor:pointer; font-family:inherit;
+               font-size:0.9rem; font-weight:600; border-bottom:none; }
+  nav button.active { background:var(--surface-2); color:var(--accent); border-color:var(--accent); }
+  main { padding:18px 22px 70px; max-width:1150px; margin:0 auto; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+          padding:22px; margin-bottom:18px; }
+  h2 { font-size:1.05rem; font-weight:800; margin-bottom:4px; }
+  .sub { color:var(--text-dim); font-size:0.85rem; margin-bottom:14px; }
+  label { display:block; font-size:0.76rem; color:var(--text-dim); margin:10px 0 5px; font-weight:600;
+          text-transform:uppercase; letter-spacing:0.04em; }
+  input, select, textarea { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text);
+          border-radius:9px; padding:10px 12px; font-size:0.92rem; font-family:inherit; }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); }
+  input:disabled { opacity:0.6; }
+  textarea { resize:vertical; min-height:96px; }
+  .row { display:flex; gap:14px; flex-wrap:wrap; }
+  .row > div { flex:1 1 190px; min-width:0; }
+  button.primary { background:var(--accent); color:#0a0e1a; border:none; border-radius:10px; padding:11px 20px;
+                   font-weight:700; cursor:pointer; font-family:inherit; font-size:0.92rem; }
+  button.primary:hover { background:var(--accent-hover); }
+  button.primary:disabled { opacity:0.6; cursor:default; }
+  button.ghost { background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:10px;
+                 padding:11px 18px; font-weight:600; cursor:pointer; font-family:inherit; font-size:0.9rem; }
+  button.ghost:hover { border-color:var(--accent); }
+  button.sm { padding:7px 12px; font-size:0.8rem; border-radius:8px; }
+  .hide { display:none !important; }
+  .muted { color:var(--text-dim); }
+  .hint { color:var(--text-dim); font-size:0.78rem; margin-top:6px; }
+  .msg { font-size:0.86rem; margin-top:10px; min-height:20px; opacity:0; transition:opacity 0.2s; }
+  .msg.show { opacity:1; } .msg.ok { color:var(--green); } .msg.err { color:#f87171; }
+  .empty { text-align:center; color:var(--text-dim); padding:30px; font-size:0.9rem; }
+  .loading { text-align:center; color:var(--text-dim); padding:40px; }
+  .spin { display:inline-block; width:14px; height:14px; border:2px solid var(--accent); border-top-color:transparent;
+          border-radius:50%; animation:s .7s linear infinite; vertical-align:middle; margin-right:6px; }
+  @keyframes s { to { transform:rotate(360deg); } }
+
+  /* drop zone */
+  #drop { border:2px dashed var(--border); border-radius:12px; padding:34px; text-align:center;
+          color:var(--text-dim); cursor:pointer; background:var(--bg); }
+  #drop.over { border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
+  #drop b { color:var(--text); }
+
+  /* photo grid editor */
+  .pgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+  .pcard { border:1px solid var(--border); border-radius:10px; padding:10px; background:var(--surface-2); }
+  .pstage { position:relative; background:#05070d; border-radius:8px; overflow:hidden; line-height:0; }
+  .pstage canvas { width:100%; display:block; cursor:grab; touch-action:none; }
+  .pstage canvas:active { cursor:grabbing; }
+  .covlbl { position:absolute; top:6px; left:6px; background:var(--accent); color:#0a0e1a; font-size:10px;
+            font-weight:800; padding:2px 7px; border-radius:6px; display:none; }
+  .pname { font-size:11px; color:var(--text-dim); margin:7px 0 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .prow label { display:flex; justify-content:space-between; margin:0 0 4px; text-transform:none; letter-spacing:0; }
+  .prow .val { color:var(--text-dim); }
+  .pbtns { display:flex; gap:5px; margin:8px 0; }
+  .chip { flex:1; min-width:0; background:var(--bg); border:1px solid var(--border); color:var(--text-dim);
+          border-radius:7px; padding:7px 0; cursor:pointer; font-weight:600; font-size:12px; font-family:inherit; }
+  .chip.on { background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
+  .pfoot { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+  .useck { display:flex; align-items:center; gap:5px; font-weight:700; font-size:12.5px; margin:0; text-transform:none; letter-spacing:0; color:var(--text); }
+  .useck input { width:auto; }
+  input[type=range] { padding:0; accent-color:var(--accent); border:none; background:transparent; }
+
+  /* scope multi-select */
+  .scopebox { border:1px solid var(--border); border-radius:9px; padding:12px;
+              display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:6px 14px; }
+  .scopebox .gh { grid-column:1/-1; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;
+                  color:var(--accent); font-weight:700; margin-top:4px; }
+  .sck { display:flex; align-items:center; gap:7px; font-weight:600; font-size:13px; cursor:pointer;
+         margin:0; text-transform:none; letter-spacing:0; color:var(--text); }
+  .sck input { width:auto; }
+
+  /* records */
+  .filters { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; }
+  .filters .full { grid-column:span 2; }
+  .filters label { margin-top:0; }
+  .post { display:grid; grid-template-columns:88px 1fr auto; gap:14px; border:1px solid var(--border);
+          border-radius:10px; padding:12px; margin-bottom:10px; align-items:center; background:var(--surface-2); }
+  .post img { width:88px; height:88px; object-fit:cover; border-radius:8px; background:var(--bg); cursor:pointer; }
+  .meta b { font-size:14px; }
+  .meta .line { color:var(--text-dim); font-size:12.5px; margin-top:2px; }
+  .tag { display:inline-block; background:var(--bg); border:1px solid var(--border); border-radius:999px;
+         padding:2px 9px; font-size:11.5px; font-weight:600; margin-right:5px; color:var(--text-dim); }
+  .badge { display:inline-block; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:700; margin-left:5px; }
+  .b-Pending { background:var(--accent-soft); color:var(--accent); }
+  .b-Drafted { background:var(--blue-soft); color:#60a5fa; }
+  .b-Posted  { background:var(--green-soft); color:var(--green); }
+  .b-NA      { background:var(--surface); color:var(--text-dim); border:1px solid var(--border); }
+  .stat { text-align:right; font-size:11.5px; color:var(--text-dim); white-space:nowrap; }
+  .stat a { color:var(--accent); }
+  .act { display:flex; flex-direction:column; gap:6px; margin-top:7px; }
+  .del, .edit { background:transparent; border-radius:7px; padding:5px 9px; font-size:11.5px; font-weight:700;
+                cursor:pointer; font-family:inherit; }
+  .del { border:1px solid var(--red); color:#f87171; }
+  .del:hover { background:var(--red); color:#fff; }
+  .edit { border:1px solid var(--border); color:var(--accent); }
+  .edit:hover { border-color:var(--accent); }
+  .editform { border:1px solid var(--accent); border-radius:10px; padding:14px; margin-bottom:10px; background:var(--surface-2); }
+
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--surface-2);
+           color:var(--text); border:1px solid var(--accent); padding:12px 20px; border-radius:10px;
+           box-shadow:0 8px 24px rgba(0,0,0,.45); z-index:60; opacity:0; transition:.25s; font-weight:600; }
+  .toast.show { opacity:1; }
+
+  /* login + config gates */
+  .gate { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .gate .card { max-width:430px; width:100%; text-align:center; padding:36px 30px; }
+  .gate .brand-logo { margin:0 auto 16px; width:60px; height:60px; font-size:1.4rem; }
+  .gbtn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:18px;
+          background:#fff; color:#1a1a1a; border:none; border-radius:10px; padding:13px; font-weight:700;
+          font-size:0.95rem; cursor:pointer; font-family:inherit; }
+  .gate input { text-align:left; margin-bottom:4px; }
+
+  @media(max-width:760px){
+    .filters { grid-template-columns:1fr 1fr; } .filters .full { grid-column:span 2; }
+    .post { grid-template-columns:64px 1fr; } .post img { width:64px; height:64px; }
+    .stat { grid-column:1/-1; text-align:left; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════ GATE 0 · SUPABASE CONFIG (shown once if keys not set) ══════════ -->
+<div class="gate" id="gateConfig" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">HG</div>
+    <h2>Connect to Supabase</h2>
+    <div class="sub" style="margin-top:6px;">Paste your project's URL and anon key once — saved in this browser.<br>
+      Find both in <b>Supabase → Project Settings → API</b>.</div>
+    <label style="text-align:left;">Project URL</label>
+    <input id="cfgUrl" placeholder="https://xxxx.supabase.co">
+    <label style="text-align:left;">Anon / public key</label>
+    <input id="cfgKey" placeholder="eyJhbGciOi...">
+    <div id="cfgMsg" class="msg"></div>
+    <button class="primary" style="width:100%; margin-top:14px;" onclick="saveConfig()">Connect</button>
+  </div>
+</div>
+
+<!-- ══════════ GATE 1 · LOGIN ══════════ -->
+<div class="gate" id="gateLogin" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">HG</div>
+    <h2>Blog &amp; LinkedIn Posting</h2>
+    <div class="sub" style="margin-top:6px;">Sign in with the Google account your admin has allowlisted.</div>
+    <button class="gbtn" onclick="signIn()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41 35.3 44 30.1 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+      Sign in with Google
+    </button>
+    <div id="loginMsg" class="msg"></div>
+  </div>
+</div>
+
+<!-- ══════════ GATE 2 · NOT ON ALLOWLIST ══════════ -->
+<div class="gate" id="gateDenied" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">🔒</div>
+    <h2>Not authorised</h2>
+    <div class="sub" style="margin-top:6px;"><span id="deniedEmail"></span> is not on the access list.<br>
+      Ask your admin to add you under <b>Settings → Team access</b>.</div>
+    <button class="ghost" style="width:100%; margin-top:10px;" onclick="signOut()">Use a different account</button>
+  </div>
+</div>
+
+<!-- ══════════ THE APP ══════════ -->
+<div id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand-block">
+      <div class="brand-logo">HG</div>
+      <div>
+        <div class="brand-name">Blog &amp; LinkedIn Posting</div>
+        <div class="brand-sub">Supabase edition · capture · straighten · queue</div>
+      </div>
+    </div>
+    <div class="user-pill"><b id="userPill">…</b><button onclick="signOut()">Sign out</button></div>
+  </div>
+
+  <nav>
+    <button class="active" data-tab="create" onclick="showTab('create')">＋ New Post</button>
+    <button data-tab="records" onclick="showTab('records')">📁 Records</button>
+  </nav>
+
+  <main>
+    <!-- ════ CREATE ════ -->
+    <section id="tab-create">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div style="flex:1;"><h2>1 · Upload Photos</h2></div>
+          <div style="flex:0 0 auto;"><button class="ghost sm" onclick="el('file').click()">＋ Add Photos</button></div>
+        </div>
+        <div id="drop" style="margin-top:10px;">
+          <div>📷 <b>Drag &amp; drop photos here</b> or click to browse</div>
+          <div class="hint">JPG / PNG · multiple at a time · first used photo = cover</div>
+        </div>
+        <input id="file" type="file" accept="image/*" multiple class="hide">
+      </div>
+
+      <div class="card hide" id="editorCard">
+        <h2>2 · Straighten &amp; Frame <span id="editIdx" class="hint" style="display:inline; font-weight:600;"></span></h2>
+        <div id="photoGrid" class="pgrid" style="margin-top:10px;"></div>
+      </div>
+
+      <div class="card hide" id="detailsCard">
+        <h2>3 · Job Details</h2>
+        <label>Job Scope <span class="hint" style="display:inline; text-transform:none;">(tick all that apply)</span></label>
+        <div id="scopeBox" class="scopebox"></div>
+        <div class="row">
+          <div><label>Mall / Site</label><input id="mall" placeholder="e.g. Pavilion KL" oninput="autoCaption()"></div>
+          <div><label>Brand / Client</label><input id="brand" placeholder="e.g. A-Look" oninput="autoCaption()"></div>
+        </div>
+        <div class="row">
+          <div><label>Job Date</label><input id="jobDate" type="date" oninput="autoCaption()"></div>
+          <div><label>Post To</label><select id="target"><option>Both</option><option>Wix</option><option>LinkedIn</option></select></div>
+        </div>
+        <label>Caption / Notes <button class="ghost sm" style="float:right; margin-top:-6px;" onclick="autoCaption(true)">⚡ Auto-fill</button></label>
+        <textarea id="caption" placeholder="Auto-fills from job scope + mall + brand + date. Type to override." oninput="captionTouched=true"></textarea>
+        <div style="margin-top:14px;">
+          <button class="primary" id="saveBtn" onclick="savePost()">💾 Save to queue (Pending)</button>
+        </div>
+        <div class="hint">Saved as <b>Pending</b>. In Claude, say “push the pending ones” to create the Wix &amp; LinkedIn drafts.</div>
+      </div>
+    </section>
+
+    <!-- ════ RECORDS ════ -->
+    <section id="tab-records" class="hide">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div style="flex:1;"><h2>Filters</h2></div>
+          <div style="flex:0 0 auto;"><button class="ghost sm" onclick="exportPostsExcel()">⬇ Export Excel</button></div>
+        </div>
+        <div class="filters" style="margin-top:10px;">
+          <div class="full"><label>Search mall / brand</label><input id="fText" oninput="renderPosts()" placeholder="type to filter..."></div>
+          <div><label>Job Scope</label><select id="fScope" onchange="renderPosts()"><option value="">All</option></select></div>
+          <div><label>Target</label><select id="fTarget" onchange="renderPosts()"><option value="">All</option><option>Both</option><option>Wix</option><option>LinkedIn</option></select></div>
+          <div><label>Status</label><select id="fStatus" onchange="renderPosts()"><option value="">All</option><option>Pending</option><option>Drafted</option><option>Posted</option></select></div>
+          <div></div>
+          <div><label>Job date from</label><input id="fFrom" type="date" onchange="renderPosts()"></div>
+          <div><label>Job date to</label><input id="fTo" type="date" onchange="renderPosts()"></div>
+          <div class="full" style="display:flex; align-items:flex-end; gap:8px;">
+            <button class="ghost sm" onclick="clearFilters()">Clear</button>
+            <button class="ghost sm" onclick="loadPosts()">⟳ Refresh</button>
+            <span id="count" class="hint" style="margin:0 0 6px auto;"></span>
+          </div>
+        </div>
+      </div>
+      <div id="postList" class="loading"><span class="spin"></span> Loading…</div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════ CONFIG ═══════════════════════════
+// Option A: paste your values here (recommended once stable):
+var SUPABASE_URL = '';   // e.g. 'https://abcd1234.supabase.co'
+var SUPABASE_KEY = '';   // the anon/public key
+// Option B: leave blank — the app shows a one-time connect screen and
+// stores them in this browser (localStorage). Same keys as every HG tool.
+if (!SUPABASE_URL) SUPABASE_URL = localStorage.getItem('hg_supabase_url') || '';
+if (!SUPABASE_KEY) SUPABASE_KEY = localStorage.getItem('hg_supabase_key') || '';
+
+var sb = null;            // supabase client
+var SESSION = null;       // auth session
+var IS_ADMIN = false;
+var BUCKET = 'blog-images';
+
+// ═══════════════════════════ HELPERS ═══════════════════════════
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function showMsg(id, t, ok){ var m=el(id); m.textContent=t; m.className='msg show '+(ok?'ok':'err'); setTimeout(function(){m.classList.remove('show');},4500); }
+function toast(m){ var t=el('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove('show')},2800); }
+function fail(e){ toast('Error: '+(e && e.message ? e.message : String(e))); }
+function pad(n){ return (n<10?'0':'')+n; }
+function fmtDT(ts){ if(!ts) return ''; var d=new Date(ts); if(isNaN(d)) return String(ts);
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes()); }
+
+// ═══════════════════════════ BOOT / AUTH FLOW ═══════════════════════════
+function saveConfig(){
+  var u = el('cfgUrl').value.trim().replace(/\/+$/,'');
+  var k = el('cfgKey').value.trim();
+  if(!/^https:\/\/.+\.supabase\.co$/.test(u)){ showMsg('cfgMsg','URL must look like https://xxxx.supabase.co', false); return; }
+  if(!(k.indexOf('eyJ')===0 || k.indexOf('sb_publishable_')===0) || k.length < 30){
+    showMsg('cfgMsg','That does not look like the anon/public key (starts with eyJ… or sb_publishable_…).', false); return; }
+  localStorage.setItem('hg_supabase_url', u);
+  localStorage.setItem('hg_supabase_key', k);
+  location.reload();
+}
+
+async function start(){
+  if(!SUPABASE_URL || !SUPABASE_KEY){ el('gateConfig').style.display='flex'; return; }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var s = await sb.auth.getSession();
+  SESSION = s.data.session;
+  sb.auth.onAuthStateChange(function(_e, session){ if(!!session !== !!SESSION){ SESSION = session; route(); } });
+  route();
+}
+
+async function route(){
+  ['gateConfig','gateLogin','gateDenied'].forEach(function(g){ el(g).style.display='none'; });
+  el('app').style.display='none';
+  if(!SESSION){ el('gateLogin').style.display='flex'; return; }
+  var email = (SESSION.user.email||'').toLowerCase();
+  // allowlist check
+  var r = await sb.from('allowed_users').select('email,is_admin').ilike('email', email).maybeSingle();
+  if(r.error){ showMsg('loginMsg', r.error.message, false); el('gateLogin').style.display='flex'; return; }
+  if(!r.data){ el('deniedEmail').textContent = email; el('gateDenied').style.display='flex'; return; }
+  IS_ADMIN = !!r.data.is_admin;
+  el('app').style.display='block';
+  el('userPill').textContent = email;
+}
+
+function signIn(){
+  var here = window.location.href.split('#')[0];
+  var embedded = (window.self !== window.top);
+  // Google blocks its login page inside iframes — when embedded (e.g. in the hub),
+  // redirect the TOP window instead. Same flow, same redirect back to this page.
+  sb.auth.signInWithOAuth({ provider:'google',
+      options:{ redirectTo: here, skipBrowserRedirect: embedded } })
+    .then(function(r){
+      if(r.error){ showMsg('loginMsg', r.error.message, false); return; }
+      if(embedded && r.data && r.data.url){ window.top.location.href = r.data.url; }
+    });
+}
+function signOut(){ sb.auth.signOut().then(function(){ location.reload(); }); }
+
+// ═══════════════════════════ TABS ═══════════════════════════
+function showTab(t){
+  document.querySelectorAll('nav button').forEach(function(b){ b.classList.toggle('active', b.dataset.tab===t); });
+  ['create','records'].forEach(function(x){ el('tab-'+x).classList.toggle('hide', x!==t); });
+  if(t==='records') loadPosts();
+}
+
+// ═══════════════════════════ JOB SCOPES + AUTO CAPTION (client-side, ported verbatim) ═══
+var SCOPES=[
+  {g:'Hoarding',items:['Hoarding (Indoor)','Hoarding (Outdoor)']},
+  {g:'Other Services',items:['Visual Print & Install','Scaffold','Temporary Storage Rental','Reinstatement']},
+  {g:'Fit-Out',items:['Fit-Out — Partition','Fit-Out — Plaster Ceiling','Fit-Out — Tiling','Fit-Out — Flooring','Fit-Out — Brick Wall','Fit-Out — Painting']}
+];
+// Edit phrase / tags here to control the auto-caption wording per scope.
+var SCOPE_META={
+  'Hoarding (Indoor)':{phrase:'Hoarding (Indoor) Installation',tags:['hoarding','indoor']},
+  'Hoarding (Outdoor)':{phrase:'Hoarding (Outdoor) Installation',tags:['hoarding','outdoor']},
+  'Visual Print & Install':{phrase:'Visual Tarpaulin Installation',tags:['visual','tarpaulin']},
+  'Scaffold':{phrase:'Scaffolding Works',tags:['scaffold']},
+  'Temporary Storage Rental':{phrase:'Temporary Storage Setup',tags:['storage','rental']},
+  'Reinstatement':{phrase:'Reinstatement Works',tags:['reinstatement']},
+  'Fit-Out — Partition':{phrase:'Partition Installation',tags:['fitout','partition']},
+  'Fit-Out — Plaster Ceiling':{phrase:'Plaster Ceiling Works',tags:['fitout','ceiling']},
+  'Fit-Out — Tiling':{phrase:'Tiling Works',tags:['fitout','tiling']},
+  'Fit-Out — Flooring':{phrase:'Flooring Works',tags:['fitout','flooring']},
+  'Fit-Out — Brick Wall':{phrase:'Brick Wall Erection',tags:['fitout','brickwall']},
+  'Fit-Out — Painting':{phrase:'Painting Works',tags:['fitout','painting']}
+};
+var captionTouched=false;
+(function buildScopeBox(){
+  var html='';
+  SCOPES.forEach(function(grp){
+    html+='<div class="gh">'+esc(grp.g)+'</div>';
+    grp.items.forEach(function(s){
+      html+='<label class="sck"><input type="checkbox" value="'+esc(s)+'" onchange="autoCaption()"> '+esc(s)+'</label>';
+    });
+  });
+  el('scopeBox').innerHTML=html;
+})();
+function selectedScopes(){
+  return [].slice.call(document.querySelectorAll('#scopeBox input:checked')).map(function(c){return c.value;});
+}
+function slug(s){return String(s).toLowerCase().replace(/[^a-z0-9]+/g,'');}
+function autoCaption(force){
+  if(captionTouched && !force) return;
+  if(force) captionTouched=false;
+  var scopes=selectedScopes();
+  var mall=el('mall').value.trim();
+  var brand=el('brand').value.trim();
+  var d=el('jobDate').value;
+  var dd=d?new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'';
+  if(!scopes.length && !mall && !brand){el('caption').value='';return;}
+  var phrases=scopes.map(function(s){return (SCOPE_META[s]&&SCOPE_META[s].phrase)||s;});
+  var txt=(phrases.join(' & ')||'')+(mall?(' at '+mall):'')+(brand?(' for '+brand):'')+'.';
+  if(dd) txt+=' '+dd+'.';
+  var tags=[];
+  scopes.forEach(function(s){((SCOPE_META[s]&&SCOPE_META[s].tags)||[]).forEach(function(t){if(tags.indexOf(t)<0)tags.push(t);});});
+  if(mall) tags.push(slug(mall));
+  if(brand) tags.push(slug(brand));
+  if(tags.length) txt+='\n\n#'+tags.join(' #');
+  el('caption').value=txt;
+}
+
+// ═══════════════════════════ MULTI-IMAGE GRID EDITOR (ported verbatim) ═══════
+var imgs=[];  // {img,name,rot,rot90,fh,fv,asp,base,offX,offY,FW,FH,use}
+var ASPECTS=[{a:0,l:'Orig'},{a:1,l:'1:1'},{a:0.8,l:'4:5'},{a:1.7778,l:'16:9'}];
+
+var drop=el('drop'), fileEl=el('file');
+drop.onclick=function(){fileEl.click()};
+fileEl.onchange=function(e){addFiles(e.target.files);fileEl.value='';};
+['dragenter','dragover'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.add('over')})});
+['dragleave','drop'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.remove('over')})});
+drop.addEventListener('drop',function(e){addFiles(e.dataTransfer.files)});
+
+function addFiles(list){
+  var files=[].slice.call(list).filter(function(f){return /^image\//.test(f.type);});
+  if(!files.length)return;
+  var loaders=files.map(loadOne);
+  Promise.all(loaders).then(function(items){
+    items.forEach(function(it){if(it)imgs.push(it);});
+    el('editorCard').classList.remove('hide');
+    el('detailsCard').classList.remove('hide');
+    buildGrid();
+  });
+}
+function loadOne(file){
+  return new Promise(function(res){
+    var done=function(bmp){res({img:bmp,name:file.name||'photo',rot:0,rot90:0,fh:1,fv:1,asp:0,base:1,offX:0,offY:0,FW:240,FH:180,use:true});};
+    if(window.createImageBitmap){
+      createImageBitmap(file,{imageOrientation:'from-image'}).then(done).catch(function(){fb();});
+    } else fb();
+    function fb(){var i=new Image();i.onload=function(){done(i)};i.onerror=function(){res(null)};i.src=URL.createObjectURL(file);}
+  });
+}
+
+function buildGrid(){
+  var g=el('photoGrid');
+  g.innerHTML=imgs.map(cardHTML).join('');
+  imgs.forEach(function(_,i){sizeCard(i);bindDrag(i);});
+  updateCovers();
+  el('editIdx').textContent='· '+imgs.length+' photo'+(imgs.length>1?'s':'');
+}
+function cardHTML(it,i){
+  var asp=ASPECTS.map(function(o){return '<button class="chip '+(it.asp===o.a?'on':'')+'" onclick="cardAsp('+i+','+o.a+')">'+o.l+'</button>';}).join('');
+  return '<div class="pcard" id="pc'+i+'">'+
+    '<div class="pstage"><canvas id="cvc'+i+'"></canvas><span class="covlbl" id="cov'+i+'">COVER</span></div>'+
+    '<div class="pname" title="'+esc(it.name)+'">'+esc(it.name)+'</div>'+
+    '<div class="prow"><label>Straighten <span class="val" id="rv'+i+'">'+it.rot.toFixed(1)+'°</span></label>'+
+      '<input type="range" min="-15" max="15" step="0.5" value="'+it.rot+'" oninput="onRot('+i+',this.value)"></div>'+
+    '<div class="pbtns">'+
+      '<button class="chip" onclick="card90('+i+',-1)" title="Rotate left">⟲ 90</button>'+
+      '<button class="chip" onclick="card90('+i+',1)" title="Rotate right">⟳ 90</button>'+
+      '<button class="chip" onclick="cardFlip('+i+',\'h\')">⇄</button>'+
+      '<button class="chip" onclick="cardFlip('+i+',\'v\')">⇅</button>'+
+      '<button class="chip" onclick="cardReset('+i+')">↺</button>'+
+    '</div>'+
+    '<div class="pbtns">'+asp+'</div>'+
+    '<div class="pfoot">'+
+      '<label class="useck"><input type="checkbox" '+(it.use?'checked':'')+' onchange="onUse('+i+',this.checked)"> Use</label>'+
+      '<button class="del" onclick="removeImg('+i+')">✕ Remove</button>'+
+    '</div>'+
+  '</div>';
+}
+function sizeCard(i){
+  var it=imgs[i];
+  var st=document.querySelector('#pc'+i+' .pstage');
+  var W=(st&&st.clientWidth)||220;
+  if(it.asp>0){it.FW=W;it.FH=Math.round(W/it.asp);}
+  else{var r=it.img.width/it.img.height;it.FW=W;it.FH=Math.round(W/r);}
+  if(it.FH>340){it.FH=340;}        // cap tall portraits
+  if(it.FH<150){it.FH=150;}
+  var cv=el('cvc'+i);
+  cv.style.width=it.FW+'px';cv.style.height=it.FH+'px';
+  recomputeBase(it);it.offX=0;it.offY=0;renderCard(i);
+}
+function totalRot(it){return it.rot+it.rot90;}
+// COVER scale: image (rotated) must contain the frame -> use the frame's rotated bbox.
+function recomputeBase(it){
+  var rad=Math.abs(totalRot(it)*Math.PI/180), c=Math.abs(Math.cos(rad)), s=Math.abs(Math.sin(rad));
+  var fbw=it.FW*c+it.FH*s, fbh=it.FW*s+it.FH*c;
+  it.base=Math.max(fbw/it.img.width, fbh/it.img.height);
+}
+function paint(c,x,it,mult){
+  var W=it.FW*mult,H=it.FH*mult;c.width=W;c.height=H;
+  x.clearRect(0,0,W,H);x.save();
+  x.translate(W/2+it.offX*mult,H/2+it.offY*mult);
+  x.rotate(totalRot(it)*Math.PI/180);
+  x.scale(it.fh*it.base*mult,it.fv*it.base*mult);
+  x.drawImage(it.img,-it.img.width/2,-it.img.height/2);
+  x.restore();
+}
+function renderCard(i){var it=imgs[i];var cv=el('cvc'+i);if(it&&cv)paint(cv,cv.getContext('2d'),it,1);}
+
+function onRot(i,val){var it=imgs[i];it.rot=parseFloat(val);el('rv'+i).textContent=it.rot.toFixed(1)+'°';recomputeBase(it);renderCard(i);}
+function card90(i,d){var it=imgs[i];it.rot90=(it.rot90+d*90)%360;recomputeBase(it);it.offX=0;it.offY=0;renderCard(i);}
+function cardFlip(i,a){var it=imgs[i];if(a==='h')it.fh*=-1;else it.fv*=-1;renderCard(i);}
+function cardAsp(i,a){
+  var it=imgs[i];it.asp=a;
+  var lbl=ASPECTS.filter(function(o){return o.a===a;})[0].l;
+  document.querySelectorAll('#pc'+i+' .chip').forEach(function(b){
+    if(/^(Orig|1:1|4:5|16:9)$/.test(b.textContent)) b.classList.toggle('on', b.textContent===lbl);
+  });
+  sizeCard(i);
+}
+function cardReset(i){
+  var it=imgs[i];it.rot=0;it.rot90=0;it.fh=1;it.fv=1;it.asp=0;
+  var sl=document.querySelector('#pc'+i+' input[type=range]');if(sl)sl.value=0;
+  el('rv'+i).textContent='0.0°';
+  document.querySelectorAll('#pc'+i+' .chip').forEach(function(b){if(/^(Orig|1:1|4:5|16:9)$/.test(b.textContent))b.classList.toggle('on',b.textContent==='Orig');});
+  sizeCard(i);
+}
+function onUse(i,v){imgs[i].use=v;updateCovers();}
+function removeImg(i){
+  imgs.splice(i,1);
+  if(!imgs.length){el('editorCard').classList.add('hide');el('photoGrid').innerHTML='';return;}
+  buildGrid();
+}
+function updateCovers(){
+  var coverSet=false;
+  imgs.forEach(function(it,i){
+    var lbl=el('cov'+i);if(!lbl)return;
+    if(it.use && !coverSet){lbl.style.display='block';coverSet=true;}
+    else lbl.style.display='none';
+  });
+}
+
+/* drag to reposition (per card) */
+var dragI=-1,lx=0,ly=0;
+function pt(e){return e.touches?e.touches[0]:e;}
+function bindDrag(i){
+  var cv=el('cvc'+i);if(!cv)return;
+  cv.addEventListener('mousedown',function(e){dragI=i;lx=pt(e).clientX;ly=pt(e).clientY;});
+  cv.addEventListener('touchstart',function(e){dragI=i;lx=pt(e).clientX;ly=pt(e).clientY;});
+}
+window.addEventListener('mousemove',mv);window.addEventListener('touchmove',mv,{passive:false});
+function mv(e){if(dragI<0)return;var it=imgs[dragI];if(!it)return;if(e.touches)e.preventDefault();var p=pt(e);it.offX+=p.clientX-lx;it.offY+=p.clientY-ly;lx=p.clientX;ly=p.clientY;renderCard(dragI);}
+window.addEventListener('mouseup',function(){dragI=-1;});window.addEventListener('touchend',function(){dragI=-1;});
+window.addEventListener('resize',function(){imgs.forEach(function(_,i){sizeCard(i);});});
+
+function exportOne(it){
+  var ex=document.createElement('canvas'), exc=ex.getContext('2d');
+  var mult=1280/it.FW;
+  paint(ex,exc,it,mult);
+  var out=document.createElement('canvas');out.width=ex.width;out.height=ex.height;
+  var oc=out.getContext('2d');oc.fillStyle='#ffffff';oc.fillRect(0,0,out.width,out.height);oc.drawImage(ex,0,0);
+  return out.toDataURL('image/jpeg',0.85);
+}
+
+// ═══════════════════════════ SAVE (was google.script.run.savePost) ═══════════
+function dataUrlToBlob(d){
+  var m=String(d).match(/^data:(image\/\w+);base64,(.+)$/);
+  if(!m) return null;
+  var bin=atob(m[2]), arr=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+  return new Blob([arr],{type:m[1]});
+}
+async function savePost(){
+  var used=imgs.filter(function(it){return it.use;});
+  if(!used.length){toast('Tick “Use” on at least one photo');return;}
+  var scopes=selectedScopes();
+  if(!scopes.length){toast('Pick at least one job scope');return;}
+  var btn=el('saveBtn');btn.disabled=true;btn.textContent='Saving…';
+  try{
+    var ref='P'+Date.now();
+    var paths=[];
+    for(var i=0;i<used.length;i++){
+      var blob=dataUrlToBlob(exportOne(used[i]));
+      if(!blob) continue;
+      var path=ref+'/'+ref+'_'+(i+1)+'.jpg';
+      var up=await sb.storage.from(BUCKET).upload(path, blob, {contentType:'image/jpeg', upsert:false});
+      if(up.error) throw up.error;
+      paths.push(path);
+    }
+    if(!paths.length) throw new Error('Could not read image data.');
+
+    var target=el('target').value||'Both';
+    var row={
+      ref:ref,
+      job_scope:scopes.join(' & '),
+      mall:el('mall').value.trim(),
+      brand:el('brand').value.trim(),
+      job_date:el('jobDate').value||null,
+      caption:el('caption').value.trim(),
+      target:target,
+      wix_status: target==='LinkedIn' ? 'N/A' : 'Pending',
+      linkedin_status: target==='Wix' ? 'N/A' : 'Pending',
+      image_paths:paths,
+      created_by:SESSION.user.email
+    };
+    var r=await sb.from('blg_posts').insert(row);
+    if(r.error) throw r.error;
+    await sb.rpc('log_audit',{p_action:'SAVE POST', p_details:ref+' · '+row.mall+' · '+row.brand+' · '+paths.length+' image(s)'});
+
+    toast('Saved ✓  '+ref+' ('+paths.length+' image'+(paths.length>1?'s':'')+')');
+    imgs=[];captionTouched=false;
+    el('photoGrid').innerHTML='';
+    el('editorCard').classList.add('hide');
+    el('detailsCard').classList.add('hide');
+    document.querySelectorAll('#scopeBox input:checked').forEach(function(c){c.checked=false;});
+    el('mall').value='';el('brand').value='';
+    el('jobDate').value='';el('caption').value='';
+  }catch(e){ fail(e); }
+  btn.disabled=false;btn.textContent='💾 Save to queue (Pending)';
+}
+
+// ═══════════════════════════ RECORDS (was getPosts / updatePost / deletePost) ═
+var ALL=[];        // rows from blg_posts, newest first
+var SIGNED={};     // storage path -> signed thumbnail URL
+async function loadPosts(){
+  el('count').textContent='Loading…';
+  var r=await sb.from('blg_posts').select('*').order('created_at',{ascending:false});
+  if(r.error){ el('count').textContent='Error: '+r.error.message; return; }
+  ALL=r.data||[];
+  // sign the cover image of every post (bucket is private)
+  var covers=[];
+  ALL.forEach(function(p){ var c=(p.image_paths||[])[0]; if(c && !SIGNED[c]) covers.push(c); });
+  if(covers.length){
+    var s=await sb.storage.from(BUCKET).createSignedUrls(covers, 3600);
+    if(!s.error && s.data) s.data.forEach(function(o){ if(o.signedUrl) SIGNED[o.path]=o.signedUrl; });
+  }
+  buildScopeFilter();
+  renderPosts();
+}
+function buildScopeFilter(){
+  var sel=el('fScope');var cur=sel.value;
+  var set={};ALL.forEach(function(p){if(p.job_scope)set[p.job_scope]=1;});
+  sel.innerHTML='<option value="">All</option>'+Object.keys(set).sort().map(function(s){return '<option>'+esc(s)+'</option>';}).join('');
+  sel.value=cur;
+}
+function clearFilters(){['fText','fScope','fTarget','fStatus','fFrom','fTo'].forEach(function(i){el(i).value='';});renderPosts();}
+function inRange(d,a,b){if(!d)return !a&&!b;if(a&&d<a)return false;if(b&&d>b)return false;return true;}
+function badge(s){return '<span class="badge b-'+(s==='N/A'?'NA':esc(s))+'">'+esc(s)+'</span>';}
+
+function filteredPosts(){
+  var t=el('fText').value.toLowerCase();
+  var sc=el('fScope').value, tg=el('fTarget').value, st=el('fStatus').value;
+  var fr=el('fFrom').value, to=el('fTo').value;
+  return ALL.filter(function(p){
+    if(t && (String(p.mall||'').toLowerCase().indexOf(t)<0 && String(p.brand||'').toLowerCase().indexOf(t)<0))return false;
+    if(sc && p.job_scope!==sc)return false;
+    if(tg && p.target!==tg)return false;
+    if(st && p.wix_status!==st && p.linkedin_status!==st)return false;
+    if((fr||to) && !inRange(p.job_date||'',fr,to))return false;
+    return true;
+  });
+}
+function renderPosts(){
+  var out=filteredPosts();
+  el('count').textContent=out.length+' of '+ALL.length+' posts';
+  el('postList').className='';
+  el('postList').innerHTML=out.map(postHTML).join('')||'<div class="card empty">No posts match.</div>';
+}
+async function openImage(id){
+  var p=findPost(id);if(!p||!(p.image_paths||[]).length)return;
+  var s=await sb.storage.from(BUCKET).createSignedUrls(p.image_paths, 3600);
+  if(s.error){ fail(s.error); return; }
+  (s.data||[]).forEach(function(o){ if(o.signedUrl) window.open(o.signedUrl,'_blank'); });
+}
+function postHTML(p){
+  var paths=p.image_paths||[];
+  var thumb=paths.length?(SIGNED[paths[0]]||''):'';
+  var multi=paths.length>1?'<span class="tag">🖼 '+paths.length+'</span>':'';
+  return '<div class="post" id="r_'+esc(p.id)+'">'+
+    '<img src="'+esc(thumb)+'" onclick="openImage(\''+esc(p.id)+'\')" onerror="this.style.visibility=\'hidden\'" title="Open image(s)">'+
+    '<div class="meta"><b>'+esc(p.mall||'—')+'</b> · '+esc(p.brand||'—')+' '+multi+
+      '<div class="line"><span class="tag">'+esc(p.job_scope)+'</span>'+esc(p.job_date||'no date')+'</div>'+
+      '<div class="line">Wix '+badge(p.wix_status)+' &nbsp; LinkedIn '+badge(p.linkedin_status)+'</div>'+
+    '</div>'+
+    '<div class="stat">'+esc(p.ref)+'<br>'+esc(fmtDT(p.created_at))+
+      (p.wix_link?'<br><a href="'+esc(p.wix_link)+'" target="_blank">Wix ↗</a>':'')+
+      (p.linkedin_link?' <a href="'+esc(p.linkedin_link)+'" target="_blank">LinkedIn ↗</a>':'')+
+      '<div class="act"><button class="edit" onclick="editPost(\''+esc(p.id)+'\')">✎ Edit</button>'+
+      '<button class="del" onclick="delPost(\''+esc(p.id)+'\')">🗑 Delete</button></div>'+
+    '</div></div>';
+}
+
+function findPost(id){return ALL.filter(function(p){return p.id===id;})[0];}
+function editPost(id){
+  var p=findPost(id);if(!p)return;
+  var opt=function(v){return ['Both','Wix','LinkedIn'].map(function(o){return '<option '+(o===v?'selected':'')+'>'+o+'</option>';}).join('');};
+  el('r_'+id).outerHTML=
+    '<div class="editform" id="r_'+esc(id)+'">'+
+    '<div style="font-weight:700;margin-bottom:10px">Edit '+esc(p.ref)+' <span class="hint" style="display:inline;font-weight:500">(images stay the same)</span></div>'+
+    '<label>Job Scope</label><input id="e_scope" value="'+esc(p.job_scope)+'">'+
+    '<div class="row"><div><label>Mall / Site</label><input id="e_mall" value="'+esc(p.mall)+'"></div>'+
+      '<div><label>Brand / Client</label><input id="e_brand" value="'+esc(p.brand)+'"></div></div>'+
+    '<div class="row"><div><label>Job Date</label><input id="e_date" type="date" value="'+esc(p.job_date||'')+'"></div>'+
+      '<div><label>Post To</label><select id="e_target">'+opt(p.target)+'</select></div></div>'+
+    '<label>Caption / Notes</label><textarea id="e_caption">'+esc(p.caption)+'</textarea>'+
+    '<div style="margin-top:12px;">'+
+    '<button class="primary sm" onclick="saveEdit(\''+esc(id)+'\')">Save changes</button> '+
+    '<button class="ghost sm" onclick="renderPosts()">Cancel</button></div>'+
+    '</div>';
+}
+async function saveEdit(id){
+  var p=findPost(id);if(!p)return;
+  var d={
+    job_scope:el('e_scope').value.trim(),
+    mall:el('e_mall').value.trim(),
+    brand:el('e_brand').value.trim(),
+    job_date:el('e_date').value||null,
+    caption:el('e_caption').value.trim(),
+    target:el('e_target').value
+  };
+  // only flip Pending<->N/A; never overwrite Drafted/Posted (same rule as the GAS version)
+  var ws=p.wix_status, ls=p.linkedin_status;
+  if(d.target==='LinkedIn'){ if(ws==='Pending'||ws==='N/A') ws='N/A'; } else { if(ws==='N/A') ws='Pending'; }
+  if(d.target==='Wix'){ if(ls==='Pending'||ls==='N/A') ls='N/A'; } else { if(ls==='N/A') ls='Pending'; }
+  d.wix_status=ws; d.linkedin_status=ls;
+  var r=await sb.from('blg_posts').update(d).eq('id',id);
+  if(r.error){ fail(r.error); return; }
+  await sb.rpc('log_audit',{p_action:'EDIT POST', p_details:p.ref+' · '+d.mall+' · '+d.brand});
+  toast('Updated '+p.ref);
+  loadPosts();
+}
+async function delPost(id){
+  var p=findPost(id);if(!p)return;
+  if(!confirm('Delete '+p.ref+' and its image(s)? This removes the record and its images in storage. Cannot be undone here.'))return;
+  if((p.image_paths||[]).length){
+    var s=await sb.storage.from(BUCKET).remove(p.image_paths);
+    if(s.error){ fail(s.error); return; }
+  }
+  var r=await sb.from('blg_posts').delete().eq('id',id);
+  if(r.error){ fail(r.error); return; }
+  await sb.rpc('log_audit',{p_action:'DELETE POST', p_details:p.ref+' · '+(p.mall||'')+' · '+(p.brand||'')});
+  toast('Deleted '+p.ref);
+  loadPosts();
+}
+
+// ═══════════════════════════ EXPORT EXCEL (SheetJS) ═══════════════════════════
+function exportPostsExcel(){
+  var rows=filteredPosts();
+  if(!rows.length){ toast('Nothing to export.'); return; }
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.map(function(p){ return {
+    'ID':p.ref, 'Created At':fmtDT(p.created_at), 'Job Scope':p.job_scope, 'Mall':p.mall,
+    'Brand':p.brand, 'Job Date':p.job_date||'', 'Caption':p.caption,
+    'Images':(p.image_paths||[]).join(', '), 'Target':p.target,
+    'Wix Status':p.wix_status, 'LinkedIn Status':p.linkedin_status,
+    'Wix Link':p.wix_link, 'LinkedIn Link':p.linkedin_link,
+    'Pushed At':fmtDT(p.pushed_at), 'Created By':p.created_by }; })), 'Posts');
+  XLSX.writeFile(wb, 'HG-BlogPosts-'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+start();
+</script>
+</body>
+</html>

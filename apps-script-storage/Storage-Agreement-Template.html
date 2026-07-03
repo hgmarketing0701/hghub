@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>HG Group — Temporary Storage Pre-Engagement Agreement</title>
+<style>
+  body{font:13px/1.6 Arial,sans-serif;max-width:820px;margin:24px auto;padding:0 22px;color:#111;background:#f1f5f9}
+  .sheet{background:#fff;padding:34px 40px;border:1px solid #ddd;border-radius:8px}
+  h1{font-size:19px;text-align:center;margin:0 0 4px}
+  .sub{text-align:center;color:#555;margin-bottom:18px;font-size:12px}
+  .fillbar{background:#0f172a;color:#fff;padding:14px 18px;border-radius:8px;margin-bottom:14px}
+  .fillbar h3{margin:0 0 8px;font-size:13px;color:#93c5fd}
+  .fillbar .g{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .fillbar label{font-size:11px;color:#cbd5e1;display:block;margin-bottom:2px}
+  .fillbar input{width:100%;padding:6px;border:0;border-radius:5px;font:inherit}
+  .fillbar button{margin-top:10px;background:#2563eb;color:#fff;border:0;padding:9px 16px;border-radius:6px;font-weight:600;cursor:pointer}
+  table{width:100%;border-collapse:collapse;margin:8px 0}
+  td{padding:6px 9px;border:1px solid #bbb;vertical-align:top}
+  td.k{background:#f5f5f5;width:170px;font-weight:bold}
+  h2{font-size:14px;margin-top:22px;border-bottom:1px solid #ccc;padding-bottom:4px}
+  ol{padding-left:18px}li{margin:7px 0}
+  .sign{display:flex;gap:50px;margin-top:55px}
+  .sign div{flex:1;border-top:1px solid #000;padding-top:6px;font-size:12px}
+  .val{font-weight:bold}
+  @media print{.fillbar,.noprint{display:none}body{background:#fff;margin:0}.sheet{border:0}}
+  @media(max-width:640px){.fillbar .g{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="fillbar noprint">
+  <h3>Fill in, then click Apply → Print/Save PDF. (Nothing is saved online — this is the offline template.)</h3>
+  <div class="g">
+    <div><label>Agreement Ref</label><input id="ref" placeholder="HG-STR-0001"></div>
+    <div><label>Date</label><input id="date" type="date"></div>
+    <div><label>Invoice No</label><input id="inv" placeholder="INV-0001"></div>
+    <div><label>Client Company</label><input id="co" placeholder="ABC Sdn Bhd"></div>
+    <div><label>Client PIC</label><input id="pic"></div>
+    <div><label>Contact No</label><input id="tel"></div>
+    <div><label>Client Email</label><input id="em"></div>
+    <div><label>Lot No</label><input id="lot" placeholder="A-01"></div>
+    <div><label>Lockset No</label><input id="lock" placeholder="34579"></div>
+    <div><label>Lot Size</label><input id="size" placeholder="36 m²"></div>
+    <div><label>Start Date</label><input id="start" type="date"></div>
+    <div><label>End Date</label><input id="end" type="date"></div>
+    <div><label>Rate (RM/month)</label><input id="rate" placeholder="800"></div>
+    <div><label>CCTV No / URL</label><input id="cctv"></div>
+    <div><label>HG Rep Name</label><input id="rep"></div>
+  </div>
+  <button onclick="apply()">Apply to document</button>
+  <button onclick="window.print()" style="background:#16a34a">🖨 Print / Save PDF</button>
+</div>
+
+<div class="sheet">
+  <h1>HG GROUP</h1>
+  <div class="sub">TEMPORARY STORAGE — PRE-ENGAGEMENT AGREEMENT</div>
+
+  <table>
+    <tr><td class="k">Agreement Ref</td><td class="val" id="o_ref">—</td><td class="k">Date</td><td class="val" id="o_date">—</td></tr>
+    <tr><td class="k">Client (Owner of Goods)</td><td class="val" colspan="3" id="o_co">—</td></tr>
+    <tr><td class="k">Contact</td><td class="val" id="o_tel">—</td><td class="k">Email</td><td class="val" id="o_em">—</td></tr>
+    <tr><td class="k">Storage Lot</td><td class="val" id="o_lot">—</td><td class="k">Lockset No</td><td class="val" id="o_lock">—</td></tr>
+    <tr><td class="k">Lot Size</td><td class="val" id="o_size">as inspected on site</td><td class="k">Invoice No</td><td class="val" id="o_inv">—</td></tr>
+    <tr><td class="k">Storage Period</td><td class="val" id="o_period">—</td><td class="k">Rate</td><td class="val" id="o_rate">as quoted</td></tr>
+    <tr><td class="k">CCTV Ref</td><td class="val" colspan="3" id="o_cctv">—</td></tr>
+  </table>
+
+  <h2>Terms</h2>
+  <ol>
+    <li><b>Storage space only.</b> HG provides a lockable storage lot on an "as-is" basis. HG is a space provider, not a warehouse keeper or bailee for reward.</li>
+    <li><b>No warranty, no insurance.</b> HG gives NO warranty and provides NO insurance over the stored goods. The Client stores goods entirely at the Client's own risk and is responsible for arranging its own insurance.</li>
+    <li><b>Liability.</b> HG shall not be liable for any loss, theft, damage, fire, flood, pest, deterioration or loss of profit/business arising from the storage, save for HG's own proven gross negligence, and in any case capped at one (1) month's storage fee.</li>
+    <li><b>Lock & keys.</b> The lot is secured by the lockset number above. The Client holds the key/combination. HG holds no duplicate and is not responsible for the Client's locking.</li>
+    <li><b>Prohibited goods.</b> No illegal, hazardous, flammable, explosive, perishable, living, or foul-smelling items, and no cash/valuables/documents. Breach allows HG to remove items at the Client's cost.</li>
+    <li><b>Payment.</b> Storage fees are payable in advance per the invoice. Access may be suspended on overdue payment.</li>
+    <li><b>Expiry & renewal.</b> Before the end date HG will issue <b>two (2) renewal reminders</b> (about 30 days and 7 days before expiry). To continue, the Client must renew in writing and settle the renewal invoice before the end date.</li>
+    <li><b>Non-renewal / abandonment.</b> If the period expires and the Client does not renew or collect the goods after the two reminders, the goods are deemed <b>abandoned</b>. HG may, without further notice, dispose of, clear, or <b>sell off</b> the goods, and <b>ownership of the goods shall pass to HG</b>. Sale proceeds may be applied to outstanding fees, clearance and disposal costs; the Client remains liable for any shortfall.</li>
+    <li><b>Access & CCTV.</b> Access during operating hours only. Premises may be under CCTV for security; the Client consents to such recording.</li>
+    <li><b>Photographic record.</b> The Client agrees HG may photograph the goods at intake for record purposes.</li>
+    <li><b>Indemnity.</b> The Client indemnifies HG against all claims arising from the Client's goods or any breach of this agreement.</li>
+    <li><b>Governing law.</b> This agreement is governed by the laws of Malaysia.</li>
+  </ol>
+
+  <p>By signing, the Client confirms they have read and accept these terms <b>before</b> moving any goods in.</p>
+
+  <div class="sign">
+    <div>Client signature / company stamp<br><br>Name:<br>Date:</div>
+    <div>For HG Group<br><br>Name: <span class="val" id="o_rep"></span><br>Date:</div>
+  </div>
+</div>
+
+<script>
+function v(id){return document.getElementById(id).value.trim();}
+function set(id,val){document.getElementById(id).textContent=val||'—';}
+function apply(){
+  set('o_ref',v('ref'));set('o_date',v('date'));set('o_inv',v('inv'));
+  set('o_co', v('co')+(v('pic')?' — attn: '+v('pic'):''));
+  set('o_tel',v('tel'));set('o_em',v('em'));
+  set('o_lot',v('lot'));set('o_lock',v('lock'));
+  set('o_size',v('size')||'as inspected on site');
+  set('o_period',(v('start')&&v('end'))?v('start')+' to '+v('end'):'—');
+  set('o_rate',v('rate')?'RM '+v('rate')+' / month':'as quoted');
+  set('o_cctv',v('cctv'));set('o_rep',v('rep'));
+}
+</script>
+</body>
+</html>

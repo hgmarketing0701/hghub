@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Black Lee — Master System Blueprint</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #141926;
+    --surface-2: #1c2335;
+    --surface-3: #232c42;
+    --border: #2a3245;
+    --text: #ffffff;
+    --text-dim: #a0a8b8;
+    --text-dim2: #6f7b91;
+    --accent: #f59e0b;
+    --accent-soft: rgba(245, 158, 11, 0.12);
+
+    /* DATA LAYER COLOURS */
+    --c-blue:   #3b82f6;
+    --c-green:  #22c55e;
+    --c-turq:   #06b6d4;
+    --c-yellow: #eab308;
+    --c-red:    #ef4444;
+    --c-beige:  #cba36a;
+    --c-pink:   #ec4899;
+    --c-grey:   #94a3b8;
+
+    --radius: 14px;
+    --shadow: 0 10px 40px rgba(0,0,0,0.45);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .container { max-width: 1180px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  /* HEADER */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 20px; padding-bottom: 22px; border-bottom: 1px solid var(--border); margin-bottom: 32px;
+  }
+  .brand-block { display: flex; align-items: center; gap: 16px; }
+  .brand-logo {
+    width: 54px; height: 54px;
+    background: linear-gradient(135deg, var(--accent), #d97706);
+    border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; color: #0a0e1a; font-weight: 900;
+  }
+  .brand-name { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
+  .brand-sub { font-size: 0.85rem; color: var(--text-dim); margin-top: 4px; }
+  .meta-pills { display: flex; gap: 10px; flex-wrap: wrap; }
+  .pill {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 9px 15px; border-radius: 999px; font-size: 0.82rem; color: var(--text-dim);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .pill strong { color: var(--text); font-weight: 700; }
+
+  h2.section-title { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 4px; }
+  .section-sub { color: var(--text-dim); font-size: 0.92rem; margin-bottom: 20px; max-width: 760px; }
+  section { margin-bottom: 48px; }
+
+  /* THE BIG IDEA BANNER */
+  .bigidea {
+    background: linear-gradient(135deg, rgba(245,158,11,0.10), rgba(59,130,246,0.06));
+    border: 1px solid var(--border); border-left: 4px solid var(--accent);
+    border-radius: var(--radius); padding: 20px 24px; margin-bottom: 40px;
+  }
+  .bigidea h3 { font-size: 1.05rem; margin-bottom: 6px; }
+  .bigidea p { color: var(--text-dim); font-size: 0.93rem; }
+  .bigidea b { color: var(--text); }
+
+  /* DATA LAYER LEGEND */
+  .legend-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  }
+  .layer-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px; position: relative; overflow: hidden;
+  }
+  .layer-card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--lc);
+  }
+  .layer-top { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+  .swatch { width: 16px; height: 16px; border-radius: 5px; background: var(--lc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lc) 22%, transparent); }
+  .layer-name { font-weight: 800; font-size: 0.92rem; letter-spacing: 0.01em; }
+  .layer-where { font-size: 0.72rem; color: var(--text-dim2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .layer-fields { font-size: 0.82rem; color: var(--text-dim); line-height: 1.45; }
+
+  /* PIPELINE */
+  .flow { display: flex; flex-direction: column; gap: 0; }
+  .stage {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px; position: relative;
+  }
+  .stage::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+    border-radius: 5px 0 0 5px; background: var(--accent);
+  }
+  .stage.adds-blue::before   { background: var(--c-blue); }
+  .stage.adds-green::before  { background: var(--c-green); }
+  .stage.adds-turq::before   { background: var(--c-turq); }
+  .stage.adds-yellow::before { background: var(--c-yellow); }
+  .stage.adds-red::before    { background: var(--c-red); }
+  .stage.adds-beige::before  { background: var(--c-beige); }
+  .stage.adds-pink::before   { background: var(--c-pink); }
+  .stage.adds-grey::before   { background: var(--c-grey); }
+  .stage.adds-none::before   { background: var(--text-dim2); }
+
+  .stage-head { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+  .stage-no {
+    flex: 0 0 auto; width: 42px; height: 42px; border-radius: 10px;
+    background: var(--surface-3); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.95rem; color: var(--text);
+  }
+  .stage-main { flex: 1 1 320px; min-width: 0; }
+  .stage-title { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.01em; }
+  .stage-desc { color: var(--text-dim); font-size: 0.87rem; margin-top: 5px; line-height: 1.5; }
+  .stage-desc b { color: var(--text); font-weight: 600; }
+
+  .stage-side { flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; min-width: 150px; }
+  .badge { font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; }
+  .b-live    { background: rgba(34,197,94,0.16);  color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+  .b-enhance { background: rgba(245,158,11,0.16); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+  .b-soon    { background: rgba(59,130,246,0.16); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+  .b-ext     { background: rgba(148,163,184,0.16); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.3); }
+  .b-tbd     { background: rgba(168,85,247,0.16); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+  .owner { font-size: 0.78rem; color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
+  .owner b { color: var(--text); }
+  .tool { font-size: 0.74rem; color: var(--text-dim2); text-align: right; }
+
+  /* data chips row */
+  .chips-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 14px; padding-top: 13px; border-top: 1px dashed var(--border); }
+  .chips-block { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .chips-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim2); font-weight: 700; }
+  .dchip { font-size: 0.7rem; font-weight: 700; padding: 3px 9px 3px 7px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid; }
+  .dchip i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .dchip.add { box-shadow: 0 0 0 1px currentColor inset; }
+  .d-blue   { color: var(--c-blue);   border-color: color-mix(in srgb, var(--c-blue) 45%, transparent);   background: color-mix(in srgb, var(--c-blue) 13%, transparent); }
+  .d-blue i { background: var(--c-blue); }
+  .d-green  { color: #4ade80; border-color: color-mix(in srgb, var(--c-green) 45%, transparent);  background: color-mix(in srgb, var(--c-green) 13%, transparent); }
+  .d-green i { background: var(--c-green); }
+  .d-turq   { color: #22d3ee; border-color: color-mix(in srgb, var(--c-turq) 45%, transparent);   background: color-mix(in srgb, var(--c-turq) 13%, transparent); }
+  .d-turq i { background: var(--c-turq); }
+  .d-yellow { color: #facc15; border-color: color-mix(in srgb, var(--c-yellow) 50%, transparent); background: color-mix(in srgb, var(--c-yellow) 13%, transparent); }
+  .d-yellow i { background: var(--c-yellow); }
+  .d-red    { color: #f87171; border-color: color-mix(in srgb, var(--c-red) 45%, transparent);    background: color-mix(in srgb, var(--c-red) 13%, transparent); }
+  .d-red i { background: var(--c-red); }
+  .d-beige  { color: var(--c-beige);  border-color: color-mix(in srgb, var(--c-beige) 50%, transparent);  background: color-mix(in srgb, var(--c-beige) 13%, transparent); }
+  .d-beige i { background: var(--c-beige); }
+  .d-pink   { color: #f472b6; border-color: color-mix(in srgb, var(--c-pink) 45%, transparent);   background: color-mix(in srgb, var(--c-pink) 13%, transparent); }
+  .d-pink i { background: var(--c-pink); }
+  .d-grey   { color: var(--c-grey);   border-color: color-mix(in srgb, var(--c-grey) 50%, transparent);   background: color-mix(in srgb, var(--c-grey) 13%, transparent); }
+  .d-grey i { background: var(--c-grey); }
+
+  /* connector */
+  .connector { display: flex; flex-direction: column; align-items: center; height: 26px; }
+  .connector .line { width: 2px; flex: 1; background: linear-gradient(var(--border), var(--border)); }
+  .connector .arrow { color: var(--text-dim2); font-size: 0.9rem; line-height: 1; margin-top: -2px; }
+
+  /* branch wrapper */
+  .branch { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .branch-note { text-align: center; font-size: 0.74rem; color: var(--text-dim2); margin: 4px 0 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  /* cycle footer */
+  .cycle {
+    margin-top: 28px; background: var(--surface); border: 1px dashed var(--accent);
+    border-radius: var(--radius); padding: 18px 22px; display: flex; align-items: center; gap: 14px;
+  }
+  .cycle .ico { font-size: 1.5rem; }
+  .cycle p { color: var(--text-dim); font-size: 0.9rem; }
+  .cycle b { color: var(--text); }
+
+  .note { font-size: 0.78rem; color: var(--text-dim2); margin-top: 14px; }
+  .note b { color: var(--text-dim); }
+
+  @media (max-width: 860px) {
+    .legend-grid { grid-template-columns: repeat(2, 1fr); }
+    .branch { grid-template-columns: 1fr; }
+    .stage-side { align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="topbar">
+    <div class="brand-block">
+      <div class="brand-logo">BL</div>
+      <div>
+        <div class="brand-name">Master System Blueprint</div>
+        <div class="brand-sub">Black Lee · Contractor Support Platform — one job, start to payroll</div>
+      </div>
+    </div>
+    <div class="meta-pills">
+      <div class="pill">🎨 <strong>8</strong> data layers</div>
+      <div class="pill">🔁 <strong>10</strong> stages</div>
+      <div class="pill">📅 v1 · 2026-06-23</div>
+    </div>
+  </div>
+
+  <!-- BIG IDEA -->
+  <div class="bigidea">
+    <h3>🧠 The one rule that runs the whole platform</h3>
+    <p>The colours are <b>not status</b>. They are <b>data layers</b>.<br>
+    Each stage <b>inherits every colour from upstream</b>, adds its own colour, and passes the bigger bundle to the next stage.<br>
+    Build every system to <b>read the incoming colours and write only its own</b> — that is the integration.</p>
+  </div>
+
+  <!-- LEGEND -->
+  <section>
+    <h2 class="section-title">1 · The 8 data layers</h2>
+    <p class="section-sub">This is the shared language between every system. When two systems "talk", they are passing these colour bundles.</p>
+    <div class="legend-grid">
+
+      <div class="layer-card" style="--lc: var(--c-blue)">
+        <div class="layer-top"><span class="swatch"></span><span class="layer-name">BLUE</span></div>
+        <div class="layer-where">born at · CRM (from WATI)</div>
+        <div class="layer-fields">Client / lead — name, tel, contact, communication details.</div>
+      </div>
+
+      <div class="layer-card" style="--lc: var(--c-green)">
+        <div class="layer-top"><span class="swatch"></span><span class="layer-name">GREEN</span></div>
+        <div class="layer-where">born at · Smart Quotation</div>
+        <div class="layer-fields">Commercial — lot no, lot size, job scope, mall + client details, drawing / measurement.</div>
+      </div>
+
+      <div class="layer-card" style="--lc: var(--c-turq)">
+        <div class="layer-top"><span class="swatch"></span><span class="layer-name">TURQUOISE</span></div>
+        <div class="layer-where">born at · Job Confirmation List</div>
+        <div class="layer-fields">Confirmation data + live job-progress status carried through the pipeline.</div>
+      </div>
+
+      <div class="layer-card" style="--lc: var(--c-yellow)">
+        <div class="layer-top"><span class="swatch"></span><span class="layer-name">YELLOW</span></div>
+        <div class="layer-where">born at · Permit System</div>
+        <div class="layer-fields">Approved working permit + worker docs (IC, passport, visa, certs, safety pledge).</div>
+      </div>
+
+      <div class="layer-card" style="--lc: var(--c-red)">
+        <div class="layer-top"><span class="swatch"></span><span class="layer-name">RED</span></div>
+        <div class="layer-where">born at · Pre-Onsite Mgmt</div>
+        <div class="layer-fields">Resourcing — onsite workers, lorry driver / supervisor, visual, scaffold, fabric, floor protection, client concerns.</div>
+      </div>
+
+      <div class="layer-card" style="--lc: var(--c-beige)">
+        <div class="layer-top"><span class="swatch"></span><span class="layer-name">BEIGE</span></div>
+        <div class="layer-where">born at · Factory Fabrication</div>
+        <div class="layer-fields">Fabrication time, date, worker arrangement + scope → feeds worker pay calc.</div>
+      </div>
+
+      <div class="layer-card" style="--lc: var(--c-pink)">
+        <div class="layer-top"><span class="swatch"></span><span class="layer-name">PINK</span></div>
+        <div class="layer-where">born at · Onsite Mgmt</div>
+        <div class="layer-fields">Evidence photos — dilapidation, in-progress, completed. Direct upload, editable at backend.</div>
+      </div>
+
+      <div class="layer-card" style="--lc: var(--c-grey)">
+        <div class="layer-top"><span class="swatch"></span><span class="layer-name">GREY</span></div>
+        <div class="layer-where">born at · Backend Reporting</div>
+        <div class="layer-fields">CIDB insertion data → manual CIMS submission summary.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PIPELINE -->
+  <section>
+    <h2 class="section-title">2 · The pipeline — one job, top to bottom</h2>
+    <p class="section-sub">Read each card: what it does, who owns it, which tool runs it, what colours it receives, and the one colour it adds.</p>
+
+    <div class="flow">
+
+      <!-- STAGE 0 -->
+      <div class="stage adds-none">
+        <div class="stage-head">
+          <div class="stage-no">0</div>
+          <div class="stage-main">
+            <div class="stage-title">Marketing / Demand</div>
+            <div class="stage-desc">Website + SEO · Google · <b>AEO (AI search)</b> · Social — Instagram, Facebook, LinkedIn, TikTok. Every channel pushes the lead toward one door.</div>
+          </div>
+          <div class="stage-side">
+            <span class="badge b-live">Live · mixed</span>
+            <div class="tool">Wix + Ad channels</div>
+          </div>
+        </div>
+      </div>
+      <div class="connector"><div class="line"></div><div class="arrow">▼</div></div>
+
+      <!-- STAGE 1 -->
+      <div class="stage adds-none">
+        <div class="stage-head">
+          <div class="stage-no">1</div>
+          <div class="stage-main">
+            <div class="stage-title">WATI Gateway — chatbot filter</div>
+            <div class="stage-desc">All channels divert here. Chatbot <b>filters & qualifies</b> leads, then routes the real ones into the CRM automatically.</div>
+          </div>
+          <div class="stage-side">
+            <span class="badge b-tbd">Method TBD</span>
+            <div class="tool">WATI (WhatsApp API)</div>
+          </div>
+        </div>
+      </div>
+      <div class="connector"><div class="line"></div><div class="arrow">▼</div></div>
+
+      <!-- STAGE 2 -->
+      <div class="stage adds-blue">
+        <div class="stage-head">
+          <div class="stage-no">2</div>
+          <div class="stage-main">
+            <div class="stage-title">CRM</div>
+            <div class="stage-desc">Auto-captures the qualified lead from WATI. This is where <b>BLUE is born</b> — the master client record everything else hangs off.</div>
+          </div>
+          <div class="stage-side">
+            <span class="badge b-soon">Coming soon</span>
+            <div class="tool">New system</div>
+          </div>
+        </div>
+        <div class="chips-row">
+          <div class="chips-block"><span class="chips-label">Adds →</span><span class="dchip add d-blue"><i></i>BLUE</span></div>
+        </div>
+      </div>
+      <div class="connector"><div class="line"></div><div class="arrow">▼</div></div>
+
+      <!-- STAGE 3 -->
+      <div class="stage adds-green">
+        <div class="stage-head">
+          <div class="stage-no">3</div>
+          <div class="stage-main">
+            <div class="stage-title">Smart Quotation — Commercial &amp; Project P&amp;L</div>
+            <div class="stage-desc">Auto-generates the quote from <b>lot no, lot size, scope, client + comms</b>. Holds the price list + every mall's hoarding measurements. Prompts commercial to check (must double-confirm if client supplies a drawing), then auto-sends quote <b>+ our stored measurement</b> via email / WATI — so any variation can be claimed back. On client <b>confirm</b>: manual invoice raised in Infotech, status flips to confirmed → fires the Job Confirmation List.</div>
+          </div>
+          <div class="stage-side">
+            <span class="badge b-live">Live</span>
+            <span class="badge b-enhance">Enhance: CRM link</span>
+            <div class="tool">Smart Quotation · Infotech (invoice, standalone)</div>
+          </div>
+        </div>
+        <div class="chips-row">
+          <div class="chips-block"><span class="chips-label">Reads</span><span class="dchip d-blue"><i></i>BLUE</span></div>
+          <div class="chips-block"><span class="chips-label">Adds →</span><span class="dchip add d-green"><i></i>GREEN</span></div>
+        </div>
+      </div>
+      <div class="connector"><div class="line"></div><div class="arrow">▼</div></div>
+
+      <!-- STAGE 4 -->
+      <div class="stage adds-turq">
+        <div class="stage-head">
+          <div class="stage-no">4</div>
+          <div class="stage-main">
+            <div class="stage-title">Job Confirmation List</div>
+            <div class="stage-desc">A tab inside Smart Quotation. Inherits BLUE + GREEN, lets the team key in <b>TURQUOISE</b>, and shows the live <b>job-progress status</b> from here on.</div>
+          </div>
+          <div class="stage-side">
+            <span class="badge b-live">Live</span>
+            <div class="tool">Smart Quotation (tab)</div>
+          </div>
+        </div>
+        <div class="chips-row">
+          <div class="chips-block"><span class="chips-label">Reads</span><span class="dchip d-blue"><i></i>BLUE</span><span class="dchip d-green"><i></i>GREEN</span></div>
+          <div class="chips-block"><span class="chips-label">Adds →</span><span class="dchip add d-turq"><i></i>TURQUOISE</span></div>
+        </div>
+      </div>
+      <div class="connector"><div class="line"></div><div class="arrow">▼</div></div>
+
+      <!-- STAGE 5 -->
+      <div class="stage adds-yellow">
+        <div class="stage-head">
+          <div class="stage-no">5</div>
+          <div class="stage-main">
+            <div class="stage-title">Permit, Mall Requirement &amp; Workers Library</div>
+            <div class="stage-desc">Stores every blank permit. Enhancement: <b>auto-fills the form from BLUE + GREEN</b>, pulls the worker name-list matching the job scope, and auto-emails the <b>filled permit + worker docs + Method Statement + HIRARC</b>. Building-side replies are amended in-system with <b>version control (v2, v3…)</b>. On approval, the approved permit (<b>YELLOW</b>) is uploaded onward.</div>
+          </div>
+          <div class="stage-side">
+            <span class="badge b-enhance">Enhance: auto-fill</span>
+            <div class="owner">👤 <b>Imrah</b></div>
+            <div class="tool">Permit system</div>
+          </div>
+        </div>
+        <div class="chips-row">
+          <div class="chips-block"><span class="chips-label">Reads</span><span class="dchip d-blue"><i></i>BLUE</span><span class="dchip d-green"><i></i>GREEN</span></div>
+          <div class="chips-block"><span class="chips-label">Adds →</span><span class="dchip add d-yellow"><i></i>YELLOW</span></div>
+        </div>
+      </div>
+      <div class="connector"><div class="line"></div><div class="arrow">▼</div></div>
+
+      <div class="branch-note">— splits into two parallel tracks —</div>
+      <div class="branch">
+
+        <!-- STAGE 6A -->
+        <div class="stage adds-red">
+          <div class="stage-head">
+            <div class="stage-no">6A</div>
+            <div class="stage-main">
+              <div class="stage-title">Pre-Onsite Mgmt</div>
+              <div class="stage-desc"><i>Hoarding &amp; visual track.</i> Adds <b>RED</b>: onsite worker arrangement, lorry driver / supervisor, visual to bring + who installs, scaffold, fabric, floor protection, extra client concerns.</div>
+            </div>
+          </div>
+          <div class="stage-side">
+            <span class="badge b-live">Live</span>
+            <div class="owner">👤 <b>Eason</b></div>
+          </div>
+          <div class="chips-row">
+            <div class="chips-block"><span class="chips-label">Reads</span><span class="dchip d-blue"><i></i></span><span class="dchip d-yellow"><i></i></span><span class="dchip d-green"><i></i></span></div>
+            <div class="chips-block"><span class="chips-label">Adds</span><span class="dchip add d-red"><i></i>RED</span></div>
+          </div>
+        </div>
+
+        <!-- STAGE 6B -->
+        <div class="stage adds-beige">
+          <div class="stage-head">
+            <div class="stage-no">6B</div>
+            <div class="stage-main">
+              <div class="stage-title">Factory Fabrication Mgmt</div>
+              <div class="stage-desc"><i>Workshop track.</i> Inherits GREEN + TURQUOISE, adds <b>BEIGE</b>: fabrication time, date, worker arrangement + job scope — the raw data the backend uses to calculate worker pay.</div>
+            </div>
+          </div>
+          <div class="stage-side">
+            <span class="badge b-live">Live</span>
+            <div class="owner">👤 <b>Sohel</b></div>
+          </div>
+          <div class="chips-row">
+            <div class="chips-block"><span class="chips-label">Reads</span><span class="dchip d-green"><i></i></span><span class="dchip d-turq"><i></i></span></div>
+            <div class="chips-block"><span class="chips-label">Adds</span><span class="dchip add d-beige"><i></i>BEIGE</span></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="connector"><div class="line"></div><div class="arrow">▼</div></div>
+
+      <!-- STAGE 7 -->
+      <div class="stage adds-pink">
+        <div class="stage-head">
+          <div class="stage-no">7</div>
+          <div class="stage-main">
+            <div class="stage-title">Onsite Mgmt</div>
+            <div class="stage-desc">The field stage. Inherits BLUE + GREEN + RED + YELLOW and captures <b>PINK</b>: dilapidation photos, in-progress photos, completed photos — uploaded direct from site, editable later at the backend.</div>
+          </div>
+          <div class="stage-side">
+            <span class="badge b-live">Live</span>
+            <div class="owner">👤 <b>Eason</b></div>
+            <div class="tool">Onsite system (mobile)</div>
+          </div>
+        </div>
+        <div class="chips-row">
+          <div class="chips-block"><span class="chips-label">Reads</span><span class="dchip d-blue"><i></i></span><span class="dchip d-green"><i></i></span><span class="dchip d-red"><i></i></span><span class="dchip d-yellow"><i></i></span></div>
+          <div class="chips-block"><span class="chips-label">Adds →</span><span class="dchip add d-pink"><i></i>PINK</span></div>
+        </div>
+      </div>
+      <div class="connector"><div class="line"></div><div class="arrow">▼</div></div>
+
+      <div class="branch-note">— converges into two outputs —</div>
+      <div class="branch">
+
+        <!-- STAGE 8A -->
+        <div class="stage adds-none">
+          <div class="stage-head">
+            <div class="stage-no">8A</div>
+            <div class="stage-main">
+              <div class="stage-title">Job Completion Report</div>
+              <div class="stage-desc">Straighten tilted photos, fix status / wording, auto spell-check, submit. Auto-emails the client from <b>BLUE + GREEN + RED + PINK + TURQUOISE</b>, and drops a <b>Wix blog + LinkedIn</b> draft in save-mode for you / team to post.</div>
+            </div>
+          </div>
+          <div class="stage-side">
+            <span class="badge b-live">Live</span>
+            <div class="owner">👤 <b>Katm</b></div>
+            <div class="tool">JCR system → Wix · LinkedIn</div>
+          </div>
+          <div class="chips-row">
+            <div class="chips-block"><span class="chips-label">Reads</span><span class="dchip d-blue"><i></i></span><span class="dchip d-green"><i></i></span><span class="dchip d-red"><i></i></span><span class="dchip d-pink"><i></i></span><span class="dchip d-turq"><i></i></span></div>
+          </div>
+        </div>
+
+        <!-- STAGE 8B -->
+        <div class="stage adds-grey">
+          <div class="stage-head">
+            <div class="stage-no">8B</div>
+            <div class="stage-main">
+              <div class="stage-title">Backend Reporting + Pay</div>
+              <div class="stage-desc">The vault. Adds <b>GREY</b> (CIDB) → generates the summary your team follows to submit to <b>CIDB CIMS</b> manually. Stores all job arrangement, who worked (driver / supervisor / workers), time + date, scope, site, subcon &amp; supplier, worker pay, and <b>project P&amp;L</b>.</div>
+            </div>
+          </div>
+          <div class="stage-side">
+            <span class="badge b-live">Live</span>
+            <div class="owner">👤 <b>Afiqah / Ainaa</b></div>
+            <div class="tool">Backend system → CIMS (manual)</div>
+          </div>
+          <div class="chips-row">
+            <div class="chips-block"><span class="chips-label">Reads</span><span class="dchip d-blue"><i></i></span><span class="dchip d-red"><i></i></span><span class="dchip d-beige"><i></i></span><span class="dchip d-green"><i></i></span><span class="dchip d-turq"><i></i></span></div>
+            <div class="chips-block"><span class="chips-label">Adds</span><span class="dchip add d-grey"><i></i>GREY</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CYCLE -->
+      <div class="cycle">
+        <div class="ico">🔁</div>
+        <p><b>The whole cycle repeats per job.</b> Backend P&amp;L + completion proof feed the next quote and the next marketing post — the loop closes back to Stage 0.</p>
+      </div>
+
+    </div>
+
+    <p class="note"><b>Tools today:</b> systems are your own builds (Sheet + Apps Script), used in place of ClickUp + Odoo · WATI method still being decided · Infotech invoicing + CIDB CIMS still manual.<br>
+    <b>Owner names</b> (Imrah, Eason, Sohel, Katm, Afiqah, Ainaa) are read from your sketch — tell me any that are wrong and I'll correct.</p>
+  </section>
+
+</div>
+</body>
+</html>

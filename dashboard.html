@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Black Lee — Daily Site Tracking Dashboard</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #141926;
+    --surface-2: #1c2335;
+    --border: #2a3245;
+    --text: #ffffff;
+    --text-dim: #a0a8b8;
+    --accent: #f59e0b;
+    --accent-hover: #d97706;
+    --accent-soft: rgba(245, 158, 11, 0.12);
+    --green: #22c55e;
+    --green-soft: rgba(34, 197, 94, 0.15);
+    --red: #ef4444;
+    --red-soft: rgba(239, 68, 68, 0.15);
+    --blue: #3b82f6;
+    --blue-soft: rgba(59, 130, 246, 0.15);
+    --grey: #6b7280;
+    --grey-soft: rgba(107, 114, 128, 0.18);
+    --radius: 12px;
+    --shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .container { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
+
+  /* HEADER */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 20px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+  .brand {
+    font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em;
+  }
+  .brand span { color: var(--accent); }
+  .brand .sub {
+    display: block;
+    font-size: 0.8rem; font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 0;
+    margin-top: 2px;
+  }
+  .meta {
+    display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
+  }
+  .meta-item .num {
+    font-size: 1.6rem; font-weight: 800; color: var(--accent);
+    line-height: 1;
+  }
+  .meta-item .lbl {
+    font-size: 0.75rem; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px;
+  }
+  .date-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+  }
+
+  /* ACTIONS BAR */
+  .actions {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: transform 0.1s, background 0.2s;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--accent); color: #0a0e1a; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-ghost {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface-2); border-color: var(--accent); }
+  .btn-danger {
+    background: var(--surface);
+    color: var(--red);
+    border: 1px solid var(--border);
+  }
+  .btn-danger:hover { border-color: var(--red); }
+  .btn-sm { padding: 6px 12px; font-size: 0.85rem; }
+
+  /* EMPTY STATE */
+  .empty {
+    text-align: center;
+    padding: 80px 20px;
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    color: var(--text-dim);
+  }
+  .empty h3 { color: var(--text); margin-bottom: 8px; }
+
+  /* SITE CARDS */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .card-head {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  }
+  .card-title {
+    font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em;
+  }
+  .card-sub {
+    font-size: 0.85rem; color: var(--text-dim); margin-top: 2px;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .badge-green { background: var(--green-soft); color: var(--green); border-color: var(--green); }
+  .badge-red   { background: var(--red-soft);   color: var(--red);   border-color: var(--red); }
+  .badge-blue  { background: var(--blue-soft);  color: var(--blue);  border-color: var(--blue); }
+  .badge-grey  { background: var(--grey-soft);  color: var(--grey);  border-color: var(--grey); }
+
+  .field-row {
+    font-size: 0.92rem;
+  }
+  .field-row .k {
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .field-row .v {
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+  .field-row .v.dim { color: var(--text-dim); font-style: italic; }
+
+  .progress {
+    height: 8px; background: var(--bg);
+    border-radius: 999px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .progress-fill {
+    height: 100%; background: var(--accent);
+    transition: width 0.3s;
+  }
+  .progress-row {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.85rem; color: var(--text-dim);
+  }
+  .progress-row .progress { flex: 1; }
+
+  .card-actions {
+    display: flex; gap: 8px; margin-top: 4px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* MODAL */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: flex-start; justify-content: center;
+    padding: 40px 20px;
+    z-index: 1000;
+    overflow-y: auto;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    width: 100%; max-width: 640px;
+    box-shadow: var(--shadow);
+  }
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .modal-head h2 { font-size: 1.3rem; }
+  .x-btn {
+    background: transparent; border: none; color: var(--text-dim);
+    font-size: 1.4rem; cursor: pointer; line-height: 1;
+  }
+  .x-btn:hover { color: var(--text); }
+
+  /* FORM */
+  .form-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  .form-grid .full { grid-column: 1 / -1; }
+  @media (max-width: 540px) { .form-grid { grid-template-columns: 1fr; } }
+  .form-field label {
+    display: block;
+    font-weight: 600; font-size: 0.85rem; margin-bottom: 6px;
+  }
+  .form-field input,
+  .form-field textarea,
+  .form-field select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 11px 13px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+  .form-field input:focus,
+  .form-field textarea:focus,
+  .form-field select:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .form-field textarea { resize: vertical; min-height: 70px; }
+  .form-foot {
+    display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  /* REPORT MODAL */
+  .report-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    font-family: 'Courier New', Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--text);
+    white-space: pre-wrap;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--green);
+    color: #06120a;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-weight: 700;
+    box-shadow: 0 10px 30px rgba(34, 197, 94, 0.4);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 2000;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="topbar">
+    <div>
+      <div class="brand">Black Lee<span>.</span>
+        <span class="sub">Daily Site Tracking Dashboard</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="date-pill" id="todayDate">—</div>
+      <div class="meta-item"><div class="num" id="cntActive">0</div><div class="lbl">Active</div></div>
+      <div class="meta-item"><div class="num" id="cntDelayed">0</div><div class="lbl">Delayed</div></div>
+      <div class="meta-item"><div class="num" id="cntWaiting">0</div><div class="lbl">Awaiting</div></div>
+      <div class="meta-item"><div class="num" id="cntDone">0</div><div class="lbl">Done</div></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" onclick="openAdd()">+ Add Site</button>
+    <button class="btn btn-ghost" onclick="openReport()">📋 Generate Daily Report</button>
+    <button class="btn btn-ghost" onclick="loadSample()">🧪 Load Sample Data</button>
+    <button class="btn btn-danger" onclick="clearAll()">🗑 Clear All</button>
+  </div>
+
+  <div id="board"></div>
+
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-bg" id="formModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="formTitle">Add Site</h2>
+      <button class="x-btn" onclick="closeForm()">✕</button>
+    </div>
+    <form id="siteForm" onsubmit="return saveSite(event)">
+      <input type="hidden" id="fId" />
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="fClient">Client / Site</label>
+          <input type="text" id="fClient" required placeholder="e.g. ABC Sdn Bhd" />
+        </div>
+        <div class="form-field">
+          <label for="fProject">Project / Location</label>
+          <input type="text" id="fProject" placeholder="e.g. KL Tower lvl 12 fit-out" />
+        </div>
+        <div class="form-field">
+          <label for="fStatus">Status</label>
+          <select id="fStatus" required>
+            <option value="in_progress">🟢 In Progress</option>
+            <option value="delayed">🔴 Delayed</option>
+            <option value="awaiting_client">🔵 Awaiting Client</option>
+            <option value="completed">⚫ Completed</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="fPercent">% Complete</label>
+          <input type="number" id="fPercent" min="0" max="100" value="0" />
+        </div>
+        <div class="form-field full">
+          <label for="fToday">Today's work done</label>
+          <textarea id="fToday" placeholder="e.g. Hoarding install 80m completed"></textarea>
+        </div>
+        <div class="form-field full">
+          <label for="fTomorrow">Tomorrow's plan</label>
+          <textarea id="fTomorrow" placeholder="e.g. Visual tarpaulin paste"></textarea>
+        </div>
+        <div class="form-field full">
+          <label for="fIssues">Issues / Blockers</label>
+          <textarea id="fIssues" placeholder="e.g. Sliding door — supplier delay"></textarea>
+        </div>
+        <div class="form-field full">
+          <label for="fActions">Action items (one per line)</label>
+          <textarea id="fActions" placeholder="Chase supplier on sliding door
+Get design confirmation from client"></textarea>
+        </div>
+      </div>
+      <div class="form-foot">
+        <button type="button" class="btn btn-ghost" onclick="closeForm()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Site</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal-bg" id="reportModal">
+  <div class="modal" style="max-width: 760px;">
+    <div class="modal-head">
+      <h2>📋 Daily Hoarding Tracking Report</h2>
+      <button class="x-btn" onclick="closeReport()">✕</button>
+    </div>
+    <div class="report-box" id="reportText">—</div>
+    <div class="form-foot">
+      <button class="btn btn-ghost" onclick="closeReport()">Close</button>
+      <button class="btn btn-primary" onclick="copyReport()">📋 Copy to Clipboard</button>
+      <button class="btn btn-ghost" onclick="sendReportWA()">💬 Send via WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+  const KEY = 'bl_sites_v1';
+  const STATUS = {
+    in_progress:    { label: 'In Progress',    cls: 'badge-green' },
+    delayed:        { label: 'Delayed',        cls: 'badge-red' },
+    awaiting_client:{ label: 'Awaiting Client', cls: 'badge-blue' },
+    completed:      { label: 'Completed',      cls: 'badge-grey' },
+  };
+
+  function getSites() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+    catch { return []; }
+  }
+  function setSites(arr) {
+    localStorage.setItem(KEY, JSON.stringify(arr));
+  }
+
+  function todayStr() {
+    const d = new Date();
+    return d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  function todayShort() {
+    const d = new Date();
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  function render() {
+    document.getElementById('todayDate').textContent = todayStr();
+    const sites = getSites();
+
+    const cnt = { in_progress: 0, delayed: 0, awaiting_client: 0, completed: 0 };
+    sites.forEach(s => { cnt[s.status] = (cnt[s.status] || 0) + 1; });
+    document.getElementById('cntActive').textContent  = cnt.in_progress;
+    document.getElementById('cntDelayed').textContent = cnt.delayed;
+    document.getElementById('cntWaiting').textContent = cnt.awaiting_client;
+    document.getElementById('cntDone').textContent    = cnt.completed;
+
+    const board = document.getElementById('board');
+    if (sites.length === 0) {
+      board.innerHTML = `
+        <div class="empty">
+          <h3>No sites yet lah.</h3>
+          <p>Click <strong>+ Add Site</strong> to start tracking — or hit <strong>🧪 Load Sample Data</strong> to see how it works first.</p>
+        </div>`;
+      return;
+    }
+
+    board.innerHTML = '<div class="grid">' + sites.map(siteCard).join('') + '</div>';
+  }
+
+  function siteCard(s) {
+    const st = STATUS[s.status] || STATUS.in_progress;
+    return `
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">${escapeHtml(s.client)}</div>
+            ${s.project ? `<div class="card-sub">${escapeHtml(s.project)}</div>` : ''}
+          </div>
+          <span class="badge ${st.cls}">${st.label}</span>
+        </div>
+
+        <div class="field-row">
+          <div class="k">Today's Work</div>
+          <div class="v ${s.todayWork ? '' : 'dim'}">${escapeHtml(s.todayWork) || '—'}</div>
+        </div>
+
+        <div class="field-row">
+          <div class="k">Tomorrow's Plan</div>
+          <div class="v ${s.tomorrowPlan ? '' : 'dim'}">${escapeHtml(s.tomorrowPlan) || '—'}</div>
+        </div>
+
+        ${s.issues ? `
+        <div class="field-row">
+          <div class="k">⚠️ Issues</div>
+          <div class="v">${escapeHtml(s.issues)}</div>
+        </div>` : ''}
+
+        ${s.actions ? `
+        <div class="field-row">
+          <div class="k">🚨 Action Items</div>
+          <div class="v">${escapeHtml(s.actions)}</div>
+        </div>` : ''}
+
+        <div class="progress-row">
+          <span>${s.percent || 0}%</span>
+          <div class="progress"><div class="progress-fill" style="width:${s.percent || 0}%"></div></div>
+        </div>
+
+        <div class="card-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openEdit('${s.id}')">✏️ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteSite('${s.id}')">🗑 Delete</button>
+        </div>
+      </div>`;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  function openAdd() {
+    document.getElementById('formTitle').textContent = 'Add Site';
+    document.getElementById('siteForm').reset();
+    document.getElementById('fId').value = '';
+    document.getElementById('fPercent').value = 0;
+    document.getElementById('formModal').classList.add('open');
+  }
+  function openEdit(id) {
+    const s = getSites().find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('formTitle').textContent = 'Edit Site';
+    document.getElementById('fId').value = s.id;
+    document.getElementById('fClient').value = s.client || '';
+    document.getElementById('fProject').value = s.project || '';
+    document.getElementById('fStatus').value = s.status || 'in_progress';
+    document.getElementById('fPercent').value = s.percent || 0;
+    document.getElementById('fToday').value = s.todayWork || '';
+    document.getElementById('fTomorrow').value = s.tomorrowPlan || '';
+    document.getElementById('fIssues').value = s.issues || '';
+    document.getElementById('fActions').value = s.actions || '';
+    document.getElementById('formModal').classList.add('open');
+  }
+  function closeForm() {
+    document.getElementById('formModal').classList.remove('open');
+  }
+
+  function saveSite(e) {
+    e.preventDefault();
+    const id = document.getElementById('fId').value || ('s_' + Date.now());
+    const sites = getSites();
+    const idx = sites.findIndex(x => x.id === id);
+    const site = {
+      id,
+      client: document.getElementById('fClient').value.trim(),
+      project: document.getElementById('fProject').value.trim(),
+      status: document.getElementById('fStatus').value,
+      percent: parseInt(document.getElementById('fPercent').value, 10) || 0,
+      todayWork: document.getElementById('fToday').value.trim(),
+      tomorrowPlan: document.getElementById('fTomorrow').value.trim(),
+      issues: document.getElementById('fIssues').value.trim(),
+      actions: document.getElementById('fActions').value.trim(),
+      updatedAt: new Date().toISOString(),
+    };
+    if (idx >= 0) sites[idx] = site;
+    else sites.push(site);
+    setSites(sites);
+    closeForm();
+    render();
+    showToast(idx >= 0 ? 'Updated.' : 'Site added.');
+    return false;
+  }
+
+  function deleteSite(id) {
+    if (!confirm('Delete this site from the tracker?')) return;
+    setSites(getSites().filter(x => x.id !== id));
+    render();
+    showToast('Deleted.');
+  }
+
+  function clearAll() {
+    if (!confirm('Clear ALL sites? Cannot undo lah.')) return;
+    setSites([]);
+    render();
+    showToast('All cleared.');
+  }
+
+  /* REPORT GENERATION */
+  function buildReport() {
+    const sites = getSites();
+    if (sites.length === 0) return 'No sites to report.';
+
+    const cnt = { in_progress: 0, delayed: 0, awaiting_client: 0, completed: 0 };
+    sites.forEach(s => { cnt[s.status] = (cnt[s.status] || 0) + 1; });
+
+    const lines = [];
+    lines.push('📋 DAILY HOARDING TRACKING REPORT — ' + todayShort());
+    lines.push('');
+    lines.push('═══════════════════════════════════════════════════');
+    lines.push('');
+
+    sites.forEach((s, i) => {
+      const st = STATUS[s.status] || STATUS.in_progress;
+      lines.push('SITE ' + (i + 1) + ' — ' + s.client + (s.project ? '  (' + s.project + ')' : ''));
+      lines.push('Status:       ' + st.label.toUpperCase());
+      lines.push('Today:        ' + (s.todayWork || '—'));
+      lines.push('Tomorrow:     ' + (s.tomorrowPlan || '—'));
+      if (s.issues) lines.push('Issues:       ' + s.issues);
+      lines.push('% Complete:   ' + (s.percent || 0) + '%');
+      lines.push('───────────────────────────────────────────────────');
+    });
+
+    const allActions = sites
+      .filter(s => s.actions && s.actions.trim())
+      .map(s => ({ client: s.client, lines: s.actions.split('\n').filter(l => l.trim()) }));
+
+    if (allActions.length) {
+      lines.push('');
+      lines.push('🚨 ACTION REQUIRED:');
+      let n = 1;
+      allActions.forEach(a => {
+        a.lines.forEach(line => {
+          lines.push(n + '. [' + a.client + '] ' + line.trim());
+          n++;
+        });
+      });
+    }
+
+    lines.push('');
+    lines.push('📊 SUMMARY:');
+    lines.push('- ' + sites.length + ' sites total');
+    if (cnt.in_progress)      lines.push('- ' + cnt.in_progress + ' active');
+    if (cnt.delayed)          lines.push('- ' + cnt.delayed + ' delayed');
+    if (cnt.awaiting_client)  lines.push('- ' + cnt.awaiting_client + ' awaiting client');
+    if (cnt.completed)        lines.push('- ' + cnt.completed + ' completed');
+
+    return lines.join('\n');
+  }
+
+  function openReport() {
+    document.getElementById('reportText').textContent = buildReport();
+    document.getElementById('reportModal').classList.add('open');
+  }
+  function closeReport() {
+    document.getElementById('reportModal').classList.remove('open');
+  }
+  function copyReport() {
+    const text = document.getElementById('reportText').textContent;
+    navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
+  }
+  function sendReportWA() {
+    const text = document.getElementById('reportText').textContent;
+    const url = 'https://wa.me/?text=' + encodeURIComponent(text);
+    window.open(url, '_blank');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  /* SAMPLE DATA — based on the Lesson 1 proof moment */
+  function loadSample() {
+    if (getSites().length && !confirm('This will replace existing data. Continue?')) return;
+    const sample = [
+      {
+        id: 's_sample_1',
+        client: 'ABC Sdn Bhd',
+        project: 'KL high-rise hoarding',
+        status: 'in_progress',
+        percent: 60,
+        todayWork: 'Hoarding install — 80m completed',
+        tomorrowPlan: 'Visual tarpaulin paste',
+        issues: 'Minor injury reported — no work stoppage',
+        actions: '',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 's_sample_2',
+        client: 'XYZ Construction',
+        project: 'Mall lvl 2 fit-out',
+        status: 'delayed',
+        percent: 40,
+        todayWork: 'Counterweight delivered, 50% installed',
+        tomorrowPlan: 'Complete counterweight installation',
+        issues: 'Sliding door — supplier delay',
+        actions: 'Chase supplier on sliding door delivery',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 's_sample_3',
+        client: 'DEF Builders',
+        project: 'Office reinstatement',
+        status: 'awaiting_client',
+        percent: 55,
+        todayWork: 'Reinstatement tiling — 60% done',
+        tomorrowPlan: 'Continue tiling',
+        issues: 'Plaster ceiling — awaiting client design',
+        actions: 'Get design confirmation from DEF Builders on plaster ceiling',
+        updatedAt: new Date().toISOString(),
+      },
+    ];
+    setSites(sample);
+    render();
+    showToast('Sample loaded.');
+  }
+
+  /* CLOSE MODAL ON BG CLICK */
+  document.querySelectorAll('.modal-bg').forEach(bg => {
+    bg.addEventListener('click', e => {
+      if (e.target === bg) bg.classList.remove('open');
+    });
+  });
+
+  render();
+</script>
+
+</body>
+</html>

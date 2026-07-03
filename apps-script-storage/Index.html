@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<base target="_top">
+<style>
+  :root{
+    --bg:#0a0e1a; --panel:#141926; --panel2:#1c2335; --line:#2a3245;
+    --ink:#ffffff; --mut:#a0a8b8; --acc:#f59e0b; --acc2:#d97706;
+    --acc-soft:rgba(245,158,11,0.12);
+    --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --blue:#3b82f6; --chip:#1c2335;
+    --radius:14px; --shadow:0 10px 40px rgba(0,0,0,0.4);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:var(--acc)}
+  header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:16px;padding:14px 22px;flex-wrap:wrap}
+  .brand-block{display:flex;align-items:center;gap:14px}
+  .brand-logo{width:46px;height:46px;background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:12px;
+    display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:#0a0e1a;font-weight:900;letter-spacing:.02em}
+  .brand-name{font-size:1.15rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1}
+  .brand-sub{font-size:.8rem;color:var(--mut);margin-top:2px}
+  header .meta-pills{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  header .mpill{background:var(--bg);border:1px solid var(--line);padding:8px 14px;border-radius:999px;
+    font-size:.82rem;color:var(--mut);display:flex;align-items:center;gap:7px}
+  header .mpill strong{color:var(--ink);font-weight:700}
+  nav{display:flex;gap:6px;flex-wrap:wrap;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);
+    position:sticky;top:75px;z-index:19}
+  nav button{background:transparent;border:1px solid transparent;color:var(--mut);padding:8px 15px;border-radius:10px;
+    cursor:pointer;font-size:13px;font-weight:600;font-family:inherit}
+  nav button.active{background:var(--acc);color:#0a0e1a}
+  nav button:hover:not(.active){background:var(--panel2);color:var(--ink);border-color:var(--line)}
+  main{padding:24px;max-width:1280px;margin:0 auto}
+  .view{display:none}.view.active{display:block}
+  h2{font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;margin:0 0 16px}
+  h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:var(--acc);margin:18px 0 8px;font-weight:700}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+  .row{display:flex;gap:14px;flex-wrap:wrap}.row>*{flex:1;min-width:150px}
+  label{display:block;font-size:.82rem;color:var(--mut);margin:0 0 6px;font-weight:600}
+  input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);
+    border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
+  textarea{resize:vertical;min-height:54px}
+  button.btn{display:inline-flex;align-items:center;gap:8px;background:var(--acc);color:#0a0e1a;border:none;border-radius:10px;
+    padding:11px 18px;font-weight:700;cursor:pointer;font-size:14px;font-family:inherit;transition:transform .1s,background .2s}
+  button.btn:hover{background:var(--acc2)}button.btn:active{transform:translateY(1px)}
+  button.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+  button.ghost:hover{background:var(--panel2);border-color:var(--acc)}
+  button.sm{padding:6px 11px;font-size:12px;border-radius:8px}
+  button.danger{background:transparent;border:1px solid var(--bad);color:#fca5a5}
+  button.danger:hover{background:rgba(239,68,68,.12)}
+  button.okbtn{background:var(--ok);color:#04240f}button.okbtn:hover{filter:brightness(1.1)}
+  .muted{color:var(--mut)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:8px;border-bottom:1px solid var(--line)}
+  td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:hover td{background:var(--panel2)}
+  .right{text-align:right}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+  .p-Active,.p-Paid{background:#14432a;color:#86efac}
+  .p-Expiring,.p-Partial{background:#4a3a12;color:#fcd34d}
+  .p-Expired,.p-Overdue{background:#4c1d24;color:#fca5a5}
+  .p-Vacated,.p-Released,.p-Void{background:var(--line);color:var(--mut)}
+  .p-SoldOff{background:#0a0e1a;color:#fff;border:1px solid var(--line)}
+  .p-Internal{background:#1e3a5f;color:#93c5fd}
+  .p-Unpaid{background:#374151;color:#d1d5db}
+  .tag{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:11px;color:var(--mut)}
+  .alert{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:9px;margin-bottom:6px;font-size:13px;cursor:pointer}
+  .alert.expired{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4)}
+  .alert.expiring{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4)}
+  .stat{flex:1;min-width:130px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px;transition:border-color .2s}
+  .stat:hover{border-color:var(--acc)}
+  .stat .n{font-size:1.6rem;font-weight:800;color:var(--acc)}
+  .stat .n.bad{color:var(--bad)}.stat .n.ok{color:var(--ok)}
+  .stat .l{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .toolbar input,.toolbar select{width:auto;flex:0 0 auto}
+  .hint{font-size:12px;color:var(--mut);margin-top:3px}
+  /* lot board */
+  .zone{margin-bottom:16px}
+  .zone h3{margin:0 0 8px}
+  .lots{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+  .lot{border:1px solid var(--line);border-radius:10px;padding:11px;cursor:pointer;background:var(--panel2);position:relative;transition:.15s}
+  .lot:hover{border-color:var(--acc)}
+  .lot.occ{border-left:4px solid var(--bad)}.lot.avail{border-left:4px solid var(--ok)}.lot.int{border-left:4px solid var(--blue)}
+  .lot .id{font-weight:800;font-size:15px}
+  .lot .meta{font-size:11px;color:var(--mut);margin-top:2px}
+  .ltag{font-size:9px;font-weight:800;padding:2px 7px;border-radius:99px;position:absolute;top:9px;right:9px;letter-spacing:.03em}
+  .ltag.avail{background:#14432a;color:#86efac}.ltag.occ{background:#4c1d24;color:#fca5a5}.ltag.int{background:#1e3a5f;color:#93c5fd}
+  .photos{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .photos a img{height:64px;border-radius:6px;border:1px solid var(--line)}
+  .kv{width:100%}.kv td{padding:6px 8px;border-bottom:1px solid var(--line)}.kv td.k{color:var(--mut);width:170px}
+  /* modal */
+  dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);padding:0;max-width:860px;width:94%;box-shadow:var(--shadow)}
+  dialog::backdrop{background:rgba(0,0,0,.75);backdrop-filter:blur(6px)}
+  .modal-h{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .modal-h h2{margin:0;font-size:1.15rem}
+  .modal-h .x{margin-left:auto;background:none;border:none;color:var(--mut);font-size:22px;cursor:pointer}
+  .modal-b{padding:18px;max-height:74vh;overflow:auto}
+  .modal-f{display:flex;gap:8px;justify-content:flex-end;padding:14px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000;border:1px solid var(--line);
+    padding:11px 18px;border-radius:10px;z-index:100;display:none;max-width:90%}
+  #toast.bad{border-color:var(--bad)}#toast.ok{border-color:var(--ok)}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--mut);border-top-color:var(--acc);border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .dz{border:1.5px dashed var(--line);border-radius:9px;padding:12px;text-align:center;cursor:pointer;background:var(--panel2);transition:.15s}
+  .dz:hover,.dz.over{border-color:var(--acc);background:var(--acc-soft)}
+  .dz-files{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;justify-content:center}
+  .dz-chip{background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:11px}
+  .dz-chip b{color:var(--bad);cursor:pointer;margin-left:4px;font-weight:700}
+  .totbar{display:flex;gap:18px;justify-content:flex-end;align-items:baseline;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+  .totbar .big{font-size:20px;font-weight:800;color:var(--acc)}
+  .clientOnly,.internalOnly{display:block}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand-block">
+    <div class="brand-logo">BL</div>
+    <div>
+      <div class="brand-name">Temporary Storage Rental</div>
+      <div class="brand-sub">Black Lee · HG Group</div>
+    </div>
+  </div>
+  <div class="meta-pills">
+    <div class="mpill" id="dateNow">—</div>
+    <div class="mpill">👤 <strong id="who">…</strong></div>
+  </div>
+</header>
+<nav id="nav"></nav>
+<main>
+  <div class="view active" id="v-dash"></div>
+  <div class="view" id="v-board"></div>
+  <div class="view" id="v-rentals"></div>
+  <div class="view" id="v-invoices"></div>
+  <div class="view" id="v-reports"></div>
+  <div class="view" id="v-lots"></div>
+  <div class="view" id="v-audit"></div>
+</main>
+
+<dialog id="modal">
+  <div class="modal-h"><h2 id="m-title">…</h2><button class="x" onclick="closeModal()">×</button></div>
+  <div class="modal-b" id="m-body"></div>
+  <div class="modal-f" id="m-foot"></div>
+</dialog>
+<dialog id="modal2">
+  <div class="modal-h"><h2 id="m2-title">…</h2><button class="x" onclick="closeModal2()">×</button></div>
+  <div class="modal-b" id="m2-body"></div>
+  <div class="modal-f" id="m2-foot"></div>
+</dialog>
+<div id="toast"></div>
+
+<script>
+/* ===================== STATE ===================== */
+var DB={lots:[],rentals:[],invoices:[],payments:[],config:{},stats:{},alerts:[],currentUser:'',sstRate:0.06,today:''};
+var TABS=[['dash','Dashboard'],['board','Availability'],['rentals','Rentals'],['invoices','Invoices & Payments'],['reports','Reports'],['lots','Lots'],['audit','Audit Log']];
+var RENTAL_LABEL={Active:'Active',Expiring:'Expiring',Expired:'Expired',Vacated:'Vacated',SoldOff:'Sold off',Internal:'Internal',Released:'Released'};
+var INV_LABEL={Paid:'Paid',Partial:'Partial',Unpaid:'Unpaid',Overdue:'Overdue',Void:'Void'};
+
+/* ===================== BRIDGE / HELPERS ===================== */
+function call(fn,args){return new Promise(function(res,rej){
+  var run=google.script.run.withSuccessHandler(res).withFailureHandler(rej);
+  if(typeof run[fn]!=='function'){rej(new Error('Server function "'+fn+'" not found — the Apps Script Code.gs is out of date. Re-paste the latest Code.gs, Save, then redeploy: Deploy → Manage deployments → Edit (pencil) → Version: New version → Deploy.'));return;}
+  run[fn].apply(run,args||[]);
+});}
+function toast(msg,kind){var t=document.getElementById('toast');t.textContent=msg;t.className=kind||'';t.style.display='block';clearTimeout(t._t);t._t=setTimeout(function(){t.style.display='none';},kind==='bad'?5200:2600);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function rm(n){return 'RM '+(Number(n)||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function num(n){return (Number(n)||0).toLocaleString('en-MY',{maximumFractionDigits:2});}
+function pill(s,lbl){return '<span class="pill p-'+s+'">'+((lbl||{})[s]||s)+'</span>';}
+function rpill(s){return pill(s,RENTAL_LABEL);}
+function ipill(s){return pill(s,INV_LABEL);}
+function field(lbl,inner){return '<div><label>'+lbl+'</label>'+inner+'</div>';}
+function stat(n,l,cls){return '<div class="stat"><div class="n '+(cls||'')+'">'+n+'</div><div class="l">'+l+'</div></div>';}
+function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+function today(){return DB.today||new Date().toISOString().slice(0,10);}
+
+function openModal(t,b,f){document.getElementById('m-title').innerHTML=t;document.getElementById('m-body').innerHTML=b;document.getElementById('m-foot').innerHTML=f||'';document.getElementById('modal').showModal();}
+function closeModal(){document.getElementById('modal').close();}
+function openModal2(t,b,f){document.getElementById('m2-title').innerHTML=t;document.getElementById('m2-body').innerHTML=b;document.getElementById('m2-foot').innerHTML=f||'';document.getElementById('modal2').showModal();}
+function closeModal2(){document.getElementById('modal2').close();}
+
+/* dropzone (multi photo) */
+var DROPS={};
+function dz(id,multiple,accept,label){DROPS[id]={files:[],multiple:!!multiple};
+  return '<div class="dz" id="dz-'+id+'" ondragover="dzOver(event,\''+id+'\')" ondragleave="dzLeave(\''+id+'\')" ondrop="dzDrop(event,\''+id+'\')" onclick="document.getElementById(\'dzi-'+id+'\').click()">'+
+    '<input type="file" id="dzi-'+id+'" '+(multiple?'multiple':'')+' accept="'+(accept||'')+'" style="display:none" onchange="dzPick(\''+id+'\',this.files)">'+
+    '<div class="hint">'+(label||'Drag here or click to upload')+'</div><div class="dz-files" id="dzf-'+id+'"></div></div>';}
+function dzOver(e,id){e.preventDefault();var el=document.getElementById('dz-'+id);if(el)el.classList.add('over');}
+function dzLeave(id){var el=document.getElementById('dz-'+id);if(el)el.classList.remove('over');}
+function dzDrop(e,id){e.preventDefault();dzLeave(id);dzPick(id,e.dataTransfer.files);}
+function dzPick(id,fl){var d=DROPS[id];if(!d)return;var arr=Array.prototype.slice.call(fl);d.files=d.multiple?d.files.concat(arr):arr.slice(0,1);dzRender(id);}
+function dzRender(id){var d=DROPS[id];var el=document.getElementById('dzf-'+id);if(!el)return;el.innerHTML=d.files.map(function(f,i){return '<span class="dz-chip">'+esc(f.name)+'<b onclick="event.stopPropagation();dzRemove(\''+id+'\','+i+')">×</b></span>';}).join('');}
+function dzRemove(id,i){DROPS[id].files.splice(i,1);dzRender(id);}
+function fileB64(f){return new Promise(function(res){var r=new FileReader();r.onload=function(){res({base64:r.result,mime:f.type||'application/octet-stream',name:f.name});};r.readAsDataURL(f);});}
+function dzAll(id){return Promise.all(((DROPS[id]&&DROPS[id].files)||[]).map(fileB64));}
+function dzOne(id){var fs=(DROPS[id]&&DROPS[id].files)||[];return fs.length?fileB64(fs[0]):Promise.resolve(null);}
+
+/* ===================== BOOT ===================== */
+function boot(){
+  buildNav();
+  call('bootstrap').then(function(d){
+    DB=d;document.getElementById('who').textContent=d.currentUser;
+    try{document.getElementById('dateNow').textContent=new Date(d.serverTime.replace(' ','T')).toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'});}catch(_){}
+    renderAll();
+  }).catch(function(e){document.getElementById('v-dash').innerHTML='<div class="card">⚠️ '+esc(e.message||e)+'</div>';});
+}
+function buildNav(){var n=document.getElementById('nav');n.innerHTML=TABS.map(function(t,i){return '<button data-t="'+t[0]+'"'+(i===0?' class="active"':'')+'>'+t[1]+'</button>';}).join('');
+  n.querySelectorAll('button').forEach(function(b){b.onclick=function(){show(b.dataset.t);};});}
+function show(t){document.querySelectorAll('nav button').forEach(function(b){b.classList.toggle('active',b.dataset.t===t);});
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});document.getElementById('v-'+t).classList.add('active');
+  if(t==='audit')renderAudit();}
+function renderAll(){renderDash();renderBoard();renderRentals();renderInvoices();renderReports();renderLots();}
+function refresh(d){if(d)DB=d;renderAll();}
+
+/* ===================== DASHBOARD ===================== */
+function renderDash(){
+  var s=DB.stats;
+  var alerts=DB.alerts.length?DB.alerts.map(function(a){
+    var icon=a.level==='expired'?'⛔':'⚠️';
+    var lbl=a.kind==='invoice'?'Invoice':'Rental';
+    var fn=a.kind==='invoice'?'openInvoice':'openRental';
+    return '<div class="alert '+a.level+'" onclick="'+fn+'(\''+a.id+'\')">'+icon+' <b>'+lbl+' · '+esc(a.who)+'</b> — '+esc(a.msg)+'</div>';
+  }).join(''):'<div class="muted">No expiring rentals or overdue invoices. ✅</div>';
+
+  document.getElementById('v-dash').innerHTML=
+    '<h2>Dashboard <button class="ghost sm" style="float:right" onclick="settingsForm()">⚙ Settings</button></h2>'+
+    '<div class="row" style="margin-bottom:14px">'+
+      stat(s.occupancyPct+'%','Occupancy')+stat(s.free,'Lots free','ok')+stat(s.occupied,'Client-occupied')+stat(s.internal,'Internal (HG)')+
+    '</div>'+
+    '<div class="row" style="margin-bottom:14px">'+
+      stat(rm(s.mrr),'Monthly recurring')+
+      stat(rm(s.outstanding),'Outstanding',s.outstanding>0?'bad':'')+
+      stat(s.overdueCount,'Overdue invoices',s.overdueCount>0?'bad':'')+
+      stat(rm(s.collectedThisMonth),'Collected this month','ok')+
+      stat(rm(s.deposits),'Deposits held')+
+    '</div>'+
+    '<div class="card"><h3 style="margin-top:0">⏰ Renewal & payment alerts</h3>'+alerts+'</div>'+
+    '<div class="card"><div class="toolbar"><h3 style="margin:0;flex:1">Recent engagements</h3>'+
+      '<button class="btn sm" onclick="show(\'rentals\');rentalForm(null)">+ New engagement</button></div>'+
+      rentalsTable(DB.rentals.slice().sort(byUpdated).slice(0,8))+'</div>';
+}
+function byUpdated(a,b){return String(b.updatedAt||'').localeCompare(String(a.updatedAt||''));}
+
+/* ===================== BOARD ===================== */
+function renderBoard(){
+  var zones={};DB.lots.forEach(function(l){(zones[l.zone]=zones[l.zone]||[]).push(l);});
+  var html=Object.keys(zones).sort().map(function(z){
+    var floor=zones[z][0].floor;
+    return '<div class="zone"><h3>Zone '+esc(z)+' · '+esc(floor)+'</h3><div class="lots">'+
+      zones[z].map(function(l){
+        var st=l.lotStatus,cls=st==='Internal'?'int':(st==='Occupied'?'occ':'avail'),tag=st==='Internal'?'INTERNAL':(st==='Occupied'?'TAKEN':'FREE');
+        var area=l.areaSqm?num(l.areaSqm)+' m²':'size TBC';var sub=area;
+        if(st==='Occupied')sub=esc(l.holder.clientCompany)+' · ends '+esc(l.holder.endDate);
+        if(st==='Internal')sub='HG '+esc(l.holder.department||'')+(l.holder.endDate?' · ends '+esc(l.holder.endDate):' · open-ended');
+        return '<div class="lot '+cls+'" onclick="lotClick(\''+esc(l.id)+'\')"><span class="ltag '+cls+'">'+tag+'</span>'+
+          '<div class="id">'+esc(l.id)+'</div><div class="meta">🔒 '+esc(l.lockset)+'</div><div class="meta">'+sub+'</div></div>';
+      }).join('')+'</div></div>';
+  }).join('');
+  document.getElementById('v-board').innerHTML='<h2>Availability Board</h2>'+
+    '<div class="toolbar"><span class="muted" style="flex:1">🟢 free · 🔴 client · 🔵 internal HG. Click a lot to view or rent it.</span></div>'+
+    '<div class="card">'+html+'</div>';
+}
+function lotClick(id){
+  var l=DB.lots.filter(function(x){return x.id===id;})[0];
+  if(l.holder)openRental(l.holder.id);
+  else{show('rentals');rentalForm(null,id);}
+}
+
+/* ===================== RENTALS ===================== */
+function renderRentals(){
+  document.getElementById('v-rentals').innerHTML=
+    '<h2>Engagements</h2>'+
+    '<div class="toolbar"><input id="r-q" placeholder="Search company / dept / lot / PIC" oninput="filterRentals()" style="min-width:240px">'+
+      '<select id="r-type" onchange="filterRentals()"><option value="">All types</option><option>Client</option><option>Internal</option></select>'+
+      '<select id="r-status" onchange="filterRentals()"><option value="">All status</option>'+Object.keys(RENTAL_LABEL).map(function(s){return '<option>'+s+'</option>';}).join('')+'</select>'+
+      '<button class="btn" style="margin-left:auto" onclick="rentalForm(null)">+ New engagement</button></div>'+
+    '<div class="card" id="r-list">'+rentalsTable(DB.rentals)+'</div>';
+}
+function filterRentals(){
+  var q=val('r-q').toLowerCase(),ty=val('r-type'),st=val('r-status');
+  var rows=DB.rentals.filter(function(r){
+    if(ty&&r.engagementType!==ty)return false;
+    if(st&&r.liveStatus!==st)return false;
+    if(q){var s=(r.clientCompany+' '+r.department+' '+r.lotId+' '+r.clientPIC).toLowerCase();if(s.indexOf(q)<0)return false;}
+    return true;
+  });
+  document.getElementById('r-list').innerHTML=rentalsTable(rows);
+}
+function rentalsTable(rows){
+  if(!rows.length)return '<div class="muted">No engagements yet.</div>';
+  return '<table><thead><tr><th>Lot</th><th>Holder</th><th>Period</th><th>Days</th><th>Rate</th><th>Status</th><th>Handled</th><th></th></tr></thead><tbody>'+
+    rows.map(function(r){
+      var internal=r.engagementType==='Internal';
+      var holder=internal?('HG — '+esc(r.department||'')):esc(r.clientCompany);
+      var dl=r.endDate?(r.daysToExpiry<0?(-r.daysToExpiry)+'d over':r.daysToExpiry+'d'):'open';
+      return '<tr><td><b>'+esc(r.lotId)+'</b></td>'+
+        '<td>'+holder+'<div class="muted" style="font-size:11px">'+esc(r.clientPIC||'')+'</div></td>'+
+        '<td>'+esc(r.startDate)+'<div class="muted" style="font-size:11px">→ '+esc(r.endDate||'open-ended')+'</div></td>'+
+        '<td>'+dl+'</td><td class="right">'+(r.monthlyRate?rm(r.monthlyRate):'—')+'</td>'+
+        '<td>'+rpill(r.liveStatus)+'</td><td class="muted" style="font-size:11px">'+esc(r.handledBy||'-')+'</td>'+
+        '<td class="right"><button class="ghost sm" onclick="openRental(\''+r.id+'\')">Open</button></td></tr>';
+    }).join('')+'</tbody></table>';
+}
+function lotOptions(cur){
+  return '<option value="">— select lot —</option>'+DB.lots.map(function(l){
+    var taken=l.lotStatus!=='Available'&&l.id!==cur;
+    var why=l.lotStatus==='Internal'?' — INTERNAL':' — TAKEN';
+    return '<option value="'+esc(l.id)+'"'+(l.id===cur?' selected':'')+(taken?' disabled':'')+'>'+esc(l.id)+' (Zone '+esc(l.zone)+' · 🔒'+esc(l.lockset)+')'+(taken?why:'')+'</option>';
+  }).join('');
+}
+function rentalForm(r,presetLot){
+  var e=!!r;r=r||{};
+  var ty=r.engagementType||'Client';
+  var body=
+    '<div class="row">'+
+      field('Engagement type *','<select id="f-type" onchange="applyType()"><option value="Client"'+(ty==='Client'?' selected':'')+'>Client (external, paying)</option><option value="Internal"'+(ty==='Internal'?' selected':'')+'>Internal (HG team use)</option></select>')+
+      field('Lot *','<select id="f-lot">'+lotOptions(e?r.lotId:(presetLot||''))+'</select>')+
+    '</div>'+
+    '<div class="row">'+
+      '<div class="clientOnly">'+field('Client company *','<input id="f-co" value="'+esc(r.clientCompany||'')+'" placeholder="ABC Sdn Bhd">')+'</div>'+
+      '<div class="internalOnly">'+field('HG department / team *','<input id="f-dept" value="'+esc(r.department||'')+'" placeholder="e.g. Scaffold, Visual, Stores">')+'</div>'+
+      field('<span id="picLbl">Client PIC</span>','<input id="f-pic" value="'+esc(r.clientPIC||'')+'">')+
+      field('Contact no','<input id="f-tel" value="'+esc(r.clientContact||'')+'">')+
+    '</div>'+
+    '<div class="row">'+
+      '<div class="clientOnly">'+field('Client email','<input id="f-email" type="email" value="'+esc(r.clientEmail||'')+'">')+'</div>'+
+      field('Storage start *','<input id="f-start" type="date" value="'+esc(r.startDate||today())+'">')+
+      field('<span id="endLbl">Storage end *</span>','<input id="f-end" type="date" value="'+esc(r.endDate||'')+'"><div class="hint internalOnly">Optional for internal (blank = open-ended)</div>')+
+    '</div>'+
+    '<div class="row clientOnly">'+
+      field('Monthly rate (RM)','<input id="f-rate" type="number" min="0" step="0.01" value="'+esc(r.monthlyRate||'')+'">')+
+      field('Security deposit (RM)','<input id="f-dep" type="number" min="0" step="0.01" value="'+esc(r.deposit||'')+'">')+
+      field('Agreement signed?','<select id="f-agr"><option value="">— not yet —</option><option'+(r.agreementSigned==='Yes'?' selected':'')+'>Yes</option><option'+(r.agreementSigned==='Pending'?' selected':'')+'>Pending</option></select>')+
+    '</div>'+
+    '<div class="clientOnly">'+field('Signed agreement file (upload the scan/photo after the client signs)',
+      '<input id="f-agrfile" type="file" accept="image/*,application/pdf">'+(e&&r.agreementUrl?'<div class="hint">✅ <a href="'+esc(r.agreementUrl)+'" target="_blank">current signed agreement on file ↗</a> — choose a file only to replace it</div>':'<div class="hint">Print the agreement first (open this engagement → Print agreement), get it signed, then upload here.</div>'))+'</div>'+
+    '<input type="hidden" id="f-agrurl" value="'+esc(r.agreementUrl||'')+'">'+
+    '<div class="row">'+
+      field('Handled by (liaison)','<input id="f-handled" value="'+esc(r.handledBy||DB.currentUser)+'">')+
+      field('CCTV no','<input id="f-cctvno" value="'+esc(r.cctvNo||'')+'">')+
+      field('CCTV login URL','<input id="f-cctvurl" value="'+esc(r.cctvUrl||'')+'" placeholder="https://...">')+
+    '</div>'+
+    field('Items stored (description)','<textarea id="f-items" placeholder="e.g. 12 pallets office furniture, 3 generators...">'+esc(r.itemsDescription||'')+'</textarea>')+
+    field('Remarks','<textarea id="f-remarks">'+esc(r.remarks||'')+'</textarea>')+
+    '<h3>Item photos</h3>'+
+    '<div class="hint">Upload from phone/PC (filed to a HG Drive folder, domain view-only), or paste links below.</div>'+
+    dz('photos',true,'image/*','Drag photos here, or click — multiple allowed')+
+    field('Photo links','<textarea id="f-photos" placeholder="https://drive.google.com/... , https://...">'+esc(r.photosUrl||'')+'</textarea>');
+  var foot=(e?'<button class="danger" onclick="delRental(\''+r.id+'\')">Delete</button>':'')+
+    '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" id="r-save">'+(e?'Save changes':'Create engagement')+'</button>';
+  openModal(e?('Edit engagement — Lot '+esc(r.lotId)):'New engagement',body,foot);
+  applyType();
+  document.getElementById('r-save').onclick=function(){saveRentalForm(e?r.id:null);};
+}
+function applyType(){
+  var internal=val('f-type')==='Internal';
+  function showDisp(el){return el.classList.contains('row')?'flex':'block';}
+  document.querySelectorAll('#modal .clientOnly').forEach(function(el){el.style.display=internal?'none':showDisp(el);});
+  document.querySelectorAll('#modal .internalOnly').forEach(function(el){el.style.display=internal?showDisp(el):'none';});
+  document.getElementById('picLbl').textContent=internal?'Person in charge':'Client PIC';
+  document.getElementById('endLbl').textContent=internal?'Storage end':'Storage end *';
+}
+function saveRentalForm(id){
+  var internal=val('f-type')==='Internal';
+  if(internal){if(!val('f-lot')||!val('f-dept')||!val('f-start')){toast('Lot, department & start date required',1);return;}}
+  else{if(!val('f-lot')||!val('f-co')||!val('f-start')||!val('f-end')){toast('Lot, company, start & end dates required',1);return;}}
+  var btn=document.getElementById('r-save');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Saving…';
+  var agrFile=document.getElementById('f-agrfile');
+  var agrPrep=(agrFile&&agrFile.files&&agrFile.files[0])?fileB64(agrFile.files[0]):Promise.resolve(null);
+  Promise.all([dzAll('photos'),agrPrep]).then(function(arr){
+    var files=arr[0],agr=arr[1];
+    var p={id:id,engagementType:val('f-type'),lotId:val('f-lot'),clientCompany:val('f-co'),department:val('f-dept'),
+      clientPIC:val('f-pic'),clientContact:val('f-tel'),clientEmail:val('f-email'),startDate:val('f-start'),endDate:val('f-end'),
+      monthlyRate:val('f-rate'),deposit:val('f-dep'),agreementSigned:val('f-agr'),handledBy:val('f-handled'),
+      cctvNo:val('f-cctvno'),cctvUrl:val('f-cctvurl'),itemsDescription:val('f-items'),remarks:val('f-remarks'),
+      photosUrl:val('f-photos'),photoFiles:files,agreementUrl:val('f-agrurl')};
+    if(agr)p.agreementFile=agr;
+    return call('saveRental',[p]);
+  }).then(function(d){refresh(d);closeModal();toast('Saved ✓','ok');})
+   .catch(function(er){btn.disabled=false;btn.textContent='Save';toast(er.message||er,'bad');});
+}
+function openRental(id){
+  var r=DB.rentals.filter(function(x){return x.id===id;})[0];if(!r)return;
+  var lot=DB.lots.filter(function(l){return l.id===r.lotId;})[0]||{};
+  var internal=r.engagementType==='Internal';
+  var urls=(r.photosUrl||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var invs=DB.invoices.filter(function(i){return i.rentalId===r.id;});
+  var kv=function(k,v){return '<tr><td class="k">'+k+'</td><td>'+(v||'-')+'</td></tr>';};
+  var period=esc(r.startDate)+' → '+esc(r.endDate||'open-ended')+(r.endDate?' ('+(r.daysToExpiry<0?(-r.daysToExpiry)+'d overdue':r.daysToExpiry+'d left')+')':'');
+  var clientRows=internal?'':kv('Contact',esc(r.clientContact)+(r.clientEmail?' · '+esc(r.clientEmail):''))+
+    kv('Monthly rate',r.monthlyRate?rm(r.monthlyRate):'-')+
+    kv('Deposit',r.deposit?rm(r.deposit)+' <span class="tag">'+esc(r.depositStatus)+'</span>':'-')+
+    kv('Agreement',(r.agreementSigned||'—')+(r.agreementUrl?' · <a href="'+esc(r.agreementUrl)+'" target="_blank">signed copy ↗</a>':' <span class="muted">(no signed copy uploaded)</span>'))+
+    kv('Notices sent','N1: '+(r.notice1Sent||'—')+' · N2: '+(r.notice2Sent||'—'));
+  var invBlock=internal?'':'<h3>Invoices</h3>'+(invs.length?'<table><tbody>'+invs.map(function(i){
+      return '<tr><td><b>'+esc(i.invNo)+'</b></td><td>'+esc(i.invDate)+'</td><td class="right">'+rm(i.total)+'</td><td>'+ipill(i.overdue?'Overdue':i.payStatus)+'</td><td class="right"><button class="ghost sm" onclick="closeModal();openInvoice(\''+i.id+'\')">Open</button></td></tr>';
+    }).join('')+'</tbody></table>':'<div class="muted">No invoices yet.</div>')+
+    '<button class="ghost sm" style="margin-top:8px" onclick="closeModal();invoiceForm(null,\''+r.id+'\')">+ New invoice for this client</button>';
+  var actions=internal?
+    '<button class="btn" onclick="closeModal();rentalForm(DB.rentals.filter(function(x){return x.id===\''+id+'\';})[0])">Edit</button>'+
+    '<button class="ghost" onclick="rAction(\''+id+'\',\'release\')">Release lot</button>'
+   :'<button class="btn" onclick="closeModal();rentalForm(DB.rentals.filter(function(x){return x.id===\''+id+'\';})[0])">Edit</button>'+
+    '<button class="okbtn" onclick="rRenew(\''+id+'\',\''+esc(r.endDate)+'\')">Renew</button>'+
+    (r.deposit&&r.depositStatus==='Held'?'<button class="ghost" onclick="rAction(\''+id+'\',\'refund\')">Refund deposit</button>':'')+
+    '<button class="ghost" onclick="rAction(\''+id+'\',\'vacate\')">Vacated</button>'+
+    '<button class="danger" onclick="rAction(\''+id+'\',\'selloff\')">Sell-off → HG</button>'+
+    '<button class="ghost" onclick="printAgreement(\''+id+'\')">Print agreement</button>';
+  var body='<div style="margin-bottom:8px">'+rpill(r.liveStatus)+(internal?' <span class="pill p-Internal">HG INTERNAL — no invoice / no sell-off</span>':'')+'</div>'+
+    '<table class="kv"><tbody>'+
+      kv('Lot / Zone',esc(r.lotId)+' · Zone '+esc(lot.zone||'')+' · '+esc(lot.floor||''))+
+      kv('Lockset','🔒 '+esc(lot.lockset||''))+kv('Size',lot.areaSqm?num(lot.areaSqm)+' m²':'TBC')+
+      kv(internal?'Department':'Client',internal?('HG — '+esc(r.department||'')):esc(r.clientCompany))+
+      kv(internal?'Person in charge':'Client PIC',esc(r.clientPIC))+clientRows+
+      kv('Period',period)+kv('CCTV',esc(r.cctvNo)+(r.cctvUrl?' · <a href="'+esc(r.cctvUrl)+'" target="_blank">login ↗</a>':''))+
+      kv('Items',esc(r.itemsDescription))+kv('Handled by',esc(r.handledBy))+
+      kv('Keyed in by',esc(r.createdBy)+' @ '+esc(r.createdAt))+kv('Last update',esc(r.updatedBy)+' @ '+esc(r.updatedAt))+
+      kv('Remarks',esc(r.remarks))+
+    '</tbody></table>'+
+    (urls.length?'<div class="photos">'+urls.map(function(u){return '<a href="'+esc(u)+'" target="_blank"><img src="'+esc(u)+'"></a>';}).join('')+'</div>':'')+
+    invBlock;
+  openModal((internal?'HG Internal — ':'')+'Lot '+esc(r.lotId),body,actions);
+}
+function delRental(id){if(!confirm('Delete this engagement?'))return;call('deleteRental',[id]).then(function(d){refresh(d);closeModal();toast('Deleted','ok');}).catch(function(e){toast(e.message||e,'bad');});}
+function rRenew(id,cur){var nd=prompt('New end date (YYYY-MM-DD). Current: '+cur);if(!nd)return;call('renewRental',[id,nd]).then(function(d){refresh(d);closeModal();toast('Renewed ✓','ok');}).catch(function(e){toast(e.message||e,'bad');});}
+function rAction(id,kind){
+  var msg={selloff:'SELL-OFF: client did not renew after 2 notices. Items disposed/sold, ownership passes to HG.\n\nRemarks:',
+    vacate:'Mark vacated (client collected items). Remarks:',release:'Release this lot — internal HG use finished. Remarks:',
+    refund:'Refund the security deposit to the client. Remarks:'}[kind];
+  var rem=prompt(msg);if(rem===null)return;
+  var fn={selloff:'sellOffRental',vacate:'vacateRental',release:'releaseInternal',refund:'refundDeposit'}[kind];
+  call(fn,[id,rem]).then(function(d){refresh(d);closeModal();toast('Done ✓','ok');}).catch(function(e){toast(e.message||e,'bad');});
+}
+
+/* ===================== INVOICES ===================== */
+function renderInvoices(){
+  document.getElementById('v-invoices').innerHTML=
+    '<h2>Invoices &amp; Payments</h2>'+
+    '<div class="toolbar"><input id="i-q" placeholder="Search inv no / client / lot" oninput="filterInvoices()" style="min-width:240px">'+
+      '<select id="i-status" onchange="filterInvoices()"><option value="">All status</option><option>Unpaid</option><option>Partial</option><option>Paid</option><option>Overdue</option><option>Void</option></select>'+
+      '<button class="ghost" style="margin-left:auto" onclick="genMonthly()">⚡ Generate monthly</button>'+
+      '<button class="btn" onclick="invoiceForm(null)">+ New invoice</button></div>'+
+    '<div class="card" id="i-list">'+invoicesTable(DB.invoices)+'</div>';
+}
+function filterInvoices(){
+  var q=val('i-q').toLowerCase(),st=val('i-status');
+  var rows=DB.invoices.filter(function(i){
+    var s=i.overdue?'Overdue':i.payStatus;
+    if(st&&s!==st)return false;
+    if(q){var t=(i.invNo+' '+i.clientCompany+' '+i.lotId).toLowerCase();if(t.indexOf(q)<0)return false;}
+    return true;
+  });
+  document.getElementById('i-list').innerHTML=invoicesTable(rows);
+}
+function invoicesTable(rows){
+  if(!rows.length)return '<div class="muted">No invoices yet.</div>';
+  rows=rows.slice().sort(function(a,b){return String(b.invDate).localeCompare(String(a.invDate));});
+  return '<table><thead><tr><th>Inv No</th><th>Client</th><th>Lot</th><th>Date</th><th>Due</th><th class="right">Total</th><th class="right">Paid</th><th class="right">Balance</th><th>Status</th><th></th></tr></thead><tbody>'+
+    rows.map(function(i){
+      return '<tr><td><b>'+esc(i.invNo)+'</b></td><td>'+esc(i.clientCompany)+'</td><td>'+esc(i.lotId||'—')+'</td>'+
+        '<td>'+esc(i.invDate)+'</td><td>'+esc(i.dueDate||'—')+'</td>'+
+        '<td class="right">'+rm(i.total)+'</td><td class="right">'+rm(i.amountPaid)+'</td><td class="right">'+rm(i.balance)+'</td>'+
+        '<td>'+ipill(i.overdue?'Overdue':i.payStatus)+'</td>'+
+        '<td class="right"><button class="ghost sm" onclick="openInvoice(\''+i.id+'\')">Open</button></td></tr>';
+    }).join('')+'</tbody></table>';
+}
+function rentalSelectOptions(cur){
+  var clients=DB.rentals.filter(function(r){return r.engagementType!=='Internal';});
+  return '<option value="">— none / manual —</option>'+clients.map(function(r){
+    return '<option value="'+r.id+'"'+(r.id===cur?' selected':'')+'>'+esc(r.clientCompany)+' · Lot '+esc(r.lotId)+' ('+esc(r.startDate)+'→'+esc(r.endDate||'open')+')</option>';
+  }).join('');
+}
+function invoiceForm(inv,presetRental){
+  var e=!!inv;inv=inv||{};
+  var body=
+    '<div class="row">'+
+      field('Invoice no *','<input id="iv-no" value="'+esc(inv.invNo||'')+'" placeholder="e.g. STR-0001">')+
+      field('Link to engagement','<select id="iv-rental" onchange="invPrefill()">'+rentalSelectOptions(e?inv.rentalId:(presetRental||''))+'</select>')+
+    '</div>'+
+    '<div class="row">'+
+      field('Client *','<input id="iv-co" value="'+esc(inv.clientCompany||'')+'">')+
+      field('Lot','<input id="iv-lot" value="'+esc(inv.lotId||'')+'" placeholder="A-01">')+
+    '</div>'+
+    '<div class="row">'+
+      field('Invoice date *','<input id="iv-date" type="date" value="'+esc(inv.invDate||today())+'">')+
+      field('Due date','<input id="iv-due" type="date" value="'+esc(inv.dueDate||'')+'">')+
+    '</div>'+
+    '<div class="row">'+
+      field('Billing period from','<input id="iv-pfrom" type="date" value="'+esc(inv.periodFrom||'')+'">')+
+      field('Billing period to','<input id="iv-pto" type="date" value="'+esc(inv.periodTo||'')+'">')+
+    '</div>'+
+    field('Description','<textarea id="iv-desc" placeholder="Storage rental — Lot A-01, June 2026">'+esc(inv.description||'')+'</textarea>')+
+    '<div class="row">'+
+      field('Amount before SST (RM) *','<input id="iv-amt" type="number" min="0" step="0.01" value="'+esc(inv.amount||'')+'" oninput="invTot()">')+
+      field('SST 6%','<select id="iv-sst" onchange="invTot()"><option value="">No SST</option><option value="1"'+(inv.sstEnabled?' selected':'')+'>Add SST 6%</option></select>')+
+    '</div>'+
+    '<div class="totbar"><span class="muted">SST <span id="iv-sstout">RM 0.00</span></span><span class="muted">Total <span class="big" id="iv-totout">RM 0.00</span></span></div>'+
+    field('Invoice file (PDF/image)','<input id="iv-file" type="file" accept="image/*,application/pdf">'+(e&&inv.fileUrl?'<div class="hint"><a href="'+esc(inv.fileUrl)+'" target="_blank">current file ↗</a></div>':''))+
+    field('Notes','<textarea id="iv-notes">'+esc(inv.notes||'')+'</textarea>');
+  var foot=(e?'<button class="danger" onclick="delInvoice(\''+inv.id+'\')">Delete</button>':'')+
+    '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" id="iv-save">'+(e?'Save invoice':'Create invoice')+'</button>';
+  openModal(e?('Invoice '+esc(inv.invNo)):'New invoice',body,foot);
+  invTot();
+  document.getElementById('iv-save').onclick=function(){saveInvoiceForm(e?inv.id:null);};
+}
+function invPrefill(){
+  var id=val('iv-rental');if(!id)return;
+  var r=DB.rentals.filter(function(x){return x.id===id;})[0];if(!r)return;
+  document.getElementById('iv-co').value=r.clientCompany;
+  document.getElementById('iv-lot').value=r.lotId;
+  if(r.monthlyRate&&!val('iv-amt')){document.getElementById('iv-amt').value=r.monthlyRate;invTot();}
+  if(!val('iv-desc'))document.getElementById('iv-desc').value='Storage rental — Lot '+r.lotId;
+}
+function invTot(){var a=Number(val('iv-amt'))||0;var sst=val('iv-sst')?a*DB.sstRate:0;
+  document.getElementById('iv-sstout').textContent=rm(sst);document.getElementById('iv-totout').textContent=rm(a+sst);}
+function saveInvoiceForm(id){
+  if(!val('iv-no')||!val('iv-co')||!val('iv-date')){toast('Invoice no, client & date required',1);return;}
+  var btn=document.getElementById('iv-save');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Saving…';
+  var fileInput=document.getElementById('iv-file');
+  var p={id:id,invNo:val('iv-no'),rentalId:val('iv-rental'),clientCompany:val('iv-co'),lotId:val('iv-lot'),
+    invDate:val('iv-date'),dueDate:val('iv-due'),periodFrom:val('iv-pfrom'),periodTo:val('iv-pto'),
+    description:val('iv-desc'),amount:val('iv-amt'),sstEnabled:val('iv-sst')?true:false,notes:val('iv-notes')};
+  var prep=(fileInput.files&&fileInput.files[0])?fileB64(fileInput.files[0]).then(function(f){p.file=f;}):Promise.resolve();
+  prep.then(function(){return call('saveInvoice',[p]);}).then(function(d){refresh(d);closeModal();toast('Saved ✓','ok');})
+    .catch(function(er){btn.disabled=false;btn.textContent='Save';toast(er.message||er,'bad');});
+}
+function openInvoice(id){
+  show('invoices');
+  var i=DB.invoices.filter(function(x){return x.id===id;})[0];if(!i)return;
+  var pays=DB.payments.filter(function(p){return p.invoiceId===id;}).sort(function(a,b){return String(a.payDate).localeCompare(String(b.payDate));});
+  var kv=function(k,v){return '<tr><td class="k">'+k+'</td><td>'+(v||'-')+'</td></tr>';};
+  var paysHtml=pays.length?'<table><thead><tr><th>Date</th><th>Method</th><th>Ref</th><th class="right">Amount</th><th>By</th><th></th></tr></thead><tbody>'+
+    pays.map(function(p){return '<tr><td>'+esc(p.payDate)+'</td><td>'+esc(p.method||'-')+'</td><td>'+esc(p.reference||'-')+'</td><td class="right">'+rm(p.amount)+'</td><td class="muted">'+esc(p.receivedBy||'')+'</td>'+
+      '<td class="right"><button class="danger sm" onclick="delPayment(\''+p.id+'\')">×</button></td></tr>';}).join('')+'</tbody></table>'
+    :'<div class="muted">No payments recorded.</div>';
+  var body='<div style="margin-bottom:8px">'+ipill(i.overdue?'Overdue':i.payStatus)+'</div>'+
+    '<table class="kv"><tbody>'+
+      kv('Client',esc(i.clientCompany))+kv('Lot',esc(i.lotId||'-'))+
+      kv('Invoice date',esc(i.invDate))+kv('Due date',esc(i.dueDate||'-'))+
+      kv('Billing period',(i.periodFrom||i.periodTo)?(esc(i.periodFrom||'?')+' → '+esc(i.periodTo||'?')):'-')+
+      kv('Description',esc(i.description))+
+      kv('Amount',rm(i.amount))+kv('SST',i.sstEnabled?rm(i.sstAmount)+' (6%)':'—')+
+      kv('Total',rm(i.total))+kv('Paid',rm(i.amountPaid))+kv('Balance','<b>'+rm(i.balance)+'</b>')+
+      kv('File',i.fileUrl?'<a href="'+esc(i.fileUrl)+'" target="_blank">open ↗</a>':'-')+
+      kv('Notes',esc(i.notes))+
+    '</tbody></table>'+
+    '<h3>Payments</h3>'+paysHtml;
+  var foot=(i.payStatus!=='Void'?'<button class="okbtn" onclick="paymentForm(\''+i.id+'\')">+ Record payment</button>':'')+
+    '<button class="btn" onclick="closeModal();invoiceForm(DB.invoices.filter(function(x){return x.id===\''+id+'\';})[0])">Edit</button>'+
+    '<button class="ghost" onclick="printInvoice(\''+id+'\')">Print invoice</button>'+
+    (i.payStatus!=='Void'&&i.amountPaid<=0?'<button class="danger" onclick="voidInvoice(\''+id+'\')">Void</button>':'');
+  openModal('Invoice '+esc(i.invNo),body,foot);
+}
+function paymentForm(invId){
+  var i=DB.invoices.filter(function(x){return x.id===invId;})[0];
+  var body=field('Amount (RM) *','<input id="pm-amt" type="number" min="0" step="0.01" value="'+(i?i.balance:'')+'">')+
+    '<div class="row">'+field('Date','<input id="pm-date" type="date" value="'+today()+'">')+
+      field('Method','<select id="pm-method"><option>Bank transfer</option><option>Cheque</option><option>Cash</option><option>Online</option><option>Other</option></select>')+'</div>'+
+    '<div class="row">'+field('Reference / txn no','<input id="pm-ref">')+field('Received by','<input id="pm-by" value="'+esc(DB.currentUser)+'">')+'</div>'+
+    field('Notes','<textarea id="pm-notes"></textarea>');
+  openModal2('Record payment — Inv '+esc(i.invNo),body,
+    '<button class="ghost" onclick="closeModal2()">Cancel</button><button class="btn" id="pm-save">Save payment</button>');
+  document.getElementById('pm-save').onclick=function(){
+    if(!(Number(val('pm-amt'))>0)){toast('Enter an amount',1);return;}
+    var btn=this;btn.disabled=true;btn.innerHTML='<span class="spin"></span> Saving…';
+    call('recordPayment',[{invoiceId:invId,amount:val('pm-amt'),payDate:val('pm-date'),method:val('pm-method'),reference:val('pm-ref'),receivedBy:val('pm-by'),notes:val('pm-notes')}])
+      .then(function(d){refresh(d);closeModal2();closeModal();toast('Payment recorded ✓','ok');})
+      .catch(function(e){btn.disabled=false;btn.textContent='Save payment';toast(e.message||e,'bad');});
+  };
+}
+function delPayment(id){if(!confirm('Delete this payment?'))return;call('deletePayment',[id]).then(function(d){refresh(d);closeModal();toast('Deleted','ok');}).catch(function(e){toast(e.message||e,'bad');});}
+function voidInvoice(id){var r=prompt('Void this invoice? Reason:');if(r===null)return;call('voidInvoice',[id,r]).then(function(d){refresh(d);closeModal();toast('Voided','ok');}).catch(function(e){toast(e.message||e,'bad');});}
+function delInvoice(id){if(!confirm('Delete this invoice and its payments?'))return;call('deleteInvoice',[id]).then(function(d){refresh(d);closeModal();toast('Deleted','ok');}).catch(function(e){toast(e.message||e,'bad');});}
+function genMonthly(){
+  var def=today().slice(0,7);
+  var m=prompt('Auto-generate invoices for all active client rentals — which month? (YYYY-MM)\n\nSkips internal use, already-invoiced periods, and rentals with no monthly rate.',def);
+  if(!m)return;
+  if(!/^\d{4}-\d{2}$/.test(m)){toast('Use format YYYY-MM, e.g. '+def,1);return;}
+  toast('Generating…');
+  call('generateMonthlyInvoices',[m]).then(function(res){
+    DB=res.db;renderAll();show('invoices');
+    if(res.count){openModal('Generated '+res.count+' invoice(s) — '+esc(res.month),
+      '<div class="muted" style="margin-bottom:8px">New invoices created (Unpaid):</div><ul style="margin:0;padding-left:18px">'+res.created.map(function(c){return '<li>'+esc(c)+'</li>';}).join('')+'</ul>',
+      '<button class="btn" onclick="closeModal()">Done</button>');
+      toast('Created '+res.count+' invoice(s) ✓','ok');
+    }else{toast('No new invoices needed for '+res.month+' (all already invoiced or no active rentals).','ok');}
+  }).catch(function(e){toast(e.message||e,'bad');});
+}
+
+/* ===================== LOTS ===================== */
+function renderLots(){
+  document.getElementById('v-lots').innerHTML=
+    '<h2>Lots</h2>'+
+    '<div class="toolbar"><span class="muted" style="flex:1">The storage inventory from your floor plans. Edit to fix dimensions / locksets.</span>'+
+      '<button class="btn" onclick="lotForm(null)">+ Add lot</button></div>'+
+    '<div class="card"><table><thead><tr><th>Lot</th><th>Zone · Floor</th><th>Type</th><th>Lockset</th><th class="right">W×D (mm)</th><th class="right">Area m²</th><th>Status</th><th>Notes</th><th></th></tr></thead><tbody>'+
+    DB.lots.map(function(l){
+      var tag=l.lotStatus==='Internal'?'<span class="pill p-Internal">Internal</span>':(l.lotStatus==='Occupied'?'<span class="pill p-Active">Occupied</span>':'<span class="tag">Free</span>');
+      return '<tr><td><b>'+esc(l.id)+'</b></td><td>'+esc(l.zone)+' · '+esc(l.floor)+'</td><td>'+esc(l.type)+'</td><td>🔒 '+esc(l.lockset)+'</td>'+
+        '<td class="right">'+(l.widthMm&&l.depthMm?num(l.widthMm)+'×'+num(l.depthMm):'—')+'</td><td class="right">'+(l.areaSqm?num(l.areaSqm):'—')+'</td>'+
+        '<td>'+tag+'</td><td class="muted" style="font-size:11px">'+esc(l.notes||'')+'</td>'+
+        '<td class="right"><button class="ghost sm" onclick=\'lotForm('+JSON.stringify({id:l.id,zone:l.zone,floor:l.floor,type:l.type,lockset:l.lockset,widthMm:l.widthMm,depthMm:l.depthMm,notes:l.notes})+')\'>Edit</button></td></tr>';
+    }).join('')+'</tbody></table></div>';
+}
+function lotForm(l){
+  var e=!!l;l=l||{};
+  var body='<div class="row">'+
+      field('Lot ID *','<input id="lt-id" value="'+esc(l.id||'')+'"'+(e?' readonly':'')+' placeholder="A-01">')+
+      field('Zone','<input id="lt-zone" value="'+esc(l.zone||'')+'" placeholder="A">')+
+      field('Floor','<input id="lt-floor" value="'+esc(l.floor||'')+'" placeholder="Ground">')+
+    '</div><div class="row">'+
+      field('Type','<input id="lt-type" value="'+esc(l.type||'Standard')+'">')+
+      field('Lockset no','<input id="lt-lock" value="'+esc(l.lockset||'')+'">')+
+    '</div><div class="row">'+
+      field('Width (mm)','<input id="lt-w" type="number" value="'+esc(l.widthMm||'')+'">')+
+      field('Depth (mm)','<input id="lt-d" type="number" value="'+esc(l.depthMm||'')+'">')+
+    '</div>'+field('Notes','<input id="lt-notes" value="'+esc(l.notes||'')+'">');
+  var foot=(e?'<button class="danger" onclick="delLot(\''+esc(l.id)+'\')">Delete</button>':'')+
+    '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" id="lt-save">Save lot</button>';
+  openModal(e?('Edit lot '+esc(l.id)):'Add lot',body,foot);
+  document.getElementById('lt-save').onclick=function(){
+    if(!val('lt-id')){toast('Lot ID required',1);return;}
+    call('saveLot',[{id:val('lt-id'),zone:val('lt-zone'),floor:val('lt-floor'),type:val('lt-type'),lockset:val('lt-lock'),widthMm:val('lt-w'),depthMm:val('lt-d'),notes:val('lt-notes'),_isEdit:e}])
+      .then(function(d){refresh(d);closeModal();toast('Saved ✓','ok');}).catch(function(er){toast(er.message||er,'bad');});
+  };
+}
+function delLot(id){if(!confirm('Delete lot '+id+'?'))return;call('deleteLot',[id]).then(function(d){refresh(d);closeModal();toast('Deleted','ok');}).catch(function(e){toast(e.message||e,'bad');});}
+
+/* ===================== AUDIT ===================== */
+function renderAudit(){
+  document.getElementById('v-audit').innerHTML='<h2>Audit Log</h2><div class="card"><div class="muted">Loading…</div></div>';
+  call('loadAudit').then(function(rows){
+    document.getElementById('v-audit').innerHTML='<h2>Audit Log</h2>'+
+      '<div class="card"><div class="muted" style="margin-bottom:10px">Every create / edit / payment / status change, newest first (last 200).</div>'+
+      '<table><thead><tr><th>When</th><th>User</th><th>Action</th><th>Type</th><th>Record</th><th>Detail</th></tr></thead><tbody>'+
+      (rows.length?rows.map(function(a){return '<tr><td>'+esc(a.timestamp)+'</td><td>'+esc(a.userEmail)+'</td><td><span class="tag">'+esc(a.action)+'</span></td><td>'+esc(a.recordType)+'</td><td>'+esc(a.recordId)+'</td><td class="muted">'+esc(a.details)+'</td></tr>';}).join(''):'<tr><td colspan="6" class="muted">No activity yet.</td></tr>')+
+      '</tbody></table></div>';
+  }).catch(function(e){toast(e.message||e,'bad');});
+}
+
+/* ===================== REPORTS ===================== */
+var REPORTS=[['rentroll','Rent Roll — current engagements'],['occupancy','Occupancy by zone'],
+  ['revenue','Revenue & Collections (monthly)'],['aging','Outstanding & Aging'],['renewals','Renewals & Expiring']];
+var CUR_REP='rentroll', LAST_REPORT=null;
+
+function renderReports(){
+  document.getElementById('v-reports').innerHTML=
+    '<h2>Reports</h2>'+
+    '<div class="toolbar">'+
+      '<select id="rep-type" onchange="CUR_REP=this.value;drawReport()">'+REPORTS.map(function(r){return '<option value="'+r[0]+'">'+r[1]+'</option>';}).join('')+'</select>'+
+      '<span id="rep-monthwrap"><input type="month" id="rep-month" value="'+today().slice(0,7)+'" onchange="drawReport()"></span>'+
+      '<button class="ghost" style="margin-left:auto" onclick="downloadReportCsv()">⬇ Download CSV</button>'+
+      '<button class="btn" onclick="printReport()">🖨 Print / Save PDF</button>'+
+    '</div>'+
+    '<div class="card" id="rep-body"></div>';
+  document.getElementById('rep-type').value=CUR_REP;
+  drawReport();
+}
+function lotById(id){return DB.lots.filter(function(l){return l.id===id;})[0]||{};}
+function repDays(date){return date?Math.round((new Date(date+'T00:00:00')-new Date(today()+'T00:00:00'))/86400000):null;}
+/* New vs Existing client: New if the company's earliest engagement started within NEW_CLIENT_DAYS */
+function clientTenure(r){
+  if(r.engagementType==='Internal')return 'Internal';
+  var co=(r.clientCompany||'').trim().toLowerCase();
+  if(!co)return 'New';
+  var starts=DB.rentals.filter(function(x){return x.engagementType!=='Internal'&&(x.clientCompany||'').trim().toLowerCase()===co&&x.startDate;}).map(function(x){return x.startDate;}).sort();
+  var earliest=starts[0]||r.startDate;
+  if(!earliest)return 'New';
+  var days=Math.round((new Date(today()+'T00:00:00')-new Date(earliest+'T00:00:00'))/86400000);
+  var win=Number(DB.config.NEW_CLIENT_DAYS)||60;
+  return days>win?'Existing':'New';
+}
+
+function buildReport(type){
+  var month=val('rep-month')||today().slice(0,7);
+  if(type==='rentroll'){
+    var nw=0,ex=0;
+    var rows=DB.rentals.filter(function(r){return ['Active','Expiring','Expired','Internal'].indexOf(r.liveStatus)>=0;})
+      .map(function(r){var l=lotById(r.lotId);var t=clientTenure(r);if(t==='New')nw++;else if(t==='Existing')ex++;
+        return {lot:r.lotId,zone:l.zone||'',holder:r.engagementType==='Internal'?('HG — '+(r.department||'')):r.clientCompany,
+        client:t,type:r.engagementType,start:r.startDate,end:r.endDate||'open-ended',rate:r.monthlyRate,deposit:r.deposit,status:r.liveStatus};});
+    var mrr=0,dep=0,cli=0,intl=0;
+    DB.rentals.forEach(function(r){if(['Active','Expiring','Expired','Internal'].indexOf(r.liveStatus)<0)return;
+      if(r.engagementType==='Internal')intl++;else{cli++;if(['Active','Expiring'].indexOf(r.liveStatus)>=0)mrr+=r.monthlyRate;if(r.depositStatus!=='Refunded')dep+=r.deposit;}});
+    return {title:'Rent Roll — current engagements',summary:[{label:'Engagements',val:rows.length},{label:'New clients',val:nw},{label:'Existing clients',val:ex},{label:'Internal',val:intl},{label:'Monthly recurring',val:rm(mrr)},{label:'Deposits held',val:rm(dep)}],
+      columns:[{key:'lot',label:'Lot'},{key:'zone',label:'Zone'},{key:'holder',label:'Holder'},{key:'client',label:'Client'},{key:'type',label:'Type'},{key:'start',label:'Start'},{key:'end',label:'End'},{key:'rate',label:'Rate',right:1,money:1},{key:'deposit',label:'Deposit',right:1,money:1},{key:'status',label:'Status'}],
+      rows:rows};
+  }
+  if(type==='occupancy'){
+    var zones={};DB.lots.forEach(function(l){(zones[l.zone]=zones[l.zone]||[]).push(l);});
+    var rows=Object.keys(zones).sort().map(function(z){var ls=zones[z];
+      var free=ls.filter(function(l){return l.lotStatus==='Available';}).length;
+      var occ=ls.filter(function(l){return l.lotStatus==='Occupied';}).length;
+      var intl=ls.filter(function(l){return l.lotStatus==='Internal';}).length;
+      return {zone:z,floor:ls[0].floor,total:ls.length,free:free,occupied:occ,internal:intl,pct:Math.round(((occ+intl)/ls.length)*100)};});
+    var s=DB.stats;
+    return {title:'Occupancy by zone',summary:[{label:'Total lots',val:s.lotsTotal},{label:'Free',val:s.free},{label:'Client-occupied',val:s.occupied},{label:'Internal',val:s.internal},{label:'Occupancy',val:s.occupancyPct+'%'}],
+      columns:[{key:'zone',label:'Zone'},{key:'floor',label:'Floor'},{key:'total',label:'Total',right:1},{key:'free',label:'Free',right:1},{key:'occupied',label:'Client',right:1},{key:'internal',label:'Internal',right:1},{key:'pct',label:'Occupancy %',right:1,pct:1}],
+      rows:rows};
+  }
+  if(type==='revenue'){
+    var billed=0,sst=0,collected=0,outstanding=0;
+    var rows=DB.invoices.filter(function(i){return i.payStatus!=='Void'&&String(i.invDate).slice(0,7)===month;})
+      .sort(function(a,b){return String(a.invDate).localeCompare(String(b.invDate));})
+      .map(function(i){return {invNo:i.invNo,date:i.invDate,client:i.clientCompany,lot:i.lotId,total:i.total,paid:i.amountPaid,balance:i.balance,status:i.overdue?'Overdue':i.payStatus};});
+    DB.invoices.forEach(function(i){if(i.payStatus==='Void')return;if(String(i.invDate).slice(0,7)===month){billed+=i.total;sst+=i.sstAmount;}outstanding+=i.balance;});
+    DB.payments.forEach(function(p){if(String(p.payDate).slice(0,7)===month)collected+=p.amount;});
+    return {title:'Revenue & Collections — '+month,sub:month,summary:[{label:'Billed ('+month+')',val:rm(billed)},{label:'incl. SST',val:rm(sst)},{label:'Collected ('+month+')',val:rm(collected)},{label:'Outstanding (all)',val:rm(outstanding)}],
+      columns:[{key:'invNo',label:'Inv No'},{key:'date',label:'Date'},{key:'client',label:'Client'},{key:'lot',label:'Lot'},{key:'total',label:'Total',right:1,money:1},{key:'paid',label:'Paid',right:1,money:1},{key:'balance',label:'Balance',right:1,money:1},{key:'status',label:'Status'}],
+      rows:rows};
+  }
+  if(type==='aging'){
+    var buckets={'Not due':0,'1–30':0,'31–60':0,'61–90':0,'90+':0};
+    var rows=DB.invoices.filter(function(i){return i.payStatus!=='Void'&&i.balance>0.005;}).map(function(i){
+      var d=i.dueDate?repDays(i.dueDate):null;var over=d===null?0:-d;var b=over<=0?'Not due':over<=30?'1–30':over<=60?'31–60':over<=90?'61–90':'90+';
+      buckets[b]+=i.balance;
+      return {invNo:i.invNo,client:i.clientCompany,lot:i.lotId,due:i.dueDate||'—',overdue:over>0?over:0,balance:i.balance,status:i.overdue?'Overdue':i.payStatus};
+    }).sort(function(a,b){return b.overdue-a.overdue;});
+    return {title:'Outstanding & Aging',summary:Object.keys(buckets).map(function(k){return {label:k+' days',val:rm(buckets[k])};}),
+      columns:[{key:'invNo',label:'Inv No'},{key:'client',label:'Client'},{key:'lot',label:'Lot'},{key:'due',label:'Due date'},{key:'overdue',label:'Days overdue',right:1},{key:'balance',label:'Balance',right:1,money:1},{key:'status',label:'Status'}],
+      rows:rows};
+  }
+  // renewals
+  var rows2=DB.rentals.filter(function(r){return r.engagementType!=='Internal'&&['Active','Expiring','Expired'].indexOf(r.liveStatus)>=0&&r.endDate;})
+    .sort(function(a,b){return (a.daysToExpiry==null?9e9:a.daysToExpiry)-(b.daysToExpiry==null?9e9:b.daysToExpiry);})
+    .map(function(r){return {lot:r.lotId,client:r.clientCompany,pic:r.clientPIC,end:r.endDate,days:r.daysToExpiry<0?(-r.daysToExpiry)+'d overdue':r.daysToExpiry+'d left',rate:r.monthlyRate,status:r.liveStatus,handled:r.handledBy};});
+  var expiring=DB.rentals.filter(function(r){return r.liveStatus==='Expiring';}).length;
+  var expired=DB.rentals.filter(function(r){return r.liveStatus==='Expired';}).length;
+  return {title:'Renewals & Expiring',summary:[{label:'Expiring soon',val:expiring},{label:'Expired',val:expired}],
+    columns:[{key:'lot',label:'Lot'},{key:'client',label:'Client'},{key:'pic',label:'PIC'},{key:'end',label:'End date'},{key:'days',label:'Status'},{key:'rate',label:'Rate',right:1,money:1},{key:'status',label:'State'},{key:'handled',label:'Handled by'}],
+    rows:rows2};
+}
+function fmtCell(v,c){if(c.money)return rm(v);if(c.pct)return (Number(v)||0)+'%';return esc(v==null?'':v);}
+function repTable(r){
+  if(!r.rows.length)return '<div class="muted">No data for this report.</div>';
+  return '<table><thead><tr>'+r.columns.map(function(c){return '<th'+(c.right?' class="right"':'')+'>'+c.label+'</th>';}).join('')+'</tr></thead><tbody>'+
+    r.rows.map(function(row){return '<tr>'+r.columns.map(function(c){return '<td'+(c.right?' class="right"':'')+'>'+fmtCell(row[c.key],c)+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table>';
+}
+function drawReport(){
+  LAST_REPORT=buildReport(CUR_REP);
+  document.getElementById('rep-monthwrap').style.display=(CUR_REP==='revenue')?'inline-block':'none';
+  var sum=LAST_REPORT.summary&&LAST_REPORT.summary.length?'<div class="row" style="margin-bottom:14px">'+LAST_REPORT.summary.map(function(s){return stat(s.val,s.label);}).join('')+'</div>':'';
+  document.getElementById('rep-body').innerHTML=sum+repTable(LAST_REPORT);
+}
+function csvEscape(v){v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function downloadReportCsv(){
+  var r=LAST_REPORT;if(!r)return;
+  var lines=[r.columns.map(function(c){return c.label;})];
+  r.rows.forEach(function(row){lines.push(r.columns.map(function(c){return c.money?(Number(row[c.key])||0):row[c.key];}));});
+  var csv='﻿'+lines.map(function(a){return a.map(csvEscape).join(',');}).join('\r\n');
+  try{
+    var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download=r.title.replace(/[^a-z0-9]+/gi,'_').replace(/^_|_$/g,'')+'_'+today()+'.csv';
+    document.body.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(a.href);},1000);
+    toast('CSV downloaded','ok');
+  }catch(e){toast('Download blocked here — use Print / Save PDF instead.',1);}
+}
+function printReport(){
+  var r=LAST_REPORT;if(!r)return;var c=DB.config;
+  var sumHtml=r.summary&&r.summary.length?'<div class="sum">'+r.summary.map(function(s){return '<div><span>'+esc(s.label)+'</span><b>'+esc(s.val)+'</b></div>';}).join('')+'</div>':'';
+  var tbl='<table><thead><tr>'+r.columns.map(function(col){return '<th'+(col.right?' class="r"':'')+'>'+col.label+'</th>';}).join('')+'</tr></thead><tbody>'+
+    r.rows.map(function(row){return '<tr>'+r.columns.map(function(col){return '<td'+(col.right?' class="r"':'')+'>'+fmtCell(row[col.key],col)+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table>';
+  if(!r.rows.length)tbl='<p>No data for this report.</p>';
+  var w=window.open('','_blank');
+  w.document.write('<html><head><title>'+esc(r.title)+'</title><style>body{font:12px/1.5 Arial;max-width:1000px;margin:24px auto;padding:0 20px;color:#111}h1{font-size:20px;margin:0}h2{font-size:15px;margin:14px 0 4px}.muted{color:#666;font-size:11px}'+
+    'table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ccc;padding:5px 8px;text-align:left}th{background:#f3f3f3}.r{text-align:right}'+
+    '.sum{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}.sum div{border:1px solid #ddd;border-radius:8px;padding:8px 14px;min-width:110px}.sum span{display:block;font-size:10px;color:#666;text-transform:uppercase}.sum b{font-size:16px}'+
+    '@media print{button{display:none}}</style></head><body>'+
+    '<button onclick="print()" style="float:right;padding:8px 14px">🖨 Print / Save PDF</button>'+
+    '<h1>'+esc(c.COMPANY_NAME||'HG Group')+'</h1><div class="muted">Temporary Storage Rental</div>'+
+    '<h2>'+esc(r.title)+'</h2><div class="muted">Generated '+today()+' · by '+esc(DB.currentUser)+'</div>'+
+    sumHtml+tbl+'</body></html>');
+  w.document.close();
+}
+
+/* ===================== SETTINGS ===================== */
+function settingsForm(){
+  var c=DB.config;
+  var body='<h3 style="margin-top:0">Reminders</h3>'+
+    '<div class="row">'+
+      field('Notice 1 (days before expiry)','<input id="c-n1" type="number" value="'+esc(c.NOTICE1_DAYS)+'">')+
+      field('Notice 2 (days before expiry)','<input id="c-n2" type="number" value="'+esc(c.NOTICE2_DAYS)+'">')+
+      field('Invoice "due soon" (days)','<input id="c-due" type="number" value="'+esc(c.INVOICE_DUE_SOON_DAYS)+'">')+
+    '</div>'+
+    field('"New client" window (days) — Rent Roll labels a client New if their first engagement started within this many days','<input id="c-newdays" type="number" value="'+esc(c.NEW_CLIENT_DAYS)+'">')+
+    field('Reminder recipient(s) — comma separated','<input id="c-to" value="'+esc(c.REMINDER_TO)+'" placeholder="you@hggroup.com.my">')+
+    '<div class="hint">Each reminder also goes to the engagement\'s Handled-By staff if it is an email.</div>'+
+    '<h3>Auto monthly invoicing</h3>'+
+    '<div class="hint" style="margin-bottom:8px">Runs on the 1st of each month: one invoice per active client rental that has a monthly rate. Already-invoiced periods are skipped. You can also run it anytime via <b>Invoices → ⚡ Generate monthly</b>.</div>'+
+    '<div class="row">'+
+      field('Invoice no prefix','<input id="c-prefix" value="'+esc(c.INVOICE_PREFIX)+'" placeholder="STR-">')+
+      field('Payment terms (days to due)','<input id="c-terms" type="number" value="'+esc(c.INVOICE_TERMS_DAYS)+'">')+
+      field('Apply SST 6% on auto invoices','<select id="c-autosst"><option value="1"'+(c.AUTO_INVOICE_SST=='1'?' selected':'')+'>Yes</option><option value="0"'+(c.AUTO_INVOICE_SST!='1'?' selected':'')+'>No</option></select>')+
+    '</div>'+
+    '<h3>Company details (printed on invoices &amp; agreement)</h3>'+
+    '<div class="row">'+field('Company name','<input id="c-name" value="'+esc(c.COMPANY_NAME)+'">')+field('Company reg no','<input id="c-reg" value="'+esc(c.COMPANY_REG)+'">')+'</div>'+
+    '<div class="row">'+field('SST reg no','<input id="c-sst" value="'+esc(c.SST_NO)+'">')+field('Phone','<input id="c-phone" value="'+esc(c.COMPANY_PHONE)+'">')+'</div>'+
+    field('Address','<textarea id="c-addr">'+esc(c.COMPANY_ADDRESS)+'</textarea>');
+  openModal('⚙ Settings',body,'<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" id="c-save">Save settings</button>');
+  document.getElementById('c-save').onclick=function(){
+    call('saveConfig',[{NOTICE1_DAYS:val('c-n1'),NOTICE2_DAYS:val('c-n2'),INVOICE_DUE_SOON_DAYS:val('c-due'),NEW_CLIENT_DAYS:val('c-newdays'),REMINDER_TO:val('c-to'),
+      INVOICE_PREFIX:val('c-prefix'),INVOICE_TERMS_DAYS:val('c-terms'),AUTO_INVOICE_SST:val('c-autosst'),
+      COMPANY_NAME:val('c-name'),COMPANY_REG:val('c-reg'),SST_NO:val('c-sst'),COMPANY_PHONE:val('c-phone'),COMPANY_ADDRESS:val('c-addr')}])
+      .then(function(d){refresh(d);closeModal();toast('Settings saved ✓','ok');}).catch(function(e){toast(e.message||e,'bad');});
+  };
+}
+
+/* ===================== PRINTABLES ===================== */
+function printAgreement(id){call('getAgreementData',[id]).then(buildAgreement).catch(function(e){toast(e.message||e,'bad');});}
+function buildAgreement(o){
+  var r=o.rental,lot=o.lot,c=o.config,today=o.today;
+  var size=lot.areaSqm?num(lot.areaSqm)+' m² ('+(lot.widthMm||'?')+'mm × '+(lot.depthMm||'?')+'mm)':'as inspected on site';
+  var w=window.open('','_blank');
+  w.document.write('<html><head><title>Storage Agreement '+esc(r.id)+'</title><style>body{font:13px/1.6 Arial;max-width:780px;margin:30px auto;padding:0 20px;color:#111}h1{font-size:19px;text-align:center}h2{font-size:14px;margin-top:22px;border-bottom:1px solid #ccc;padding-bottom:4px}table{width:100%;border-collapse:collapse;margin:8px 0}td{padding:5px 8px;border:1px solid #ccc}td.k{background:#f5f5f5;width:170px;font-weight:bold}ol{padding-left:18px}li{margin:6px 0}.sign{display:flex;gap:40px;margin-top:50px}.sign div{flex:1;border-top:1px solid #000;padding-top:6px;font-size:12px}@media print{button{display:none}}</style></head><body>'+
+    '<button onclick="print()" style="float:right;padding:8px 14px">🖨 Print / Save PDF</button>'+
+    '<h1>'+esc(c.COMPANY_NAME||'HG Group')+'<br>TEMPORARY STORAGE — PRE-ENGAGEMENT AGREEMENT</h1>'+
+    '<table><tr><td class="k">Agreement Ref</td><td>'+esc(r.id)+'</td><td class="k">Date</td><td>'+esc(today)+'</td></tr>'+
+    '<tr><td class="k">Client (Owner of Goods)</td><td colspan="3">'+esc(r.clientCompany)+(r.clientPIC?' — attn: '+esc(r.clientPIC):'')+'</td></tr>'+
+    '<tr><td class="k">Contact</td><td>'+esc(r.clientContact||'-')+'</td><td class="k">Email</td><td>'+esc(r.clientEmail||'-')+'</td></tr>'+
+    '<tr><td class="k">Storage Lot</td><td>'+esc(r.lotId)+' (Zone '+esc(lot.zone||'')+', '+esc(lot.floor||'')+')</td><td class="k">Lockset No</td><td>'+esc(lot.lockset||'-')+'</td></tr>'+
+    '<tr><td class="k">Lot Size</td><td>'+esc(size)+'</td><td class="k">Deposit</td><td>'+(r.deposit?rm(r.deposit):'-')+'</td></tr>'+
+    '<tr><td class="k">Storage Period</td><td>'+esc(r.startDate)+' to '+esc(r.endDate)+'</td><td class="k">Rate</td><td>'+(r.monthlyRate?rm(r.monthlyRate)+' / month':'as quoted')+'</td></tr>'+
+    '<tr><td class="k">CCTV Ref</td><td colspan="3">'+esc(r.cctvNo||'-')+' '+(r.cctvUrl?'('+esc(r.cctvUrl)+')':'')+'</td></tr></table>'+
+    '<h2>Terms</h2><ol>'+
+    '<li><b>Storage space only.</b> HG provides a lockable storage lot on an "as-is" basis. HG is a space provider, not a warehouse keeper or bailee for reward.</li>'+
+    '<li><b>No warranty, no insurance.</b> HG gives NO warranty and provides NO insurance over the stored goods. The Client stores goods entirely at the Client\'s own risk and is responsible for arranging its own insurance.</li>'+
+    '<li><b>Liability.</b> HG shall not be liable for any loss, theft, damage, fire, flood, pest, deterioration or loss of profit/business, save for HG\'s own proven gross negligence, capped at one (1) month\'s storage fee.</li>'+
+    '<li><b>Lock & keys.</b> Lot is secured by the lockset above. The Client holds the key/combination. HG holds no duplicate.</li>'+
+    '<li><b>Prohibited goods.</b> No illegal, hazardous, flammable, explosive, perishable, living, or foul-smelling items, and no cash/valuables/documents.</li>'+
+    '<li><b>Payment.</b> Storage fees are payable in advance per the invoice. Access may be suspended on overdue payment.</li>'+
+    '<li><b>Expiry & renewal.</b> HG will issue <b>two (2) renewal reminders</b> (about '+esc(c.NOTICE1_DAYS)+' and '+esc(c.NOTICE2_DAYS)+' days before expiry). To continue, the Client must renew in writing and settle the renewal invoice before the end date.</li>'+
+    '<li><b>Non-renewal / abandonment.</b> If the period expires and the Client does not renew or collect the goods after the two reminders, the goods are deemed <b>abandoned</b>. HG may dispose of, clear, or <b>sell off</b> the goods, and <b>ownership shall pass to HG</b>. Sale proceeds may be applied to outstanding fees and costs; the Client remains liable for any shortfall.</li>'+
+    '<li><b>Access & CCTV.</b> Access during operating hours. Premises may be under CCTV; the Client consents.</li>'+
+    '<li><b>Photographic record.</b> The Client agrees HG may photograph the goods at intake for record purposes.</li>'+
+    '<li><b>Indemnity.</b> The Client indemnifies HG against all claims arising from the Client\'s goods or breach of this agreement.</li>'+
+    '<li><b>Governing law.</b> Laws of Malaysia.</li></ol>'+
+    '<p>By signing, the Client confirms they have read and accept these terms <b>before</b> moving goods in.</p>'+
+    '<div class="sign"><div>Client signature / company stamp<br><br>Name:<br>Date:</div><div>For '+esc(c.COMPANY_NAME||'HG Group')+'<br><br>Name: '+esc(r.handledBy||'')+'<br>Date:</div></div></body></html>');
+  w.document.close();
+}
+function printInvoice(id){call('getInvoiceData',[id]).then(buildInvoice).catch(function(e){toast(e.message||e,'bad');});}
+function buildInvoice(o){
+  var i=o.invoice,c=o.config,lot=o.lot,pays=o.payments;
+  var paysRows=pays.map(function(p){return '<tr><td>'+esc(p.payDate)+'</td><td>'+esc(p.method||'')+'</td><td>'+esc(p.reference||'')+'</td><td style="text-align:right">'+rm(p.amount)+'</td></tr>';}).join('');
+  var w=window.open('','_blank');
+  w.document.write('<html><head><title>Invoice '+esc(i.invNo)+'</title><style>body{font:13px/1.6 Arial;max-width:760px;margin:28px auto;padding:0 20px;color:#111}h1{font-size:22px;margin:0}.r{text-align:right}.head{display:flex;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:16px}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{padding:7px 9px;border:1px solid #ccc}th{background:#f5f5f5;text-align:left}.tot td{border:none;padding:3px 9px}.tot .big{font-size:17px;font-weight:bold}.muted{color:#666;font-size:12px}@media print{button{display:none}}</style></head><body>'+
+    '<button onclick="print()" style="float:right;padding:8px 14px">🖨 Print / Save PDF</button>'+
+    '<div class="head"><div><h1>'+esc(c.COMPANY_NAME||'HG Group')+'</h1><div class="muted">'+esc(c.COMPANY_REG||'')+(c.SST_NO?' · SST: '+esc(c.SST_NO):'')+'<br>'+esc(c.COMPANY_ADDRESS||'').replace(/\n/g,'<br>')+(c.COMPANY_PHONE?'<br>Tel: '+esc(c.COMPANY_PHONE):'')+'</div></div>'+
+    '<div class="r"><h1 style="color:#888">'+(i.sstEnabled?'TAX INVOICE':'INVOICE')+'</h1><div><b>'+esc(i.invNo)+'</b><br>Date: '+esc(i.invDate)+(i.dueDate?'<br>Due: '+esc(i.dueDate):'')+'</div></div></div>'+
+    '<div><b>Bill to:</b><br>'+esc(i.clientCompany)+'</div>'+
+    '<table><thead><tr><th>Description</th><th class="r">Amount</th></tr></thead><tbody>'+
+    '<tr><td>'+esc(i.description||('Storage rental — Lot '+i.lotId))+(lot.lockset?'<div class="muted">Lot '+esc(i.lotId)+' · Lockset '+esc(lot.lockset)+(i.periodFrom?' · '+esc(i.periodFrom)+' → '+esc(i.periodTo||''):'')+'</div>':'')+'</td><td class="r">'+rm(i.amount)+'</td></tr>'+
+    '</tbody></table>'+
+    '<table class="tot" style="width:300px;margin-left:auto"><tr><td>Subtotal</td><td class="r">'+rm(i.amount)+'</td></tr>'+
+    (i.sstEnabled?'<tr><td>SST 6%</td><td class="r">'+rm(i.sstAmount)+'</td></tr>':'')+
+    '<tr><td class="big">Total</td><td class="r big">'+rm(i.total)+'</td></tr>'+
+    (i.amountPaid>0?'<tr><td>Paid</td><td class="r">-'+rm(i.amountPaid)+'</td></tr><tr><td class="big">Balance due</td><td class="r big">'+rm(i.balance)+'</td></tr>':'')+
+    '</table>'+
+    (paysRows?'<h3 style="font-size:13px">Payments received</h3><table><thead><tr><th>Date</th><th>Method</th><th>Reference</th><th class="r">Amount</th></tr></thead><tbody>'+paysRows+'</tbody></table>':'')+
+    (i.notes?'<p class="muted">'+esc(i.notes)+'</p>':'')+
+    '<p class="muted" style="margin-top:30px">This is a computer-generated invoice.</p></body></html>');
+  w.document.close();
+}
+
+boot();
+</script>
+</body>
+</html>

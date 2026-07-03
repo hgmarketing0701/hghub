@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HG Workers Documentation &amp; Work Permits — Supabase</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335; --border:#2a3245;
+    --text:#ffffff; --text-dim:#a0a8b8; --accent:#f59e0b; --accent-hover:#d97706;
+    --accent-soft:rgba(245,158,11,0.12); --green:#22c55e; --green-soft:rgba(34,197,94,0.15);
+    --red:#ef4444; --red-soft:rgba(239,68,68,0.15); --blue:#3b82f6; --blue-soft:rgba(59,130,246,0.15);
+    --yellow:#eab308; --yellow-soft:rgba(234,179,8,0.15); --amber:#f59e0b; --amber-soft:rgba(245,158,11,0.15);
+    --radius:14px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+         background:var(--bg); color:var(--text); line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+            padding:16px 22px; border-bottom:1px solid var(--border); }
+  .brand-block { display:flex; align-items:center; gap:13px; }
+  .brand-logo { width:44px; height:44px; background:linear-gradient(135deg,var(--accent),var(--accent-hover));
+                border-radius:11px; display:flex; align-items:center; justify-content:center; color:#0a0e1a; font-weight:900; }
+  .brand-name { font-weight:800; font-size:1.15rem; letter-spacing:-0.01em; }
+  .brand-sub { font-size:0.78rem; color:var(--text-dim); }
+  .user-pill { background:var(--surface); border:1px solid var(--border); border-radius:999px;
+               padding:8px 14px; font-size:0.8rem; color:var(--text-dim); display:flex; align-items:center; gap:10px; }
+  .user-pill b { color:var(--text); font-weight:600; }
+  .user-pill button { background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.78rem; font-weight:700; font-family:inherit; }
+  nav { display:flex; gap:6px; padding:14px 22px 0; flex-wrap:wrap; }
+  nav button { background:var(--surface); border:1px solid var(--border); color:var(--text-dim);
+               padding:10px 16px; border-radius:10px 10px 0 0; cursor:pointer; font-family:inherit;
+               font-size:0.88rem; font-weight:600; border-bottom:none; }
+  nav button.active { background:var(--surface-2); color:var(--accent); border-color:var(--accent); }
+  main { padding:18px 22px 70px; max-width:1200px; margin:0 auto; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+          padding:22px; margin-bottom:18px; }
+  h2 { font-size:1.05rem; font-weight:800; margin-bottom:4px; }
+  h3 { font-size:0.92rem; font-weight:700; margin:14px 0 8px; }
+  .sub { color:var(--text-dim); font-size:0.85rem; margin-bottom:14px; }
+  label { display:block; font-size:0.76rem; color:var(--text-dim); margin:10px 0 5px; font-weight:600;
+          text-transform:uppercase; letter-spacing:0.04em; }
+  input, select, textarea { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text);
+          border-radius:9px; padding:10px 12px; font-size:0.92rem; font-family:inherit; }
+  textarea { resize:vertical; min-height:64px; }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); }
+  input:disabled { opacity:0.6; }
+  .row { display:flex; gap:14px; flex-wrap:wrap; }
+  .row > div { flex:1 1 190px; min-width:0; }
+  button.primary { background:var(--accent); color:#0a0e1a; border:none; border-radius:10px; padding:11px 20px;
+                   font-weight:700; cursor:pointer; font-family:inherit; font-size:0.92rem; }
+  button.primary:hover { background:var(--accent-hover); }
+  button.primary:disabled { opacity:0.6; cursor:default; }
+  button.ghost { background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:10px;
+                 padding:11px 18px; font-weight:600; cursor:pointer; font-family:inherit; font-size:0.9rem; }
+  button.ghost:hover { border-color:var(--accent); }
+  button.danger { background:var(--red-soft); color:#f87171; border:1px solid var(--red); border-radius:10px;
+                  padding:11px 18px; font-weight:600; cursor:pointer; font-family:inherit; font-size:0.9rem; }
+  button.sm { padding:6px 12px; font-size:0.78rem; }
+  .empty { text-align:center; color:var(--text-dim); padding:30px; font-size:0.9rem; }
+  .msg { font-size:0.86rem; margin-top:10px; min-height:20px; opacity:0; transition:opacity 0.2s; }
+  .msg.show { opacity:1; } .msg.ok { color:var(--green); } .msg.err { color:#f87171; }
+  table.grid { width:100%; border-collapse:collapse; font-size:0.85rem; }
+  table.grid th { text-align:left; color:var(--text-dim); font-size:0.7rem; text-transform:uppercase;
+                  letter-spacing:0.05em; padding:8px 10px; border-bottom:1px solid var(--border); }
+  table.grid td { padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+  table.grid tr.click { cursor:pointer; } table.grid tr.click:hover td { background:var(--surface-2); }
+  .tag { display:inline-block; background:var(--surface-2); border:1px solid var(--border); border-radius:8px;
+         padding:2px 9px; font-size:0.74rem; color:var(--text-dim); }
+  .badge { display:inline-block; font-size:0.68rem; font-weight:700; border-radius:999px; padding:3px 9px;
+           text-transform:uppercase; letter-spacing:0.03em; }
+  .badge-green { background:var(--green-soft); color:var(--green); }
+  .badge-amber { background:var(--amber-soft); color:var(--amber); }
+  .badge-yellow{ background:var(--yellow-soft); color:var(--yellow); }
+  .badge-red   { background:var(--red-soft); color:#f87171; }
+  .badge-grey  { background:var(--surface-2); color:var(--text-dim); }
+  .badge-blue  { background:var(--blue-soft); color:#60a5fa; }
+  .stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; }
+  .stat { background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:16px; }
+  .stat .n { font-size:1.7rem; font-weight:800; }
+  .stat .l { font-size:0.74rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.04em; margin-top:2px; }
+  .stat.red .n { color:#f87171; } .stat.amber .n { color:var(--amber); }
+  .stat.yellow .n { color:var(--yellow); } .stat.green .n { color:var(--green); }
+  .spin { display:inline-block; width:14px; height:14px; border:2px solid var(--accent); border-top-color:transparent;
+          border-radius:50%; animation:s .7s linear infinite; vertical-align:middle; margin-right:6px; }
+  @keyframes s { to { transform:rotate(360deg); } }
+  .loading { text-align:center; color:var(--text-dim); padding:40px; }
+  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:flex-start;
+              justify-content:center; padding:30px 16px; overflow-y:auto; z-index:50; backdrop-filter:blur(6px); }
+  .modal-bg.show { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+           max-width:820px; width:100%; padding:24px; }
+  .hide { display:none !important; }
+  .muted { color:var(--text-dim); }
+  .toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .filters { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+  .filters > div { min-width:150px; }
+  .filters label { margin-top:0; }
+  .chk-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:8px; }
+  .chk { display:flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--border);
+         border-radius:9px; padding:9px 11px; font-size:0.85rem; cursor:pointer; }
+  .chk.on { border-color:var(--accent); background:var(--accent-soft); }
+  .chk input { width:auto; }
+  .attach-row { display:flex; gap:8px; margin-bottom:8px; }
+  .attach-row input { flex:1; }
+  .gate { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .gate .card { max-width:430px; width:100%; text-align:center; padding:36px 30px; }
+  .gate .brand-logo { margin:0 auto 16px; width:60px; height:60px; font-size:1.4rem; }
+  .gbtn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:18px;
+          background:#fff; color:#1a1a1a; border:none; border-radius:10px; padding:13px; font-weight:700;
+          font-size:0.95rem; cursor:pointer; font-family:inherit; }
+  .gate input { text-align:left; margin-bottom:4px; }
+  a.filelink { color:var(--accent); font-size:0.8rem; text-decoration:none; }
+  a.filelink:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+
+<!-- ══════════ GATE 0 · SUPABASE CONFIG ══════════ -->
+<div class="gate" id="gateConfig" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">HG</div>
+    <h2>Connect to Supabase</h2>
+    <div class="sub" style="margin-top:6px;">Paste your project's URL and anon key once — saved in this browser.<br>
+      Find both in <b>Supabase → Project Settings → API</b>.</div>
+    <label style="text-align:left;">Project URL</label>
+    <input id="cfgUrl" placeholder="https://xxxx.supabase.co">
+    <label style="text-align:left;">Anon / public key</label>
+    <input id="cfgKey" placeholder="eyJhbGciOi...">
+    <div id="cfgMsg" class="msg"></div>
+    <button class="primary" style="width:100%; margin-top:14px;" onclick="saveConfig()">Connect</button>
+  </div>
+</div>
+
+<!-- ══════════ GATE 1 · LOGIN ══════════ -->
+<div class="gate" id="gateLogin" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">HG</div>
+    <h2>Workers Documentation</h2>
+    <div class="sub" style="margin-top:6px;">Sign in with the Google account your admin has allowlisted.</div>
+    <button class="gbtn" onclick="signIn()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41 35.3 44 30.1 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+      Sign in with Google
+    </button>
+    <div id="loginMsg" class="msg"></div>
+  </div>
+</div>
+
+<!-- ══════════ GATE 2 · NOT ON ALLOWLIST ══════════ -->
+<div class="gate" id="gateDenied" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">🔒</div>
+    <h2>Not authorised</h2>
+    <div class="sub" style="margin-top:6px;"><span id="deniedEmail"></span> is not on the access list.<br>
+      Ask your admin to add you under <b>Settings → Team access</b>.</div>
+    <button class="ghost" style="width:100%; margin-top:10px;" onclick="signOut()">Use a different account</button>
+  </div>
+</div>
+
+<!-- ══════════ THE APP ══════════ -->
+<div id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand-block">
+      <div class="brand-logo">HG</div>
+      <div>
+        <div class="brand-name">Workers Documentation &amp; Work Permits</div>
+        <div class="brand-sub">Supabase edition · Compliance docs · permits · insurance · expiry reminders</div>
+      </div>
+    </div>
+    <div class="user-pill"><b id="userPill">…</b><button onclick="signOut()">Sign out</button></div>
+  </div>
+
+  <nav>
+    <button class="active" data-tab="dashboard" onclick="showTab('dashboard')">📊 Dashboard</button>
+    <button data-tab="workers" onclick="showTab('workers')">👷 Workers</button>
+    <button data-tab="permits" onclick="showTab('permits')">🛂 Work Permits</button>
+    <button data-tab="insurance" onclick="showTab('insurance')">🛡️ Insurance</button>
+    <button data-tab="forms" onclick="showTab('forms')">📥 Form Library</button>
+    <button data-tab="divisions" onclick="showTab('divisions')">🏷️ Divisions</button>
+    <button data-tab="report" onclick="showTab('report')">📄 Generate Report</button>
+    <button data-tab="settings" onclick="showTab('settings')">⚙️ Settings</button>
+  </nav>
+
+  <main>
+    <div id="loaderDash" class="loading"><span class="spin"></span> Loading data…</div>
+
+    <!-- ════ DASHBOARD ════ -->
+    <section id="tab-dashboard">
+      <div class="card">
+        <h2>Compliance overview</h2>
+        <div class="sub">Live snapshot of workers, documents and permits.</div>
+        <div class="stat-grid" id="dashStats"></div>
+      </div>
+      <div class="card">
+        <div class="toolbar">
+          <div><h2>⏰ Expiry alarms</h2><div class="sub" style="margin:0;">Same list the weekly reminder email would send — worker docs (active workers) &amp; active permits due or overdue.</div></div>
+          <button class="ghost sm" onclick="exportAlarmsExcel()">⬇ Export Excel</button>
+        </div>
+        <div id="alarmsList" class="loading"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+
+    <!-- ════ WORKERS ════ -->
+    <section id="tab-workers" class="hide">
+      <div class="card">
+        <div class="toolbar">
+          <div><h2>Workers</h2><div class="sub" style="margin:0;">Master list. Click a row to view documents &amp; expiry status.</div></div>
+          <div style="display:flex; gap:8px;">
+            <button class="ghost sm" onclick="exportWorkersExcel()">⬇ Export Excel</button>
+            <button class="primary sm" onclick="openWorkerEdit(null)">+ Add worker</button>
+          </div>
+        </div>
+        <div class="filters">
+          <div><label>Search</label><input id="wkSearch" placeholder="name / IC / passport" oninput="renderWorkers()"></div>
+          <div><label>Division</label><select id="wkDivFilter" onchange="renderWorkers()"></select></div>
+          <div><label>Status</label><select id="wkStatusFilter" onchange="renderWorkers()">
+            <option value="">All</option><option value="active">Active</option><option value="inactive">Inactive</option><option value="resigned">Resigned</option></select></div>
+        </div>
+        <div id="workersList" style="margin-top:14px;"></div>
+      </div>
+    </section>
+
+    <!-- ════ PERMITS ════ -->
+    <section id="tab-permits" class="hide">
+      <div class="card">
+        <div class="toolbar">
+          <div><h2>Work permits</h2><div class="sub" style="margin:0;">Issued mall / building permits linked to workers.</div></div>
+          <div style="display:flex; gap:8px;">
+            <button class="ghost sm" onclick="exportPermitsExcel()">⬇ Export Excel</button>
+            <button class="primary sm" onclick="openPermitEdit(null)">+ Add permit</button>
+          </div>
+        </div>
+        <div class="filters">
+          <div><label>Search</label><input id="pmSearch" placeholder="permit / mall / client" oninput="renderPermits()"></div>
+          <div><label>Duration</label><select id="pmDurFilter" onchange="renderPermits()"></select></div>
+          <div><label>Status</label><select id="pmStatusFilter" onchange="renderPermits()">
+            <option value="">All</option><option value="active">Active</option><option value="cancelled">Cancelled</option><option value="superseded">Superseded</option></select></div>
+        </div>
+        <div id="permitsList" style="margin-top:14px;"></div>
+      </div>
+    </section>
+
+    <!-- ════ INSURANCE ════ -->
+    <section id="tab-insurance" class="hide">
+      <div class="card">
+        <div class="toolbar">
+          <div><h2>Insurance policies</h2><div class="sub" style="margin:0;">HG's own cover-note library — track premium, what we charge the client, quotes &amp; payments.</div></div>
+          <div style="display:flex; gap:8px;">
+            <button class="ghost sm" onclick="exportInsuranceExcel()">⬇ Export Excel</button>
+            <button class="primary sm" onclick="openInsuranceEdit(null)">+ Add policy</button>
+          </div>
+        </div>
+        <div id="insuranceList" style="margin-top:8px;"></div>
+      </div>
+    </section>
+
+    <!-- ════ FORM LIBRARY ════ -->
+    <section id="tab-forms" class="hide">
+      <div class="card">
+        <div class="toolbar">
+          <div><h2>Form library</h2><div class="sub" style="margin:0;">Blank permit forms per mall — grab the right template when applying.</div></div>
+          <div style="display:flex; gap:8px;">
+            <button class="ghost sm" onclick="exportFormsExcel()">⬇ Export Excel</button>
+            <button class="primary sm" onclick="openFormEdit(null)">+ Add form</button>
+          </div>
+        </div>
+        <div class="filters">
+          <div><label>Filter mall</label><select id="fmMallFilter" onchange="renderForms()"></select></div>
+        </div>
+        <div id="formsList" style="margin-top:14px;"></div>
+      </div>
+    </section>
+
+    <!-- ════ DIVISIONS ════ -->
+    <section id="tab-divisions" class="hide">
+      <div class="card">
+        <div class="toolbar">
+          <div><h2>Divisions</h2><div class="sub" style="margin:0;">Group workers by department / trade.</div></div>
+          <button class="primary sm" onclick="openDivisionEdit(null)">+ Add division</button>
+        </div>
+        <div id="divisionsList" style="margin-top:8px;"></div>
+      </div>
+    </section>
+
+    <!-- ════ GENERATE REPORT ════ -->
+    <section id="tab-report" class="hide">
+      <div class="card">
+        <h2>Compliance report</h2>
+        <div class="sub">Pick divisions + doc types → generate a per-project compliance checklist or full pack (print / PDF).</div>
+        <div class="row">
+          <div><label>Project name</label><input id="repProjectName" placeholder="e.g. Lot 2.15 fit-out"></div>
+          <div><label>Mall / building</label><input id="repMallName" placeholder="e.g. Mid Valley"></div>
+        </div>
+        <div class="row">
+          <div><label>Contractor ref</label><input id="repContractorRef" placeholder="e.g. ABC Sdn Bhd"></div>
+          <div><label>Report date</label><input id="repDate" type="date"></div>
+        </div>
+        <h3>Divisions <a href="#" class="filelink" onclick="repToggleAll('div',true);return false;">all</a> · <a href="#" class="filelink" onclick="repToggleAll('div',false);return false;">none</a></h3>
+        <div class="chk-grid" id="repDivisions"></div>
+        <h3>Document types <a href="#" class="filelink" onclick="repToggleAll('doc',true);return false;">all</a> · <a href="#" class="filelink" onclick="repToggleAll('doc',false);return false;">none</a></h3>
+        <div class="chk-grid" id="repDocTypes"></div>
+        <div id="repMsg" class="msg"></div>
+        <div class="row" style="margin-top:18px; justify-content:flex-end;">
+          <div style="flex:0 0 auto;"><button class="ghost" onclick="generateReport('checklist')">Checklist (print/PDF)</button></div>
+          <div style="flex:0 0 auto;"><button class="primary" onclick="generateReport('fullpack')">Full pack (print/PDF)</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="toolbar"><div><h2>Report history</h2><div class="sub" style="margin:0;">Past report runs.</div></div></div>
+        <div id="reportHistoryList"></div>
+      </div>
+    </section>
+
+    <!-- ════ SETTINGS ════ -->
+    <section id="tab-settings" class="hide">
+      <div class="card">
+        <h2>Reminder settings</h2>
+        <div class="sub">Controls the expiry alarm windows &amp; who the daily-alarms email digest goes to.</div>
+        <div id="setForm" class="loading"><span class="spin"></span> Loading…</div>
+      </div>
+      <div class="card" id="teamCard" style="display:none;">
+        <h2>Team access (admin)</h2>
+        <div class="sub">Who can sign in. Google login + this list = access.</div>
+        <div class="row">
+          <div><label>Email</label><input id="au_email" placeholder="name@gmail.com"></div>
+          <div><label>Name</label><input id="au_name" placeholder="optional"></div>
+          <div style="flex:0 0 auto; display:flex; align-items:flex-end; gap:8px;">
+            <label class="chk" style="margin:0 0 0;"><input type="checkbox" id="au_admin"> Admin</label>
+            <button class="primary" onclick="addAllowed()">Add</button>
+          </div>
+        </div>
+        <div id="auMsg" class="msg"></div>
+        <div id="auList" style="margin-top:10px;"></div>
+      </div>
+      <div class="card">
+        <h2>Audit log</h2>
+        <div class="sub">Last 50 actions — who changed what, when.</div>
+        <div id="auditList" class="loading"><span class="spin"></span> Loading…</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ═══════ MODALS ═══════ -->
+<!-- Worker edit -->
+<div class="modal-bg" id="mWorkerEdit"><div class="modal">
+  <h2 id="weTitle">Add worker</h2><div class="sub">Master worker record.</div>
+  <input type="hidden" id="weId">
+  <div class="row">
+    <div><label>Full name *</label><input id="weName"></div>
+    <div><label>Status</label><select id="weStatus"><option value="active">Active</option><option value="inactive">Inactive</option><option value="resigned">Resigned</option></select></div>
+  </div>
+  <div class="row">
+    <div><label>IC number</label><input id="weIc"></div>
+    <div><label>Passport number</label><input id="wePassport"></div>
+    <div><label>Nationality</label><input id="weNationality"></div>
+  </div>
+  <div class="row">
+    <div><label>Division</label><select id="weDivision"></select></div>
+    <div><label>Position</label><input id="wePosition"></div>
+    <div><label>Phone</label><input id="wePhone"></div>
+  </div>
+  <label>Photo URL / storage path</label><input id="wePhoto" placeholder="https://… or upload below">
+  <div id="weUploadBox"></div>
+  <div id="weMsg" class="msg"></div>
+  <div class="row" style="margin-top:16px; justify-content:flex-end;">
+    <div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal('mWorkerEdit')">Cancel</button></div>
+    <div style="flex:0 0 auto;"><button class="primary" id="weSave" onclick="saveWorker()">Save</button></div>
+  </div>
+</div></div>
+
+<!-- Worker detail (documents) -->
+<div class="modal-bg" id="mWorkerDetail"><div class="modal" id="wdBody"></div></div>
+
+<!-- Document edit -->
+<div class="modal-bg" id="mDocEdit"><div class="modal">
+  <h2 id="deTitle">Add document</h2><div class="sub" id="deSub"></div>
+  <input type="hidden" id="deId"><input type="hidden" id="deWorkerId">
+  <div class="row">
+    <div><label>Document type</label><select id="deDocType" onchange="onDocTypeChange()"></select></div>
+    <div id="deSubtypeWrap"><label>Sub-type</label><input id="deDocSubtype" placeholder="e.g. mall name / vehicle type"></div>
+  </div>
+  <div class="row">
+    <div><label>Document number</label><input id="deDocNumber"></div>
+    <div><label>Issuing authority</label><input id="deIssuingAuthority"></div>
+  </div>
+  <div class="row">
+    <div><label>Issue date</label><input id="deIssueDate" type="date"></div>
+    <div><label>Expiry date</label><input id="deExpiryDate" type="date"></div>
+  </div>
+  <label>File URL / storage path</label><input id="deFileUrl" placeholder="https://… or upload below">
+  <div id="deUploadBox"></div>
+  <label>Notes</label><textarea id="deNotes"></textarea>
+  <div id="deMsg" class="msg"></div>
+  <div class="row" style="margin-top:16px; justify-content:flex-end;">
+    <div style="flex:0 0 auto;"><button class="danger" id="deDelBtn" onclick="deleteDocument()">Delete</button></div>
+    <div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal('mDocEdit')">Cancel</button></div>
+    <div style="flex:0 0 auto;"><button class="primary" id="deSave" onclick="saveDocument()">Save</button></div>
+  </div>
+</div></div>
+
+<!-- Permit edit -->
+<div class="modal-bg" id="mPermitEdit"><div class="modal">
+  <h2 id="peTitle">Add work permit</h2><div class="sub">Issued mall / building permit.</div>
+  <input type="hidden" id="peId">
+  <div class="row">
+    <div><label>Permit number</label><input id="pePermitNumber"></div>
+    <div><label>Title</label><input id="peTitleInp"></div>
+  </div>
+  <div class="row">
+    <div><label>Mall / building</label><input id="peMall"></div>
+    <div><label>Contractor / client</label><input id="peContractor"></div>
+    <div><label>Project reference</label><input id="peProjectRef"></div>
+  </div>
+  <div class="row">
+    <div><label>Work scope</label><input id="peWorkScope"></div>
+    <div><label>Work area</label><input id="peWorkArea"></div>
+    <div><label>Working hours</label><input id="peWorkingHours"></div>
+  </div>
+  <div class="row">
+    <div><label>Applied by</label><select id="peAppliedBy"><option value="own_team">Own team</option><option value="client">Client</option><option value="mall">Mall</option></select></div>
+    <div><label>Issued by</label><input id="peIssuedBy"></div>
+    <div><label>Duration</label><select id="peDuration"></select></div>
+  </div>
+  <div class="row">
+    <div><label>Issue date</label><input id="peIssueDate" type="date"></div>
+    <div><label>Valid from</label><input id="peValidFrom" type="date"></div>
+    <div><label>Valid until</label><input id="peValidUntil" type="date"></div>
+    <div><label>Status</label><select id="peStatus"><option value="active">Active</option><option value="cancelled">Cancelled</option><option value="superseded">Superseded</option></select></div>
+  </div>
+  <label>Approved permit PDF — URL / storage path</label><input id="peFileUrl" placeholder="https://…">
+  <div id="peUploadBox"></div>
+  <h3>Insurance for this permit</h3>
+  <div class="row">
+    <div><label>Insurance source</label><select id="peInsSource" onchange="onPermitInsSource()"></select></div>
+    <div id="peInsPolWrap"><label>HG policy</label><select id="peInsPolicyId"></select></div>
+  </div>
+  <div class="row" id="peInsManual">
+    <div><label>Provider</label><input id="peInsProvider"></div>
+    <div><label>Policy / cover note no.</label><input id="peInsPolicyNumber"></div>
+  </div>
+  <div class="row">
+    <div><label>Insurance file URL</label><input id="peInsFileUrl"></div>
+    <div><label>Client invoice number</label><input id="peClientInvoice"></div>
+  </div>
+  <label>Insurance notes</label><input id="peInsNotes">
+  <h3>Assign workers</h3>
+  <div class="chk-grid" id="peWorkers" style="max-height:220px; overflow:auto;"></div>
+  <h3>Attachments</h3>
+  <div id="peAttachments"></div>
+  <button class="ghost sm" style="margin-top:8px;" onclick="addPermitAttachRow()">+ Attachment</button>
+  <label>Notes</label><textarea id="peNotes"></textarea>
+  <div id="peMsg" class="msg"></div>
+  <div class="row" style="margin-top:16px; justify-content:flex-end;">
+    <div style="flex:0 0 auto;"><button class="danger" id="peDelBtn" onclick="deletePermit()">Delete</button></div>
+    <div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal('mPermitEdit')">Cancel</button></div>
+    <div style="flex:0 0 auto;"><button class="primary" id="peSave" onclick="savePermit()">Save</button></div>
+  </div>
+</div></div>
+
+<!-- Insurance edit -->
+<div class="modal-bg" id="mInsuranceEdit"><div class="modal">
+  <h2 id="ieTitle">Add insurance policy</h2><div class="sub">Cover-note record + quotes + payments.</div>
+  <input type="hidden" id="ieId">
+  <div class="row">
+    <div><label>Policy / cover note number *</label><input id="iePolicyNumber"></div>
+    <div><label>Provider *</label><input id="ieProvider"></div>
+    <div><label>Status</label><select id="ieStatus"><option value="active">Active</option><option value="expired">Expired</option><option value="cancelled">Cancelled</option></select></div>
+  </div>
+  <div class="row">
+    <div><label>Coverage type</label><input id="ieCoverageType"></div>
+    <div><label>Coverage amount</label><input id="ieCoverageAmount"></div>
+  </div>
+  <div class="row">
+    <div><label>Valid from</label><input id="ieValidFrom" type="date"></div>
+    <div><label>Valid until</label><input id="ieValidUntil" type="date"></div>
+  </div>
+  <div class="row">
+    <div><label>Invoice number (to client)</label><input id="ieInvoiceNumber"></div>
+    <div><label>Premium amount (RM — we pay)</label><input id="iePremiumAmount" type="number" step="any" value="0"></div>
+    <div><label>Charged to client (RM)</label><input id="ieChargedToClient" type="number" step="any" value="0"></div>
+  </div>
+  <label>Policy file URL / storage path</label><input id="ieFileUrl">
+  <div id="ieUploadBox"></div>
+  <label>Notes</label><textarea id="ieNotes"></textarea>
+  <h3>Quotes</h3><div id="ieQuotes"></div>
+  <button class="ghost sm" style="margin-top:8px;" onclick="addInsQuoteRow()">+ Quote</button>
+  <h3>Payments</h3><div id="iePayments"></div>
+  <button class="ghost sm" style="margin-top:8px;" onclick="addInsPaymentRow()">+ Payment</button>
+  <h3>Attachments</h3><div id="ieAttachments"></div>
+  <button class="ghost sm" style="margin-top:8px;" onclick="addInsAttachRow()">+ Attachment</button>
+  <div id="ieMsg" class="msg"></div>
+  <div class="row" style="margin-top:16px; justify-content:flex-end;">
+    <div style="flex:0 0 auto;"><button class="danger" id="ieDelBtn" onclick="deleteInsurance()">Delete</button></div>
+    <div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal('mInsuranceEdit')">Cancel</button></div>
+    <div style="flex:0 0 auto;"><button class="primary" id="ieSave" onclick="saveInsurance()">Save</button></div>
+  </div>
+</div></div>
+
+<!-- Form edit -->
+<div class="modal-bg" id="mFormEdit"><div class="modal">
+  <h2 id="feTitle">Add form</h2><div class="sub">Blank permit form template.</div>
+  <input type="hidden" id="feId">
+  <div class="row">
+    <div><label>Mall / building *</label><input id="feMall"></div>
+    <div><label>Form name *</label><input id="feFormName"></div>
+  </div>
+  <div class="row">
+    <div><label>Form type</label><input id="feFormType" list="formTypeList"></div>
+    <div><label>Version</label><input id="feVersion"></div>
+    <div><label>Last verified date</label><input id="feLastVerified" type="date"></div>
+  </div>
+  <label>Form file URL / storage path</label><input id="feFileUrl">
+  <div id="feUploadBox"></div>
+  <div class="row">
+    <div><label>Contact info</label><input id="feContact"></div>
+    <div><label>Lead time</label><input id="feLeadTime"></div>
+  </div>
+  <label>Requirements</label><textarea id="feRequirements"></textarea>
+  <label>Notes</label><textarea id="feNotes"></textarea>
+  <div id="feMsg" class="msg"></div>
+  <div class="row" style="margin-top:16px; justify-content:flex-end;">
+    <div style="flex:0 0 auto;"><button class="danger" id="feDelBtn" onclick="deleteForm()">Delete</button></div>
+    <div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal('mFormEdit')">Cancel</button></div>
+    <div style="flex:0 0 auto;"><button class="primary" id="feSave" onclick="saveForm()">Save</button></div>
+  </div>
+</div></div>
+<datalist id="formTypeList"></datalist>
+
+<!-- Division edit -->
+<div class="modal-bg" id="mDivisionEdit"><div class="modal">
+  <h2 id="dvTitle">Add division</h2>
+  <input type="hidden" id="dvId">
+  <label>Name *</label><input id="dvName">
+  <label>Description</label><input id="dvDescription">
+  <label class="chk" style="margin-top:10px;"><input type="checkbox" id="dvActive" checked> Active</label>
+  <div id="dvMsg" class="msg"></div>
+  <div class="row" style="margin-top:16px; justify-content:flex-end;">
+    <div style="flex:0 0 auto;"><button class="danger" id="dvDelBtn" onclick="deleteDivision()">Delete</button></div>
+    <div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal('mDivisionEdit')">Cancel</button></div>
+    <div style="flex:0 0 auto;"><button class="primary" id="dvSave" onclick="saveDivision()">Save</button></div>
+  </div>
+</div></div>
+
+<script>
+// ═══════════════════════════ CONFIG ═══════════════════════════
+var SUPABASE_URL = '';
+var SUPABASE_KEY = '';
+if (!SUPABASE_URL) SUPABASE_URL = localStorage.getItem('hg_supabase_url') || '';
+if (!SUPABASE_KEY) SUPABASE_KEY = localStorage.getItem('hg_supabase_key') || '';
+
+var sb = null, SESSION = null, IS_ADMIN = false;
+var BUCKET = 'worker-docs';
+
+// Locked 12-key doc-type enum (matches the GAS DOC_TYPES)
+var DOC_TYPES = [
+  { key:'PASSPORT',          label:'Passport',                        tracksExpiry:true,  hasSubtype:false },
+  { key:'IC',                label:'IC / MyKad',                      tracksExpiry:false, hasSubtype:false },
+  { key:'WORKING_VISA',      label:'Working Visa',                    tracksExpiry:true,  hasSubtype:false },
+  { key:'LETTER_AUTH',       label:'Letter of Authorization (Agent)', tracksExpiry:true,  hasSubtype:false },
+  { key:'MALL_PLEDGE',       label:'Mall Safety Pledge',              tracksExpiry:false, hasSubtype:true  },
+  { key:'MALL_EHS',          label:'Mall EHS Card',                   tracksExpiry:true,  hasSubtype:true  },
+  { key:'CIDB_GREEN',        label:'CIDB Green Card',                 tracksExpiry:true,  hasSubtype:false },
+  { key:'WAH',               label:'Work at Height (WAH)',            tracksExpiry:true,  hasSubtype:true  },
+  { key:'COMPETENCY_CERT',   label:'Competency Certificate',          tracksExpiry:true,  hasSubtype:true  },
+  { key:'EDUCATION_CERT',    label:'Education Certificate',           tracksExpiry:false, hasSubtype:true  },
+  { key:'PROFESSIONAL_CERT', label:'Professional Certificate',        tracksExpiry:true,  hasSubtype:true  },
+  { key:'DRIVING_HEAVY',     label:'Driving Licence — Heavy Vehicle', tracksExpiry:true,  hasSubtype:true  },
+];
+var PERMIT_DURATIONS = [{key:'yearly',label:'Yearly'},{key:'monthly',label:'Monthly'},{key:'ad_hoc',label:'Ad-hoc / one-off'}];
+var INSURANCE_SOURCES = [
+  {key:'hg_existing',label:'Use existing HG insurance policy'},
+  {key:'new',label:'Buy new insurance policy'},
+  {key:'client',label:'Insurance cover note from client'},
+  {key:'none',label:'No insurance coverage needed'},
+];
+var FORM_TYPES = ['General Work Permit','Hot Work Permit','After-Hours / Night Work','Lift / Crane Permit','Hoarding Permit','Loading Bay Booking','Worker Pass Application','Vehicle Pass Application','EHS / Safety Induction','Other'];
+
+// ═══════════════════════════ STATE ═══════════════════════════
+var DATA = {
+  divisions:[], workers:[], documents:[], workPermits:[], workPermitWorkers:[],
+  workPermitAttachments:[], insurancePolicies:[], insuranceAttachments:[],
+  insuranceQuotes:[], insurancePayments:[], permitForms:[], reportHistory:[],
+  settings:{}, alarms:[]
+};
+var repSel = { divisions:new Set(), docTypes:new Set() };
+
+// ═══════════════════════════ HELPERS ═══════════════════════════
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function fmt(s){ return s ? String(s).slice(0,10) : ''; }
+function rm(n){ return 'RM '+(Number(n)||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fail(e){ toast(e && e.message ? e.message : String(e), true); }
+function openModalEl(id){ el(id).classList.add('show'); }
+function closeModal(id){ el(id).classList.remove('show'); }
+function openModal(id){ el(id).classList.add('show'); }
+document.addEventListener('click', function(e){ if(e.target.classList && e.target.classList.contains('modal-bg')) e.target.classList.remove('show'); });
+function showMsg(id,t,ok){ var m=el(id); if(!m)return; m.textContent=t; m.className='msg show '+(ok?'ok':'err'); setTimeout(function(){m.classList.remove('show');},4500); }
+function toast(msg,isErr){ var box=el('__toast'); if(!box){ box=document.createElement('div'); box.id='__toast'; box.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1c2335;border:1px solid #2a3245;color:#fff;padding:12px 20px;border-radius:10px;z-index:99;font-size:0.9rem;box-shadow:0 8px 24px rgba(0,0,0,.4);transition:opacity .2s;'; document.body.appendChild(box); } box.textContent=msg; box.style.borderColor=isErr?'#ef4444':'#2a3245'; box.style.color=isErr?'#f87171':'#fff'; box.style.opacity='1'; clearTimeout(window.__tt); window.__tt=setTimeout(function(){box.style.opacity='0';},2600); }
+function docTypeLabel(k){ var t=DOC_TYPES.find(function(x){return x.key===k;}); return t?t.label:k; }
+function docTypeDef(k){ return DOC_TYPES.find(function(x){return x.key===k;})||{}; }
+function divisionName(id){ var d=DATA.divisions.find(function(x){return x.id===id;}); return d?d.name:'—'; }
+function workerById(id){ return DATA.workers.find(function(w){return w.id===id;}); }
+function docsForWorker(id){ return DATA.documents.filter(function(d){return d.worker_id===id;}); }
+function parseDateLocal(s){ if(!s)return null; var m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})/); if(!m)return null; return new Date(Number(m[1]),Number(m[2])-1,Number(m[3])); }
+function statusFromExpiry(expiry){
+  if(!expiry) return {label:'No expiry', cls:'badge-grey', days:null};
+  var today=new Date(); today.setHours(0,0,0,0);
+  var exp=parseDateLocal(expiry); if(!exp) return {label:'Invalid date',cls:'badge-grey',days:null};
+  var days=Math.floor((exp-today)/86400000);
+  if(days<0)  return {label:'Expired '+(-days)+'d ago',cls:'badge-red',days:days};
+  if(days<30) return {label:days+'d left',cls:'badge-amber',days:days};
+  if(days<90) return {label:days+'d left',cls:'badge-yellow',days:days};
+  return {label:'Valid',cls:'badge-green',days:days};
+}
+
+// resolve a stored file_url (external URL or sb://bucket/path) into an openable URL
+async function openFile(url){
+  if(!url) return;
+  if(/^https?:\/\//i.test(url)){ window.open(url,'_blank'); return; }
+  var path=url.replace(/^sb:\/\/[^/]+\//,'').replace(/^worker-docs\//,'');
+  var r=await sb.storage.from(BUCKET).createSignedUrl(path, 3600);
+  if(r.error){ fail(r.error); return; }
+  window.open(r.data.signedUrl,'_blank');
+}
+
+// upload widget: injects a small file picker into a container, sets target input on success
+function mountUploader(boxId, targetId, subfolder){
+  var box=el(boxId); if(!box) return;
+  box.innerHTML='<div style="margin-top:6px;"><input type="file" accept="application/pdf,image/*" style="font-size:0.8rem;" onchange="doUpload(this,\''+targetId+'\',\''+subfolder+'\')"><span class="u">'+'</span></div>';
+}
+async function doUpload(input, targetId, subfolder){
+  var file=input.files && input.files[0]; if(!file) return;
+  if(file.size > 10*1024*1024){ toast('File too large. Max 10 MB.', true); return; }
+  var stamp=new Date().toISOString().replace(/[-:T.Z]/g,'').slice(0,14);
+  var clean=file.name.replace(/[\\/:*?"<>|]+/g,'_').slice(0,120);
+  var path=subfolder+'/'+stamp+'_'+clean;
+  var span=input.parentNode.querySelector('.u'); if(span) span.textContent=' ⏳ uploading…';
+  var r=await sb.storage.from(BUCKET).upload(path, file, { upsert:false });
+  if(r.error){ if(span) span.textContent=' ❌ '+r.error.message; toast(r.error.message,true); return; }
+  el(targetId).value='sb://'+BUCKET+'/'+path;
+  if(span) span.textContent=' ✅ '+clean;
+}
+
+// ═══════════════════════════ BOOT / AUTH ═══════════════════════════
+function saveConfig(){
+  var u=el('cfgUrl').value.trim().replace(/\/+$/,''), k=el('cfgKey').value.trim();
+  if(!/^https:\/\/.+\.supabase\.co$/.test(u)){ showMsg('cfgMsg','URL must look like https://xxxx.supabase.co', false); return; }
+  if(!(k.indexOf('eyJ')===0 || k.indexOf('sb_publishable_')===0) || k.length<30){
+    showMsg('cfgMsg','That does not look like the anon/public key (starts with eyJ… or sb_publishable_…).', false); return; }
+  localStorage.setItem('hg_supabase_url', u); localStorage.setItem('hg_supabase_key', k); location.reload();
+}
+async function start(){
+  if(!SUPABASE_URL || !SUPABASE_KEY){ el('gateConfig').style.display='flex'; return; }
+  sb=window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var s=await sb.auth.getSession(); SESSION=s.data.session;
+  sb.auth.onAuthStateChange(function(_e,session){ if(!!session !== !!SESSION){ SESSION=session; route(); } });
+  route();
+}
+async function route(){
+  ['gateConfig','gateLogin','gateDenied'].forEach(function(g){ el(g).style.display='none'; });
+  el('app').style.display='none';
+  if(!SESSION){ el('gateLogin').style.display='flex'; return; }
+  var email=(SESSION.user.email||'').toLowerCase();
+  var r=await sb.from('allowed_users').select('email,is_admin').ilike('email', email).maybeSingle();
+  if(r.error){ showMsg('loginMsg', r.error.message, false); el('gateLogin').style.display='flex'; return; }
+  if(!r.data){ el('deniedEmail').textContent=email; el('gateDenied').style.display='flex'; return; }
+  IS_ADMIN=!!r.data.is_admin;
+  el('app').style.display='block';
+  el('userPill').textContent='👤 '+email;
+  el('teamCard').style.display=IS_ADMIN?'block':'none';
+  await loadAll();
+}
+function signIn(){
+  var here=window.location.href.split('#')[0];
+  var embedded=(window.self !== window.top);
+  sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo:here, skipBrowserRedirect:embedded } })
+    .then(function(r){
+      if(r.error){ showMsg('loginMsg', r.error.message, false); return; }
+      if(embedded && r.data && r.data.url){ window.top.location.href=r.data.url; }
+    });
+}
+function signOut(){ sb.auth.signOut().then(function(){ location.reload(); }); }
+
+// ═══════════════════════════ LOAD ALL ═══════════════════════════
+async function loadAll(){
+  el('loaderDash').style.display='block';
+  var q = await Promise.all([
+    sb.from('wkr_divisions').select('*').order('name'),
+    sb.from('wkr_workers').select('*').order('full_name'),
+    sb.from('wkr_documents').select('*'),
+    sb.from('wkr_work_permits').select('*').order('created_at',{ascending:false}),
+    sb.from('wkr_permit_workers').select('*'),
+    sb.from('wkr_permit_attachments').select('*'),
+    sb.from('wkr_insurance_policies').select('*').order('created_at',{ascending:false}),
+    sb.from('wkr_insurance_attachments').select('*'),
+    sb.from('wkr_insurance_quotes').select('*'),
+    sb.from('wkr_insurance_payments').select('*'),
+    sb.from('wkr_permit_forms').select('*').order('mall_name'),
+    sb.from('wkr_report_history').select('*').order('generated_at',{ascending:false}),
+    sb.from('app_settings').select('*'),
+    sb.from('wkr_alarms').select('*')
+  ]);
+  var errs=q.filter(function(x){return x.error;});
+  if(errs.length){ el('loaderDash').innerHTML='<p style="color:var(--red)">'+esc(errs[0].error.message)+'</p>'; return; }
+  DATA.divisions=q[0].data; DATA.workers=q[1].data; DATA.documents=q[2].data;
+  DATA.workPermits=q[3].data; DATA.workPermitWorkers=q[4].data; DATA.workPermitAttachments=q[5].data;
+  DATA.insurancePolicies=q[6].data; DATA.insuranceAttachments=q[7].data;
+  DATA.insuranceQuotes=q[8].data; DATA.insurancePayments=q[9].data;
+  DATA.permitForms=q[10].data; DATA.reportHistory=q[11].data;
+  DATA.settings={}; q[12].data.forEach(function(r){ DATA.settings[r.key]=r.value; });
+  DATA.alarms=q[13].data;
+  el('loaderDash').style.display='none';
+  buildStaticSelects();
+  renderAll();
+}
+function buildStaticSelects(){
+  el('formTypeList').innerHTML=FORM_TYPES.map(function(t){return '<option value="'+esc(t)+'">';}).join('');
+  el('peDuration').innerHTML=PERMIT_DURATIONS.map(function(d){return '<option value="'+d.key+'">'+esc(d.label)+'</option>';}).join('');
+  el('peInsSource').innerHTML=INSURANCE_SOURCES.map(function(s){return '<option value="'+s.key+'">'+esc(s.label)+'</option>';}).join('');
+}
+function renderAll(){
+  renderDashboard(); renderAlarms();
+  fillDivisionDropdowns();
+  renderWorkers(); renderPermits(); renderInsurance(); renderForms(); renderDivisions();
+  renderReportPickers(); renderReportHistory();
+}
+function fillDivisionDropdowns(){
+  var opts='<option value="">— none —</option>'+DATA.divisions.map(function(d){return '<option value="'+d.id+'">'+esc(d.name)+'</option>';}).join('');
+  el('weDivision').innerHTML=opts;
+  el('wkDivFilter').innerHTML='<option value="">All divisions</option>'+DATA.divisions.map(function(d){return '<option value="'+d.id+'">'+esc(d.name)+'</option>';}).join('');
+  el('pmDurFilter').innerHTML='<option value="">All durations</option>'+PERMIT_DURATIONS.map(function(d){return '<option value="'+d.key+'">'+esc(d.label)+'</option>';}).join('');
+  var malls=Array.from(new Set(DATA.permitForms.map(function(f){return f.mall_name;}).filter(Boolean))).sort();
+  el('fmMallFilter').innerHTML='<option value="">All malls</option>'+malls.map(function(m){return '<option>'+esc(m)+'</option>';}).join('');
+}
+
+// ═══════════════════════════ DASHBOARD ═══════════════════════════
+function renderDashboard(){
+  var activeWorkers=DATA.workers.filter(function(w){return w.status==='active';}).length;
+  var expired=0, soon=0, warn=0;
+  DATA.documents.forEach(function(d){
+    var w=workerById(d.worker_id); if(!w || w.status!=='active') return;
+    var s=statusFromExpiry(d.expiry_date);
+    if(s.cls==='badge-red') expired++; else if(s.cls==='badge-amber') soon++; else if(s.cls==='badge-yellow') warn++;
+  });
+  var activePermits=DATA.workPermits.filter(function(p){return (p.status||'active')==='active';}).length;
+  el('dashStats').innerHTML=[
+    ['', DATA.workers.length, 'Total workers'],
+    ['green', activeWorkers, 'Active workers'],
+    ['', DATA.documents.length, 'Documents'],
+    ['red', expired, 'Expired docs'],
+    ['amber', soon, 'Expiring < 30d'],
+    ['yellow', warn, 'Expiring < 90d'],
+    ['', activePermits, 'Active permits'],
+    ['', DATA.insurancePolicies.length, 'Insurance policies']
+  ].map(function(x){ return '<div class="stat '+x[0]+'"><div class="n">'+x[1]+'</div><div class="l">'+x[2]+'</div></div>'; }).join('');
+}
+function renderAlarms(){
+  if(!DATA.alarms.length){ el('alarmsList').innerHTML='<div class="empty">✅ Nothing due or overdue.</div>'; return; }
+  var rows=DATA.alarms.slice().sort(function(a,b){return String(a.due_date||'').localeCompare(String(b.due_date||''));});
+  el('alarmsList').innerHTML='<table class="grid"><thead><tr><th>Type</th><th>Ref</th><th>Detail</th><th>Due</th><th>Status</th></tr></thead><tbody>'+
+    rows.map(function(a){
+      var s=statusFromExpiry(a.due_date);
+      return '<tr><td><span class="tag">'+esc(a.alarm_type)+'</span></td><td>'+esc(a.ref)+'</td><td class="muted">'+esc(a.detail)+'</td>'+
+        '<td>'+esc(fmt(a.due_date))+'</td><td><span class="badge '+s.cls+'">'+esc(s.label)+'</span></td></tr>';
+    }).join('')+'</tbody></table>';
+}
+
+// ═══════════════════════════ WORKERS ═══════════════════════════
+function renderWorkers(){
+  var q=(el('wkSearch').value||'').toLowerCase(), fd=el('wkDivFilter').value, fs=el('wkStatusFilter').value;
+  var rows=DATA.workers.filter(function(w){
+    if(fd && w.division_id!==fd) return false;
+    if(fs && w.status!==fs) return false;
+    if(q){ var hay=(w.full_name+' '+(w.ic_number||'')+' '+(w.passport_number||'')).toLowerCase(); if(hay.indexOf(q)<0) return false; }
+    return true;
+  });
+  if(!rows.length){ el('workersList').innerHTML='<div class="empty">No workers match.</div>'; return; }
+  el('workersList').innerHTML='<table class="grid"><thead><tr><th>Name</th><th>Division</th><th>Position</th><th>IC / Passport</th><th>Docs</th><th>Worst expiry</th><th>Status</th></tr></thead><tbody>'+
+    rows.map(function(w){
+      var docs=docsForWorker(w.id);
+      var worst=null;
+      docs.forEach(function(d){ var s=statusFromExpiry(d.expiry_date); if(s.days!=null && (worst===null || s.days<worst.days)) worst=s; });
+      var worstHtml=worst?'<span class="badge '+worst.cls+'">'+esc(worst.label)+'</span>':'<span class="muted">—</span>';
+      return '<tr class="click" onclick="openWorkerDetail(\''+w.id+'\')"><td><b>'+esc(w.full_name)+'</b></td><td>'+esc(divisionName(w.division_id))+'</td>'+
+        '<td>'+esc(w.position||'')+'</td><td class="muted">'+esc(w.ic_number||w.passport_number||'')+'</td>'+
+        '<td>'+docs.length+'</td><td>'+worstHtml+'</td><td><span class="badge badge-'+(w.status==='active'?'green':w.status==='resigned'?'red':'grey')+'">'+esc(w.status)+'</span></td></tr>';
+    }).join('')+'</tbody></table>';
+}
+function openWorkerEdit(id){
+  var w=id?workerById(id):null;
+  el('weTitle').textContent=w?'Edit worker':'Add worker';
+  el('weId').value=w?w.id:''; el('weName').value=w?w.full_name:''; el('weStatus').value=w?w.status:'active';
+  el('weIc').value=w?w.ic_number:''; el('wePassport').value=w?w.passport_number:''; el('weNationality').value=w?w.nationality:'';
+  el('weDivision').value=w?(w.division_id||''):''; el('wePosition').value=w?w.position:''; el('wePhone').value=w?w.phone:'';
+  el('wePhoto').value=w?w.photo_url:'';
+  mountUploader('weUploadBox','wePhoto','worker-photos');
+  openModal('mWorkerEdit');
+}
+async function saveWorker(){
+  var id=el('weId').value;
+  var obj={ full_name:el('weName').value.trim(), ic_number:el('weIc').value.trim(), passport_number:el('wePassport').value.trim(),
+    nationality:el('weNationality').value.trim(), division_id:el('weDivision').value||null, position:el('wePosition').value.trim(),
+    phone:el('wePhone').value.trim(), photo_url:el('wePhoto').value.trim(), status:el('weStatus').value,
+    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+  if(!obj.full_name){ showMsg('weMsg','Name is required.', false); return; }
+  var btn=el('weSave'); btn.disabled=true; btn.textContent='Saving…';
+  var r;
+  if(id){ r=await sb.from('wkr_workers').update(obj).eq('id',id); }
+  else { obj.created_by=SESSION.user.email; r=await sb.from('wkr_workers').insert(obj); }
+  btn.disabled=false; btn.textContent='Save';
+  if(r.error){ showMsg('weMsg', r.error.message, false); return; }
+  await sb.rpc('log_audit',{ p_action:(id?'wkr.worker.update':'wkr.worker.create'), p_details:obj.full_name });
+  closeModal('mWorkerEdit'); toast('Worker saved.');
+  await loadAll();
+}
+function openWorkerDetail(id){
+  var w=workerById(id); if(!w) return;
+  var docs=docsForWorker(id);
+  var docRows=docs.length?docs.map(function(d){
+    var s=statusFromExpiry(d.expiry_date);
+    var fileBtn=d.file_url?'<a href="#" class="filelink" onclick="openFile(\''+esc(d.file_url).replace(/'/g,"\\'")+'\');return false;">open file</a>':'';
+    return '<tr class="click" onclick="openDocEdit(\''+d.id+'\',\''+id+'\')"><td><b>'+esc(docTypeLabel(d.doc_type))+'</b>'+(d.doc_subtype?' · '+esc(d.doc_subtype):'')+'</td>'+
+      '<td>'+esc(d.doc_number||'')+'</td><td>'+esc(fmt(d.issue_date))+'</td><td>'+esc(fmt(d.expiry_date))+'</td>'+
+      '<td><span class="badge '+s.cls+'">'+esc(s.label)+'</span></td><td onclick="event.stopPropagation()">'+fileBtn+'</td></tr>';
+  }).join(''):'<tr><td colspan="6" class="empty">No documents yet.</td></tr>';
+  el('wdBody').innerHTML=
+    '<div class="toolbar"><div><h2>'+esc(w.full_name)+' <span class="badge badge-'+(w.status==='active'?'green':'grey')+'">'+esc(w.status)+'</span></h2>'+
+      '<div class="sub" style="margin:0;">'+esc(divisionName(w.division_id))+' · '+esc(w.position||'')+' · '+esc(w.nationality||'')+'</div></div>'+
+      '<button class="ghost sm" onclick="closeModal(\'mWorkerDetail\')">✕ Close</button></div>'+
+    '<div class="sub">IC: '+esc(w.ic_number||'—')+' · Passport: '+esc(w.passport_number||'—')+' · Phone: '+esc(w.phone||'—')+'</div>'+
+    '<div class="toolbar"><h3>Documents</h3><div style="display:flex;gap:8px;"><button class="ghost sm" onclick="openWorkerEdit(\''+id+'\')">Edit worker</button>'+
+      '<button class="danger sm" onclick="confirmDeleteWorker(\''+id+'\')">Delete worker</button>'+
+      '<button class="primary sm" onclick="openDocEdit(null,\''+id+'\')">+ Add document</button></div></div>'+
+    '<table class="grid"><thead><tr><th>Type</th><th>Number</th><th>Issued</th><th>Expiry</th><th>Status</th><th>File</th></tr></thead><tbody>'+docRows+'</tbody></table>';
+  openModal('mWorkerDetail');
+}
+async function confirmDeleteWorker(id){
+  var w=workerById(id); if(!w) return;
+  if(!confirm('Delete worker "'+w.full_name+'" and all their documents? This cannot be undone.')) return;
+  var r=await sb.from('wkr_workers').delete().eq('id',id); // documents + permit_workers cascade
+  if(r.error){ fail(r.error); return; }
+  await sb.rpc('log_audit',{ p_action:'wkr.worker.delete', p_details:w.full_name });
+  closeModal('mWorkerDetail'); toast('Worker deleted.'); await loadAll();
+}
+
+// ═══════════════════════════ DOCUMENTS ═══════════════════════════
+function onDocTypeChange(){
+  var def=docTypeDef(el('deDocType').value);
+  el('deSubtypeWrap').style.display=def.hasSubtype?'block':'none';
+}
+function openDocEdit(docId, workerId){
+  closeModal('mWorkerDetail');
+  var d=docId?DATA.documents.find(function(x){return x.id===docId;}):null;
+  var w=workerById(workerId);
+  el('deTitle').textContent=d?'Edit document':'Add document';
+  el('deSub').textContent=w?w.full_name:'';
+  el('deId').value=d?d.id:''; el('deWorkerId').value=workerId;
+  el('deDocType').innerHTML=DOC_TYPES.map(function(t){return '<option value="'+t.key+'">'+esc(t.label)+'</option>';}).join('');
+  el('deDocType').value=d?d.doc_type:DOC_TYPES[0].key;
+  el('deDocSubtype').value=d?d.doc_subtype:''; el('deDocNumber').value=d?d.doc_number:'';
+  el('deIssuingAuthority').value=d?d.issuing_authority:''; el('deIssueDate').value=d?fmt(d.issue_date):'';
+  el('deExpiryDate').value=d?fmt(d.expiry_date):''; el('deFileUrl').value=d?d.file_url:''; el('deNotes').value=d?d.notes:'';
+  el('deDelBtn').style.display=d?'inline-block':'none';
+  onDocTypeChange();
+  mountUploader('deUploadBox','deFileUrl','worker-docs-files');
+  openModal('mDocEdit');
+}
+async function saveDocument(){
+  var id=el('deId').value, workerId=el('deWorkerId').value;
+  var obj={ worker_id:workerId, doc_type:el('deDocType').value, doc_subtype:el('deDocSubtype').value.trim(),
+    doc_number:el('deDocNumber').value.trim(), issue_date:el('deIssueDate').value||null, expiry_date:el('deExpiryDate').value||null,
+    issuing_authority:el('deIssuingAuthority').value.trim(), file_url:el('deFileUrl').value.trim(), notes:el('deNotes').value.trim(),
+    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+  if(!obj.worker_id || !obj.doc_type){ showMsg('deMsg','Worker and document type required.', false); return; }
+  var btn=el('deSave'); btn.disabled=true; btn.textContent='Saving…';
+  var r;
+  if(id){ r=await sb.from('wkr_documents').update(obj).eq('id',id); }
+  else { obj.created_by=SESSION.user.email; r=await sb.from('wkr_documents').insert(obj); }
+  btn.disabled=false; btn.textContent='Save';
+  if(r.error){ showMsg('deMsg', r.error.message, false); return; }
+  var w=workerById(workerId);
+  await sb.rpc('log_audit',{ p_action:(id?'wkr.document.update':'wkr.document.create'), p_details:(w?w.full_name:'')+' · '+obj.doc_type });
+  closeModal('mDocEdit'); toast('Document saved.'); await loadAll();
+  openWorkerDetail(workerId);
+}
+async function deleteDocument(){
+  var id=el('deId').value, workerId=el('deWorkerId').value;
+  if(!id || !confirm('Delete this document?')) return;
+  var r=await sb.from('wkr_documents').delete().eq('id',id);
+  if(r.error){ fail(r.error); return; }
+  await sb.rpc('log_audit',{ p_action:'wkr.document.delete', p_details:id });
+  closeModal('mDocEdit'); toast('Document deleted.'); await loadAll();
+  openWorkerDetail(workerId);
+}
+
+// ═══════════════════════════ PERMITS ═══════════════════════════
+function renderPermits(){
+  var q=(el('pmSearch').value||'').toLowerCase(), fdur=el('pmDurFilter').value, fs=el('pmStatusFilter').value;
+  var rows=DATA.workPermits.filter(function(p){
+    if(fdur && (p.duration||'ad_hoc')!==fdur) return false;
+    if(fs && (p.status||'active')!==fs) return false;
+    if(q){ var hay=((p.permit_number||'')+' '+(p.title||'')+' '+(p.mall_name||'')+' '+(p.contractor_client||'')).toLowerCase(); if(hay.indexOf(q)<0) return false; }
+    return true;
+  });
+  if(!rows.length){ el('permitsList').innerHTML='<div class="empty">No permits match.</div>'; return; }
+  el('permitsList').innerHTML='<table class="grid"><thead><tr><th>Permit / Title</th><th>Mall</th><th>Client</th><th>Workers</th><th>Duration</th><th>Valid until</th><th>Status</th></tr></thead><tbody>'+
+    rows.map(function(p){
+      var wc=DATA.workPermitWorkers.filter(function(j){return j.permit_id===p.id;}).length;
+      var s=statusFromExpiry(p.valid_until);
+      var dur=(PERMIT_DURATIONS.find(function(d){return d.key===p.duration;})||{}).label||p.duration||'';
+      return '<tr class="click" onclick="openPermitEdit(\''+p.id+'\')"><td><b>'+esc(p.permit_number||p.title||'(untitled)')+'</b>'+(p.title&&p.permit_number?'<br><small class="muted">'+esc(p.title)+'</small>':'')+'</td>'+
+        '<td>'+esc(p.mall_name||'')+'</td><td>'+esc(p.contractor_client||'')+'</td><td>'+wc+'</td><td>'+esc(dur)+'</td>'+
+        '<td>'+esc(fmt(p.valid_until))+' '+((p.status||'active')==='active'&&s.days!=null?'<span class="badge '+s.cls+'">'+esc(s.label)+'</span>':'')+'</td>'+
+        '<td><span class="badge badge-'+((p.status||'active')==='active'?'green':'grey')+'">'+esc(p.status||'active')+'</span></td></tr>';
+    }).join('')+'</tbody></table>';
+}
+function permitInsPolicyOptions(sel){
+  return '<option value="">— pick policy —</option>'+DATA.insurancePolicies.map(function(p){
+    return '<option value="'+p.id+'"'+(p.id===sel?' selected':'')+'>'+esc(p.provider+' · '+p.policy_number)+'</option>';
+  }).join('');
+}
+function onPermitInsSource(){
+  el('peInsPolWrap').style.display=el('peInsSource').value==='hg_existing'?'block':'none';
+}
+var _permitAttachments=[];
+function renderPermitAttachments(){
+  el('peAttachments').innerHTML=_permitAttachments.map(function(a,i){
+    return '<div class="attach-row"><input placeholder="label" value="'+esc(a.label)+'" oninput="_permitAttachments['+i+'].label=this.value"><input placeholder="url / path" value="'+esc(a.fileUrl)+'" oninput="_permitAttachments['+i+'].fileUrl=this.value"><button class="danger sm" onclick="_permitAttachments.splice('+i+',1);renderPermitAttachments()">✕</button></div>';
+  }).join('');
+}
+function addPermitAttachRow(){ _permitAttachments.push({label:'',fileUrl:''}); renderPermitAttachments(); }
+function openPermitEdit(id){
+  var p=id?DATA.workPermits.find(function(x){return x.id===id;}):null;
+  el('peTitle').textContent=p?'Edit work permit':'Add work permit';
+  el('peId').value=p?p.id:'';
+  el('pePermitNumber').value=p?p.permit_number:''; el('peTitleInp').value=p?p.title:'';
+  el('peMall').value=p?p.mall_name:''; el('peContractor').value=p?p.contractor_client:''; el('peProjectRef').value=p?p.project_reference:'';
+  el('peWorkScope').value=p?p.work_scope:''; el('peWorkArea').value=p?p.work_area:''; el('peWorkingHours').value=p?p.working_hours:'';
+  el('peAppliedBy').value=p?(p.applied_by||'own_team'):'own_team'; el('peIssuedBy').value=p?p.issued_by:''; el('peDuration').value=p?(p.duration||'ad_hoc'):'ad_hoc';
+  el('peIssueDate').value=p?fmt(p.issue_date):''; el('peValidFrom').value=p?fmt(p.valid_from):''; el('peValidUntil').value=p?fmt(p.valid_until):'';
+  el('peStatus').value=p?(p.status||'active'):'active'; el('peFileUrl').value=p?p.file_url:'';
+  el('peInsSource').value=p?(p.insurance_source||'none'):'none';
+  el('peInsPolicyId').innerHTML=permitInsPolicyOptions(p?p.insurance_policy_id:'');
+  el('peInsProvider').value=p?p.insurance_provider:''; el('peInsPolicyNumber').value=p?p.insurance_policy_number:'';
+  el('peInsFileUrl').value=p?p.insurance_file_url:''; el('peClientInvoice').value=p?p.client_invoice_number:''; el('peInsNotes').value=p?p.insurance_notes:'';
+  el('peNotes').value=p?p.notes:'';
+  onPermitInsSource();
+  var assigned=p?DATA.workPermitWorkers.filter(function(j){return j.permit_id===p.id;}).map(function(j){return j.worker_id;}):[];
+  el('peWorkers').innerHTML=DATA.workers.filter(function(w){return w.status!=='resigned';}).map(function(w){
+    return '<label class="chk"><input type="checkbox" value="'+w.id+'"'+(assigned.indexOf(w.id)>=0?' checked':'')+'> '+esc(w.full_name)+'</label>';
+  }).join('')||'<span class="muted">No workers yet.</span>';
+  _permitAttachments=p?DATA.workPermitAttachments.filter(function(a){return a.permit_id===p.id;}).sort(function(a,b){return (a.sort_order||0)-(b.sort_order||0);}).map(function(a){return {label:a.label,fileUrl:a.file_url};}):[];
+  renderPermitAttachments();
+  el('peDelBtn').style.display=p?'inline-block':'none';
+  mountUploader('peUploadBox','peFileUrl','permits');
+  openModal('mPermitEdit');
+}
+async function savePermit(){
+  var id=el('peId').value;
+  var workerIds=Array.prototype.slice.call(el('peWorkers').querySelectorAll('input:checked')).map(function(c){return c.value;});
+  var payload={
+    permitNumber:el('pePermitNumber').value.trim(), title:el('peTitleInp').value.trim(), mallName:el('peMall').value.trim(),
+    projectReference:el('peProjectRef').value.trim(), contractorClient:el('peContractor').value.trim(),
+    workScope:el('peWorkScope').value.trim(), workArea:el('peWorkArea').value.trim(), workingHours:el('peWorkingHours').value.trim(),
+    appliedBy:el('peAppliedBy').value, issuedBy:el('peIssuedBy').value.trim(),
+    issueDate:el('peIssueDate').value, validFrom:el('peValidFrom').value, validUntil:el('peValidUntil').value,
+    fileUrl:el('peFileUrl').value.trim(), status:el('peStatus').value, notes:el('peNotes').value.trim(), duration:el('peDuration').value,
+    insuranceSource:el('peInsSource').value, insurancePolicyId:el('peInsPolicyId').value,
+    insuranceProvider:el('peInsProvider').value.trim(), insurancePolicyNumber:el('peInsPolicyNumber').value.trim(),
+    insuranceFileUrl:el('peInsFileUrl').value.trim(), insuranceNotes:el('peInsNotes').value.trim(),
+    clientInvoiceNumber:el('peClientInvoice').value.trim(),
+    workerIds:workerIds, attachments:_permitAttachments
+  };
+  if(id) payload.id=id;
+  if(!payload.mallName && !payload.permitNumber && !payload.title){ showMsg('peMsg','At minimum the permit needs a mall, permit number, or title.', false); return; }
+  var btn=el('peSave'); btn.disabled=true; btn.textContent='Saving…';
+  var r=await sb.rpc('wkr_save_permit',{ payload:payload });
+  btn.disabled=false; btn.textContent='Save';
+  if(r.error){ showMsg('peMsg', r.error.message, false); return; }
+  closeModal('mPermitEdit'); toast('Permit saved.'); await loadAll();
+}
+async function deletePermit(){
+  var id=el('peId').value;
+  if(!id || !confirm('Delete this permit?')) return;
+  var r=await sb.from('wkr_work_permits').delete().eq('id',id); // workers + attachments cascade
+  if(r.error){ fail(r.error); return; }
+  await sb.rpc('log_audit',{ p_action:'wkr.permit.delete', p_details:id });
+  closeModal('mPermitEdit'); toast('Permit deleted.'); await loadAll();
+}
+
+// ═══════════════════════════ INSURANCE ═══════════════════════════
+function renderInsurance(){
+  if(!DATA.insurancePolicies.length){ el('insuranceList').innerHTML='<div class="empty">No policies yet.</div>'; return; }
+  el('insuranceList').innerHTML='<table class="grid"><thead><tr><th>Policy</th><th>Provider</th><th>Coverage</th><th>Valid until</th><th style="text-align:right">Premium</th><th style="text-align:right">Charged</th><th>Status</th></tr></thead><tbody>'+
+    DATA.insurancePolicies.map(function(p){
+      var s=statusFromExpiry(p.valid_until);
+      return '<tr class="click" onclick="openInsuranceEdit(\''+p.id+'\')"><td><b>'+esc(p.policy_number)+'</b></td><td>'+esc(p.provider)+'</td>'+
+        '<td class="muted">'+esc((p.coverage_type||'')+(p.coverage_amount?' · '+p.coverage_amount:''))+'</td>'+
+        '<td>'+esc(fmt(p.valid_until))+' '+(s.days!=null?'<span class="badge '+s.cls+'">'+esc(s.label)+'</span>':'')+'</td>'+
+        '<td style="text-align:right">'+rm(p.premium_amount)+'</td><td style="text-align:right">'+rm(p.charged_to_client)+'</td>'+
+        '<td><span class="badge badge-'+(p.status==='active'?'green':'grey')+'">'+esc(p.status)+'</span></td></tr>';
+    }).join('')+'</tbody></table>';
+}
+var _insQuotes=[], _insPayments=[], _insAttach=[];
+function renderInsChildRows(){
+  el('ieQuotes').innerHTML=_insQuotes.map(function(q,i){
+    return '<div class="attach-row"><input placeholder="provider" value="'+esc(q.provider)+'" oninput="_insQuotes['+i+'].provider=this.value"><input placeholder="amount" type="number" step="any" value="'+esc(q.amount)+'" oninput="_insQuotes['+i+'].amount=this.value"><input placeholder="notes" value="'+esc(q.notes)+'" oninput="_insQuotes['+i+'].notes=this.value"><button class="danger sm" onclick="_insQuotes.splice('+i+',1);renderInsChildRows()">✕</button></div>';
+  }).join('');
+  el('iePayments').innerHTML=_insPayments.map(function(p,i){
+    return '<div class="attach-row"><input type="date" value="'+esc(p.paymentDate)+'" oninput="_insPayments['+i+'].paymentDate=this.value"><input placeholder="amount" type="number" step="any" value="'+esc(p.amount)+'" oninput="_insPayments['+i+'].amount=this.value"><input placeholder="reference" value="'+esc(p.reference)+'" oninput="_insPayments['+i+'].reference=this.value"><button class="danger sm" onclick="_insPayments.splice('+i+',1);renderInsChildRows()">✕</button></div>';
+  }).join('');
+  el('ieAttachments').innerHTML=_insAttach.map(function(a,i){
+    return '<div class="attach-row"><input placeholder="label" value="'+esc(a.label)+'" oninput="_insAttach['+i+'].label=this.value"><input placeholder="url / path" value="'+esc(a.fileUrl)+'" oninput="_insAttach['+i+'].fileUrl=this.value"><button class="danger sm" onclick="_insAttach.splice('+i+',1);renderInsChildRows()">✕</button></div>';
+  }).join('');
+}
+function addInsQuoteRow(){ _insQuotes.push({provider:'',amount:'',notes:''}); renderInsChildRows(); }
+function addInsPaymentRow(){ _insPayments.push({paymentDate:'',amount:'',reference:''}); renderInsChildRows(); }
+function addInsAttachRow(){ _insAttach.push({label:'',fileUrl:''}); renderInsChildRows(); }
+function openInsuranceEdit(id){
+  var p=id?DATA.insurancePolicies.find(function(x){return x.id===id;}):null;
+  el('ieTitle').textContent=p?'Edit insurance policy':'Add insurance policy';
+  el('ieId').value=p?p.id:'';
+  el('iePolicyNumber').value=p?p.policy_number:''; el('ieProvider').value=p?p.provider:''; el('ieStatus').value=p?p.status:'active';
+  el('ieCoverageType').value=p?p.coverage_type:''; el('ieCoverageAmount').value=p?p.coverage_amount:'';
+  el('ieValidFrom').value=p?fmt(p.valid_from):''; el('ieValidUntil').value=p?fmt(p.valid_until):'';
+  el('ieInvoiceNumber').value=p?p.invoice_number:''; el('iePremiumAmount').value=p?p.premium_amount:0; el('ieChargedToClient').value=p?p.charged_to_client:0;
+  el('ieFileUrl').value=p?p.file_url:''; el('ieNotes').value=p?p.notes:'';
+  _insQuotes=p?DATA.insuranceQuotes.filter(function(q){return q.policy_id===p.id;}).sort(function(a,b){return(a.sort_order||0)-(b.sort_order||0);}).map(function(q){return {provider:q.provider,amount:q.amount,notes:q.notes};}):[];
+  _insPayments=p?DATA.insurancePayments.filter(function(x){return x.policy_id===p.id;}).sort(function(a,b){return(a.sort_order||0)-(b.sort_order||0);}).map(function(x){return {paymentDate:fmt(x.payment_date),amount:x.amount,reference:x.reference,notes:x.notes};}):[];
+  _insAttach=p?DATA.insuranceAttachments.filter(function(a){return a.policy_id===p.id;}).sort(function(a,b){return(a.sort_order||0)-(b.sort_order||0);}).map(function(a){return {label:a.label,fileUrl:a.file_url};}):[];
+  renderInsChildRows();
+  el('ieDelBtn').style.display=p?'inline-block':'none';
+  mountUploader('ieUploadBox','ieFileUrl','insurance');
+  openModal('mInsuranceEdit');
+}
+async function saveInsurance(){
+  var id=el('ieId').value;
+  var payload={
+    policyNumber:el('iePolicyNumber').value.trim(), provider:el('ieProvider').value.trim(), status:el('ieStatus').value,
+    coverageType:el('ieCoverageType').value.trim(), coverageAmount:el('ieCoverageAmount').value.trim(),
+    validFrom:el('ieValidFrom').value, validUntil:el('ieValidUntil').value,
+    invoiceNumber:el('ieInvoiceNumber').value.trim(), premiumAmount:el('iePremiumAmount').value, chargedToClient:el('ieChargedToClient').value,
+    fileUrl:el('ieFileUrl').value.trim(), notes:el('ieNotes').value.trim(),
+    quotes:_insQuotes, payments:_insPayments, attachments:_insAttach
+  };
+  if(id) payload.id=id;
+  if(!payload.policyNumber){ showMsg('ieMsg','Policy / cover note number required.', false); return; }
+  if(!payload.provider){ showMsg('ieMsg','Insurance provider required.', false); return; }
+  var btn=el('ieSave'); btn.disabled=true; btn.textContent='Saving…';
+  var r=await sb.rpc('wkr_save_insurance',{ payload:payload });
+  btn.disabled=false; btn.textContent='Save';
+  if(r.error){ showMsg('ieMsg', r.error.message, false); return; }
+  closeModal('mInsuranceEdit'); toast('Policy saved.'); await loadAll();
+}
+async function deleteInsurance(){
+  var id=el('ieId').value;
+  if(!id) return;
+  var inUse=DATA.workPermits.filter(function(wp){return wp.insurance_policy_id===id;});
+  if(inUse.length){ toast('Cannot delete — '+inUse.length+' work permit(s) still reference this policy.', true); return; }
+  if(!confirm('Delete this policy?')) return;
+  var r=await sb.from('wkr_insurance_policies').delete().eq('id',id);
+  if(r.error){ fail(r.error); return; }
+  await sb.rpc('log_audit',{ p_action:'wkr.insurance.delete', p_details:id });
+  closeModal('mInsuranceEdit'); toast('Policy deleted.'); await loadAll();
+}
+
+// ═══════════════════════════ FORM LIBRARY ═══════════════════════════
+function renderForms(){
+  var fm=el('fmMallFilter').value;
+  var rows=DATA.permitForms.filter(function(f){ return !fm || f.mall_name===fm; });
+  if(!rows.length){ el('formsList').innerHTML='<div class="empty">No forms yet.</div>'; return; }
+  el('formsList').innerHTML='<table class="grid"><thead><tr><th>Mall</th><th>Form</th><th>Type</th><th>Version</th><th>Lead time</th><th>Last verified</th><th>File</th></tr></thead><tbody>'+
+    rows.map(function(f){
+      var fileBtn=f.file_url?'<a href="#" class="filelink" onclick="openFile(\''+esc(f.file_url).replace(/'/g,"\\'")+'\');return false;">open</a>':'';
+      return '<tr class="click" onclick="openFormEdit(\''+f.id+'\')"><td><b>'+esc(f.mall_name)+'</b></td><td>'+esc(f.form_name)+'</td>'+
+        '<td>'+esc(f.form_type||'')+'</td><td>'+esc(f.version||'')+'</td><td class="muted">'+esc(f.lead_time||'')+'</td>'+
+        '<td>'+esc(fmt(f.last_verified_date))+'</td><td onclick="event.stopPropagation()">'+fileBtn+'</td></tr>';
+    }).join('')+'</tbody></table>';
+}
+function openFormEdit(id){
+  var f=id?DATA.permitForms.find(function(x){return x.id===id;}):null;
+  el('feTitle').textContent=f?'Edit form':'Add form';
+  el('feId').value=f?f.id:'';
+  el('feMall').value=f?f.mall_name:''; el('feFormName').value=f?f.form_name:''; el('feFormType').value=f?f.form_type:'';
+  el('feVersion').value=f?f.version:''; el('feLastVerified').value=f?fmt(f.last_verified_date):''; el('feFileUrl').value=f?f.file_url:'';
+  el('feContact').value=f?f.contact_info:''; el('feLeadTime').value=f?f.lead_time:'';
+  el('feRequirements').value=f?f.requirements:''; el('feNotes').value=f?f.notes:'';
+  el('feDelBtn').style.display=f?'inline-block':'none';
+  mountUploader('feUploadBox','feFileUrl','forms');
+  openModal('mFormEdit');
+}
+async function saveForm(){
+  var id=el('feId').value;
+  var obj={ mall_name:el('feMall').value.trim(), form_name:el('feFormName').value.trim(), form_type:el('feFormType').value.trim(),
+    version:el('feVersion').value.trim(), last_verified_date:el('feLastVerified').value||null, file_url:el('feFileUrl').value.trim(),
+    contact_info:el('feContact').value.trim(), lead_time:el('feLeadTime').value.trim(),
+    requirements:el('feRequirements').value.trim(), notes:el('feNotes').value.trim(),
+    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+  if(!obj.mall_name){ showMsg('feMsg','Mall / building name required.', false); return; }
+  if(!obj.form_name){ showMsg('feMsg','Form name required.', false); return; }
+  var btn=el('feSave'); btn.disabled=true; btn.textContent='Saving…';
+  var r;
+  if(id){ r=await sb.from('wkr_permit_forms').update(obj).eq('id',id); }
+  else { obj.created_by=SESSION.user.email; r=await sb.from('wkr_permit_forms').insert(obj); }
+  btn.disabled=false; btn.textContent='Save';
+  if(r.error){ showMsg('feMsg', r.error.message, false); return; }
+  await sb.rpc('log_audit',{ p_action:(id?'wkr.form.update':'wkr.form.create'), p_details:obj.mall_name+' · '+obj.form_name });
+  closeModal('mFormEdit'); toast('Form saved.'); await loadAll();
+}
+async function deleteForm(){
+  var id=el('feId').value;
+  if(!id || !confirm('Delete this form?')) return;
+  var r=await sb.from('wkr_permit_forms').delete().eq('id',id);
+  if(r.error){ fail(r.error); return; }
+  await sb.rpc('log_audit',{ p_action:'wkr.form.delete', p_details:id });
+  closeModal('mFormEdit'); toast('Form deleted.'); await loadAll();
+}
+
+// ═══════════════════════════ DIVISIONS ═══════════════════════════
+function renderDivisions(){
+  if(!DATA.divisions.length){ el('divisionsList').innerHTML='<div class="empty">No divisions yet.</div>'; return; }
+  el('divisionsList').innerHTML='<table class="grid"><thead><tr><th>Name</th><th>Description</th><th>Workers</th><th>Active</th></tr></thead><tbody>'+
+    DATA.divisions.map(function(d){
+      var wc=DATA.workers.filter(function(w){return w.division_id===d.id;}).length;
+      return '<tr class="click" onclick="openDivisionEdit(\''+d.id+'\')"><td><b>'+esc(d.name)+'</b></td><td class="muted">'+esc(d.description||'')+'</td>'+
+        '<td>'+wc+'</td><td>'+(d.active!==false?'<span class="badge badge-green">yes</span>':'<span class="badge badge-grey">no</span>')+'</td></tr>';
+    }).join('')+'</tbody></table>';
+}
+function openDivisionEdit(id){
+  var d=id?DATA.divisions.find(function(x){return x.id===id;}):null;
+  el('dvTitle').textContent=d?'Edit division':'Add division';
+  el('dvId').value=d?d.id:''; el('dvName').value=d?d.name:''; el('dvDescription').value=d?d.description:''; el('dvActive').checked=d?d.active!==false:true;
+  el('dvDelBtn').style.display=d?'inline-block':'none';
+  openModal('mDivisionEdit');
+}
+async function saveDivision(){
+  var id=el('dvId').value;
+  var obj={ name:el('dvName').value.trim(), description:el('dvDescription').value.trim(), active:el('dvActive').checked };
+  if(!obj.name){ showMsg('dvMsg','Division name required.', false); return; }
+  var btn=el('dvSave'); btn.disabled=true; btn.textContent='Saving…';
+  var r;
+  if(id){ r=await sb.from('wkr_divisions').update(obj).eq('id',id); }
+  else { obj.created_by=SESSION.user.email; r=await sb.from('wkr_divisions').insert(obj); }
+  btn.disabled=false; btn.textContent='Save';
+  if(r.error){ showMsg('dvMsg', r.error.message, false); return; }
+  await sb.rpc('log_audit',{ p_action:(id?'wkr.division.update':'wkr.division.create'), p_details:obj.name });
+  closeModal('mDivisionEdit'); toast('Division saved.'); await loadAll();
+}
+async function deleteDivision(){
+  var id=el('dvId').value;
+  if(!id || !confirm('Delete this division?')) return;
+  var r=await sb.rpc('wkr_delete_division',{ p_id:id });
+  if(r.error){ showMsg('dvMsg', r.error.message, false); return; }
+  closeModal('mDivisionEdit'); toast('Division deleted.'); await loadAll();
+}
+
+// ═══════════════════════════ REPORT ═══════════════════════════
+function renderReportPickers(){
+  if(!el('repDate').value) el('repDate').value=new Date().toISOString().slice(0,10);
+  el('repDivisions').innerHTML=DATA.divisions.map(function(d){
+    return '<label class="chk'+(repSel.divisions.has(d.id)?' on':'')+'"><input type="checkbox" data-div="'+d.id+'"'+(repSel.divisions.has(d.id)?' checked':'')+' onchange="repToggle(\'div\',\''+d.id+'\',this)"> '+esc(d.name)+'</label>';
+  }).join('')||'<span class="muted">No divisions yet.</span>';
+  el('repDocTypes').innerHTML=DOC_TYPES.map(function(t){
+    return '<label class="chk'+(repSel.docTypes.has(t.key)?' on':'')+'"><input type="checkbox" data-doc="'+t.key+'"'+(repSel.docTypes.has(t.key)?' checked':'')+' onchange="repToggle(\'doc\',\''+t.key+'\',this)"> '+esc(t.label)+'</label>';
+  }).join('');
+}
+function repToggle(kind, key, cb){
+  var set=kind==='div'?repSel.divisions:repSel.docTypes;
+  if(cb.checked) set.add(key); else set.delete(key);
+  cb.closest('label').classList.toggle('on', cb.checked);
+}
+function repToggleAll(kind, on){
+  var set=kind==='div'?repSel.divisions:repSel.docTypes;
+  set.clear();
+  if(on){ (kind==='div'?DATA.divisions.map(function(d){return d.id;}):DOC_TYPES.map(function(t){return t.key;})).forEach(function(k){set.add(k);}); }
+  renderReportPickers();
+}
+function reportWorkers(){
+  var divs=repSel.divisions;
+  return DATA.workers.filter(function(w){ return w.status==='active' && (divs.size===0 || divs.has(w.division_id)); });
+}
+async function generateReport(format){
+  var docTypes=Array.from(repSel.docTypes);
+  if(!docTypes.length){ showMsg('repMsg','Pick at least one document type.', false); return; }
+  var workers=reportWorkers();
+  if(!workers.length){ showMsg('repMsg','No active workers match the selected divisions.', false); return; }
+  var meta={ projectName:el('repProjectName').value.trim(), mallName:el('repMallName').value.trim(),
+    contractorRef:el('repContractorRef').value.trim(), date:el('repDate').value||new Date().toISOString().slice(0,10) };
+  printReport(workers, docTypes, meta, format);
+  // save history
+  var rec={ generated_by:SESSION.user.email, format:format, mall_name:meta.mallName, project_name:meta.projectName,
+    contractor_ref:meta.contractorRef, report_date:meta.date||null,
+    division_ids:Array.from(repSel.divisions).join(','), worker_ids:workers.map(function(w){return w.id;}).join(','),
+    doc_types:docTypes.join(','), worker_count:workers.length, doc_type_count:docTypes.length };
+  var r=await sb.from('wkr_report_history').insert(rec);
+  if(!r.error){ await sb.rpc('log_audit',{ p_action:'wkr.report.generate', p_details:format+' · '+(meta.mallName||meta.projectName||'no project')+' · '+workers.length+' worker(s)' }); await loadAll(); showTab('report'); }
+}
+function printReport(workers, docTypes, meta, format){
+  var typeLabels=docTypes.map(docTypeLabel);
+  var head='<div class="hd"><div><h1>HG Group — Workers Compliance</h1><div class="muted">'+
+    esc(meta.mallName||'')+(meta.projectName?' · '+esc(meta.projectName):'')+(meta.contractorRef?' · '+esc(meta.contractorRef):'')+'<br>Report date: '+esc(meta.date||'')+'</div></div>'+
+    '<div style="text-align:right"><h1 style="color:#b8860b">'+(format==='fullpack'?'FULL PACK':'CHECKLIST')+'</h1><div class="muted">'+workers.length+' worker(s) · '+docTypes.length+' doc type(s)</div></div></div>';
+  var body;
+  if(format==='checklist'){
+    var th=typeLabels.map(function(l){return '<th>'+esc(l)+'</th>';}).join('');
+    body='<table><thead><tr><th>#</th><th>Worker</th><th>Division</th>'+th+'</tr></thead><tbody>'+
+      workers.map(function(w,i){
+        var docs=docsForWorker(w.id);
+        var cells=docTypes.map(function(k){
+          var ds=docs.filter(function(d){return d.doc_type===k;});
+          if(!ds.length) return '<td style="color:#b91c1c">✗</td>';
+          var worst=null; ds.forEach(function(d){ var s=statusFromExpiry(d.expiry_date); if(s.days!=null && (worst===null||s.days<worst)) worst=s.days; });
+          var mark=worst!=null&&worst<0?'⚠ expired':(worst!=null&&worst<30?'⚠ '+worst+'d':'✓');
+          return '<td>'+mark+'</td>';
+        }).join('');
+        return '<tr><td>'+(i+1)+'</td><td>'+esc(w.full_name)+'</td><td>'+esc(divisionName(w.division_id))+'</td>'+cells+'</tr>';
+      }).join('')+'</tbody></table>';
+  } else {
+    body=workers.map(function(w){
+      var docs=docsForWorker(w.id).filter(function(d){return docTypes.indexOf(d.doc_type)>=0;});
+      var rows=docs.length?docs.map(function(d){
+        var s=statusFromExpiry(d.expiry_date);
+        return '<tr><td>'+esc(docTypeLabel(d.doc_type))+(d.doc_subtype?' · '+esc(d.doc_subtype):'')+'</td><td>'+esc(d.doc_number||'')+'</td>'+
+          '<td>'+esc(fmt(d.issue_date))+'</td><td>'+esc(fmt(d.expiry_date))+'</td><td>'+esc(s.label)+'</td></tr>';
+      }).join(''):'<tr><td colspan="5" style="color:#b91c1c">No documents on file for the selected types.</td></tr>';
+      return '<div class="worker"><h2>'+esc(w.full_name)+' <span class="muted">— '+esc(divisionName(w.division_id))+' · '+esc(w.position||'')+'</span></h2>'+
+        '<div class="muted" style="font-size:12px">IC: '+esc(w.ic_number||'—')+' · Passport: '+esc(w.passport_number||'—')+' · '+esc(w.nationality||'')+'</div>'+
+        '<table><thead><tr><th>Document</th><th>Number</th><th>Issued</th><th>Expiry</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+    }).join('');
+  }
+  var html='<html><head><title>Workers Compliance — '+esc(meta.mallName||meta.projectName||'')+'</title><style>'+
+    'body{font-family:Arial,Helvetica,sans-serif;color:#111;max-width:1000px;margin:24px auto;padding:0 16px;font-size:12px}'+
+    'h1{font-size:19px;margin:0}h2{font-size:15px;margin:18px 0 6px}.muted{color:#666}'+
+    '.hd{display:flex;justify-content:space-between;border-bottom:2px solid #f59e0b;padding-bottom:12px;margin-bottom:16px}'+
+    'table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:6px 8px;border:1px solid #ddd;text-align:left;vertical-align:top}'+
+    'th{background:#faf6ee;font-size:10px;text-transform:uppercase;color:#666}.worker{page-break-inside:avoid;margin-bottom:14px}'+
+    '</style></head><body>'+head+body+
+    '<scr'+'ipt>window.onload=function(){window.print();}</scr'+'ipt></body></html>';
+  var wnd=window.open('','_blank'); wnd.document.write(html); wnd.document.close();
+}
+function renderReportHistory(){
+  if(!DATA.reportHistory.length){ el('reportHistoryList').innerHTML='<div class="empty">No reports generated yet.</div>'; return; }
+  el('reportHistoryList').innerHTML='<table class="grid"><thead><tr><th>When</th><th>Format</th><th>Project / Mall</th><th>Workers</th><th>Doc types</th><th>By</th><th></th></tr></thead><tbody>'+
+    DATA.reportHistory.map(function(r){
+      return '<tr><td class="muted">'+esc(new Date(r.generated_at).toLocaleString('en-MY'))+'</td><td><span class="tag">'+esc(r.format)+'</span></td>'+
+        '<td>'+esc(r.mall_name||r.project_name||'—')+'</td><td>'+esc(r.worker_count)+'</td><td>'+esc(r.doc_type_count)+'</td>'+
+        '<td class="muted">'+esc(String(r.generated_by||'').split('@')[0])+'</td>'+
+        '<td style="text-align:right"><button class="danger sm" onclick="deleteReportHistory(\''+r.id+'\')">✕</button></td></tr>';
+    }).join('')+'</tbody></table>';
+}
+async function deleteReportHistory(id){
+  if(!confirm('Remove this history entry?')) return;
+  var r=await sb.from('wkr_report_history').delete().eq('id',id);
+  if(r.error){ fail(r.error); return; }
+  await sb.rpc('log_audit',{ p_action:'wkr.report.delete', p_details:id });
+  toast('History entry removed.'); await loadAll();
+}
+
+// ═══════════════════════════ SETTINGS ═══════════════════════════
+var SETTING_KEYS=[
+  ['WKR_EXPIRING_SOON_DAYS','Expiring soon (days) — amber'],
+  ['WKR_EXPIRING_WARN_DAYS','Expiring warning (days) — yellow'],
+  ['COMPANY_EMAIL','Reminder recipient email (daily-alarms)']
+];
+function loadSettings(){
+  el('setForm').innerHTML=SETTING_KEYS.map(function(k){
+    return '<label>'+k[1]+'</label><input id="set_'+k[0]+'" value="'+esc(DATA.settings[k[0]]||'')+'">';
+  }).join('')+'<div id="setMsg" class="msg"></div>'+
+    '<div class="row" style="margin-top:14px; justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="primary" onclick="saveSettings()">Save settings</button></div></div>';
+  loadAudit();
+  if(IS_ADMIN) loadAllowed();
+}
+async function saveSettings(){
+  var rows=SETTING_KEYS.map(function(k){ return { key:k[0], value:el('set_'+k[0]).value }; });
+  var r=await sb.from('app_settings').upsert(rows);
+  if(r.error){ showMsg('setMsg', r.error.message, false); return; }
+  await sb.rpc('log_audit',{ p_action:'wkr.settings.update', p_details:'reminder settings' });
+  rows.forEach(function(x){ DATA.settings[x.key]=x.value; });
+  showMsg('setMsg','Saved.', true); await loadAll();
+}
+async function loadAudit(){
+  var r=await sb.from('audit_log').select('*').order('at',{ascending:false}).limit(50);
+  if(r.error){ el('auditList').innerHTML='<div class="empty">'+esc(r.error.message)+'</div>'; return; }
+  if(!r.data.length){ el('auditList').innerHTML='<div class="empty">No activity yet.</div>'; return; }
+  el('auditList').innerHTML='<table class="grid"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>'+
+    r.data.map(function(a){ return '<tr><td class="muted">'+esc(new Date(a.at).toLocaleString('en-MY'))+'</td>'+
+      '<td>'+esc(String(a.user_email||'').split('@')[0])+'</td><td><b>'+esc(a.action)+'</b></td><td class="muted">'+esc(a.details)+'</td></tr>'; }).join('')+'</tbody></table>';
+}
+async function loadAllowed(){
+  var r=await sb.from('allowed_users').select('*').order('added_at');
+  if(r.error){ el('auList').innerHTML='<div class="empty">'+esc(r.error.message)+'</div>'; return; }
+  el('auList').innerHTML='<table class="grid"><thead><tr><th>Email</th><th>Name</th><th>Role</th><th></th></tr></thead><tbody>'+
+    r.data.map(function(u){ return '<tr><td>'+esc(u.email)+'</td><td>'+esc(u.full_name||'')+'</td>'+
+      '<td>'+(u.is_admin?'<span class="tag">admin</span>':'staff')+'</td>'+
+      '<td style="text-align:right"><button class="danger sm" onclick="removeAllowed(\''+esc(u.email)+'\')">Remove</button></td></tr>'; }).join('')+'</tbody></table>';
+}
+async function addAllowed(){
+  var email=el('au_email').value.trim().toLowerCase();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showMsg('auMsg','Enter a valid email.', false); return; }
+  var r=await sb.from('allowed_users').insert({ email:email, full_name:el('au_name').value.trim(), is_admin:el('au_admin').checked, added_by:SESSION.user.email });
+  if(r.error){ showMsg('auMsg', r.error.message, false); return; }
+  await sb.rpc('log_audit',{ p_action:'ADD User', p_details:email });
+  el('au_email').value=''; el('au_name').value=''; el('au_admin').checked=false;
+  showMsg('auMsg','Added '+email, true); loadAllowed();
+}
+async function removeAllowed(email){
+  if(email.toLowerCase()===(SESSION.user.email||'').toLowerCase()){ alert('You cannot remove yourself.'); return; }
+  if(!confirm('Remove '+email+' from access?')) return;
+  var r=await sb.from('allowed_users').delete().eq('email',email);
+  if(r.error){ fail(r.error); return; }
+  await sb.rpc('log_audit',{ p_action:'REMOVE User', p_details:email });
+  loadAllowed();
+}
+
+// ═══════════════════════════ EXCEL EXPORTS ═══════════════════════════
+function dl(wb, name){ XLSX.writeFile(wb, name+'-'+new Date().toISOString().slice(0,10)+'.xlsx'); }
+function exportWorkersExcel(){
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DATA.workers.map(function(w){ return {
+    'Name':w.full_name,'IC':w.ic_number,'Passport':w.passport_number,'Nationality':w.nationality,
+    'Division':divisionName(w.division_id),'Position':w.position,'Phone':w.phone,'Status':w.status }; })), 'Workers');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DATA.documents.map(function(d){ var w=workerById(d.worker_id)||{}; return {
+    'Worker':w.full_name||'','Doc Type':docTypeLabel(d.doc_type),'Sub-type':d.doc_subtype,'Number':d.doc_number,
+    'Issued':fmt(d.issue_date),'Expiry':fmt(d.expiry_date),'Authority':d.issuing_authority,'Status':statusFromExpiry(d.expiry_date).label,'Notes':d.notes }; })), 'Documents');
+  dl(wb,'HG-Workers');
+}
+function exportPermitsExcel(){
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DATA.workPermits.map(function(p){ return {
+    'Permit No':p.permit_number,'Title':p.title,'Mall':p.mall_name,'Client':p.contractor_client,'Scope':p.work_scope,
+    'Applied By':p.applied_by,'Duration':p.duration,'Issue Date':fmt(p.issue_date),'Valid From':fmt(p.valid_from),'Valid Until':fmt(p.valid_until),
+    'Status':p.status,'Insurance Source':p.insurance_source,'Insurance Provider':p.insurance_provider,'Client Invoice':p.client_invoice_number,
+    'Workers':DATA.workPermitWorkers.filter(function(j){return j.permit_id===p.id;}).length }; })), 'Permits');
+  dl(wb,'HG-Permits');
+}
+function exportInsuranceExcel(){
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DATA.insurancePolicies.map(function(p){ return {
+    'Policy No':p.policy_number,'Provider':p.provider,'Coverage Type':p.coverage_type,'Coverage Amount':p.coverage_amount,
+    'Valid From':fmt(p.valid_from),'Valid Until':fmt(p.valid_until),'Status':p.status,'Invoice No':p.invoice_number,
+    'Premium (RM)':Number(p.premium_amount),'Charged To Client (RM)':Number(p.charged_to_client) }; })), 'Policies');
+  dl(wb,'HG-Insurance');
+}
+function exportFormsExcel(){
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DATA.permitForms.map(function(f){ return {
+    'Mall':f.mall_name,'Form':f.form_name,'Type':f.form_type,'Version':f.version,'Contact':f.contact_info,
+    'Lead Time':f.lead_time,'Requirements':f.requirements,'Last Verified':fmt(f.last_verified_date),'Notes':f.notes }; })), 'Forms');
+  dl(wb,'HG-Forms');
+}
+function exportAlarmsExcel(){
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DATA.alarms.map(function(a){ return {
+    'Type':a.alarm_type,'Ref':a.ref,'Detail':a.detail,'Due Date':fmt(a.due_date),'Recipient':a.recipient }; })), 'Alarms');
+  dl(wb,'HG-Alarms');
+}
+
+// ═══════════════════════════ TABS ═══════════════════════════
+function showTab(t){
+  document.querySelectorAll('nav button').forEach(function(b){ b.classList.toggle('active', b.dataset.tab===t); });
+  ['dashboard','workers','permits','insurance','forms','divisions','report','settings'].forEach(function(x){ el('tab-'+x).classList.toggle('hide', x!==t); });
+  if(t==='settings') loadSettings();
+}
+
+start();
+</script>
+</body>
+</html>

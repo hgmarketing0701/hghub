@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HG Inventory, Tools/Equipment &amp; Purchasing — Supabase</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335; --border:#2a3245;
+    --text:#ffffff; --text-dim:#a0a8b8; --accent:#f59e0b; --accent-hover:#d97706;
+    --accent-soft:rgba(245,158,11,0.12); --green:#22c55e; --green-soft:rgba(34,197,94,0.15);
+    --red:#ef4444; --red-soft:rgba(239,68,68,0.15); --blue:#3b82f6; --blue-soft:rgba(59,130,246,0.15);
+    --radius:14px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+         background:var(--bg); color:var(--text); line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+            padding:16px 22px; border-bottom:1px solid var(--border); }
+  .brand-block { display:flex; align-items:center; gap:13px; }
+  .brand-logo { width:44px; height:44px; background:linear-gradient(135deg,var(--accent),var(--accent-hover));
+                border-radius:11px; display:flex; align-items:center; justify-content:center; color:#0a0e1a; font-weight:900; }
+  .brand-name { font-weight:800; font-size:1.15rem; letter-spacing:-0.01em; }
+  .brand-sub { font-size:0.78rem; color:var(--text-dim); }
+  .user-pill { background:var(--surface); border:1px solid var(--border); border-radius:999px;
+               padding:8px 14px; font-size:0.8rem; color:var(--text-dim); display:flex; align-items:center; gap:10px; }
+  .user-pill b { color:var(--text); font-weight:600; }
+  .user-pill button { background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.78rem; font-weight:700; font-family:inherit; }
+  nav { display:flex; gap:6px; padding:14px 22px 0; flex-wrap:wrap; }
+  nav button { background:var(--surface); border:1px solid var(--border); color:var(--text-dim);
+               padding:9px 15px; border-radius:10px 10px 0 0; cursor:pointer; font-family:inherit;
+               font-size:0.86rem; font-weight:600; border-bottom:none; }
+  nav button.active { background:var(--surface-2); color:var(--accent); border-color:var(--accent); }
+  main { padding:18px 22px 70px; max-width:1250px; margin:0 auto; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+          padding:22px; margin-bottom:18px; }
+  h2 { font-size:1.05rem; font-weight:800; margin-bottom:4px; }
+  .sub { color:var(--text-dim); font-size:0.85rem; margin-bottom:14px; }
+  label { display:block; font-size:0.76rem; color:var(--text-dim); margin:10px 0 5px; font-weight:600;
+          text-transform:uppercase; letter-spacing:0.04em; }
+  input, select, textarea { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text);
+          border-radius:9px; padding:10px 12px; font-size:0.92rem; font-family:inherit; }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); }
+  input:disabled { opacity:0.6; }
+  textarea { min-height:60px; resize:vertical; }
+  .row { display:flex; gap:14px; flex-wrap:wrap; }
+  .row > div { flex:1 1 190px; min-width:0; }
+  button.primary { background:var(--accent); color:#0a0e1a; border:none; border-radius:10px; padding:11px 20px;
+                   font-weight:700; cursor:pointer; font-family:inherit; font-size:0.92rem; }
+  button.primary:hover { background:var(--accent-hover); }
+  button.primary:disabled { opacity:0.6; cursor:default; }
+  button.ghost { background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:10px;
+                 padding:11px 18px; font-weight:600; cursor:pointer; font-family:inherit; font-size:0.9rem; }
+  button.ghost:hover { border-color:var(--accent); }
+  button.danger { background:var(--red-soft); color:#f87171; border:1px solid var(--red); border-radius:10px;
+                  padding:11px 18px; font-weight:600; cursor:pointer; font-family:inherit; font-size:0.9rem; }
+  .btn-sm { padding:6px 12px; font-size:0.78rem; border-radius:8px; }
+  .seg { display:flex; gap:8px; flex-wrap:wrap; }
+  .seg button { background:var(--bg); border:1px solid var(--border); color:var(--text-dim); border-radius:999px;
+                padding:9px 18px; cursor:pointer; font-family:inherit; font-weight:600; font-size:0.86rem; }
+  .seg button.on { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+  .empty { text-align:center; color:var(--text-dim); padding:30px; font-size:0.9rem; }
+  .msg { font-size:0.86rem; margin-top:10px; min-height:20px; opacity:0; transition:opacity 0.2s; }
+  .msg.show { opacity:1; } .msg.ok { color:var(--green); } .msg.err { color:#f87171; }
+  table.grid { width:100%; border-collapse:collapse; font-size:0.83rem; }
+  table.grid th { text-align:left; color:var(--text-dim); font-size:0.68rem; text-transform:uppercase;
+                  letter-spacing:0.05em; padding:8px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  table.grid td { padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+  table.grid td.num, table.grid th.num, table.grid td.amt, table.grid th.amt { text-align:right; }
+  table.grid tr.click { cursor:pointer; } table.grid tr.click:hover td { background:var(--surface-2); }
+  .tablewrap { overflow-x:auto; }
+  .tag { display:inline-block; background:var(--surface-2); border:1px solid var(--border); border-radius:8px;
+         padding:2px 9px; font-size:0.74rem; color:var(--text-dim); }
+  .pill-tag { display:inline-block; font-size:0.68rem; font-weight:700; border-radius:999px; padding:2px 9px;
+              text-transform:uppercase; letter-spacing:0.03em; }
+  .pill-tag.green { background:var(--green-soft); color:var(--green); }
+  .pill-tag.red { background:var(--red-soft); color:#f87171; }
+  .pill-tag.blue { background:var(--blue-soft); color:#60a5fa; }
+  .pill-tag.amber { background:var(--accent-soft); color:var(--accent); }
+  .cards { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+  .stat { flex:1 1 160px; background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:15px 17px; }
+  .stat .k { font-size:0.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.04em; font-weight:700; }
+  .stat .v { font-size:1.4rem; font-weight:800; margin-top:4px; }
+  .stat .v.accent { color:var(--accent); } .stat .v.red { color:#f87171; } .stat .v.green { color:var(--green); }
+  .spin { display:inline-block; width:14px; height:14px; border:2px solid var(--accent); border-top-color:transparent;
+          border-radius:50%; animation:s .7s linear infinite; vertical-align:middle; margin-right:6px; }
+  @keyframes s { to { transform:rotate(360deg); } }
+  .loading { text-align:center; color:var(--text-dim); padding:40px; }
+  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:flex-start;
+              justify-content:center; padding:30px 16px; overflow-y:auto; z-index:50; backdrop-filter:blur(6px); }
+  .modal-bg.show { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+           max-width:820px; width:100%; padding:24px; }
+  .hide { display:none !important; }
+  .muted { color:var(--text-dim); }
+  .drop { border:2px dashed var(--border); border-radius:10px; padding:16px; text-align:center; color:var(--text-dim);
+          font-size:0.82rem; cursor:pointer; transition:border-color .15s,background .15s; }
+  .drop.over { border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
+  .thumbs { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .thumb { position:relative; width:64px; height:64px; border-radius:8px; overflow:hidden; border:1px solid var(--border); background:var(--bg); }
+  .thumb img { width:100%; height:100%; object-fit:cover; }
+  .thumb .x { position:absolute; top:2px; right:2px; background:rgba(0,0,0,0.7); color:#fff; border-radius:50%;
+              width:18px; height:18px; line-height:16px; text-align:center; font-size:12px; cursor:pointer; }
+  .thumb .file { display:flex; align-items:center; justify-content:center; height:100%; font-size:0.62rem; padding:4px; text-align:center; color:var(--text-dim); }
+  .lineitem-row { display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  .lineitem-row > div { flex:1 1 120px; min-width:0; }
+  .lineitem-row label { margin-top:0; }
+  .upstat { font-size:0.74rem; color:var(--text-dim); margin-top:5px; min-height:16px; }
+  .subtotbar { display:flex; justify-content:flex-end; gap:26px; font-size:0.92rem; margin-top:10px; }
+  .subtotbar .v { font-weight:700; min-width:120px; text-align:right; }
+  .subtotbar .grand .v { color:var(--accent); font-weight:800; }
+  /* login + config gates */
+  .gate { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .gate .card { max-width:430px; width:100%; text-align:center; padding:36px 30px; }
+  .gate .brand-logo { margin:0 auto 16px; width:60px; height:60px; font-size:1.4rem; }
+  .gbtn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:18px;
+          background:#fff; color:#1a1a1a; border:none; border-radius:10px; padding:13px; font-weight:700;
+          font-size:0.95rem; cursor:pointer; font-family:inherit; }
+  .gate input { text-align:left; margin-bottom:4px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════ GATE 0 · SUPABASE CONFIG ══════════ -->
+<div class="gate" id="gateConfig" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">HG</div>
+    <h2>Connect to Supabase</h2>
+    <div class="sub" style="margin-top:6px;">Paste your project's URL and anon key once — saved in this browser.<br>
+      Find both in <b>Supabase → Project Settings → API</b>.</div>
+    <label style="text-align:left;">Project URL</label>
+    <input id="cfgUrl" placeholder="https://xxxx.supabase.co">
+    <label style="text-align:left;">Anon / public key</label>
+    <input id="cfgKey" placeholder="eyJhbGciOi...">
+    <div id="cfgMsg" class="msg"></div>
+    <button class="primary" style="width:100%; margin-top:14px;" onclick="saveConfig()">Connect</button>
+  </div>
+</div>
+
+<!-- ══════════ GATE 1 · LOGIN ══════════ -->
+<div class="gate" id="gateLogin" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">HG</div>
+    <h2>Inventory &amp; Purchasing</h2>
+    <div class="sub" style="margin-top:6px;">Sign in with the Google account your admin has allowlisted.</div>
+    <button class="gbtn" onclick="signIn()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41 35.3 44 30.1 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+      Sign in with Google
+    </button>
+    <div id="loginMsg" class="msg"></div>
+  </div>
+</div>
+
+<!-- ══════════ GATE 2 · NOT ON ALLOWLIST ══════════ -->
+<div class="gate" id="gateDenied" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">🔒</div>
+    <h2>Not authorised</h2>
+    <div class="sub" style="margin-top:6px;"><span id="deniedEmail"></span> is not on the access list.<br>
+      Ask your admin to add you under <b>Settings → Team access</b>.</div>
+    <button class="ghost" style="width:100%; margin-top:10px;" onclick="signOut()">Use a different account</button>
+  </div>
+</div>
+
+<!-- ══════════ THE APP ══════════ -->
+<div id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand-block">
+      <div class="brand-logo">HG</div>
+      <div>
+        <div class="brand-name">Inventory, Tools/Equipment &amp; Purchasing</div>
+        <div class="brand-sub">Supabase edition · materials · tools · suppliers · stock in/out · payments</div>
+      </div>
+    </div>
+    <div class="user-pill"><b id="userPill">…</b><button onclick="signOut()">Sign out</button></div>
+  </div>
+
+  <nav id="nav">
+    <button class="active" data-tab="dashboard" onclick="showTab('dashboard')">Dashboard</button>
+    <button data-tab="materials" onclick="showTab('materials')">Materials</button>
+    <button data-tab="suppliers" onclick="showTab('suppliers')">Suppliers</button>
+    <button data-tab="quotes" onclick="showTab('quotes')">Quotations</button>
+    <button data-tab="stockin" onclick="showTab('stockin')">Stock IN</button>
+    <button data-tab="stockout" onclick="showTab('stockout')">Stock OUT</button>
+    <button data-tab="payments" onclick="showTab('payments')">Payments</button>
+    <button data-tab="stockcount" onclick="showTab('stockcount')">Stock Count</button>
+    <button data-tab="tools" onclick="showTab('tools')">Tools / Equipment</button>
+    <button data-tab="assignments" onclick="showTab('assignments')">Assignments</button>
+    <button data-tab="repairs" onclick="showTab('repairs')">Repairs</button>
+    <button data-tab="settings" onclick="showTab('settings')">Settings</button>
+  </nav>
+
+  <main id="mainBody">
+    <div id="bootLoading" class="loading"><span class="spin"></span> Loading inventory…</div>
+    <div id="tabHost" style="display:none;"></div>
+  </main>
+</div>
+
+<!-- generic modal -->
+<div class="modal-bg" id="modal"><div class="modal" id="modalBody"></div></div>
+
+<script>
+// ═══════════════════════════ CONFIG ═══════════════════════════
+var SUPABASE_URL = '';
+var SUPABASE_KEY = '';
+if (!SUPABASE_URL) SUPABASE_URL = localStorage.getItem('hg_supabase_url') || '';
+if (!SUPABASE_KEY) SUPABASE_KEY = localStorage.getItem('hg_supabase_key') || '';
+
+var sb = null, SESSION = null, IS_ADMIN = false;
+var BUCKET = 'inventory-files';
+var DIVISIONS = ['Hoarding','Visual Print & Install','Scaffold','Temporary Storage Rental','Reinstatement','Fit-out'];
+var SELF_CLAIM_NAME = 'Black Lee';
+var DASH = '—';
+
+// full in-memory dataset (mirrors GAS _getAll_)
+var state = { materials:[], suppliers:[], purchases:[], stockOuts:[], quotations:[],
+              tools:[], toolAssignments:[], repairs:[], stockCounts:[], payments:[] };
+var CURRENT_TAB = 'dashboard';
+
+// ═══════════════════════════ HELPERS ═══════════════════════════
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function escq(s){ return String(s==null?'':s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+function fmtRM(n){ return 'RM ' + (Number(n)||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtNum(n){ return (Math.round((Number(n)||0)*100)/100).toString(); }
+function round2(n){ return Math.round((Number(n)+Number.EPSILON)*100)/100; }
+function fmtDate(d){ if(!d) return DASH; var s=String(d).slice(0,10); return s||DASH; }
+function fmtTime(d){ if(!d) return ''; var x=new Date(d); return isNaN(x)?String(d):x.toLocaleString('en-MY'); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function uid(){ return 'u'+Math.random().toString(36).slice(2,10); }
+function fail(e){ var m=(e&&e.message)?e.message:String(e); showToast(m,true); }
+function openModal(){ el('modal').classList.add('show'); }
+function closeModal(){ el('modal').classList.remove('show'); }
+document.addEventListener('click', function(e){ if(e.target.id==='modal') closeModal(); });
+
+var _toast=null;
+function showToast(msg, isErr){
+  if(_toast) _toast.remove();
+  var t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200;padding:12px 20px;border-radius:10px;font-size:0.88rem;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.5);'+
+    (isErr?'background:#3a1720;color:#f87171;border:1px solid #ef4444;':'background:#14261a;color:#22c55e;border:1px solid #22c55e;');
+  document.body.appendChild(t); _toast=t;
+  setTimeout(function(){ if(t.parentNode) t.remove(); }, 4500);
+}
+
+// ═══════════════════════════ LOOKUPS ═══════════════════════════
+function findMaterial(id){ return state.materials.find(function(m){return m.id===id;}); }
+function findSupplier(id){ return state.suppliers.find(function(s){return s.id===id;}); }
+function findTool(id){ return state.tools.find(function(t){return t.id===id;}); }
+function matName(id){ var m=findMaterial(id); return m?m.name:DASH; }
+function supName(id){ var s=findSupplier(id); return s?s.name:DASH; }
+function toolName(id){ var t=findTool(id); return t?t.name:DASH; }
+function toolUnit(id){ var t=findTool(id); return t?(t.unit||''):''; }
+function matUnit(id){ var m=findMaterial(id); return m?(m.unit||''):''; }
+function lineItemType(l){ return String(l.itemType||'material'); }
+function lineItemName(l){ return lineItemType(l)==='tool' ? toolName(l.materialId) : matName(l.materialId); }
+function allCategories(list){ var s={}; (list||[]).forEach(function(x){ if(x.category) s[x.category]=1; }); return Object.keys(s).sort(); }
+
+// ═══════════════════════════ BOOT / AUTH ═══════════════════════════
+function saveConfig(){
+  var u = el('cfgUrl').value.trim().replace(/\/+$/,'');
+  var k = el('cfgKey').value.trim();
+  if(!/^https:\/\/.+\.supabase\.co$/.test(u)){ showMsgEl('cfgMsg','URL must look like https://xxxx.supabase.co', false); return; }
+  if(!(k.indexOf('eyJ')===0 || k.indexOf('sb_publishable_')===0) || k.length < 30){
+    showMsgEl('cfgMsg','That does not look like the anon/public key (starts with eyJ… or sb_publishable_…).', false); return; }
+  localStorage.setItem('hg_supabase_url', u);
+  localStorage.setItem('hg_supabase_key', k);
+  location.reload();
+}
+function showMsgEl(id,t,ok){ var m=el(id); if(!m) return; m.textContent=t; m.className='msg show '+(ok?'ok':'err'); setTimeout(function(){m.classList.remove('show');},4500); }
+
+async function start(){
+  if(!SUPABASE_URL || !SUPABASE_KEY){ el('gateConfig').style.display='flex'; return; }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var s = await sb.auth.getSession();
+  SESSION = s.data.session;
+  sb.auth.onAuthStateChange(function(_e, session){ if(!!session !== !!SESSION){ SESSION = session; route(); } });
+  route();
+}
+
+async function route(){
+  ['gateConfig','gateLogin','gateDenied'].forEach(function(g){ el(g).style.display='none'; });
+  el('app').style.display='none';
+  if(!SESSION){ el('gateLogin').style.display='flex'; return; }
+  var email = (SESSION.user.email||'').toLowerCase();
+  var r = await sb.from('allowed_users').select('email,is_admin').ilike('email', email).maybeSingle();
+  if(r.error){ showMsgEl('loginMsg', r.error.message, false); el('gateLogin').style.display='flex'; return; }
+  if(!r.data){ el('deniedEmail').textContent = email; el('gateDenied').style.display='flex'; return; }
+  IS_ADMIN = !!r.data.is_admin;
+  el('app').style.display='block';
+  el('userPill').textContent = email;
+  await loadAll();
+}
+
+function signIn(){
+  var here = window.location.href.split('#')[0];
+  var embedded = (window.self !== window.top);
+  sb.auth.signInWithOAuth({ provider:'google',
+      options:{ redirectTo: here, skipBrowserRedirect: embedded } })
+    .then(function(r){
+      if(r.error){ showMsgEl('loginMsg', r.error.message, false); return; }
+      if(embedded && r.data && r.data.url){ window.top.location.href = r.data.url; }
+    });
+}
+function signOut(){ sb.auth.signOut().then(function(){ location.reload(); }); }
+function myEmail(){ return SESSION && SESSION.user ? (SESSION.user.email||'') : ''; }
+async function audit(action, details){ try { await sb.rpc('log_audit', { p_action:action, p_details:details||'' }); } catch(e){} }
+
+// ═══════════════════════════ DATA LOAD ═══════════════════════════
+async function loadAll(){
+  el('bootLoading').style.display='block'; el('tabHost').style.display='none';
+  try {
+    var res = await Promise.all([
+      sb.from('inv_materials').select('*').order('name'),
+      sb.from('inv_suppliers').select('*').order('name'),
+      sb.from('inv_tools').select('*').order('name'),
+      sb.from('inv_purchases').select('*').order('date',{ascending:false}),
+      sb.from('inv_purchase_lines').select('*'),
+      sb.from('inv_stock_outs').select('*').order('date',{ascending:false}),
+      sb.from('inv_stock_out_lines').select('*'),
+      sb.from('inv_quotations').select('*').order('created_at',{ascending:false}),
+      sb.from('inv_tool_assignments').select('*').order('created_at',{ascending:false}),
+      sb.from('inv_repairs').select('*').order('created_at',{ascending:false}),
+      sb.from('inv_stock_counts').select('*').order('count_date',{ascending:false}),
+      sb.from('inv_payments').select('*').order('payment_date',{ascending:false}),
+      sb.from('inv_payment_allocations').select('*')
+    ]);
+    for(var i=0;i<res.length;i++){ if(res[i].error) throw res[i].error; }
+    var materials=res[0].data, suppliers=res[1].data, tools=res[2].data,
+        purHead=res[3].data, purLines=res[4].data, soHead=res[5].data, soLines=res[6].data,
+        quotations=res[7].data, assigns=res[8].data, repairs=res[9].data, counts=res[10].data,
+        payHead=res[11].data, payAllocs=res[12].data;
+
+    state.materials = materials.map(mapMaterial);
+    state.suppliers = suppliers.map(mapSupplier);
+    state.tools     = tools.map(mapTool);
+    state.quotations= quotations.map(mapQuotation);
+    state.toolAssignments = assigns.map(mapAssignment);
+    state.repairs   = repairs.map(mapRepair);
+    state.stockCounts = counts.map(mapCount);
+
+    var pById={}; state.purchases = purHead.map(function(p){ var o=mapPurchase(p); o.lines=[]; pById[p.id]=o; return o; });
+    purLines.forEach(function(l){ if(pById[l.purchase_id]) pById[l.purchase_id].lines.push({
+      materialId:l.material_id, qty:Number(l.qty||0), rate:Number(l.rate||0), amount:Number(l.amount||0),
+      division:l.division||'', requestedBy:l.requested_by||'', itemType:String(l.item_type||'material') }); });
+
+    var oById={}; state.stockOuts = soHead.map(function(o){ var x=mapStockOut(o); x.lines=[]; oById[o.id]=x; return x; });
+    soLines.forEach(function(l){ if(oById[l.stock_out_id]) oById[l.stock_out_id].lines.push({
+      materialId:l.material_id, qty:Number(l.qty||0), ratePerUnit:Number(l.rate_per_unit||0), amount:Number(l.amount||0) }); });
+
+    var payById={}; state.payments = payHead.map(function(p){ var x=mapPayment(p); x.allocations=[]; payById[p.id]=x; return x; });
+    payAllocs.forEach(function(a){ if(payById[a.payment_id]) payById[a.payment_id].allocations.push({
+      purchaseId:a.purchase_id, amountApplied:Number(a.amount_applied||0) }); });
+
+    el('bootLoading').style.display='none'; el('tabHost').style.display='block';
+    showTab(CURRENT_TAB);
+  } catch(e){ el('bootLoading').innerHTML='<div class="empty">'+esc((e&&e.message)||String(e))+'</div>'; }
+}
+
+// row → camelCase mappers
+function mapMaterial(r){ return { id:r.id, name:r.name, unit:r.unit, category:r.category||'', lowStockThreshold:Number(r.low_stock_threshold||0),
+  photoUrl:r.photo_url||'', createdBy:r.created_by, createdAt:r.created_at, updatedBy:r.updated_by, updatedAt:r.updated_at }; }
+function mapSupplier(r){ return { id:r.id, name:r.name, contact:r.contact||'', contactPerson:r.contact_person||'', category:r.category||'',
+  supplierType:r.supplier_type||'', notes:r.notes||'', createdBy:r.created_by, updatedAt:r.updated_at, updatedBy:r.updated_by }; }
+function mapTool(r){ return { id:r.id, name:r.name, category:r.category||'', brand:r.brand||'', unit:r.unit||'pc', totalQty:Number(r.total_qty||0),
+  serialNumber:r.serial_number||'', photoUrl:r.photo_url||'', notes:r.notes||'', createdBy:r.created_by, createdAt:r.created_at, updatedBy:r.updated_by, updatedAt:r.updated_at }; }
+function mapPurchase(r){ return { id:r.id, date:fmtDate(r.date), supplierId:r.supplier_id||'', doNumber:r.do_number||'', notes:r.notes||'',
+  invoiceUrl:r.invoice_url||'', discount:Number(r.discount||0), delivery:Number(r.delivery||0), tax:Number(r.tax||0),
+  roundingAdjustment:Number(r.rounding_adjustment||0), deliveryPhotos:r.delivery_photos||[], paidBy:r.paid_by||'company', createdBy:r.created_by, createdAt:r.created_at }; }
+function mapStockOut(r){ return { id:r.id, dnNumber:r.dn_number, date:fmtDate(r.date), division:r.division, project:r.project||'', notes:r.notes||'',
+  requestedBy:r.requested_by||'', collectionPhotos:r.collection_photos||[], createdBy:r.created_by, createdAt:r.created_at }; }
+function mapQuotation(r){ return { id:r.id, itemType:String(r.item_type||'material'), materialId:r.material_id||'', supplierId:r.supplier_id||'',
+  rate:Number(r.rate||0), qtyOffered:(r.qty_offered==null?'':Number(r.qty_offered)), validUntil:fmtDate(r.valid_until), source:r.source||'',
+  notes:r.notes||'', screenshotUrl:r.screenshot_url||'', createdBy:r.created_by, updatedAt:r.updated_at }; }
+function mapAssignment(r){ return { id:r.id, toolId:r.tool_id||'', qty:Number(r.qty||0), person:r.person||'', division:r.division||'',
+  assignedDate:fmtDate(r.assigned_date), assignedNotes:r.assigned_notes||'', returnedDate:r.returned_date?fmtDate(r.returned_date):'',
+  returnedQty:(r.returned_qty==null?'':Number(r.returned_qty)), returnedCondition:r.returned_condition||'', returnedNotes:r.returned_notes||'',
+  returnedPhotoUrl:r.returned_photo_url||'', createdBy:r.created_by }; }
+function mapRepair(r){ return { id:r.id, toolId:r.tool_id||'', assignmentId:r.assignment_id||'', qty:Number(r.qty||0), supplierId:r.supplier_id||'',
+  sentDate:fmtDate(r.sent_date), sentNotes:r.sent_notes||'', sentPhotoUrl:r.sent_photo_url||'', status:r.status||'SENT',
+  returnedDate:r.returned_date?fmtDate(r.returned_date):'', returnedQty:(r.returned_qty==null?'':Number(r.returned_qty)),
+  returnedNotes:r.returned_notes||'', returnedPhotoUrl:r.returned_photo_url||'', createdBy:r.created_by }; }
+function mapCount(r){ return { id:r.id, countDate:fmtDate(r.count_date), itemType:String(r.item_type||'material'), itemId:r.item_id||'',
+  systemQty:Number(r.system_qty||0), countedQty:Number(r.counted_qty||0), variance:Number(r.variance||0), reason:r.reason||'', notes:r.notes||'',
+  photoUrl:r.photo_url||'', createdBy:r.created_by, updatedAt:r.updated_at }; }
+function mapPayment(r){ return { id:r.id, paymentDate:fmtDate(r.payment_date), payeeType:r.payee_type||'supplier', payeeId:r.payee_id||'',
+  amount:Number(r.amount||0), method:r.method||'', referenceNumber:r.reference_number||'', notes:r.notes||'', slipPhotoUrl:r.slip_photo_url||'', createdBy:r.created_by }; }
+
+// ═══════════════════════════ FILE UPLOAD (Storage) ═══════════════════════════
+async function uploadToStorage(file){
+  var safe = String(file.name||'file').replace(/[^\w.\-]/g,'_').slice(0,80);
+  var path = today().replace(/-/g,'') + '/' + Date.now() + '_' + Math.random().toString(36).slice(2,7) + '_' + safe;
+  var up = await sb.storage.from(BUCKET).upload(path, file, { upsert:false, contentType:file.type||undefined });
+  if(up.error) throw up.error;
+  await audit('UPLOAD File', path);
+  return path;
+}
+async function signedUrl(path){
+  if(!path) return '';
+  if(/^https?:\/\//.test(path)) return path; // legacy pasted URL
+  var r = await sb.storage.from(BUCKET).createSignedUrl(path, 3600);
+  return (r.data && r.data.signedUrl) || '';
+}
+// open a stored path/URL in a new tab
+async function openStored(path){
+  if(!path){ return; }
+  if(/^https?:\/\//.test(path)){ window.open(path,'_blank'); return; }
+  var u = await signedUrl(path);
+  if(u) window.open(u,'_blank'); else showToast('Could not open file',true);
+}
+// small thumbnail (async-loads signed url)
+function photoThumbHtml(path){
+  if(!path) return '<span class="muted">'+DASH+'</span>';
+  var tid='th'+uid();
+  loadThumb(tid, path);
+  return '<span id="'+tid+'" class="thumb" style="display:inline-block;cursor:pointer;" onclick="openStored(\''+escq(path)+'\')"><span class="file">…</span></span>';
+}
+async function loadThumb(tid, path){
+  var isPdf = /\.pdf($|\?)/i.test(path);
+  var host = el(tid); if(!host) return;
+  if(isPdf){ host.innerHTML='<span class="file">PDF</span>'; return; }
+  try { var u=await signedUrl(path); if(el(tid)) el(tid).innerHTML = u?('<img src="'+esc(u)+'">'):'<span class="file">?</span>'; }
+  catch(e){ if(el(tid)) el(tid).innerHTML='<span class="file">?</span>'; }
+}
+
+// Multi-photo drop-zone controller. host = container id; stores array of paths in _photos[key]
+var _photos = {};
+function initDrop(zoneId, key, multi){
+  _photos[key] = _photos[key] || [];
+  var zone = el(zoneId); if(!zone) return;
+  var input = document.createElement('input'); input.type='file'; input.accept='image/*,application/pdf'; input.style.display='none';
+  if(multi) input.multiple=true;
+  zone.appendChild(input);
+  zone.querySelector('.drop').onclick = function(){ input.click(); };
+  input.onchange = function(){ handleFiles(Array.prototype.slice.call(input.files), key, zoneId, multi); input.value=''; };
+  var dz = zone.querySelector('.drop');
+  dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('over'); });
+  dz.addEventListener('dragleave', function(){ dz.classList.remove('over'); });
+  dz.addEventListener('drop', function(e){ e.preventDefault(); dz.classList.remove('over'); handleFiles(Array.prototype.slice.call(e.dataTransfer.files), key, zoneId, multi); });
+  renderPhotos(key, zoneId, multi);
+}
+async function handleFiles(files, key, zoneId, multi){
+  files = files.filter(function(f){ return f && (f.type.indexOf('image/')===0 || f.type==='application/pdf'); });
+  if(!files.length) return;
+  if(!multi) files = files.slice(0,1);
+  var statusEl = el(zoneId).querySelector('.upstat');
+  for(var i=0;i<files.length;i++){
+    if(files[i].size > 10*1024*1024){ showToast(files[i].name+' too large (max 10MB)', true); continue; }
+    if(statusEl) statusEl.textContent = 'Uploading '+files[i].name+'…';
+    try { var path = await uploadToStorage(files[i]); if(multi) _photos[key].push(path); else _photos[key]=[path]; }
+    catch(e){ showToast('Upload failed: '+((e&&e.message)||e), true); }
+  }
+  if(statusEl) statusEl.textContent='';
+  renderPhotos(key, zoneId, multi);
+}
+function removePhoto(key, idx, zoneId, multi){ _photos[key].splice(idx,1); renderPhotos(key, zoneId, multi==='true'); }
+function renderPhotos(key, zoneId, multi){
+  var host = el(zoneId).querySelector('.thumbs'); if(!host) return;
+  host.innerHTML = (_photos[key]||[]).map(function(p,i){
+    var isPdf=/\.pdf($|\?)/i.test(p);
+    var inner = isPdf ? '<span class="file">PDF</span>' : '<span class="file" id="pt'+key+i+'">…</span>';
+    if(!isPdf) loadThumb('pt'+key+i, p);
+    return '<div class="thumb"><span class="x" onclick="removePhoto(\''+escq(key)+'\','+i+',\''+escq(zoneId)+'\',\''+(!!multi)+'\')">×</span>'+
+      '<span onclick="openStored(\''+escq(p)+'\')" style="cursor:pointer;display:block;height:100%;">'+inner+'</span></div>';
+  }).join('');
+}
+function dropZoneHtml(zoneId, label){
+  return '<div id="'+zoneId+'"><div class="drop">'+esc(label||'Drag &amp; drop image/PDF, or click to browse')+'</div>'+
+    '<div class="upstat"></div><div class="thumbs"></div></div>';
+}
+
+// ═══════════════════════════ TABS ═══════════════════════════
+function showTab(t){
+  CURRENT_TAB=t;
+  document.querySelectorAll('#nav button').forEach(function(b){ b.classList.toggle('active', b.dataset.tab===t); });
+  var host = el('tabHost');
+  var fn = TAB_RENDER[t];
+  host.innerHTML = fn ? fn() : '<div class="empty">Unknown tab</div>';
+  var after = TAB_AFTER[t]; if(after) after();
+}
+var TAB_RENDER = {}, TAB_AFTER = {};
+
+// ═══════════════════════════ DERIVED VALUES ═══════════════════════════
+function stockOnHand(matId){
+  var inQ=0, outQ=0;
+  state.purchases.forEach(function(p){ (p.lines||[]).forEach(function(l){
+    if(lineItemType(l)!=='material') return; if(l.materialId===matId) inQ+=Number(l.qty||0); }); });
+  state.stockOuts.forEach(function(o){ (o.lines||[]).forEach(function(l){ if(l.materialId===matId) outQ+=Number(l.qty||0); }); });
+  return { inQ:inQ, outQ:outQ, onHand:inQ-outQ };
+}
+function latestRate(matId){
+  var best=null;
+  state.purchases.forEach(function(p){ (p.lines||[]).forEach(function(l){
+    if(lineItemType(l)!=='material') return;
+    if(l.materialId===matId){ if(!best||(p.date||'')>=best.date) best={date:p.date||'',rate:Number(l.rate||0)}; } }); });
+  return best?best.rate:0;
+}
+function latestToolRate(toolId){
+  var best=null;
+  state.purchases.forEach(function(p){ (p.lines||[]).forEach(function(l){
+    if(lineItemType(l)!=='tool') return;
+    if(l.materialId===toolId){ if(!best||(p.date||'')>=best.date) best={date:p.date||'',rate:Number(l.rate||0)}; } }); });
+  return best?best.rate:0;
+}
+function toolDivisions(toolId){
+  var counts={};
+  (state.toolAssignments||[]).forEach(function(a){ if(a.toolId!==toolId||a.returnedDate) return;
+    var d=a.division||'Unassigned'; counts[d]=(counts[d]||0)+(Number(a.qty)||0); });
+  return counts;
+}
+function toolStats(toolId){
+  var assigned=0,inRepair=0,awaitingRepair=0,discarded=0,lost=0;
+  (state.toolAssignments||[]).forEach(function(a){ if(a.toolId!==toolId) return;
+    if(!a.returnedDate){ assigned+=Number(a.qty)||0; }
+    else { var rq=Number(a.returnedQty)||0, oq=Number(a.qty)||0, diff=oq-rq;
+      if(diff>0) lost+=diff;
+      if(a.returnedCondition==='TO_DISCARD') discarded+=rq;
+      if(a.returnedCondition==='TO_REPAIR') awaitingRepair+=rq; } });
+  var repairedQtyForTool=0;
+  (state.repairs||[]).forEach(function(r){ if(r.toolId!==toolId) return;
+    repairedQtyForTool+=Number(r.qty)||0;
+    if(String(r.status)==='SENT') inRepair+=Number(r.qty)||0;
+    if(String(r.status)==='RETURNED'){ var sq=Number(r.qty)||0, rq=Number(r.returnedQty)||0; if(sq>rq) lost+=(sq-rq); } });
+  var awaitingNet=awaitingRepair-repairedQtyForTool; if(awaitingNet<0) awaitingNet=0;
+  var tool=findTool(toolId)||{}; var totalQty=Number(tool.totalQty)||0;
+  var available=totalQty-assigned-inRepair-awaitingNet-discarded-lost; if(available<0) available=0;
+  return { totalQty:totalQty, assigned:assigned, inRepair:inRepair, awaitingRepair:awaitingNet, discarded:discarded, lost:lost, available:available };
+}
+function toolOwnedQty(toolId){ var s=toolStats(toolId); return s.totalQty-s.discarded-s.lost; }
+function purchaseSubtotal(p){ return (p.lines||[]).reduce(function(s,l){ return s+Number(l.amount||0); },0); }
+function purchaseGrandTotal(p){ return purchaseSubtotal(p)-Number(p.discount||0)+Number(p.delivery||0)+Number(p.tax||0)+Number(p.roundingAdjustment||0); }
+function purchaseDivisions(p){ var set={}; (p.lines||[]).forEach(function(l){ if(l.division) set[l.division]=true; }); return Object.keys(set); }
+function purchasePaidAmount(purchaseId, excludePaymentId){
+  var sum=0;
+  (state.payments||[]).forEach(function(pmt){ if(excludePaymentId&&pmt.id===excludePaymentId) return;
+    (pmt.allocations||[]).forEach(function(a){ if(a.purchaseId===purchaseId) sum+=Number(a.amountApplied||0); }); });
+  return sum;
+}
+function purchaseOutstanding(p, ex){ if(!p) return 0; return Math.max(0, purchaseGrandTotal(p)-purchasePaidAmount(p.id,ex)); }
+function purchasePaidStatus(p){
+  var total=purchaseGrandTotal(p); if(total<=0) return 'PAID';
+  var paid=purchasePaidAmount(p.id); if(paid<=0) return 'UNPAID';
+  if(paid+0.005>=total) return 'PAID'; return 'PARTIAL';
+}
+function paidStatusPill(s){ if(s==='PAID') return '<span class="pill-tag green">PAID</span>'; if(s==='PARTIAL') return '<span class="pill-tag blue">PARTIAL</span>'; return '<span class="pill-tag red">UNPAID</span>'; }
+function supplierOutstandingStats(supplierId){
+  var unpaidInv=0,billed=0,paid=0,oldest='';
+  (state.purchases||[]).forEach(function(p){ if(p.supplierId!==supplierId) return; if(String(p.paidBy||'company')!=='company') return;
+    var total=purchaseGrandTotal(p), pa=purchasePaidAmount(p.id);
+    if(total-pa>0.005){ unpaidInv++; if(!oldest||String(p.date)<oldest) oldest=String(p.date||''); }
+    billed+=total; paid+=Math.min(pa,total); });
+  return { unpaidInv:unpaidInv, billed:billed, paid:paid, outstanding:Math.max(0,billed-paid), oldest:oldest };
+}
+function selfClaimsList(){
+  var rows=[];
+  (state.purchases||[]).forEach(function(p){ if(String(p.paidBy||'company')!=='self') return;
+    var total=purchaseGrandTotal(p), pa=purchasePaidAmount(p.id);
+    rows.push({ purchase:p, total:total, paid:pa, outstanding:Math.max(0,total-pa) }); });
+  rows.sort(function(a,b){ return String(a.purchase.date||'').localeCompare(String(b.purchase.date||'')); });
+  return rows;
+}
+function selfClaimsOutstandingTotal(){ return selfClaimsList().reduce(function(s,r){ return s+r.outstanding; },0); }
+function suppliersOutstandingTotal(){ var seen={},sum=0; state.suppliers.forEach(function(s){ if(seen[s.id]) return; seen[s.id]=1; sum+=supplierOutstandingStats(s.id).outstanding; }); return sum; }
+
+// select builders
+function matOptions(sel){ return '<option value="">Select material…</option>'+state.materials.map(function(m){ return '<option value="'+esc(m.id)+'"'+(m.id===sel?' selected':'')+'>'+esc(m.name)+' ('+esc(m.unit||'')+')</option>'; }).join(''); }
+function toolOptions(sel){ return '<option value="">Select tool…</option>'+state.tools.map(function(t){ return '<option value="'+esc(t.id)+'"'+(t.id===sel?' selected':'')+'>'+esc(t.name)+'</option>'; }).join(''); }
+function supOptions(sel, filterType){ var list=state.suppliers.filter(function(s){ return !filterType || !s.supplierType || s.supplierType===filterType || s.supplierType==='Both'; });
+  return '<option value="">Select supplier…</option>'+list.map(function(s){ return '<option value="'+esc(s.id)+'"'+(s.id===sel?' selected':'')+'>'+esc(s.name)+'</option>'; }).join(''); }
+function divOptions(sel){ return '<option value="">Select division…</option>'+DIVISIONS.map(function(d){ return '<option'+(d===sel?' selected':'')+'>'+esc(d)+'</option>'; }).join(''); }
+
+// ═══════════════════════════ SEARCH BINDING HELPER ═══════════════════════════
+function bindSearch(ids, fn){ ids.forEach(function(id){ var e=el(id); if(e) e.addEventListener('input', fn); }); }
+
+// ═══════════════════════════ 1 · DASHBOARD ═══════════════════════════
+TAB_RENDER.dashboard = function(){
+  return '<div class="card"><h2>Inventory Dashboard</h2><div class="sub">Material stock on hand, value and low-stock alerts.</div>'+
+    '<div class="cards" id="dashCards"></div>'+
+    '<div class="row"><div><label>Search</label><input id="dashSearch" placeholder="Material name…"></div>'+
+    '<div><label>Category</label><select id="dashCat"><option value="">All</option>'+allCategories(state.materials).map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select></div>'+
+    '<div style="flex:0 0 auto;display:flex;align-items:flex-end;"><button class="ghost" onclick="exportDashExcel()">⬇ Export Excel</button></div></div>'+
+    '<div class="tablewrap" style="margin-top:14px;"><table class="grid"><thead><tr><th>Photo</th><th>Material</th><th>Category</th><th class="num">Unit</th><th class="num">In</th><th class="num">Out</th><th class="num">On hand</th><th class="amt">Latest rate</th><th class="amt">Value</th><th>Status</th></tr></thead><tbody id="dashTable"></tbody></table></div></div>';
+};
+TAB_AFTER.dashboard = function(){ renderDashboard(); bindSearch(['dashSearch'], renderDashboard); el('dashCat').onchange=renderDashboard; };
+function renderDashboard(){
+  var totalValue=0, lowCount=0;
+  state.materials.forEach(function(m){ var s=stockOnHand(m.id); totalValue+=s.onHand*latestRate(m.id); if(s.onHand<=Number(m.lowStockThreshold||0)) lowCount++; });
+  el('dashCards').innerHTML =
+    stat('Materials', state.materials.length) + stat('Tools/Equipment', state.tools.length) +
+    stat('Inventory value', fmtRM(totalValue), 'accent') + stat('Low stock', lowCount, lowCount?'red':'green') +
+    stat('Supplier outstanding', fmtRM(suppliersOutstandingTotal()), 'red') + stat('Self-claim outstanding', fmtRM(selfClaimsOutstandingTotal()), 'red');
+  var q=(el('dashSearch').value||'').trim().toLowerCase(), cat=el('dashCat').value;
+  var rows=state.materials.filter(function(m){ if(q&&String(m.name||'').toLowerCase().indexOf(q)===-1) return false; if(cat&&(m.category||'')!==cat) return false; return true; });
+  var tb=el('dashTable');
+  if(!state.materials.length){ tb.innerHTML='<tr><td colspan="10" class="empty">No materials yet.</td></tr>'; return; }
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="10" class="empty">No materials match.</td></tr>'; return; }
+  tb.innerHTML = rows.map(function(m){ var s=stockOnHand(m.id), rate=latestRate(m.id), val=s.onHand*rate, low=s.onHand<=Number(m.lowStockThreshold||0);
+    return '<tr>'+ '<td>'+photoThumbHtml(m.photoUrl)+'</td>'+ '<td><b>'+esc(m.name)+'</b></td>'+ '<td>'+esc(m.category||DASH)+'</td>'+
+      '<td class="num">'+esc(m.unit||'')+'</td>'+ '<td class="num">'+fmtNum(s.inQ)+'</td>'+ '<td class="num">'+fmtNum(s.outQ)+'</td>'+
+      '<td class="num"><b>'+fmtNum(s.onHand)+'</b></td>'+ '<td class="amt">'+fmtRM(rate)+'</td>'+ '<td class="amt">'+fmtRM(val)+'</td>'+
+      '<td>'+(low?'<span class="pill-tag red">LOW</span>':'<span class="pill-tag green">OK</span>')+'</td></tr>'; }).join('');
+}
+function stat(k,v,cls){ return '<div class="stat"><div class="k">'+esc(k)+'</div><div class="v '+(cls||'')+'">'+esc(v)+'</div></div>'; }
+
+// ═══════════════════════════ 2 · MATERIALS ═══════════════════════════
+TAB_RENDER.materials = function(){
+  return '<div class="card"><div class="row" style="justify-content:space-between;align-items:center;"><div style="flex:1;"><h2>Materials</h2><div class="sub" style="margin:0;">Consumable stock items (in via purchases, out via delivery notes).</div></div>'+
+    '<div style="flex:0 0 auto;display:flex;gap:8px;"><button class="ghost" onclick="exportMaterialsExcel()">⬇ Export</button><button class="primary" onclick="materialForm()">+ Add material</button></div></div>'+
+    '<div class="row" style="margin-top:12px;"><div><label>Search</label><input id="matSearch" placeholder="Name…"></div>'+
+    '<div><label>Category</label><select id="matCat"><option value="">All</option>'+allCategories(state.materials).map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select></div></div>'+
+    '<div class="tablewrap" style="margin-top:14px;"><table class="grid"><thead><tr><th>Photo</th><th>Name</th><th>Category</th><th>Unit</th><th class="num">On hand</th><th class="num">Low @</th><th>Updated</th><th></th></tr></thead><tbody id="matTable"></tbody></table></div></div>';
+};
+TAB_AFTER.materials = function(){ renderMaterials(); bindSearch(['matSearch'], renderMaterials); el('matCat').onchange=renderMaterials; };
+function renderMaterials(){
+  var q=(el('matSearch').value||'').trim().toLowerCase(), cat=el('matCat').value;
+  var rows=state.materials.filter(function(m){ if(q&&String(m.name||'').toLowerCase().indexOf(q)===-1) return false; if(cat&&(m.category||'')!==cat) return false; return true; });
+  var tb=el('matTable');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="8" class="empty">No materials.</td></tr>'; return; }
+  tb.innerHTML=rows.map(function(m){ var s=stockOnHand(m.id), low=s.onHand<=Number(m.lowStockThreshold||0);
+    return '<tr'+(low?' style="background:var(--red-soft);"':'')+'><td>'+photoThumbHtml(m.photoUrl)+'</td><td><b>'+esc(m.name)+'</b></td>'+
+      '<td>'+esc(m.category||DASH)+'</td><td>'+esc(m.unit||'')+'</td><td class="num">'+fmtNum(s.onHand)+'</td><td class="num">'+fmtNum(m.lowStockThreshold)+'</td>'+
+      '<td class="muted">'+esc(String(m.updatedBy||m.createdBy||'').split('@')[0])+'</td>'+
+      '<td class="actions"><button class="ghost btn-sm" onclick="materialForm(\''+m.id+'\')">Edit</button> <button class="danger btn-sm" onclick="deleteMaterial(\''+m.id+'\')">Del</button></td></tr>'; }).join('');
+}
+function materialForm(id){
+  var m = id ? findMaterial(id) : { unit:'pc', lowStockThreshold:0 };
+  _photos['matPhoto'] = m.photoUrl ? [m.photoUrl] : [];
+  el('modalBody').innerHTML = '<h2>'+(id?'Edit':'Add')+' material</h2>'+
+    '<input type="hidden" id="mfId" value="'+esc(id||'')+'">'+
+    '<div class="row"><div style="flex:2;"><label>Name *</label><input id="mfName" value="'+esc(m.name||'')+'"></div>'+
+    '<div><label>Unit</label><input id="mfUnit" value="'+esc(m.unit||'pc')+'"></div></div>'+
+    '<div class="row"><div><label>Category</label><input id="mfCat" list="matCatList" value="'+esc(m.category||'')+'"><datalist id="matCatList">'+allCategories(state.materials).map(function(c){return '<option value="'+esc(c)+'">';}).join('')+'</datalist></div>'+
+    '<div><label>Low-stock threshold</label><input id="mfLow" type="number" step="any" value="'+esc(m.lowStockThreshold||0)+'"></div></div>'+
+    '<label>Photo</label>'+dropZoneHtml('mfPhotoZone','Drag &amp; drop a photo, or click')+
+    '<div class="msg" id="mfMsg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal()">Cancel</button></div><div style="flex:0 0 auto;"><button class="primary" onclick="saveMaterial()">Save</button></div></div>';
+  openModal(); initDrop('mfPhotoZone','matPhoto', false);
+}
+async function saveMaterial(){
+  var name=el('mfName').value.trim(); if(!name){ showMsgEl('mfMsg','Name required.',false); return; }
+  var id=el('mfId').value;
+  var obj={ name:name, unit:el('mfUnit').value.trim()||'pc', category:el('mfCat').value.trim(),
+    low_stock_threshold:parseFloat(el('mfLow').value)||0, photo_url:(_photos['matPhoto']||[])[0]||'', updated_by:myEmail(), updated_at:new Date().toISOString() };
+  var r;
+  if(id){ r=await sb.from('inv_materials').update(obj).eq('id',id); }
+  else { obj.created_by=myEmail(); r=await sb.from('inv_materials').insert(obj); }
+  if(r.error){ showMsgEl('mfMsg', r.error.message, false); return; }
+  await audit((id?'UPDATE':'CREATE')+' Material', name);
+  closeModal(); await loadAll(); showToast('Material saved');
+}
+async function deleteMaterial(id){
+  var m=findMaterial(id); if(!confirm('Delete material "'+((m&&m.name)||'')+'"? Linked records keep their id reference.')) return;
+  var r=await sb.from('inv_materials').delete().eq('id',id);
+  if(r.error){ fail(r.error); return; }
+  await audit('DELETE Material', (m&&m.name)||id); await loadAll(); showToast('Deleted');
+}
+
+// ═══════════════════════════ 3 · SUPPLIERS ═══════════════════════════
+TAB_RENDER.suppliers = function(){
+  return '<div class="card"><div class="row" style="justify-content:space-between;align-items:center;"><div style="flex:1;"><h2>Suppliers</h2><div class="sub" style="margin:0;">Vendors for materials and tools. Outstanding = unpaid company purchases.</div></div>'+
+    '<div style="flex:0 0 auto;display:flex;gap:8px;"><button class="ghost" onclick="exportSuppliersExcel()">⬇ Export</button><button class="primary" onclick="supplierForm()">+ Add supplier</button></div></div>'+
+    '<div class="row" style="margin-top:12px;"><div><label>Search</label><input id="supSearch" placeholder="Name / contact…"></div></div>'+
+    '<div class="tablewrap" style="margin-top:14px;"><table class="grid"><thead><tr><th>Name</th><th>Type</th><th>Contact person</th><th>Contact</th><th>Category</th><th class="amt">Outstanding</th><th></th></tr></thead><tbody id="supTable"></tbody></table></div></div>';
+};
+TAB_AFTER.suppliers = function(){ renderSuppliers(); bindSearch(['supSearch'], renderSuppliers); };
+function renderSuppliers(){
+  var q=(el('supSearch').value||'').trim().toLowerCase();
+  var rows=state.suppliers.filter(function(s){ return !q || [s.name,s.contact,s.contactPerson,s.category].join(' ').toLowerCase().indexOf(q)>=0; });
+  var tb=el('supTable');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="7" class="empty">No suppliers.</td></tr>'; return; }
+  tb.innerHTML=rows.map(function(s){ var st=supplierOutstandingStats(s.id);
+    return '<tr><td><b>'+esc(s.name)+'</b></td><td>'+(s.supplierType?'<span class="tag">'+esc(s.supplierType)+'</span>':DASH)+'</td>'+
+      '<td>'+esc(s.contactPerson||DASH)+'</td><td>'+esc(s.contact||DASH)+'</td><td>'+esc(s.category||DASH)+'</td>'+
+      '<td class="amt">'+(st.outstanding>0.005?'<span style="color:#f87171;">'+fmtRM(st.outstanding)+'</span>':fmtRM(0))+'</td>'+
+      '<td class="actions"><button class="ghost btn-sm" onclick="supplierForm(\''+s.id+'\')">Edit</button> <button class="danger btn-sm" onclick="deleteSupplier(\''+s.id+'\')">Del</button></td></tr>'; }).join('');
+}
+function supplierForm(id){
+  var s = id ? findSupplier(id) : {};
+  var types=['','Material','Tool','Both'];
+  el('modalBody').innerHTML='<h2>'+(id?'Edit':'Add')+' supplier</h2>'+
+    '<input type="hidden" id="sfId" value="'+esc(id||'')+'">'+
+    '<div class="row"><div style="flex:2;"><label>Name *</label><input id="sfName" value="'+esc(s.name||'')+'"></div>'+
+    '<div><label>Type</label><select id="sfType">'+types.map(function(t){return '<option value="'+esc(t)+'"'+(t===(s.supplierType||'')?' selected':'')+'>'+(t||'—')+'</option>';}).join('')+'</select></div></div>'+
+    '<div class="row"><div><label>Contact person</label><input id="sfPerson" value="'+esc(s.contactPerson||'')+'"></div>'+
+    '<div><label>Contact (phone/email)</label><input id="sfContact" value="'+esc(s.contact||'')+'"></div></div>'+
+    '<div class="row"><div><label>Category</label><input id="sfCat" value="'+esc(s.category||'')+'"></div></div>'+
+    '<label>Notes</label><textarea id="sfNotes">'+esc(s.notes||'')+'</textarea>'+
+    '<div class="msg" id="sfMsg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal()">Cancel</button></div><div style="flex:0 0 auto;"><button class="primary" onclick="saveSupplier()">Save</button></div></div>';
+  openModal();
+}
+async function saveSupplier(){
+  var name=el('sfName').value.trim(); if(!name){ showMsgEl('sfMsg','Name required.',false); return; }
+  var id=el('sfId').value;
+  var obj={ name:name, supplier_type:el('sfType').value, contact_person:el('sfPerson').value.trim(),
+    contact:el('sfContact').value.trim(), category:el('sfCat').value.trim(), notes:el('sfNotes').value.trim(),
+    updated_by:myEmail(), updated_at:new Date().toISOString() };
+  var r; if(id){ r=await sb.from('inv_suppliers').update(obj).eq('id',id); } else { obj.created_by=myEmail(); r=await sb.from('inv_suppliers').insert(obj); }
+  if(r.error){ showMsgEl('sfMsg', r.error.message, false); return; }
+  await audit((id?'UPDATE':'CREATE')+' Supplier', name);
+  closeModal(); await loadAll(); showToast('Supplier saved');
+}
+async function deleteSupplier(id){
+  var s=findSupplier(id); if(!confirm('Delete supplier "'+((s&&s.name)||'')+'"?')) return;
+  var r=await sb.from('inv_suppliers').delete().eq('id',id);
+  if(r.error){ fail(r.error); return; }
+  await audit('DELETE Supplier', (s&&s.name)||id); await loadAll(); showToast('Deleted');
+}
+
+// ═══════════════════════════ 4 · QUOTATIONS (supplier price quotes) ═══════════════════════════
+TAB_RENDER.quotes = function(){
+  return '<div class="card"><div class="row" style="justify-content:space-between;align-items:center;"><div style="flex:1;"><h2>Price Quotations</h2><div class="sub" style="margin:0;">Supplier price offers for materials / tools — compare best rate.</div></div>'+
+    '<div style="flex:0 0 auto;display:flex;gap:8px;"><button class="ghost" onclick="exportQuotesExcel()">⬇ Export</button><button class="primary" onclick="quoteForm()">+ Add quotation</button></div></div>'+
+    '<div class="row" style="margin-top:12px;"><div><label>Search</label><input id="qSearch" placeholder="Item / supplier / source…"></div></div>'+
+    '<div class="tablewrap" style="margin-top:14px;"><table class="grid"><thead><tr><th>Item</th><th>Supplier</th><th class="amt">Rate</th><th class="num">Qty offered</th><th>Valid until</th><th>Source</th><th>Screenshot</th><th></th></tr></thead><tbody id="qTable"></tbody></table></div></div>';
+};
+TAB_AFTER.quotes = function(){ renderQuotes(); bindSearch(['qSearch'], renderQuotes); };
+function renderQuotes(){
+  var q=(el('qSearch').value||'').trim().toLowerCase();
+  var rows=state.quotations.filter(function(x){ var nm=lineItemType(x)==='tool'?toolName(x.materialId):matName(x.materialId);
+    return !q || [nm,supName(x.supplierId),x.source,x.notes].join(' ').toLowerCase().indexOf(q)>=0; });
+  var tb=el('qTable');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="8" class="empty">No quotations.</td></tr>'; return; }
+  tb.innerHTML=rows.map(function(x){ var nm=x.itemType==='tool'?toolName(x.materialId):matName(x.materialId);
+    return '<tr><td><b>'+esc(nm)+'</b> <span class="tag">'+esc(x.itemType)+'</span></td><td>'+esc(supName(x.supplierId))+'</td>'+
+      '<td class="amt">'+fmtRM(x.rate)+'</td><td class="num">'+(x.qtyOffered!==''?fmtNum(x.qtyOffered):DASH)+'</td>'+
+      '<td>'+esc(x.validUntil||DASH)+'</td><td>'+esc(x.source||DASH)+'</td><td>'+photoThumbHtml(x.screenshotUrl)+'</td>'+
+      '<td class="actions"><button class="ghost btn-sm" onclick="quoteForm(\''+x.id+'\')">Edit</button> <button class="danger btn-sm" onclick="deleteQuotation(\''+x.id+'\')">Del</button></td></tr>'; }).join('');
+}
+function quoteForm(id){
+  var x = id ? state.quotations.find(function(q){return q.id===id;}) : { itemType:'material' };
+  _photos['qShot'] = x.screenshotUrl ? [x.screenshotUrl] : [];
+  el('modalBody').innerHTML='<h2>'+(id?'Edit':'Add')+' quotation</h2>'+
+    '<input type="hidden" id="qfId" value="'+esc(id||'')+'">'+
+    '<div class="row"><div><label>Item type</label><select id="qfType" onchange="qfTypeChange()">'+
+    '<option value="material"'+(x.itemType==='material'?' selected':'')+'>Material</option><option value="tool"'+(x.itemType==='tool'?' selected':'')+'>Tool</option></select></div>'+
+    '<div><label>Item *</label><select id="qfItem"></select></div></div>'+
+    '<div class="row"><div><label>Supplier *</label><select id="qfSup">'+supOptions(x.supplierId)+'</select></div>'+
+    '<div><label>Rate (RM) *</label><input id="qfRate" type="number" step="any" value="'+esc(x.rate||'')+'"></div></div>'+
+    '<div class="row"><div><label>Qty offered</label><input id="qfQty" type="number" step="any" value="'+esc(x.qtyOffered!==''?x.qtyOffered:'')+'"></div>'+
+    '<div><label>Valid until</label><input id="qfValid" type="date" value="'+esc(x.validUntil&&x.validUntil!==DASH?x.validUntil:'')+'"></div>'+
+    '<div><label>Source</label><select id="qfSource">'+['','WhatsApp','Email','Phone','Website','Walk-in'].map(function(s){return '<option'+(s===(x.source||'')?' selected':'')+'>'+(s||'—')+'</option>';}).join('')+'</select></div></div>'+
+    '<label>Notes</label><textarea id="qfNotes">'+esc(x.notes||'')+'</textarea>'+
+    '<label>Screenshot</label>'+dropZoneHtml('qfShotZone','Drag &amp; drop screenshot')+
+    '<div class="msg" id="qfMsg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal()">Cancel</button></div><div style="flex:0 0 auto;"><button class="primary" onclick="saveQuotation()">Save</button></div></div>';
+  openModal(); qfTypeChange(x.materialId); initDrop('qfShotZone','qShot', false);
+}
+function qfTypeChange(sel){ var t=el('qfType').value; el('qfItem').innerHTML = t==='tool'?toolOptions(sel):matOptions(sel); }
+async function saveQuotation(){
+  var mat=el('qfItem').value, sup=el('qfSup').value, rate=parseFloat(el('qfRate').value)||0;
+  if(!mat||!sup){ showMsgEl('qfMsg','Item and supplier required.',false); return; }
+  if(rate<=0){ showMsgEl('qfMsg','Rate must be positive.',false); return; }
+  var id=el('qfId').value, qty=el('qfQty').value;
+  var obj={ item_type:el('qfType').value, material_id:mat, supplier_id:sup, rate:rate,
+    qty_offered:(qty===''?null:parseFloat(qty)), valid_until:el('qfValid').value||null, source:el('qfSource').value,
+    notes:el('qfNotes').value.trim(), screenshot_url:(_photos['qShot']||[])[0]||'', updated_by:myEmail(), updated_at:new Date().toISOString() };
+  var r; if(id){ r=await sb.from('inv_quotations').update(obj).eq('id',id); } else { obj.created_by=myEmail(); r=await sb.from('inv_quotations').insert(obj); }
+  if(r.error){ showMsgEl('qfMsg', r.error.message, false); return; }
+  await audit((id?'UPDATE':'CREATE')+' Quotation', matName(mat)+'/'+supName(sup));
+  closeModal(); await loadAll(); showToast('Quotation saved');
+}
+async function deleteQuotation(id){
+  if(!confirm('Delete this quotation?')) return;
+  var r=await sb.from('inv_quotations').delete().eq('id',id);
+  if(r.error){ fail(r.error); return; }
+  await audit('DELETE Quotation', id); await loadAll(); showToast('Deleted');
+}
+
+// ═══════════════════════════ 9 · TOOLS / EQUIPMENT ═══════════════════════════
+TAB_RENDER.tools = function(){
+  return '<div class="card"><div class="row" style="justify-content:space-between;align-items:center;"><div style="flex:1;"><h2>Tools / Equipment</h2><div class="sub" style="margin:0;">Owned assets. Total qty auto-increases when you buy tools in Stock IN.</div></div>'+
+    '<div style="flex:0 0 auto;display:flex;gap:8px;"><button class="ghost" onclick="exportToolsExcel()">⬇ Export</button><button class="primary" onclick="toolForm()">+ Add tool</button></div></div>'+
+    '<div class="row" style="margin-top:12px;"><div><label>Search</label><input id="toolSearch" placeholder="Name / brand / serial…"></div>'+
+    '<div><label>Category</label><select id="toolCat"><option value="">All</option>'+allCategories(state.tools).map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select></div></div>'+
+    '<div class="tablewrap" style="margin-top:14px;"><table class="grid"><thead><tr><th>Photo</th><th>Name</th><th>Brand</th><th>Category</th><th>Serial</th><th class="num">Total</th><th class="num">Assigned</th><th class="num">Repair</th><th class="num">Available</th><th></th></tr></thead><tbody id="toolTable"></tbody></table></div></div>';
+};
+TAB_AFTER.tools = function(){ renderTools(); bindSearch(['toolSearch'], renderTools); el('toolCat').onchange=renderTools; };
+function renderTools(){
+  var q=(el('toolSearch').value||'').trim().toLowerCase(), cat=el('toolCat').value;
+  var rows=state.tools.filter(function(t){ if(cat&&t.category!==cat) return false; return !q||[t.name,t.brand,t.serialNumber,t.notes].join(' ').toLowerCase().indexOf(q)>=0; });
+  var tb=el('toolTable');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="10" class="empty">No tools.</td></tr>'; return; }
+  tb.innerHTML=rows.map(function(t){ var s=toolStats(t.id); var avCls=s.available<=0?'pill-tag red':'pill-tag green';
+    return '<tr><td>'+photoThumbHtml(t.photoUrl)+'</td><td><b>'+esc(t.name)+'</b></td><td>'+esc(t.brand||DASH)+'</td><td>'+esc(t.category||DASH)+'</td>'+
+      '<td>'+esc(t.serialNumber||DASH)+'</td><td class="num">'+fmtNum(t.totalQty)+' '+esc(t.unit||'')+'</td><td class="num">'+fmtNum(s.assigned)+'</td>'+
+      '<td class="num">'+fmtNum(s.inRepair)+'</td><td class="num"><span class="'+avCls+'">'+fmtNum(s.available)+'</span></td>'+
+      '<td class="actions"><button class="ghost btn-sm" onclick="toolForm(\''+t.id+'\')">Edit</button> <button class="danger btn-sm" onclick="deleteTool(\''+t.id+'\')">Del</button></td></tr>'; }).join('');
+}
+function toolForm(id){
+  var t = id ? findTool(id) : { unit:'pc', totalQty:0 };
+  _photos['toolPhoto'] = t.photoUrl ? [t.photoUrl] : [];
+  el('modalBody').innerHTML='<h2>'+(id?'Edit':'Add')+' tool / equipment</h2>'+
+    '<input type="hidden" id="tfId" value="'+esc(id||'')+'">'+
+    '<div class="row"><div style="flex:2;"><label>Name *</label><input id="tfName" value="'+esc(t.name||'')+'"></div>'+
+    '<div><label>Brand</label><input id="tfBrand" value="'+esc(t.brand||'')+'"></div></div>'+
+    '<div class="row"><div><label>Category</label><input id="tfCat" value="'+esc(t.category||'')+'"></div>'+
+    '<div><label>Unit</label><input id="tfUnit" value="'+esc(t.unit||'pc')+'"></div>'+
+    '<div><label>Total qty</label><input id="tfQty" type="number" step="any" value="'+esc(t.totalQty||0)+'"></div></div>'+
+    '<div class="row"><div><label>Serial number</label><input id="tfSerial" value="'+esc(t.serialNumber||'')+'"></div></div>'+
+    '<label>Notes</label><textarea id="tfNotes">'+esc(t.notes||'')+'</textarea>'+
+    '<label>Photo</label>'+dropZoneHtml('tfPhotoZone','Drag &amp; drop a photo')+
+    '<div class="msg" id="tfMsg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal()">Cancel</button></div><div style="flex:0 0 auto;"><button class="primary" onclick="saveTool()">Save</button></div></div>';
+  openModal(); initDrop('tfPhotoZone','toolPhoto', false);
+}
+async function saveTool(){
+  var name=el('tfName').value.trim(); if(!name){ showMsgEl('tfMsg','Name required.',false); return; }
+  var id=el('tfId').value;
+  var obj={ name:name, brand:el('tfBrand').value.trim(), category:el('tfCat').value.trim(), unit:el('tfUnit').value.trim()||'pc',
+    total_qty:parseFloat(el('tfQty').value)||0, serial_number:el('tfSerial').value.trim(), notes:el('tfNotes').value.trim(),
+    photo_url:(_photos['toolPhoto']||[])[0]||'', updated_by:myEmail(), updated_at:new Date().toISOString() };
+  var r; if(id){ r=await sb.from('inv_tools').update(obj).eq('id',id); } else { obj.created_by=myEmail(); r=await sb.from('inv_tools').insert(obj); }
+  if(r.error){ showMsgEl('tfMsg', r.error.message, false); return; }
+  await audit((id?'UPDATE':'CREATE')+' Tool', name);
+  closeModal(); await loadAll(); showToast('Tool saved');
+}
+async function deleteTool(id){
+  var t=findTool(id); if(!confirm('Delete tool "'+((t&&t.name)||'')+'"?')) return;
+  var r=await sb.from('inv_tools').delete().eq('id',id);
+  if(r.error){ fail(r.error); return; }
+  await audit('DELETE Tool', (t&&t.name)||id); await loadAll(); showToast('Deleted');
+}
+
+// ═══════════════════════════ 5 · STOCK IN (Purchases) ═══════════════════════════
+TAB_RENDER.stockin = function(){
+  return '<div class="card"><div class="row" style="justify-content:space-between;align-items:center;"><div style="flex:1;"><h2>Stock IN — Purchases</h2><div class="sub" style="margin:0;">Buying materials/tools. Buying a tool auto-increases its owned total qty.</div></div>'+
+    '<div style="flex:0 0 auto;display:flex;gap:8px;"><button class="ghost" onclick="exportPurchasesExcel()">⬇ Export</button><button class="primary" onclick="purchaseForm()">+ Add purchase</button></div></div>'+
+    '<div class="row" style="margin-top:12px;"><div><label>Search</label><input id="purSearch" placeholder="DO / supplier / item…"></div>'+
+    '<div><label>Item type</label><select id="purType"><option value="">All</option><option value="material">Material</option><option value="tool">Tool</option></select></div>'+
+    '<div><label>From</label><input id="purFrom" type="date"></div><div><label>To</label><input id="purTo" type="date"></div></div>'+
+    '<div class="tablewrap" style="margin-top:14px;"><table class="grid"><thead><tr><th>Date</th><th>DO #</th><th>Supplier</th><th class="num">Items</th><th class="amt">Total</th><th class="amt">Paid</th><th class="amt">Outstanding</th><th>Status</th><th>Paid by</th><th>Files</th><th></th></tr></thead><tbody id="purTable"></tbody></table></div></div>';
+};
+TAB_AFTER.stockin = function(){ renderPurchases(); bindSearch(['purSearch'], renderPurchases); ['purType','purFrom','purTo'].forEach(function(i){ el(i).onchange=renderPurchases; }); };
+function renderPurchases(){
+  var q=(el('purSearch').value||'').trim().toLowerCase(), ft=el('purType').value, dF=el('purFrom').value, dT=el('purTo').value;
+  var rows=state.purchases.slice().sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); });
+  if(ft) rows=rows.filter(function(p){ return (p.lines||[]).some(function(l){ return lineItemType(l)===ft; }); });
+  if(dF||dT) rows=rows.filter(function(p){ var d=String(p.date||'').slice(0,10); if(dF&&d<dF) return false; if(dT&&d>dT) return false; return true; });
+  if(q) rows=rows.filter(function(p){ var parts=[p.doNumber,p.notes,supName(p.supplierId)]; (p.lines||[]).forEach(function(l){ parts.push(lineItemName(l),l.division,l.requestedBy); }); return parts.join(' ').toLowerCase().indexOf(q)>=0; });
+  var tb=el('purTable');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="11" class="empty">No purchases.</td></tr>'; return; }
+  tb.innerHTML=rows.map(function(p){ var total=purchaseGrandTotal(p), paid=purchasePaidAmount(p.id), out=Math.max(0,total-paid);
+    var files=(p.invoiceUrl?1:0)+((p.deliveryPhotos||[]).length);
+    return '<tr class="click" onclick="showPurchase(\''+p.id+'\')"><td>'+esc(p.date)+'</td><td>'+esc(p.doNumber||DASH)+'</td><td>'+esc(supName(p.supplierId))+'</td>'+
+      '<td class="num">'+(p.lines||[]).length+'</td><td class="amt">'+fmtRM(total)+'</td><td class="amt">'+fmtRM(paid)+'</td><td class="amt">'+fmtRM(out)+'</td>'+
+      '<td>'+paidStatusPill(purchasePaidStatus(p))+'</td><td>'+(String(p.paidBy)==='self'?'<span class="pill-tag blue">SELF</span>':'<span class="muted">Company</span>')+'</td>'+
+      '<td>'+(files?'<span class="tag">'+files+' file(s)</span>':DASH)+'</td>'+
+      '<td class="actions" onclick="event.stopPropagation();"><button class="danger btn-sm" onclick="deletePurchase(\''+p.id+'\')">Del</button></td></tr>'; }).join('');
+}
+var _purLines=[];
+function purchaseForm(){
+  _purLines=[{ itemType:'material', materialId:'', qty:'', rate:'', division:'', requestedBy:'' }];
+  _photos['purInvoice']=[]; _photos['purDelivery']=[];
+  el('modalBody').innerHTML='<h2>Add purchase (Stock IN)</h2>'+
+    '<div class="row"><div><label>Date *</label><input id="pfDate" type="date" value="'+today()+'"></div>'+
+    '<div><label>Supplier *</label><select id="pfSup">'+supOptions('')+'</select></div>'+
+    '<div><label>DO / Invoice #</label><input id="pfDo"></div></div>'+
+    '<div class="row"><div><label>Paid by</label><select id="pfPaidBy"><option value="company">Company</option><option value="self">Self (Black Lee claim)</option></select></div></div>'+
+    '<label style="margin-top:14px;">Line items</label><div id="pfLines"></div>'+
+    '<button class="ghost btn-sm" style="margin-top:8px;" onclick="addPurLine()">+ Add line</button>'+
+    '<div class="row" style="margin-top:14px;"><div><label>Discount</label><input id="pfDiscount" type="number" step="any" value="0" oninput="recalcPur()"></div>'+
+    '<div><label>Delivery</label><input id="pfDelivery" type="number" step="any" value="0" oninput="recalcPur()"></div>'+
+    '<div><label>Tax</label><input id="pfTax" type="number" step="any" value="0" oninput="recalcPur()"></div>'+
+    '<div><label>Rounding adj.</label><input id="pfRound" type="number" step="any" value="0" oninput="recalcPur()"></div></div>'+
+    '<label>Notes</label><textarea id="pfNotes"></textarea>'+
+    '<label>Invoice / DO (image or PDF)</label>'+dropZoneHtml('pfInvZone','Drag &amp; drop invoice/DO')+
+    '<label>Delivery photos</label>'+dropZoneHtml('pfDelZone','Drag &amp; drop delivery photos (multiple)')+
+    '<div class="subtotbar"><span class="k">Subtotal</span><span class="v" id="pfSub">RM 0.00</span></div>'+
+    '<div class="subtotbar grand"><span class="k">Grand total</span><span class="v" id="pfGrand">RM 0.00</span></div>'+
+    '<div class="msg" id="pfMsg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal()">Cancel</button></div><div style="flex:0 0 auto;"><button class="primary" id="pfSaveBtn" onclick="savePurchase()">Save purchase</button></div></div>';
+  openModal(); renderPurLines(); initDrop('pfInvZone','purInvoice', false); initDrop('pfDelZone','purDelivery', true);
+}
+function addPurLine(){ _purLines.push({ itemType:'material', materialId:'', qty:'', rate:'', division:'', requestedBy:'' }); renderPurLines(); }
+function removePurLine(i){ _purLines.splice(i,1); if(!_purLines.length) addPurLine(); else renderPurLines(); }
+function purLineSet(i,prop,val){ _purLines[i][prop]=val; if(prop==='itemType'){ _purLines[i].materialId=''; renderPurLines(); } else recalcPur(); }
+function renderPurLines(){
+  el('pfLines').innerHTML=_purLines.map(function(l,i){
+    var itemSel = l.itemType==='tool'?toolOptions(l.materialId):matOptions(l.materialId);
+    return '<div class="lineitem-row"><div style="flex:0 0 100px;"><label>Type</label><select onchange="purLineSet('+i+',\'itemType\',this.value)"><option value="material"'+(l.itemType==='material'?' selected':'')+'>Material</option><option value="tool"'+(l.itemType==='tool'?' selected':'')+'>Tool</option></select></div>'+
+      '<div style="flex:2 1 160px;"><label>Item</label><select onchange="purLineSet('+i+',\'materialId\',this.value)">'+itemSel+'</select></div>'+
+      '<div style="flex:0 0 80px;"><label>Qty</label><input type="number" step="any" value="'+esc(l.qty)+'" oninput="purLineSet('+i+',\'qty\',this.value)"></div>'+
+      '<div style="flex:0 0 90px;"><label>Rate</label><input type="number" step="any" value="'+esc(l.rate)+'" oninput="purLineSet('+i+',\'rate\',this.value)"></div>'+
+      '<div style="flex:0 0 90px;"><label>Amount</label><input disabled value="'+fmtNum((Number(l.qty)||0)*(Number(l.rate)||0))+'"></div>'+
+      '<div style="flex:1 1 130px;"><label>Division</label><select onchange="purLineSet('+i+',\'division\',this.value)">'+divOptions(l.division)+'</select></div>'+
+      '<div style="flex:1 1 110px;"><label>Requested by</label><input value="'+esc(l.requestedBy)+'" oninput="purLineSet('+i+',\'requestedBy\',this.value)"></div>'+
+      '<div style="flex:0 0 auto;"><button class="danger btn-sm" onclick="removePurLine('+i+')">✕</button></div></div>'; }).join('');
+  recalcPur();
+}
+function recalcPur(){
+  var sub=_purLines.reduce(function(s,l){ return s+(Number(l.qty)||0)*(Number(l.rate)||0); },0);
+  var grand=sub-(parseFloat(el('pfDiscount').value)||0)+(parseFloat(el('pfDelivery').value)||0)+(parseFloat(el('pfTax').value)||0)+(parseFloat(el('pfRound').value)||0);
+  if(el('pfSub')) el('pfSub').textContent=fmtRM(sub);
+  if(el('pfGrand')) el('pfGrand').textContent=fmtRM(grand);
+}
+async function savePurchase(){
+  var date=el('pfDate').value, sup=el('pfSup').value;
+  if(!date||!sup){ showMsgEl('pfMsg','Date and supplier required.',false); return; }
+  var lines=_purLines.filter(function(l){ return l.materialId && Number(l.qty)>0; })
+    .map(function(l){ return { itemType:l.itemType, materialId:l.materialId, qty:Number(l.qty)||0, rate:Number(l.rate)||0, division:l.division, requestedBy:l.requestedBy }; });
+  if(!lines.length){ showMsgEl('pfMsg','At least one valid item line required.',false); return; }
+  var payload={ date:date, supplierId:sup, doNumber:el('pfDo').value.trim(), notes:el('pfNotes').value.trim(),
+    invoiceUrl:(_photos['purInvoice']||[])[0]||'', discount:parseFloat(el('pfDiscount').value)||0,
+    delivery:parseFloat(el('pfDelivery').value)||0, tax:parseFloat(el('pfTax').value)||0,
+    roundingAdjustment:parseFloat(el('pfRound').value)||0, deliveryPhotos:(_photos['purDelivery']||[]),
+    paidBy:el('pfPaidBy').value, lines:lines };
+  var btn=el('pfSaveBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Saving…';
+  var r=await sb.rpc('inv_save_purchase', { payload:payload });
+  btn.disabled=false; btn.textContent='Save purchase';
+  if(r.error){ showMsgEl('pfMsg', r.error.message, false); return; }
+  closeModal(); await loadAll(); showToast('Purchase saved');
+}
+async function deletePurchase(id){
+  if(!confirm('Delete this purchase? Tool qty reverses; stock adjusts.')) return;
+  var r=await sb.rpc('inv_delete_purchase', { p_id:id });
+  if(r.error){ fail(r.error); return; }
+  await loadAll(); showToast('Purchase deleted');
+}
+async function showPurchase(id){
+  var p=state.purchases.find(function(x){return x.id===id;}); if(!p) return;
+  var invHtml = p.invoiceUrl ? '<button class="ghost btn-sm" onclick="openStored(\''+escq(p.invoiceUrl)+'\')">Open invoice/DO</button>' : '<span class="muted">no invoice</span>';
+  var rows=(p.lines||[]).map(function(l,i){ return '<tr><td>'+(i+1)+'</td><td>'+esc(lineItemName(l))+' <span class="tag">'+esc(lineItemType(l))+'</span></td>'+
+    '<td class="num">'+fmtNum(l.qty)+'</td><td class="amt">'+fmtRM(l.rate)+'</td><td class="amt">'+fmtRM(l.amount)+'</td><td>'+esc(l.division||DASH)+'</td><td>'+esc(l.requestedBy||DASH)+'</td></tr>'; }).join('');
+  el('modalBody').innerHTML='<div class="row" style="justify-content:space-between;align-items:center;"><h2 style="margin:0;">Purchase '+esc(p.doNumber||'')+' '+paidStatusPill(purchasePaidStatus(p))+'</h2><button class="ghost btn-sm" onclick="closeModal()">✕ Close</button></div>'+
+    '<div class="sub" style="margin-top:6px;">'+esc(p.date)+' · '+esc(supName(p.supplierId))+' · '+(String(p.paidBy)==='self'?'Paid by SELF':'Company')+'</div>'+
+    '<div class="tablewrap"><table class="grid"><thead><tr><th>#</th><th>Item</th><th class="num">Qty</th><th class="amt">Rate</th><th class="amt">Amount</th><th>Division</th><th>Requested by</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="subtotbar"><span class="k">Subtotal</span><span class="v">'+fmtRM(purchaseSubtotal(p))+'</span></div>'+
+    (p.discount?'<div class="subtotbar"><span class="k">Discount</span><span class="v">- '+fmtRM(p.discount)+'</span></div>':'')+
+    (p.delivery?'<div class="subtotbar"><span class="k">Delivery</span><span class="v">'+fmtRM(p.delivery)+'</span></div>':'')+
+    (p.tax?'<div class="subtotbar"><span class="k">Tax</span><span class="v">'+fmtRM(p.tax)+'</span></div>':'')+
+    (p.roundingAdjustment?'<div class="subtotbar"><span class="k">Rounding</span><span class="v">'+fmtRM(p.roundingAdjustment)+'</span></div>':'')+
+    '<div class="subtotbar grand"><span class="k">Grand total</span><span class="v">'+fmtRM(purchaseGrandTotal(p))+'</span></div>'+
+    (p.notes?'<div class="sub" style="margin-top:10px;">'+esc(p.notes)+'</div>':'')+
+    '<div style="margin-top:12px;">'+invHtml+'</div>'+
+    ((p.deliveryPhotos||[]).length?'<label>Delivery photos</label><div class="thumbs">'+p.deliveryPhotos.map(function(ph){ return photoThumbHtml(ph); }).join('')+'</div>':'')+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="danger" onclick="deletePurchase(\''+p.id+'\')">Delete</button></div></div>';
+  openModal();
+}
+
+// ═══════════════════════════ 6 · STOCK OUT (Delivery Notes) ═══════════════════════════
+TAB_RENDER.stockout = function(){
+  return '<div class="card"><div class="row" style="justify-content:space-between;align-items:center;"><div style="flex:1;"><h2>Stock OUT — Delivery Notes</h2><div class="sub" style="margin:0;">Issuing materials to a division/project. DN number auto-generates.</div></div>'+
+    '<div style="flex:0 0 auto;display:flex;gap:8px;"><button class="ghost" onclick="exportStockOutsExcel()">⬇ Export</button><button class="primary" onclick="stockOutForm()">+ New DN</button></div></div>'+
+    '<div class="row" style="margin-top:12px;"><div><label>Search</label><input id="soSearch" placeholder="DN / division / project…"></div>'+
+    '<div><label>Division</label><select id="soDiv"><option value="">All</option>'+DIVISIONS.map(function(d){return '<option>'+esc(d)+'</option>';}).join('')+'</select></div></div>'+
+    '<div class="tablewrap" style="margin-top:14px;"><table class="grid"><thead><tr><th>DN #</th><th>Date</th><th>Division</th><th>Project</th><th class="num">Items</th><th class="amt">Value</th><th>Requested by</th><th>Photos</th><th></th></tr></thead><tbody id="soTable"></tbody></table></div></div>';
+};
+TAB_AFTER.stockout = function(){ renderStockOuts(); bindSearch(['soSearch'], renderStockOuts); el('soDiv').onchange=renderStockOuts; };
+function soValue(o){ return (o.lines||[]).reduce(function(s,l){ return s+Number(l.amount||0); },0); }
+function renderStockOuts(){
+  var q=(el('soSearch').value||'').trim().toLowerCase(), dv=el('soDiv').value;
+  var rows=state.stockOuts.slice();
+  if(dv) rows=rows.filter(function(o){ return o.division===dv; });
+  if(q) rows=rows.filter(function(o){ var parts=[o.dnNumber,o.division,o.project,o.notes,o.requestedBy]; (o.lines||[]).forEach(function(l){ parts.push(matName(l.materialId)); }); return parts.join(' ').toLowerCase().indexOf(q)>=0; });
+  var tb=el('soTable');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="9" class="empty">No delivery notes.</td></tr>'; return; }
+  tb.innerHTML=rows.map(function(o){ return '<tr class="click" onclick="showDn(\''+o.id+'\')"><td><b>'+esc(o.dnNumber)+'</b></td><td>'+esc(o.date)+'</td><td>'+esc(o.division)+'</td>'+
+    '<td>'+esc(o.project||DASH)+'</td><td class="num">'+(o.lines||[]).length+'</td><td class="amt">'+fmtRM(soValue(o))+'</td><td>'+esc(o.requestedBy||DASH)+'</td>'+
+    '<td>'+((o.collectionPhotos||[]).length?'<span class="tag">'+o.collectionPhotos.length+'</span>':DASH)+'</td>'+
+    '<td class="actions" onclick="event.stopPropagation();"><button class="danger btn-sm" onclick="deleteStockOut(\''+o.id+'\')">Del</button></td></tr>'; }).join('');
+}
+var _soLines=[];
+function stockOutForm(){
+  _soLines=[{ materialId:'', qty:'', ratePerUnit:'' }]; _photos['soColl']=[];
+  el('modalBody').innerHTML='<h2>New Delivery Note (Stock OUT)</h2>'+
+    '<div class="row"><div><label>Date *</label><input id="sofDate" type="date" value="'+today()+'"></div>'+
+    '<div><label>Division *</label><select id="sofDiv">'+divOptions('')+'</select></div>'+
+    '<div><label>Project</label><input id="sofProject"></div></div>'+
+    '<div class="row"><div><label>Requested by</label><input id="sofReq"></div></div>'+
+    '<label style="margin-top:14px;">Line items</label><div id="sofLines"></div>'+
+    '<button class="ghost btn-sm" style="margin-top:8px;" onclick="addSoLine()">+ Add line</button>'+
+    '<label>Notes</label><textarea id="sofNotes"></textarea>'+
+    '<label>Collection photos</label>'+dropZoneHtml('sofCollZone','Drag &amp; drop collection photos (multiple)')+
+    '<div class="subtotbar grand"><span class="k">Value</span><span class="v" id="sofTotal">RM 0.00</span></div>'+
+    '<div class="msg" id="sofMsg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal()">Cancel</button></div><div style="flex:0 0 auto;"><button class="primary" id="sofSaveBtn" onclick="saveStockOut()">Save DN</button></div></div>';
+  openModal(); renderSoLines(); initDrop('sofCollZone','soColl', true);
+}
+function addSoLine(){ _soLines.push({ materialId:'', qty:'', ratePerUnit:'' }); renderSoLines(); }
+function removeSoLine(i){ _soLines.splice(i,1); if(!_soLines.length) addSoLine(); else renderSoLines(); }
+function soLineSet(i,prop,val){ _soLines[i][prop]=val; if(prop==='materialId' && (_soLines[i].ratePerUnit===''||_soLines[i].ratePerUnit==null)){ var lr=latestRate(val); if(lr) _soLines[i].ratePerUnit=lr; renderSoLines(); return; } recalcSo(); }
+function renderSoLines(){
+  el('sofLines').innerHTML=_soLines.map(function(l,i){ var oh=l.materialId?stockOnHand(l.materialId).onHand:null;
+    var warn=(oh!==null && Number(l.qty)>oh)?' style="color:#f87171;"':'';
+    return '<div class="lineitem-row"><div style="flex:2 1 180px;"><label>Material</label><select onchange="soLineSet('+i+',\'materialId\',this.value)">'+matOptions(l.materialId)+'</select></div>'+
+      '<div style="flex:0 0 90px;"><label>Qty'+(oh!==null?' (OH '+fmtNum(oh)+')':'')+'</label><input type="number" step="any"'+warn+' value="'+esc(l.qty)+'" oninput="soLineSet('+i+',\'qty\',this.value)"></div>'+
+      '<div style="flex:0 0 90px;"><label>Rate/unit</label><input type="number" step="any" value="'+esc(l.ratePerUnit)+'" oninput="soLineSet('+i+',\'ratePerUnit\',this.value)"></div>'+
+      '<div style="flex:0 0 90px;"><label>Amount</label><input disabled value="'+fmtNum((Number(l.qty)||0)*(Number(l.ratePerUnit)||0))+'"></div>'+
+      '<div style="flex:0 0 auto;"><button class="danger btn-sm" onclick="removeSoLine('+i+')">✕</button></div></div>'; }).join('');
+  recalcSo();
+}
+function recalcSo(){ var t=_soLines.reduce(function(s,l){ return s+(Number(l.qty)||0)*(Number(l.ratePerUnit)||0); },0); if(el('sofTotal')) el('sofTotal').textContent=fmtRM(t); }
+async function saveStockOut(){
+  var date=el('sofDate').value, dv=el('sofDiv').value;
+  if(!date||!dv){ showMsgEl('sofMsg','Date and division required.',false); return; }
+  var lines=_soLines.filter(function(l){ return l.materialId && Number(l.qty)>0; }).map(function(l){ return { materialId:l.materialId, qty:Number(l.qty)||0, ratePerUnit:Number(l.ratePerUnit)||0 }; });
+  if(!lines.length){ showMsgEl('sofMsg','At least one valid item line required.',false); return; }
+  var payload={ date:date, division:dv, project:el('sofProject').value.trim(), notes:el('sofNotes').value.trim(),
+    requestedBy:el('sofReq').value.trim(), collectionPhotos:(_photos['soColl']||[]), lines:lines };
+  var btn=el('sofSaveBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Saving…';
+  var r=await sb.rpc('inv_save_stock_out', { payload:payload });
+  btn.disabled=false; btn.textContent='Save DN';
+  if(r.error){ showMsgEl('sofMsg', r.error.message, false); return; }
+  closeModal(); await loadAll(); showToast('Delivery note saved');
+}
+async function deleteStockOut(id){
+  if(!confirm('Delete this delivery note? Stock returns.')) return;
+  var o=state.stockOuts.find(function(x){return x.id===id;});
+  var r=await sb.from('inv_stock_outs').delete().eq('id',id);
+  if(r.error){ fail(r.error); return; }
+  await audit('DELETE StockOut', (o&&o.dnNumber)||id); await loadAll(); showToast('Deleted');
+}
+function showDn(id){
+  var o=state.stockOuts.find(function(x){return x.id===id;}); if(!o) return;
+  var rows=(o.lines||[]).map(function(l,i){ return '<tr><td>'+(i+1)+'</td><td>'+esc(matName(l.materialId))+'</td><td class="num">'+fmtNum(l.qty)+' '+esc(matUnit(l.materialId))+'</td><td class="amt">'+fmtRM(l.ratePerUnit)+'</td><td class="amt">'+fmtRM(l.amount)+'</td></tr>'; }).join('');
+  el('modalBody').innerHTML='<div class="row" style="justify-content:space-between;align-items:center;"><h2 style="margin:0;">'+esc(o.dnNumber)+'</h2><button class="ghost btn-sm" onclick="closeModal()">✕ Close</button></div>'+
+    '<div class="sub" style="margin-top:6px;">'+esc(o.date)+' · '+esc(o.division)+(o.project?(' · '+esc(o.project)):'')+(o.requestedBy?(' · req '+esc(o.requestedBy)):'')+'</div>'+
+    '<div class="tablewrap"><table class="grid"><thead><tr><th>#</th><th>Material</th><th class="num">Qty</th><th class="amt">Rate</th><th class="amt">Amount</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="subtotbar grand"><span class="k">Value</span><span class="v">'+fmtRM(soValue(o))+'</span></div>'+
+    (o.notes?'<div class="sub" style="margin-top:10px;">'+esc(o.notes)+'</div>':'')+
+    ((o.collectionPhotos||[]).length?'<label>Collection photos</label><div class="thumbs">'+o.collectionPhotos.map(function(ph){ return photoThumbHtml(ph); }).join('')+'</div>':'')+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="danger" onclick="deleteStockOut(\''+o.id+'\')">Delete</button></div></div>';
+  openModal();
+}
+
+// ═══════════════════════════ 7 · PAYMENTS ═══════════════════════════
+TAB_RENDER.payments = function(){
+  return '<div class="card"><div class="row" style="justify-content:space-between;align-items:center;"><div style="flex:1;"><h2>Payments</h2><div class="sub" style="margin:0;">Supplier payments + Black Lee self-claim reimbursements, allocated to purchases.</div></div>'+
+    '<div style="flex:0 0 auto;display:flex;gap:8px;"><button class="ghost" onclick="exportPaymentsExcel()">⬇ Export</button><button class="primary" onclick="paymentForm()">+ Add payment</button></div></div>'+
+    '<div class="cards" id="payCards"></div>'+
+    '<div class="tablewrap" style="margin-top:14px;"><table class="grid"><thead><tr><th>Date</th><th>Payee</th><th class="amt">Amount</th><th>Method</th><th>Reference</th><th class="num">Invoices</th><th>Slip</th><th></th></tr></thead><tbody id="payTable"></tbody></table></div></div>'+
+    '<div class="card"><h2>Outstanding purchases</h2><div class="sub">Company + self-claim invoices not fully paid.</div>'+
+    '<div class="tablewrap"><table class="grid"><thead><tr><th>Date</th><th>DO #</th><th>Payee</th><th class="amt">Total</th><th class="amt">Paid</th><th class="amt">Outstanding</th><th>Status</th></tr></thead><tbody id="outTable"></tbody></table></div></div>';
+};
+TAB_AFTER.payments = function(){ renderPayments(); };
+function payeeLabel(p){ return p.payeeType==='self' ? ('Self-claim · '+SELF_CLAIM_NAME) : supName(p.payeeId); }
+function renderPayments(){
+  el('payCards').innerHTML = stat('Supplier outstanding', fmtRM(suppliersOutstandingTotal()), 'red') +
+    stat('Self-claim outstanding', fmtRM(selfClaimsOutstandingTotal()), 'red') +
+    stat('Payments recorded', state.payments.length);
+  var tb=el('payTable');
+  if(!state.payments.length){ tb.innerHTML='<tr><td colspan="8" class="empty">No payments.</td></tr>'; }
+  else tb.innerHTML=state.payments.map(function(p){ return '<tr><td>'+esc(p.paymentDate)+'</td><td><b>'+esc(payeeLabel(p))+'</b>'+(p.payeeType==='self'?' <span class="pill-tag blue">SELF</span>':'')+'</td>'+
+    '<td class="amt">'+fmtRM(p.amount)+'</td><td>'+esc(p.method||DASH)+'</td><td>'+esc(p.referenceNumber||DASH)+'</td><td class="num">'+(p.allocations||[]).length+'</td>'+
+    '<td>'+(p.slipPhotoUrl?photoThumbHtml(p.slipPhotoUrl):DASH)+'</td>'+
+    '<td class="actions"><button class="ghost btn-sm" onclick="paymentForm(\''+p.id+'\')">Edit</button> <button class="danger btn-sm" onclick="deletePayment(\''+p.id+'\')">Del</button></td></tr>'; }).join('');
+  var outs=[];
+  state.purchases.forEach(function(p){ var out=purchaseOutstanding(p); if(out>0.005) outs.push(p); });
+  outs.sort(function(a,b){ return String(a.date||'').localeCompare(String(b.date||'')); });
+  var ot=el('outTable');
+  if(!outs.length){ ot.innerHTML='<tr><td colspan="7" class="empty">Everything paid up.</td></tr>'; }
+  else ot.innerHTML=outs.map(function(p){ var total=purchaseGrandTotal(p), paid=purchasePaidAmount(p.id);
+    return '<tr><td>'+esc(p.date)+'</td><td>'+esc(p.doNumber||DASH)+'</td><td>'+(String(p.paidBy)==='self'?'Self-claim':esc(supName(p.supplierId)))+'</td>'+
+      '<td class="amt">'+fmtRM(total)+'</td><td class="amt">'+fmtRM(paid)+'</td><td class="amt">'+fmtRM(total-paid)+'</td><td>'+paidStatusPill(purchasePaidStatus(p))+'</td></tr>'; }).join('');
+}
+var _payAllocs=[];
+function paymentForm(id){
+  var p = id ? state.payments.find(function(x){return x.id===id;}) : { payeeType:'supplier' };
+  _photos['paySlip'] = p.slipPhotoUrl ? [p.slipPhotoUrl] : [];
+  _payAllocs = (p.allocations||[]).map(function(a){ return { purchaseId:a.purchaseId, amountApplied:a.amountApplied }; });
+  if(!_payAllocs.length) _payAllocs=[{ purchaseId:'', amountApplied:'' }];
+  el('modalBody').innerHTML='<h2>'+(id?'Edit':'Add')+' payment</h2>'+
+    '<input type="hidden" id="payfId" value="'+esc(id||'')+'">'+
+    '<div class="row"><div><label>Date *</label><input id="payfDate" type="date" value="'+esc(p.paymentDate&&p.paymentDate!==DASH?p.paymentDate:today())+'"></div>'+
+    '<div><label>Payee type</label><select id="payfType" onchange="payfTypeChange()"><option value="supplier"'+(p.payeeType==='supplier'?' selected':'')+'>Supplier</option><option value="self"'+(p.payeeType==='self'?' selected':'')+'>Self-claim ('+esc(SELF_CLAIM_NAME)+')</option></select></div>'+
+    '<div id="payfSupWrap"><label>Supplier *</label><select id="payfSup">'+supOptions(p.payeeId)+'</select></div></div>'+
+    '<div class="row"><div><label>Method</label><select id="payfMethod">'+['','Bank Transfer','Cheque','Cash','Card','Online'].map(function(m){return '<option'+(m===(p.method||'')?' selected':'')+'>'+(m||'—')+'</option>';}).join('')+'</select></div>'+
+    '<div><label>Reference #</label><input id="payfRef" value="'+esc(p.referenceNumber||'')+'"></div></div>'+
+    '<label style="margin-top:14px;">Allocate to invoices *</label><div id="payfAllocs"></div>'+
+    '<button class="ghost btn-sm" style="margin-top:8px;" onclick="addPayAlloc()">+ Add allocation</button>'+
+    '<label>Notes</label><textarea id="payfNotes">'+esc(p.notes||'')+'</textarea>'+
+    '<label>Payment slip</label>'+dropZoneHtml('payfSlipZone','Drag &amp; drop payment slip')+
+    '<div class="subtotbar grand"><span class="k">Total</span><span class="v" id="payfTotal">RM 0.00</span></div>'+
+    '<div class="msg" id="payfMsg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal()">Cancel</button></div><div style="flex:0 0 auto;"><button class="primary" id="payfSaveBtn" onclick="savePayment()">Save payment</button></div></div>';
+  openModal(); payfTypeChange(); renderPayAllocs(); initDrop('payfSlipZone','paySlip', false);
+}
+function payfTypeChange(){ el('payfSupWrap').style.display = el('payfType').value==='supplier'?'':'none'; renderPayAllocs(); }
+function outstandingPurchaseOptions(sel){
+  var t=el('payfType').value, supId=el('payfSup')?el('payfSup').value:'';
+  var list=state.purchases.filter(function(p){
+    if(t==='self') return String(p.paidBy||'company')==='self';
+    if(supId) return p.supplierId===supId && String(p.paidBy||'company')==='company';
+    return String(p.paidBy||'company')==='company';
+  });
+  return '<option value="">Select invoice…</option>'+list.map(function(p){ var out=purchaseOutstanding(p);
+    return '<option value="'+esc(p.id)+'"'+(p.id===sel?' selected':'')+'>'+esc(p.date)+' · '+esc(p.doNumber||'(no DO)')+' · out '+fmtRM(out)+'</option>'; }).join('');
+}
+function addPayAlloc(){ _payAllocs.push({ purchaseId:'', amountApplied:'' }); renderPayAllocs(); }
+function removePayAlloc(i){ _payAllocs.splice(i,1); if(!_payAllocs.length) addPayAlloc(); else renderPayAllocs(); }
+function payAllocSet(i,prop,val){ _payAllocs[i][prop]=val;
+  if(prop==='purchaseId'){ var p=state.purchases.find(function(x){return x.id===val;}); if(p && (_payAllocs[i].amountApplied===''||_payAllocs[i].amountApplied==null)) _payAllocs[i].amountApplied=round2(purchaseOutstanding(p)); renderPayAllocs(); return; }
+  recalcPay();
+}
+function renderPayAllocs(){
+  el('payfAllocs').innerHTML=_payAllocs.map(function(a,i){
+    return '<div class="lineitem-row"><div style="flex:3 1 240px;"><label>Invoice</label><select onchange="payAllocSet('+i+',\'purchaseId\',this.value)">'+outstandingPurchaseOptions(a.purchaseId)+'</select></div>'+
+      '<div style="flex:0 0 120px;"><label>Amount</label><input type="number" step="any" value="'+esc(a.amountApplied)+'" oninput="payAllocSet('+i+',\'amountApplied\',this.value)"></div>'+
+      '<div style="flex:0 0 auto;"><button class="danger btn-sm" onclick="removePayAlloc('+i+')">✕</button></div></div>'; }).join('');
+  recalcPay();
+}
+function recalcPay(){ var t=_payAllocs.reduce(function(s,a){ return s+(Number(a.amountApplied)||0); },0); if(el('payfTotal')) el('payfTotal').textContent=fmtRM(t); }
+async function savePayment(){
+  var type=el('payfType').value, date=el('payfDate').value;
+  if(!date){ showMsgEl('payfMsg','Payment date required.',false); return; }
+  var supId = type==='supplier' ? el('payfSup').value : '';
+  if(type==='supplier' && !supId){ showMsgEl('payfMsg','Supplier required.',false); return; }
+  var allocs=_payAllocs.filter(function(a){ return a.purchaseId && Number(a.amountApplied)>0; }).map(function(a){ return { purchaseId:a.purchaseId, amountApplied:Number(a.amountApplied)||0 }; });
+  if(!allocs.length){ showMsgEl('payfMsg','Allocate at least one invoice with a positive amount.',false); return; }
+  var payload={ id:el('payfId').value||undefined, paymentDate:date, payeeType:type, payeeId:supId, method:el('payfMethod').value,
+    referenceNumber:el('payfRef').value.trim(), notes:el('payfNotes').value.trim(), slipPhotoUrl:(_photos['paySlip']||[])[0]||'', allocations:allocs };
+  var btn=el('payfSaveBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Saving…';
+  var r=await sb.rpc('inv_save_payment', { payload:payload });
+  btn.disabled=false; btn.textContent='Save payment';
+  if(r.error){ showMsgEl('payfMsg', r.error.message, false); return; }
+  closeModal(); await loadAll(); showToast('Payment saved');
+}
+async function deletePayment(id){
+  if(!confirm('Delete this payment? Allocations reverse.')) return;
+  var r=await sb.from('inv_payments').delete().eq('id',id);
+  if(r.error){ fail(r.error); return; }
+  await audit('DELETE Payment', id); await loadAll(); showToast('Deleted');
+}
+
+// ═══════════════════════════ 8 · STOCK COUNT ═══════════════════════════
+TAB_RENDER.stockcount = function(){
+  return '<div class="card"><div class="row" style="justify-content:space-between;align-items:center;"><div style="flex:1;"><h2>Stock Count / Audit</h2><div class="sub" style="margin:0;">Physical counts vs system qty. Variance is logged with a reason.</div></div>'+
+    '<div style="flex:0 0 auto;display:flex;gap:8px;"><button class="ghost" onclick="exportCountsExcel()">⬇ Export</button><button class="primary" onclick="countForm()">+ New count</button></div></div>'+
+    '<div class="tablewrap" style="margin-top:14px;"><table class="grid"><thead><tr><th>Date</th><th>Item</th><th>Type</th><th class="num">System</th><th class="num">Counted</th><th class="num">Variance</th><th>Reason</th><th>Photo</th><th></th></tr></thead><tbody id="cntTable"></tbody></table></div></div>';
+};
+TAB_AFTER.stockcount = function(){ renderCounts(); };
+function itemName(type,id){ return type==='tool'?toolName(id):matName(id); }
+function renderCounts(){
+  var tb=el('cntTable');
+  if(!state.stockCounts.length){ tb.innerHTML='<tr><td colspan="9" class="empty">No stock counts.</td></tr>'; return; }
+  tb.innerHTML=state.stockCounts.map(function(c){ var vCls=c.variance<0?'red':(c.variance>0?'green':'');
+    return '<tr><td>'+esc(c.countDate)+'</td><td><b>'+esc(itemName(c.itemType,c.itemId))+'</b></td><td>'+esc(c.itemType)+'</td>'+
+      '<td class="num">'+fmtNum(c.systemQty)+'</td><td class="num">'+fmtNum(c.countedQty)+'</td>'+
+      '<td class="num"><span class="pill-tag '+(vCls||'blue')+'">'+(c.variance>0?'+':'')+fmtNum(c.variance)+'</span></td>'+
+      '<td>'+esc(c.reason||DASH)+'</td><td>'+photoThumbHtml(c.photoUrl)+'</td>'+
+      '<td class="actions"><button class="ghost btn-sm" onclick="countForm(\''+c.id+'\')">Edit</button> <button class="danger btn-sm" onclick="deleteCount(\''+c.id+'\')">Del</button></td></tr>'; }).join('');
+}
+function countForm(id){
+  var c = id ? state.stockCounts.find(function(x){return x.id===id;}) : { itemType:'material', countDate:today() };
+  _photos['cntPhoto'] = c.photoUrl ? [c.photoUrl] : [];
+  var reasons=['','LOST','DAMAGED','FOUND','MISPLACED','DISPUTE','ADJUSTMENT','OTHER'];
+  el('modalBody').innerHTML='<h2>'+(id?'Edit':'New')+' stock count</h2>'+
+    '<input type="hidden" id="cfId" value="'+esc(id||'')+'">'+
+    '<div class="row"><div><label>Count date</label><input id="cfDate" type="date" value="'+esc(c.countDate&&c.countDate!==DASH?c.countDate:today())+'"></div>'+
+    '<div><label>Item type</label><select id="cfType" onchange="cfTypeChange()"><option value="material"'+(c.itemType==='material'?' selected':'')+'>Material</option><option value="tool"'+(c.itemType==='tool'?' selected':'')+'>Tool</option></select></div>'+
+    '<div><label>Item *</label><select id="cfItem" onchange="cfItemChange()"></select></div></div>'+
+    '<div class="row"><div><label>System qty</label><input id="cfSys" type="number" step="any" value="'+esc(c.systemQty||0)+'" disabled></div>'+
+    '<div><label>Counted qty *</label><input id="cfCounted" type="number" step="any" value="'+esc(c.countedQty!==undefined?c.countedQty:'')+'" oninput="cfVar()"></div>'+
+    '<div><label>Variance</label><input id="cfVarInp" disabled value="'+fmtNum(c.variance||0)+'"></div></div>'+
+    '<div class="row"><div><label>Reason</label><select id="cfReason">'+reasons.map(function(x){return '<option'+(x===(c.reason||'')?' selected':'')+'>'+(x||'—')+'</option>';}).join('')+'</select></div></div>'+
+    '<label>Notes</label><textarea id="cfNotes">'+esc(c.notes||'')+'</textarea>'+
+    '<label>Photo</label>'+dropZoneHtml('cfPhotoZone','Drag &amp; drop a photo')+
+    '<div class="msg" id="cfMsg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal()">Cancel</button></div><div style="flex:0 0 auto;"><button class="primary" onclick="saveCount()">Save</button></div></div>';
+  openModal(); cfTypeChange(c.itemId); initDrop('cfPhotoZone','cntPhoto', false);
+}
+function cfTypeChange(sel){ var t=el('cfType').value; el('cfItem').innerHTML = t==='tool'?toolOptions(sel):matOptions(sel); cfItemChange(); }
+function cfItemChange(){ var t=el('cfType').value, id=el('cfItem').value;
+  var sys = id ? (t==='tool'?toolOwnedQty(id):stockOnHand(id).onHand) : 0;
+  el('cfSys').value=fmtNum(sys); cfVar(); }
+function cfVar(){ var sys=parseFloat(el('cfSys').value)||0, counted=parseFloat(el('cfCounted').value)||0; el('cfVarInp').value=fmtNum(counted-sys); }
+async function saveCount(){
+  var itemId=el('cfItem').value; if(!itemId){ showMsgEl('cfMsg','Select an item.',false); return; }
+  var counted=parseFloat(el('cfCounted').value);
+  if(isNaN(counted)||counted<0){ showMsgEl('cfMsg','Counted qty must be 0 or higher.',false); return; }
+  var sys=parseFloat(el('cfSys').value)||0, id=el('cfId').value;
+  var obj={ count_date:el('cfDate').value||today(), item_type:el('cfType').value, item_id:itemId, system_qty:sys, counted_qty:counted,
+    variance:counted-sys, reason:el('cfReason').value, notes:el('cfNotes').value.trim(), photo_url:(_photos['cntPhoto']||[])[0]||'', updated_by:myEmail(), updated_at:new Date().toISOString() };
+  var r; if(id){ r=await sb.from('inv_stock_counts').update(obj).eq('id',id); } else { obj.created_by=myEmail(); r=await sb.from('inv_stock_counts').insert(obj); }
+  if(r.error){ showMsgEl('cfMsg', r.error.message, false); return; }
+  await audit((id?'UPDATE':'CREATE')+' StockCount', itemName(obj.item_type,itemId)+' variance '+obj.variance);
+  closeModal(); await loadAll(); showToast('Stock count saved');
+}
+async function deleteCount(id){
+  if(!confirm('Delete this stock count?')) return;
+  var r=await sb.from('inv_stock_counts').delete().eq('id',id);
+  if(r.error){ fail(r.error); return; }
+  await audit('DELETE StockCount', id); await loadAll(); showToast('Deleted');
+}
+
+// ═══════════════════════════ 10 · ASSIGNMENTS ═══════════════════════════
+TAB_RENDER.assignments = function(){
+  return '<div class="card"><div class="row" style="justify-content:space-between;align-items:center;"><div style="flex:1;"><h2>Tool Assignments</h2><div class="sub" style="margin:0;">Who holds which tools. Return with condition (OK / repair / discard).</div></div>'+
+    '<div style="flex:0 0 auto;display:flex;gap:8px;"><button class="ghost" onclick="exportAssignmentsExcel()">⬇ Export</button><button class="primary" onclick="assignForm()">+ Assign tool</button></div></div>'+
+    '<div class="row" style="margin-top:12px;"><div><label>Search</label><input id="asSearch" placeholder="Tool / person / division…"></div>'+
+    '<div><label>Status</label><select id="asStatus"><option value="">All</option><option value="out">Out (not returned)</option><option value="returned">Returned</option></select></div></div>'+
+    '<div class="tablewrap" style="margin-top:14px;"><table class="grid"><thead><tr><th>Tool</th><th class="num">Qty</th><th>Person</th><th>Division</th><th>Assigned</th><th>Returned</th><th>Condition</th><th></th></tr></thead><tbody id="asTable"></tbody></table></div></div>';
+};
+TAB_AFTER.assignments = function(){ renderAssignments(); bindSearch(['asSearch'], renderAssignments); el('asStatus').onchange=renderAssignments; };
+function renderAssignments(){
+  var q=(el('asSearch').value||'').trim().toLowerCase(), st=el('asStatus').value;
+  var rows=state.toolAssignments.filter(function(a){
+    if(st==='out'&&a.returnedDate) return false; if(st==='returned'&&!a.returnedDate) return false;
+    return !q || [toolName(a.toolId),a.person,a.division].join(' ').toLowerCase().indexOf(q)>=0; });
+  var tb=el('asTable');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="8" class="empty">No assignments.</td></tr>'; return; }
+  tb.innerHTML=rows.map(function(a){ var returned=!!a.returnedDate;
+    var cond=returned?('<span class="tag">'+esc(a.returnedCondition||'OK')+'</span>'+(a.returnedQty!==''&&Number(a.returnedQty)<Number(a.qty)?' <span class="pill-tag red">short '+fmtNum(Number(a.qty)-Number(a.returnedQty))+'</span>':'')):'<span class="pill-tag amber">OUT</span>';
+    return '<tr><td><b>'+esc(toolName(a.toolId))+'</b></td><td class="num">'+fmtNum(a.qty)+'</td><td>'+esc(a.person||DASH)+'</td><td>'+esc(a.division||DASH)+'</td>'+
+      '<td>'+esc(a.assignedDate||DASH)+'</td><td>'+esc(returned?a.returnedDate:DASH)+'</td><td>'+cond+'</td>'+
+      '<td class="actions">'+(returned?'':'<button class="ghost btn-sm" onclick="returnForm(\''+a.id+'\')">Return</button> ')+'<button class="danger btn-sm" onclick="deleteAssignment(\''+a.id+'\')">Del</button></td></tr>'; }).join('');
+}
+function assignForm(){
+  el('modalBody').innerHTML='<h2>Assign tool</h2>'+
+    '<div class="row"><div><label>Tool *</label><select id="afTool" onchange="afToolChange()">'+toolOptions('')+'</select></div>'+
+    '<div><label>Qty *</label><input id="afQty" type="number" step="any" value="1"></div></div>'+
+    '<div id="afAvail" class="sub" style="margin:6px 0;"></div>'+
+    '<div class="row"><div><label>Person *</label><input id="afPerson"></div>'+
+    '<div><label>Division *</label><select id="afDiv">'+divOptions('')+'</select></div>'+
+    '<div><label>Assigned date</label><input id="afDate" type="date" value="'+today()+'"></div></div>'+
+    '<label>Notes</label><textarea id="afNotes"></textarea>'+
+    '<div class="msg" id="afMsg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal()">Cancel</button></div><div style="flex:0 0 auto;"><button class="primary" onclick="saveAssignment()">Assign</button></div></div>';
+  openModal();
+}
+function afToolChange(){ var id=el('afTool').value; el('afAvail').textContent = id?('Available: '+fmtNum(toolStats(id).available)+' '+toolUnit(id)):''; }
+async function saveAssignment(){
+  var tool=el('afTool').value, person=el('afPerson').value.trim(), div=el('afDiv').value, qty=Number(el('afQty').value)||0;
+  if(!tool||!person||!div){ showMsgEl('afMsg','Tool, person and division required.',false); return; }
+  if(qty<=0){ showMsgEl('afMsg','Quantity must be > 0.',false); return; }
+  var obj={ tool_id:tool, qty:qty, person:person, division:div, assigned_date:el('afDate').value||today(),
+    assigned_notes:el('afNotes').value.trim(), created_by:myEmail(), updated_by:myEmail() };
+  var r=await sb.from('inv_tool_assignments').insert(obj);
+  if(r.error){ showMsgEl('afMsg', r.error.message, false); return; }
+  await audit('CREATE Assignment', toolName(tool)+' x'+qty+' -> '+person+' ('+div+')');
+  closeModal(); await loadAll(); showToast('Assigned');
+}
+function returnForm(id){
+  var a=state.toolAssignments.find(function(x){return x.id===id;}); if(!a) return;
+  _photos['retPhoto']=[];
+  var conds=['OK','TO_REPAIR','TO_DISCARD','TO_REASSIGN'];
+  el('modalBody').innerHTML='<h2>Return: '+esc(toolName(a.toolId))+'</h2><div class="sub">Assigned '+fmtNum(a.qty)+' to '+esc(a.person)+' ('+esc(a.division)+')</div>'+
+    '<input type="hidden" id="rfId" value="'+esc(id||'')+'">'+
+    '<div class="row"><div><label>Returned date</label><input id="rfDate" type="date" value="'+today()+'"></div>'+
+    '<div><label>Returned qty *</label><input id="rfQty" type="number" step="any" value="'+esc(a.qty)+'"></div>'+
+    '<div><label>Condition</label><select id="rfCond">'+conds.map(function(c){return '<option>'+c+'</option>';}).join('')+'</select></div></div>'+
+    '<label>Notes</label><textarea id="rfNotes"></textarea>'+
+    '<label>Return photo</label>'+dropZoneHtml('rfPhotoZone','Drag &amp; drop return photo')+
+    '<div class="msg" id="rfMsg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal()">Cancel</button></div><div style="flex:0 0 auto;"><button class="primary" onclick="saveReturn()">Save return</button></div></div>';
+  openModal(); initDrop('rfPhotoZone','retPhoto', false);
+}
+async function saveReturn(){
+  var id=el('rfId').value, a=state.toolAssignments.find(function(x){return x.id===id;});
+  var rq=Number(el('rfQty').value); if(isNaN(rq)||rq<0){ showMsgEl('rfMsg','Invalid returned qty.',false); return; }
+  var cond=el('rfCond').value;
+  var obj={ returned_date:el('rfDate').value||today(), returned_qty:rq, returned_condition:cond,
+    returned_notes:el('rfNotes').value.trim(), returned_photo_url:(_photos['retPhoto']||[])[0]||'', updated_by:myEmail(), updated_at:new Date().toISOString() };
+  var r=await sb.from('inv_tool_assignments').update(obj).eq('id',id);
+  if(r.error){ showMsgEl('rfMsg', r.error.message, false); return; }
+  await audit('UPDATE Assignment', 'Returned '+toolName(a.toolId)+' '+rq+'/'+a.qty+' ['+cond+']');
+  closeModal(); await loadAll(); showToast('Return recorded');
+}
+async function deleteAssignment(id){
+  var a=state.toolAssignments.find(function(x){return x.id===id;});
+  if(!confirm('Delete this assignment?')) return;
+  var r=await sb.from('inv_tool_assignments').delete().eq('id',id);
+  if(r.error){ fail(r.error); return; }
+  await audit('DELETE Assignment', (a&&a.person)||id); await loadAll(); showToast('Deleted');
+}
+
+// ═══════════════════════════ 11 · REPAIRS ═══════════════════════════
+TAB_RENDER.repairs = function(){
+  return '<div class="card"><div class="row" style="justify-content:space-between;align-items:center;"><div style="flex:1;"><h2>Repairs</h2><div class="sub" style="margin:0;">Tools sent to suppliers for repair, and their return.</div></div>'+
+    '<div style="flex:0 0 auto;display:flex;gap:8px;"><button class="ghost" onclick="exportRepairsExcel()">⬇ Export</button><button class="primary" onclick="repairForm()">+ Send for repair</button></div></div>'+
+    '<div class="row" style="margin-top:12px;"><div><label>Search</label><input id="rpSearch" placeholder="Tool / supplier…"></div>'+
+    '<div><label>Status</label><select id="rpStatus"><option value="">All</option><option value="SENT">Sent</option><option value="RETURNED">Returned</option></select></div></div>'+
+    '<div class="tablewrap" style="margin-top:14px;"><table class="grid"><thead><tr><th>Tool</th><th class="num">Qty</th><th>Supplier</th><th>Sent</th><th>Status</th><th>Returned</th><th></th></tr></thead><tbody id="rpTable"></tbody></table></div></div>';
+};
+TAB_AFTER.repairs = function(){ renderRepairs(); bindSearch(['rpSearch'], renderRepairs); el('rpStatus').onchange=renderRepairs; };
+function renderRepairs(){
+  var q=(el('rpSearch').value||'').trim().toLowerCase(), st=el('rpStatus').value;
+  var rows=state.repairs.filter(function(r){ if(st&&r.status!==st) return false; return !q||[toolName(r.toolId),supName(r.supplierId)].join(' ').toLowerCase().indexOf(q)>=0; });
+  var tb=el('rpTable');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="7" class="empty">No repairs.</td></tr>'; return; }
+  tb.innerHTML=rows.map(function(r){ var ret=r.status==='RETURNED';
+    return '<tr><td><b>'+esc(toolName(r.toolId))+'</b></td><td class="num">'+fmtNum(r.qty)+'</td><td>'+esc(supName(r.supplierId))+'</td>'+
+      '<td>'+esc(r.sentDate||DASH)+'</td><td>'+(ret?'<span class="pill-tag green">RETURNED</span>':'<span class="pill-tag amber">SENT</span>')+'</td>'+
+      '<td>'+(ret?esc(r.returnedDate)+' ('+fmtNum(r.returnedQty)+')':DASH)+'</td>'+
+      '<td class="actions">'+(ret?'':'<button class="ghost btn-sm" onclick="repairReturnForm(\''+r.id+'\')">Return</button> ')+'<button class="danger btn-sm" onclick="deleteRepair(\''+r.id+'\')">Del</button></td></tr>'; }).join('');
+}
+function repairForm(){
+  _photos['repSent']=[];
+  el('modalBody').innerHTML='<h2>Send tool for repair</h2>'+
+    '<div class="row"><div><label>Tool *</label><select id="rfTool">'+toolOptions('')+'</select></div>'+
+    '<div><label>Qty *</label><input id="rfrQty" type="number" step="any" value="1"></div>'+
+    '<div><label>Supplier</label><select id="rfSup">'+supOptions('','Tool')+'</select></div></div>'+
+    '<div class="row"><div><label>Sent date</label><input id="rfSentDate" type="date" value="'+today()+'"></div></div>'+
+    '<label>Notes</label><textarea id="rfSentNotes"></textarea>'+
+    '<label>Photo</label>'+dropZoneHtml('rfSentZone','Drag &amp; drop photo')+
+    '<div class="msg" id="rfrMsg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal()">Cancel</button></div><div style="flex:0 0 auto;"><button class="primary" onclick="saveRepair()">Send</button></div></div>';
+  openModal(); initDrop('rfSentZone','repSent', false);
+}
+async function saveRepair(){
+  var tool=el('rfTool').value, qty=Number(el('rfrQty').value)||0;
+  if(!tool){ showMsgEl('rfrMsg','Tool required.',false); return; }
+  if(qty<=0){ showMsgEl('rfrMsg','Quantity must be > 0.',false); return; }
+  var obj={ tool_id:tool, qty:qty, supplier_id:el('rfSup').value, sent_date:el('rfSentDate').value||today(),
+    sent_notes:el('rfSentNotes').value.trim(), sent_photo_url:(_photos['repSent']||[])[0]||'', status:'SENT', created_by:myEmail(), updated_by:myEmail() };
+  var r=await sb.from('inv_repairs').insert(obj);
+  if(r.error){ showMsgEl('rfrMsg', r.error.message, false); return; }
+  await audit('CREATE Repair', toolName(tool)+' x'+qty+' -> '+supName(el('rfSup').value));
+  closeModal(); await loadAll(); showToast('Sent for repair');
+}
+function repairReturnForm(id){
+  var r=state.repairs.find(function(x){return x.id===id;}); if(!r) return;
+  _photos['repRet']=[];
+  el('modalBody').innerHTML='<h2>Repair return: '+esc(toolName(r.toolId))+'</h2><div class="sub">Sent '+fmtNum(r.qty)+' to '+esc(supName(r.supplierId))+'</div>'+
+    '<input type="hidden" id="rrId" value="'+esc(id||'')+'">'+
+    '<div class="row"><div><label>Returned date</label><input id="rrDate" type="date" value="'+today()+'"></div>'+
+    '<div><label>Returned qty *</label><input id="rrQty" type="number" step="any" value="'+esc(r.qty)+'"></div></div>'+
+    '<label>Notes</label><textarea id="rrNotes"></textarea>'+
+    '<label>Return photo</label>'+dropZoneHtml('rrZone','Drag &amp; drop photo')+
+    '<div class="msg" id="rrMsg"></div>'+
+    '<div class="row" style="margin-top:16px;justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal()">Cancel</button></div><div style="flex:0 0 auto;"><button class="primary" onclick="saveRepairReturn()">Save return</button></div></div>';
+  openModal(); initDrop('rrZone','repRet', false);
+}
+async function saveRepairReturn(){
+  var id=el('rrId').value, r=state.repairs.find(function(x){return x.id===id;});
+  var rq=Number(el('rrQty').value); if(isNaN(rq)||rq<0){ showMsgEl('rrMsg','Invalid returned qty.',false); return; }
+  var obj={ status:'RETURNED', returned_date:el('rrDate').value||today(), returned_qty:rq,
+    returned_notes:el('rrNotes').value.trim(), returned_photo_url:(_photos['repRet']||[])[0]||'', updated_by:myEmail(), updated_at:new Date().toISOString() };
+  var res=await sb.from('inv_repairs').update(obj).eq('id',id);
+  if(res.error){ showMsgEl('rrMsg', res.error.message, false); return; }
+  await audit('UPDATE Repair', 'Returned '+toolName(r.toolId)+' '+rq+'/'+r.qty);
+  closeModal(); await loadAll(); showToast('Repair return recorded');
+}
+async function deleteRepair(id){
+  if(!confirm('Delete this repair record?')) return;
+  var r=await sb.from('inv_repairs').delete().eq('id',id);
+  if(r.error){ fail(r.error); return; }
+  await audit('DELETE Repair', id); await loadAll(); showToast('Deleted');
+}
+
+// ═══════════════════════════ 12 · SETTINGS (team + audit) ═══════════════════════════
+TAB_RENDER.settings = function(){
+  return (IS_ADMIN?'<div class="card" id="teamCard"><h2>Team access (admin)</h2><div class="sub">Who can sign in. Google login + this list = access.</div>'+
+    '<div class="row"><div><label>Email</label><input id="au_email" placeholder="name@gmail.com"></div>'+
+    '<div><label>Name</label><input id="au_name" placeholder="optional"></div>'+
+    '<div style="flex:0 0 auto;display:flex;align-items:flex-end;gap:8px;"><label class="switch" style="margin:0 0 10px;font-size:0.85rem;color:var(--text-dim);"><input type="checkbox" id="au_admin" style="width:auto;"> Admin</label><button class="primary" onclick="addAllowed()">Add</button></div></div>'+
+    '<div id="auMsg" class="msg"></div><div id="auList" style="margin-top:10px;"></div></div>':'')+
+    '<div class="card"><h2>Audit log</h2><div class="sub">Last 50 actions — who changed what, when.</div><div id="auditList" class="loading"><span class="spin"></span> Loading…</div></div>';
+};
+TAB_AFTER.settings = function(){ loadAudit(); if(IS_ADMIN) loadAllowed(); };
+async function loadAudit(){
+  var r=await sb.from('audit_log').select('*').order('at',{ascending:false}).limit(50);
+  if(r.error){ el('auditList').innerHTML='<div class="empty">'+esc(r.error.message)+'</div>'; return; }
+  if(!r.data.length){ el('auditList').innerHTML='<div class="empty">No activity yet.</div>'; return; }
+  el('auditList').innerHTML='<div class="tablewrap"><table class="grid"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>'+
+    r.data.map(function(a){ return '<tr><td class="muted">'+esc(new Date(a.at).toLocaleString('en-MY'))+'</td><td>'+esc(String(a.user_email||'').split('@')[0])+'</td><td><b>'+esc(a.action)+'</b></td><td class="muted">'+esc(a.details)+'</td></tr>'; }).join('')+'</tbody></table></div>';
+}
+async function loadAllowed(){
+  var r=await sb.from('allowed_users').select('*').order('added_at');
+  if(r.error){ el('auList').innerHTML='<div class="empty">'+esc(r.error.message)+'</div>'; return; }
+  el('auList').innerHTML='<div class="tablewrap"><table class="grid"><thead><tr><th>Email</th><th>Name</th><th>Role</th><th></th></tr></thead><tbody>'+
+    r.data.map(function(u){ return '<tr><td>'+esc(u.email)+'</td><td>'+esc(u.full_name||'')+'</td><td>'+(u.is_admin?'<span class="tag">admin</span>':'staff')+'</td>'+
+      '<td class="amt"><button class="danger btn-sm" onclick="removeAllowed(\''+escq(u.email)+'\')">Remove</button></td></tr>'; }).join('')+'</tbody></table></div>';
+}
+async function addAllowed(){
+  var email=el('au_email').value.trim().toLowerCase();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showMsgEl('auMsg','Enter a valid email.',false); return; }
+  var r=await sb.from('allowed_users').insert({ email:email, full_name:el('au_name').value.trim(), is_admin:el('au_admin').checked, added_by:myEmail() });
+  if(r.error){ showMsgEl('auMsg', r.error.message, false); return; }
+  await audit('ADD User', email);
+  el('au_email').value=''; el('au_name').value=''; el('au_admin').checked=false;
+  showMsgEl('auMsg','Added '+email, true); loadAllowed();
+}
+async function removeAllowed(email){
+  if(email.toLowerCase()===myEmail().toLowerCase()){ alert('You cannot remove yourself.'); return; }
+  if(!confirm('Remove '+email+' from access?')) return;
+  var r=await sb.from('allowed_users').delete().eq('email',email);
+  if(r.error){ fail(r.error); return; }
+  await audit('REMOVE User', email); loadAllowed();
+}
+
+// ═══════════════════════════ EXCEL EXPORTS ═══════════════════════════
+function xlsx(sheets, fname){ var wb=XLSX.utils.book_new(); sheets.forEach(function(s){ XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(s.rows), s.name); }); XLSX.writeFile(wb, fname+'-'+today()+'.xlsx'); }
+function exportDashExcel(){ xlsx([{ name:'Stock', rows:state.materials.map(function(m){ var s=stockOnHand(m.id), rate=latestRate(m.id);
+  return { Material:m.name, Category:m.category, Unit:m.unit, In:s.inQ, Out:s.outQ, 'On hand':s.onHand, 'Latest rate':rate, Value:s.onHand*rate, 'Low @':m.lowStockThreshold }; }) }], 'HG-Inventory-Stock'); }
+function exportMaterialsExcel(){ xlsx([{ name:'Materials', rows:state.materials.map(function(m){ return { Name:m.name, Unit:m.unit, Category:m.category, 'Low threshold':m.lowStockThreshold, 'On hand':stockOnHand(m.id).onHand, 'Updated by':m.updatedBy }; }) }], 'HG-Inventory-Materials'); }
+function exportSuppliersExcel(){ xlsx([{ name:'Suppliers', rows:state.suppliers.map(function(s){ var st=supplierOutstandingStats(s.id);
+  return { Name:s.name, Type:s.supplierType, 'Contact person':s.contactPerson, Contact:s.contact, Category:s.category, Outstanding:st.outstanding, Notes:s.notes }; }) }], 'HG-Inventory-Suppliers'); }
+function exportQuotesExcel(){ xlsx([{ name:'Quotations', rows:state.quotations.map(function(x){ return { Item:(x.itemType==='tool'?toolName(x.materialId):matName(x.materialId)), Type:x.itemType, Supplier:supName(x.supplierId), Rate:x.rate, 'Qty offered':x.qtyOffered, 'Valid until':x.validUntil, Source:x.source, Notes:x.notes }; }) }], 'HG-Inventory-Quotations'); }
+function exportToolsExcel(){ xlsx([{ name:'Tools', rows:state.tools.map(function(t){ var s=toolStats(t.id); return { Name:t.name, Brand:t.brand, Category:t.category, Serial:t.serialNumber, Unit:t.unit, Total:t.totalQty, Assigned:s.assigned, 'In repair':s.inRepair, Available:s.available }; }) }], 'HG-Inventory-Tools'); }
+function exportPurchasesExcel(){
+  var heads=state.purchases.map(function(p){ return { Date:p.date, 'DO #':p.doNumber, Supplier:supName(p.supplierId), Items:(p.lines||[]).length, Subtotal:purchaseSubtotal(p), Discount:p.discount, Delivery:p.delivery, Tax:p.tax, Rounding:p.roundingAdjustment, Total:purchaseGrandTotal(p), Paid:purchasePaidAmount(p.id), Outstanding:purchaseOutstanding(p), Status:purchasePaidStatus(p), 'Paid by':p.paidBy, Notes:p.notes }; });
+  var lines=[]; state.purchases.forEach(function(p){ (p.lines||[]).forEach(function(l){ lines.push({ Date:p.date, 'DO #':p.doNumber, Supplier:supName(p.supplierId), Type:lineItemType(l), Item:lineItemName(l), Qty:l.qty, Rate:l.rate, Amount:l.amount, Division:l.division, 'Requested by':l.requestedBy }); }); });
+  xlsx([{ name:'Purchases', rows:heads }, { name:'Lines', rows:lines }], 'HG-Inventory-Purchases');
+}
+function exportStockOutsExcel(){
+  var heads=state.stockOuts.map(function(o){ return { 'DN #':o.dnNumber, Date:o.date, Division:o.division, Project:o.project, Items:(o.lines||[]).length, Value:soValue(o), 'Requested by':o.requestedBy, Notes:o.notes }; });
+  var lines=[]; state.stockOuts.forEach(function(o){ (o.lines||[]).forEach(function(l){ lines.push({ 'DN #':o.dnNumber, Date:o.date, Division:o.division, Material:matName(l.materialId), Qty:l.qty, Rate:l.ratePerUnit, Amount:l.amount }); }); });
+  xlsx([{ name:'DeliveryNotes', rows:heads }, { name:'Lines', rows:lines }], 'HG-Inventory-StockOut');
+}
+function exportPaymentsExcel(){
+  var heads=state.payments.map(function(p){ return { Date:p.paymentDate, Payee:payeeLabel(p), Type:p.payeeType, Amount:p.amount, Method:p.method, Reference:p.referenceNumber, Invoices:(p.allocations||[]).length, Notes:p.notes }; });
+  var allocs=[]; state.payments.forEach(function(p){ (p.allocations||[]).forEach(function(a){ var pur=state.purchases.find(function(x){return x.id===a.purchaseId;})||{}; allocs.push({ Date:p.paymentDate, Payee:payeeLabel(p), 'DO #':pur.doNumber||'', 'Amount applied':a.amountApplied }); }); });
+  xlsx([{ name:'Payments', rows:heads }, { name:'Allocations', rows:allocs }], 'HG-Inventory-Payments');
+}
+function exportCountsExcel(){ xlsx([{ name:'StockCounts', rows:state.stockCounts.map(function(c){ return { Date:c.countDate, Item:itemName(c.itemType,c.itemId), Type:c.itemType, System:c.systemQty, Counted:c.countedQty, Variance:c.variance, Reason:c.reason, Notes:c.notes }; }) }], 'HG-Inventory-StockCounts'); }
+function exportAssignmentsExcel(){ xlsx([{ name:'Assignments', rows:state.toolAssignments.map(function(a){ return { Tool:toolName(a.toolId), Qty:a.qty, Person:a.person, Division:a.division, 'Assigned':a.assignedDate, 'Returned':a.returnedDate, 'Returned qty':a.returnedQty, Condition:a.returnedCondition }; }) }], 'HG-Inventory-Assignments'); }
+function exportRepairsExcel(){ xlsx([{ name:'Repairs', rows:state.repairs.map(function(r){ return { Tool:toolName(r.toolId), Qty:r.qty, Supplier:supName(r.supplierId), Sent:r.sentDate, Status:r.status, Returned:r.returnedDate, 'Returned qty':r.returnedQty }; }) }], 'HG-Inventory-Repairs'); }
+
+start();
+</script>
+</body>
+</html>

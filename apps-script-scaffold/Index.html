@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<base target="_top">
+<style>
+  :root{
+    --bg:#0a0e1a; --panel:#141926; --panel2:#1c2335; --line:#2a3245;
+    --ink:#ffffff; --mut:#a0a8b8; --acc:#f59e0b; --acc2:#d97706;
+    --acc-soft:rgba(245,158,11,0.12);
+    --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --blue:#3b82f6; --green:#16a34a; --chip:#1c2335;
+    --radius:14px; --shadow:0 10px 40px rgba(0,0,0,0.4);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:var(--acc)}
+  header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:16px;padding:14px 22px;flex-wrap:wrap}
+  .brand-block{display:flex;align-items:center;gap:14px}
+  .brand-logo{width:46px;height:46px;background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:12px;
+    display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:#0a0e1a;font-weight:900;letter-spacing:.02em}
+  .brand-name{font-size:1.15rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1}
+  .brand-sub{font-size:.8rem;color:var(--mut);margin-top:2px}
+  header .meta-pills{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  header .mpill{background:var(--bg);border:1px solid var(--line);padding:8px 14px;border-radius:999px;
+    font-size:.82rem;color:var(--mut);display:flex;align-items:center;gap:7px}
+  header .mpill strong{color:var(--ink);font-weight:700}
+  nav{display:flex;gap:6px;flex-wrap:wrap;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);
+    position:sticky;top:75px;z-index:19}
+  nav button{background:transparent;border:1px solid transparent;color:var(--mut);padding:8px 15px;border-radius:10px;
+    cursor:pointer;font-size:13px;font-weight:600;font-family:inherit}
+  nav button.active{background:var(--acc);color:#0a0e1a}
+  nav button:hover:not(.active){background:var(--panel2);color:var(--ink);border-color:var(--line)}
+  main{padding:24px;max-width:1280px;margin:0 auto}
+  .view{display:none}.view.active{display:block}
+  h2{font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;margin:0 0 16px}
+  h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:var(--acc);margin:18px 0 8px;font-weight:700}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+  .row{display:flex;gap:14px;flex-wrap:wrap}.row>*{flex:1;min-width:150px}
+  label{display:block;font-size:.82rem;color:var(--mut);margin:0 0 6px;font-weight:600}
+  input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);
+    border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
+  textarea{resize:vertical;min-height:54px}
+  button.btn{display:inline-flex;align-items:center;gap:8px;background:var(--acc);color:#0a0e1a;border:none;border-radius:10px;
+    padding:11px 18px;font-weight:700;cursor:pointer;font-size:14px;font-family:inherit;transition:transform .1s,background .2s}
+  button.btn:hover{background:var(--acc2)}button.btn:active{transform:translateY(1px)}
+  button.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+  button.ghost:hover{background:var(--panel2);border-color:var(--acc)}
+  button.sm{padding:6px 11px;font-size:12px;border-radius:8px}
+  button.danger{background:transparent;border:1px solid var(--bad);color:#fca5a5}
+  button.danger:hover{background:rgba(239,68,68,.12)}
+  button.okbtn{background:var(--ok);color:#04240f}button.okbtn:hover{filter:brightness(1.1)}
+  .muted{color:var(--mut)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:8px;border-bottom:1px solid var(--line)}
+  td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:hover td{background:var(--panel2)}
+  .right{text-align:right}.center{text-align:center}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+  .p-Active,.p-Paid,.p-Green,.p-Valid{background:#14432a;color:#86efac}
+  .p-Quote,.p-Partial,.p-Expiring,.p-Hold{background:#4a3a12;color:#fcd34d}
+  .p-Expired,.p-Overdue,.p-Red{background:#4c1d24;color:#fca5a5}
+  .p-Completed{background:#1e3a5f;color:#93c5fd}
+  .p-Extension{background:#0e3a45;color:#67e8f9}
+  .p-OnHold{background:#3a3320;color:#fde68a}
+  .p-Cancelled,.p-Void,.p-Open{background:var(--line);color:var(--mut)}
+  .p-Unpaid{background:#374151;color:#d1d5db}
+  .tag{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:11px;color:var(--mut)}
+  .tag.svc{border-color:var(--acc2);color:var(--acc)}
+  .alert{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:9px;margin-bottom:6px;font-size:13px;cursor:pointer}
+  .alert.expired{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4)}
+  .alert.expiring{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4)}
+  .alert .ico{font-size:15px}
+  .stat{flex:1;min-width:130px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px;transition:border-color .2s;cursor:pointer}
+  .stat:hover{border-color:var(--acc)}
+  .stat .n{font-size:1.6rem;font-weight:800;color:var(--acc)}
+  .stat .n.bad{color:var(--bad)}.stat .n.ok{color:var(--ok)}.stat .n.blue{color:var(--blue)}
+  .stat .l{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .toolbar input,.toolbar select{width:auto;flex:0 0 auto}
+  .hint{font-size:12px;color:var(--mut);margin-top:3px}
+  .photos{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .photos a img{height:62px;border-radius:6px;border:1px solid var(--line)}
+  .kv{width:100%}.kv td{padding:6px 8px;border-bottom:1px solid var(--line)}.kv td.k{color:var(--mut);width:150px}
+  dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);padding:0;max-width:920px;width:94%;box-shadow:var(--shadow)}
+  dialog::backdrop{background:rgba(0,0,0,.75);backdrop-filter:blur(6px)}
+  .modal-h{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .modal-h h2{margin:0;font-size:1.15rem}
+  .modal-h .x{margin-left:auto;background:none;border:none;color:var(--mut);font-size:22px;cursor:pointer}
+  .modal-b{padding:18px;max-height:76vh;overflow:auto}
+  .modal-f{display:flex;gap:8px;justify-content:flex-end;padding:14px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000;border:1px solid var(--line);
+    padding:11px 18px;border-radius:10px;z-index:100;display:none;max-width:90%}
+  #toast.bad{border-color:var(--bad)}#toast.ok{border-color:var(--ok)}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--mut);border-top-color:var(--acc);border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .dz{border:1.5px dashed var(--line);border-radius:9px;padding:10px;text-align:center;cursor:pointer;background:var(--panel2);transition:.15s;font-size:12px}
+  .dz:hover,.dz.over{border-color:var(--acc);background:var(--acc-soft)}
+  .dz-files{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;justify-content:center}
+  .dz-chip{background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:11px}
+  .dz-chip b{color:var(--bad);cursor:pointer;margin-left:4px;font-weight:700}
+  .totbar{display:flex;gap:18px;justify-content:flex-end;align-items:baseline;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+  .totbar .big{font-size:20px;font-weight:800;color:var(--acc)}
+  .sec{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px;background:var(--panel2)}
+  .sec h3{margin-top:0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+  .badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}
+  .short{color:#fca5a5;font-weight:700}
+  .empty{text-align:center;color:var(--mut);padding:28px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand-block">
+    <div class="brand-logo">HG</div>
+    <div>
+      <div class="brand-name">Scaffold &amp; Green Tag</div>
+      <div class="brand-sub">Rental · Install · Green Tag Endorsement</div>
+    </div>
+  </div>
+  <div class="meta-pills">
+    <span class="mpill">👤 <strong id="meUser">…</strong></span>
+    <span class="mpill">📅 <strong id="meToday">…</strong></span>
+    <button class="btn sm" onclick="App.openJob()">+ New Job</button>
+    <button class="ghost btn sm" onclick="App.openSettings()">⚙</button>
+  </div>
+</header>
+<nav id="nav"></nav>
+<main>
+  <div class="view" id="v-dash"></div>
+  <div class="view" id="v-jobs"></div>
+  <div class="view" id="v-onsite"></div>
+  <div class="view" id="v-greentag"></div>
+  <div class="view" id="v-invoices"></div>
+  <div class="view" id="v-personnel"></div>
+  <div class="view" id="v-reports"></div>
+  <div class="view" id="v-audit"></div>
+</main>
+
+<dialog id="modal"><form method="dialog" id="modalForm">
+  <div class="modal-h"><h2 id="modalTitle">—</h2><button type="button" class="x" onclick="App.closeModal()">×</button></div>
+  <div class="modal-b" id="modalBody"></div>
+  <div class="modal-f" id="modalFoot"></div>
+</form></dialog>
+<div id="toast"></div>
+
+<script>
+/* ============ STATE ============ */
+var DB = null, CUR = 'dash';
+var TABS = [
+  ['dash','📊 Dashboard'],['jobs','🏗 Jobs'],['onsite','📦 Onsite'],['greentag','🟢 Green Tag'],
+  ['invoices','🧾 Invoices'],['personnel','🪪 Personnel'],['reports','📈 Reports'],['audit','🕓 Audit']
+];
+var SERVICE_LABEL = {Aluminium:'Aluminium mobile', Customized:'Customized system', GreenTag:'Green tag only'};
+var SCOPE_LABEL = {Full:'Full (rental+install+green tag)', RentalOnly:'Rental only (client installs)', EndorseOnly:'Endorse only'};
+var STATUS_LIST = [['Quote','Quote'],['Active','Active'],['Extension','Extension'],['OnHold','On-Hold'],['Completed','Completed'],['Cancelled','Cancelled']];
+var STATUS_LABEL = {Quote:'Quote', Active:'Active', Extension:'Extension', OnHold:'On-Hold', Completed:'Completed', Cancelled:'Cancelled'};
+var ONSITE_STATUSES = ['Active','Extension'];   // scaffold physically on site (green tag + collection run)
+var CHARGE_TYPES = [
+  ['PE','PE calculation & endorsement'],['Rental','Scaffold rental'],['Install','Scaffold installation'],
+  ['Transport','Lorry transport (delivery/pickup)'],['Dismantle','Scaffold dismantling'],
+  ['GreenTag','Green tag endorsement'],['ThirdParty','3rd-party supplier'],['Other','Other']
+];
+var CERT_TYPES = ['WAH','ScaffoldErector','ScaffoldInspector','OSHCoordinator'];
+var CERT_LABEL = {WAH:'Work at Height (WAH)', ScaffoldErector:'Scaffold Erector', ScaffoldInspector:'Scaffold Inspector', OSHCoordinator:'OSH Coordinator'};
+
+/* ============ BOOT ============ */
+window.onload = function(){ gv(null, function(db){ DB=db; renderNav(); show('dash'); }); };
+function renderNav(){
+  document.getElementById('nav').innerHTML = TABS.map(function(t){
+    return '<button id="t-'+t[0]+'" onclick="show(\''+t[0]+'\')">'+t[1]+'</button>';
+  }).join('');
+}
+function show(v){
+  CUR=v;
+  TABS.forEach(function(t){ var b=document.getElementById('t-'+t[0]); if(b) b.className = t[0]===v?'active':''; });
+  document.querySelectorAll('.view').forEach(function(x){x.classList.remove('active');});
+  var el=document.getElementById('v-'+v); el.classList.add('active');
+  ({dash:renderDash,jobs:renderJobs,onsite:renderOnsite,greentag:renderGreenTag,invoices:renderInvoices,personnel:renderPersonnel,reports:renderReports,audit:renderAudit}[v])();
+}
+
+/* ============ SERVER WRAPPER ============ */
+function gv(fn, cb, payload){
+  // fn=null -> bootstrap. Otherwise call named server fn with payload.
+  var run = google.script.run.withSuccessHandler(function(res){
+    if(res && res.engagements){ DB=res; document.getElementById('meUser').textContent=DB.currentUser; document.getElementById('meToday').textContent=DB.today; }
+    if(cb) cb(res);
+  }).withFailureHandler(function(e){ toast(e.message||String(e), true); });
+  if(!fn){ run.bootstrap(); }
+  else { run[fn].apply(run, payload||[]); }
+}
+function act(fn, payload, ok){
+  toast('<span class="spin"></span> Saving…');
+  gv(fn, function(db){ if(ok!==false){toast('Saved','ok');} App.closeModal(); show(CUR); }, payload);
+}
+function toast(html, bad){ var t=document.getElementById('toast'); t.innerHTML=html; t.className=bad?'bad':(html.indexOf('spin')>=0?'':'ok'); t.style.display='block';
+  clearTimeout(t._t); if(html.indexOf('spin')<0) t._t=setTimeout(function(){t.style.display='none';},2600); }
+
+/* ============ HELPERS ============ */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function rm(n){ return 'RM '+(Number(n)||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function pill(s){ var lbl=({OnHold:'On-Hold'})[s]||s; return '<span class="pill p-'+esc(s)+'">'+esc(lbl)+'</span>'; }
+function byId(arr,id){ for(var i=0;i<arr.length;i++) if(arr[i].id===id) return arr[i]; return null; }
+function photoStrip(str){ if(!str) return ''; return '<div class="photos">'+String(str).split(',').map(function(u){u=u.trim(); if(!u)return''; return '<a href="'+esc(u)+'" target="_blank"><img src="'+esc(u)+'=s200" onerror="this.src=\''+esc(u)+'\'"></a>';}).join('')+'</div>'; }
+function opt(v,label,sel){ return '<option value="'+esc(v)+'"'+(sel===v?' selected':'')+'>'+esc(label)+'</option>'; }
+function field(label,inner,hint){ return '<div style="flex:1;min-width:150px"><label>'+label+'</label>'+inner+(hint?'<div class="hint">'+hint+'</div>':'')+'</div>'; }
+function num(v){ return Number(v)||0; }
+
+/* base64 file pickers stored on a holder object */
+function fileDrop(holderId, multi, accept){
+  return '<div class="dz" onclick="document.getElementById(\''+holderId+'_i\').click()" '+
+    'ondragover="event.preventDefault();this.classList.add(\'over\')" ondragleave="this.classList.remove(\'over\')" '+
+    'ondrop="App.drop(event,\''+holderId+'\')">📎 Tap to add '+(multi?'photos':'a file')+' (or drag here)'+
+    '<input id="'+holderId+'_i" type="file" accept="'+(accept||'image/*')+'" '+(multi?'multiple':'')+' style="display:none" onchange="App.pick(event,\''+holderId+'\')">'+
+    '<div class="dz-files" id="'+holderId+'_f"></div></div>';
+}
+
+/* ============ DASHBOARD ============ */
+function renderDash(){
+  var s=DB.stats, a=DB.alerts;
+  var cards=[
+    ['activeJobs','Active jobs','',function(){show('jobs');}],
+    ['greenTagDue','Green tag due','bad',function(){show('greentag');}],
+    ['itemsDeployed','Items deployed (onsite)','blue',function(){show('onsite');}],
+    ['collectionDue','Collection due','bad',function(){show('onsite');}],
+    ['outstanding','Outstanding','bad',function(){show('invoices');},true],
+    ['collectedThisMonth','Collected this month','ok',null,true],
+    ['certExpiring','Certs expiring','bad',function(){show('personnel');}]
+  ];
+  var html='<h2>Dashboard</h2><div class="row" style="margin-bottom:16px">';
+  cards.forEach(function(c,i){
+    var val=c[4]?rm(s[c[0]]):s[c[0]];
+    html+='<div class="stat" onclick="(window._dc'+i+'||function(){})()"><div class="n '+(c[2]||'')+'">'+val+'</div><div class="l">'+c[1]+'</div></div>';
+    window['_dc'+i]=c[3];
+  });
+  html+='</div>';
+  html+='<div class="card"><h3>Action list — '+a.length+'</h3>';
+  if(!a.length) html+='<div class="empty">All clear. No green tags due, no overdue invoices, no cert expiries. 👍</div>';
+  else html+=a.map(function(al){
+    var ico={greentag:'🟢',collection:'🚚',job:'🏗',material:'📦',invoice:'🧾',cert:'🪪'}[al.kind]||'•';
+    return '<div class="alert '+al.level+'" onclick="App.alertJump(\''+al.kind+'\',\''+al.id+'\')"><span class="ico">'+ico+'</span>'+
+      '<div style="flex:1"><strong>'+esc(al.who)+'</strong></div><div>'+esc(al.msg)+'</div></div>';
+  }).join('');
+  html+='</div>';
+  html+='<div class="row"><div class="stat" style="cursor:default"><div class="n blue">'+rm(s.billedThisMonth)+'</div><div class="l">Billed this month</div></div>'+
+    '<div class="stat" style="cursor:default"><div class="n">'+s.quotes+'</div><div class="l">Open quotes</div></div>'+
+    '<div class="stat" style="cursor:default"><div class="n">'+(s.onHold||0)+'</div><div class="l">On-hold</div></div>'+
+    '<div class="stat" style="cursor:default"><div class="n bad">'+s.overdueCount+'</div><div class="l">Overdue invoices · '+rm(s.overdueAmt)+'</div></div>'+
+    '<div class="stat" style="cursor:default"><div class="n">'+s.totalJobs+'</div><div class="l">Total jobs (all time)</div></div></div>';
+  document.getElementById('v-dash').innerHTML=html;
+}
+
+/* ============ JOBS ============ */
+function renderJobs(){
+  var q=(window._jq||'').toLowerCase(), fs=window._jfs||'', fst=window._jfst||'';
+  var rows=DB.engagements.slice().sort(function(a,b){return (b.createdAt||'').localeCompare(a.createdAt||'');});
+  var html='<h2>Jobs <button class="btn sm" style="float:right" onclick="App.openJob()">+ New Job</button></h2>';
+  html+='<div class="toolbar"><input placeholder="Search client / job / site…" value="'+esc(window._jq||'')+'" oninput="window._jq=this.value;renderJobs()" style="min-width:220px">'+
+    '<select onchange="window._jfs=this.value;renderJobs()"><option value="">All services</option>'+
+      Object.keys(SERVICE_LABEL).map(function(k){return opt(k,SERVICE_LABEL[k],fs);}).join('')+'</select>'+
+    '<select onchange="window._jfst=this.value;renderJobs()"><option value="">All status</option>'+
+      STATUS_LIST.map(function(k){return opt(k[0],k[1],fst);}).join('')+'</select></div>';
+  var list=rows.filter(function(e){
+    if(fs && e.serviceType!==fs) return false;
+    if(fst && e.status!==fst) return false;
+    if(q){ var blob=(e.jobNo+' '+e.clientCompany+' '+e.siteName+' '+e.clientPIC).toLowerCase(); if(blob.indexOf(q)<0) return false; }
+    return true;
+  });
+  html+='<div class="card" style="padding:0"><table><thead><tr><th>Job</th><th>Client / Site</th><th>Service</th><th>Period</th><th>Green tag</th><th>Material</th><th class="right">Charges</th><th>Status</th></tr></thead><tbody>';
+  if(!list.length) html+='<tr><td colspan="8"><div class="empty">No jobs. Click <b>+ New Job</b>.</div></td></tr>';
+  list.forEach(function(e){
+    var g=e.greenTagDue, gtxt='—';
+    if(g&&g.applies){ gtxt = g.days<0 ? '<span class="short">overdue '+(-g.days)+'d</span>' : (g.never?'<span class="short">first due</span>':'in '+g.days+'d'); }
+    var mat = e.materialOut>0 ? '<span class="'+(e.status==='Completed'?'short':'')+'">'+e.materialOut+' out</span>' : '✓';
+    html+='<tr style="cursor:pointer" onclick="App.openJobDetail(\''+e.id+'\')">'+
+      '<td><b>'+esc(e.jobNo)+'</b></td>'+
+      '<td><b>'+esc(e.clientCompany)+'</b>'+(e.siteName?'<br><span class="muted">'+esc(e.siteName)+'</span>':'')+'</td>'+
+      '<td><span class="tag svc">'+esc(SERVICE_LABEL[e.serviceType]||e.serviceType)+'</span></td>'+
+      '<td class="muted">'+esc(e.startDate||'—')+(e.expectedEndDate?'<br>→ '+esc(e.expectedEndDate):'')+'</td>'+
+      '<td>'+gtxt+'</td><td>'+mat+'</td>'+
+      '<td class="right">'+rm(e.chargeTotal)+(e.uninvoiced>0.005?'<br><span class="muted" style="font-size:11px">'+rm(e.uninvoiced)+' unbilled</span>':'')+'</td>'+
+      '<td>'+pill(e.status)+'</td></tr>';
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('v-jobs').innerHTML=html;
+}
+
+/* ============ ONSITE (deployed material + collection) ============ */
+function renderOnsite(){
+  var dueSoon=Number(DB.config.COLLECTION_DUE_SOON_DAYS)||7;
+  var jobs=DB.engagements.filter(function(e){return ONSITE_STATUSES.indexOf(e.status)>=0&&e.materialOut>0;})
+    .sort(function(a,b){ var x=(a.collectionDue&&a.collectionDue.days); var y=(b.collectionDue&&b.collectionDue.days); if(x==null)x=99999; if(y==null)y=99999; return x-y; });
+  var totalItems=jobs.reduce(function(s,e){return s+e.materialOut;},0);
+  var html='<h2>Materials Onsite — rental &amp; collection</h2>'+
+    '<div class="hint" style="margin-bottom:12px">Scaffold material deployed to clients under rental. The <b>return date</b> on each job drives the collection reminder. Collect within '+dueSoon+' days = flagged.</div>';
+  html+='<div class="row" style="margin-bottom:14px">'+
+    '<div class="stat" style="cursor:default"><div class="n blue">'+totalItems+'</div><div class="l">Total items deployed</div></div>'+
+    '<div class="stat" style="cursor:default"><div class="n">'+jobs.length+'</div><div class="l">Jobs with material onsite</div></div>'+
+    '<div class="stat" style="cursor:default"><div class="n bad">'+DB.stats.collectionDue+'</div><div class="l">Collection due / overdue</div></div></div>';
+  if(!jobs.length){ document.getElementById('v-onsite').innerHTML=html+'<div class="card"><div class="empty">No scaffold material deployed onsite right now. Kit out a job from Jobs → open → Kit out.</div></div>'; return; }
+  jobs.forEach(function(e){
+    var c=e.collectionDue||{};
+    var dtxt = (c.noDate||c.days==null) ? '<span class="pill p-Quote">no return date set</span>'
+      : (c.days<0?'<span class="short">collect OVERDUE '+(-c.days)+'d</span>':(c.days===0?'<span class="short">collect TODAY</span>':(c.days<=dueSoon?'<span class="short">collect in '+c.days+'d</span>':'collect in '+c.days+'d')));
+    html+='<div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">'+
+      '<b style="font-size:15px">'+esc(e.jobNo)+' · '+esc(e.clientCompany)+'</b>'+(e.siteName?'<span class="tag">'+esc(e.siteName)+'</span>':'')+
+      '<span style="margin-left:auto"></span>'+
+      '<button class="btn sm" onclick="App.openJobDetail(\''+e.id+'\')">Open job</button>'+
+      '<button class="ghost btn sm" onclick="App.openSignoff(\''+e.id+'\',\'return\')">Collection sign-off</button>'+
+      '<button class="okbtn btn sm" onclick="App.returnAll(\''+e.id+'\')">✓ Collected all</button></div>'+
+      '<div class="row" style="margin-bottom:8px"><div>Rented out: <b>'+esc(e.startDate||'—')+'</b></div>'+
+      '<div>Return by: <b>'+esc(e.expectedEndDate||'—')+'</b> &nbsp;'+dtxt+'</div>'+
+      '<div>Deployed: <b>'+e.materialOut+'</b> item(s)</div></div>';
+    html+='<table><thead><tr><th>Code</th><th>Item / spec</th><th class="right">Out</th><th class="right">Back</th><th class="right">To collect</th></tr></thead><tbody>';
+    DB.materials.filter(function(m){return m.engagementId===e.id&&m.qtyOut>0;}).forEach(function(m){ var sh=Math.max(0,m.qtyOut-m.qtyReturned);
+      html+='<tr'+(sh>0?'':' style="opacity:.5"')+'><td>'+(m.code?'<span class="tag">'+esc(m.code)+'</span>':'—')+'</td>'+
+        '<td><b>'+esc(m.item)+'</b>'+(m.spec&&m.spec!=='—'?'<br><span class="muted">'+esc(m.spec)+'</span>':'')+'</td>'+
+        '<td class="right">'+m.qtyOut+' '+esc(m.unit)+'</td><td class="right">'+m.qtyReturned+'</td>'+
+        '<td class="right '+(sh>0?'short':'')+'">'+(sh||'✓')+'</td></tr>';
+    });
+    html+='</tbody></table></div>';
+  });
+  document.getElementById('v-onsite').innerHTML=html;
+}
+
+/* ============ GREEN TAG ============ */
+function renderGreenTag(){
+  var active=DB.engagements.filter(function(e){return e.greenTagDue&&e.greenTagDue.applies;})
+    .sort(function(a,b){return (a.greenTagDue.days)-(b.greenTagDue.days);});
+  var html='<h2>Green Tag — weekly endorsement</h2>';
+  html+='<div class="card"><h3>Scaffold onsite — inspection status</h3>';
+  if(!active.length) html+='<div class="empty">No active scaffold needing green tag right now.</div>';
+  else { html+='<table><thead><tr><th>Job</th><th>Client / Site</th><th>Last inspection</th><th>Result</th><th>Next due</th><th></th></tr></thead><tbody>';
+    active.forEach(function(e){
+      var g=e.greenTagDue;
+      var dtxt = g.days<0?'<span class="short">OVERDUE '+(-g.days)+'d</span>':(g.days===0?'<span class="short">due today</span>':'in '+g.days+'d');
+      html+='<tr><td><b>'+esc(e.jobNo)+'</b></td><td>'+esc(e.clientCompany)+(e.siteName?' · '+esc(e.siteName):'')+'</td>'+
+        '<td>'+esc(e.lastInspection||'—')+'</td><td>'+(e.lastResult?pill(e.lastResult):'—')+'</td>'+
+        '<td>'+esc(g.due||'—')+' '+dtxt+'</td>'+
+        '<td class="right"><button class="btn sm" onclick="App.openInspection(\''+e.id+'\')">+ Inspect</button></td></tr>';
+    });
+    html+='</tbody></table>'; }
+  html+='</div>';
+  // recent inspections
+  var ins=DB.inspections.slice().sort(function(a,b){return (b.inspectDate||'').localeCompare(a.inspectDate||'');}).slice(0,60);
+  html+='<div class="card"><h3>Inspection history</h3>';
+  if(!ins.length) html+='<div class="empty">No inspections logged yet.</div>';
+  else { html+='<table><thead><tr><th>Date</th><th>Job</th><th>Inspector</th><th>Result</th><th>Tag #</th><th>Findings</th><th></th></tr></thead><tbody>';
+    ins.forEach(function(i){ var e=byId(DB.engagements,i.engagementId)||{};
+      html+='<tr><td>'+esc(i.inspectDate)+'</td><td><b>'+esc(e.jobNo||'?')+'</b><br><span class="muted">'+esc(e.clientCompany||'')+'</span></td>'+
+        '<td>'+esc(i.inspector)+(i.inspectorCertNo?'<br><span class="muted">'+esc(i.inspectorCertNo)+'</span>':'')+'</td>'+
+        '<td>'+pill(i.result)+'</td><td>'+esc(i.tagNo||'—')+'</td><td class="muted">'+esc(i.findings||'')+(i.certUrl?' <a href="'+esc(i.certUrl)+'" target="_blank">cert↗</a>':'')+'</td>'+
+        '<td class="right"><button class="ghost btn sm" onclick="App.openInspection(\''+i.engagementId+'\',\''+i.id+'\')">Edit</button></td></tr>';
+    });
+    html+='</tbody></table>'; }
+  html+='</div>';
+  document.getElementById('v-greentag').innerHTML=html;
+}
+
+/* ============ INVOICES ============ */
+function renderInvoices(){
+  var q=(window._iq||'').toLowerCase();
+  var invs=DB.invoices.slice().sort(function(a,b){return (b.invDate||'').localeCompare(a.invDate||'');});
+  var html='<h2>Invoices &amp; Payments <button class="btn sm" style="float:right" onclick="App.openInvoice()">+ New Invoice</button></h2>';
+  html+='<div class="toolbar"><input placeholder="Search invoice / client…" oninput="window._iq=this.value;renderInvoices()" style="min-width:220px"></div>';
+  html+='<div class="card" style="padding:0"><table><thead><tr><th>Invoice</th><th>Client</th><th>Date / Due</th><th class="right">Total</th><th class="right">Paid</th><th class="right">Balance</th><th>Status</th></tr></thead><tbody>';
+  var list=invs.filter(function(i){ if(!q) return true; return (i.invNo+' '+i.clientCompany).toLowerCase().indexOf(q)>=0; });
+  if(!list.length) html+='<tr><td colspan="7"><div class="empty">No invoices yet.</div></td></tr>';
+  list.forEach(function(i){
+    var st=i.overdue?'Overdue':i.payStatus;
+    html+='<tr style="cursor:pointer" onclick="App.openInvoiceDetail(\''+i.id+'\')"><td><b>'+esc(i.invNo)+'</b></td><td>'+esc(i.clientCompany)+'</td>'+
+      '<td class="muted">'+esc(i.invDate)+(i.dueDate?'<br>due '+esc(i.dueDate):'')+'</td>'+
+      '<td class="right">'+rm(i.total)+'</td><td class="right">'+rm(i.amountPaid)+'</td><td class="right">'+rm(i.balance)+'</td>'+
+      '<td>'+pill(st)+'</td></tr>';
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('v-invoices').innerHTML=html;
+}
+
+/* ============ PERSONNEL ============ */
+function renderPersonnel(){
+  var ppl=DB.personnel.slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+  var html='<h2>Personnel &amp; Certifications <button class="btn sm" style="float:right" onclick="App.openPerson()">+ Add Person</button></h2>';
+  html+='<div class="hint" style="margin-bottom:10px">WAH · Scaffold Erector · Scaffold Inspector · OSH Coordinator. The system warns before any cert expires.</div>';
+  html+='<div class="card" style="padding:0"><table><thead><tr><th>Name / Role</th><th>Cert</th><th>Cert #</th><th>Issued</th><th>Expiry</th><th>Status</th><th></th></tr></thead><tbody>';
+  if(!ppl.length) html+='<tr><td colspan="7"><div class="empty">No personnel yet. Add your certified staff.</div></td></tr>';
+  ppl.forEach(function(p){
+    html+='<tr><td><b>'+esc(p.name)+'</b>'+(p.role?'<br><span class="muted">'+esc(p.role)+'</span>':'')+'</td>'+
+      '<td>'+esc(CERT_LABEL[p.certType]||p.certType)+'</td><td>'+esc(p.certNo||'—')+'</td>'+
+      '<td class="muted">'+esc(p.issuedDate||'—')+'</td><td class="muted">'+esc(p.expiryDate||'—')+(p.daysToExpiry!=null&&p.daysToExpiry>=0?' ('+p.daysToExpiry+'d)':'')+'</td>'+
+      '<td>'+pill(p.certStatus)+'</td>'+
+      '<td class="right"><button class="ghost btn sm" onclick="App.openPerson(\''+p.id+'\')">Edit</button></td></tr>';
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('v-personnel').innerHTML=html;
+}
+
+/* ============ AUDIT ============ */
+function renderAudit(){
+  document.getElementById('v-audit').innerHTML='<h2>Audit Log</h2><div class="card"><div class="empty"><span class="spin"></span> Loading…</div></div>';
+  google.script.run.withSuccessHandler(function(rows){
+    var html='<h2>Audit Log <span class="muted" style="font-size:13px">last '+rows.length+' actions</span></h2><div class="card" style="padding:0"><table><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Type</th><th>Record</th><th>Details</th></tr></thead><tbody>';
+    if(!rows.length) html+='<tr><td colspan="6"><div class="empty">No activity yet.</div></td></tr>';
+    rows.forEach(function(r){ html+='<tr><td class="muted">'+esc(r.timestamp)+'</td><td>'+esc(r.userEmail)+'</td><td><span class="tag">'+esc(r.action)+'</span></td><td>'+esc(r.recordType)+'</td><td>'+esc(r.recordId)+'</td><td class="muted">'+esc(r.details)+'</td></tr>'; });
+    html+='</tbody></table></div>';
+    document.getElementById('v-audit').innerHTML=html;
+  }).withFailureHandler(function(e){toast(e.message,true);}).loadAudit();
+}
+
+/* ============ REPORTS ============ */
+var REPORTS={
+  revenue:'Revenue by service (this month)', jobs:'Active jobs register', greentag:'Green tag compliance',
+  material:'Material out — not yet returned', outstanding:'Outstanding & aging', certs:'Certification expiry'
+};
+function renderReports(){
+  var sel=window._rep||'revenue';
+  var html='<h2>Reports</h2><div class="toolbar"><select onchange="window._rep=this.value;renderReports()">'+
+    Object.keys(REPORTS).map(function(k){return opt(k,REPORTS[k],sel);}).join('')+'</select>'+
+    '<button class="ghost btn sm" onclick="App.printReport()">🖨 Print / PDF</button>'+
+    '<button class="ghost btn sm" onclick="App.csvReport()">⬇ CSV</button></div>';
+  html+='<div class="card" id="repBody"></div>';
+  document.getElementById('v-reports').innerHTML=html;
+  document.getElementById('repBody').innerHTML=buildReport(sel).html;
+}
+function buildReport(kind){
+  var today=DB.today, ym=today.slice(0,7), head=[], rows=[], title=REPORTS[kind], summary='';
+  if(kind==='revenue'){
+    var byType={}; CHARGE_TYPES.forEach(function(c){byType[c[0]]=0;});
+    var invThisMonth={}; DB.invoices.forEach(function(i){ if((i.invDate||'').slice(0,7)===ym && i.status!=='Void') invThisMonth[i.id]=true; });
+    DB.charges.forEach(function(c){ if(c.invoiceId && invThisMonth[c.invoiceId]) byType[c.type]=(byType[c.type]||0)+c.amount; });
+    head=['Service / charge type','Amount (RM)'];
+    var tot=0; CHARGE_TYPES.forEach(function(c){ var v=byType[c[0]]||0; tot+=v; rows.push([c[1], v.toFixed(2)]); });
+    rows.push(['TOTAL (excl. SST)', tot.toFixed(2)]);
+    summary='Month '+ym+' · billed (ex-SST) by charge type';
+  } else if(kind==='jobs'){
+    head=['Job','Client','Site','Service','Start','End','Green tag','Charges'];
+    DB.engagements.filter(function(e){return ONSITE_STATUSES.indexOf(e.status)>=0;}).forEach(function(e){
+      var g=e.greenTagDue; var gt=g&&g.applies?(g.days<0?'overdue '+(-g.days)+'d':'in '+g.days+'d'):'—';
+      rows.push([e.jobNo,e.clientCompany,e.siteName,SERVICE_LABEL[e.serviceType],e.startDate,e.expectedEndDate,gt,e.chargeTotal.toFixed(2)]);
+    });
+    summary=rows.length+' active job(s)';
+  } else if(kind==='greentag'){
+    head=['Job','Client','Site','Last inspection','Result','Next due','Status'];
+    DB.engagements.filter(function(e){return e.greenTagDue&&e.greenTagDue.applies;})
+      .sort(function(a,b){return a.greenTagDue.days-b.greenTagDue.days;}).forEach(function(e){
+      var g=e.greenTagDue; rows.push([e.jobNo,e.clientCompany,e.siteName,e.lastInspection||'none',e.lastResult||'—',g.due||'—', g.days<0?'OVERDUE '+(-g.days)+'d':(g.days===0?'DUE':'OK')]);
+    });
+    summary=rows.length+' scaffold(s) under green tag';
+  } else if(kind==='material'){
+    head=['Job','Client','Code','Item','Out','Returned','Outstanding','Damage RM'];
+    DB.materials.forEach(function(m){ var out=Math.max(0,m.qtyOut-m.qtyReturned); if(out<=0 && m.damageCharge<=0) return;
+      var e=byId(DB.engagements,m.engagementId)||{}; rows.push([e.jobNo||'?',e.clientCompany||'',m.code||'',m.item,m.qtyOut,m.qtyReturned,out,(m.damageCharge||0).toFixed(2)]); });
+    summary=rows.length+' line(s) with material out or damage';
+  } else if(kind==='outstanding'){
+    head=['Invoice','Client','Due','Balance RM','Age (days)','Bucket'];
+    DB.invoices.filter(function(i){return i.payStatus!=='Void'&&i.balance>0.005;}).sort(function(a,b){return (a.dueDate||'').localeCompare(b.dueDate||'');}).forEach(function(i){
+      var age=i.dueDate?Math.round((new Date(today)-new Date(i.dueDate))/86400000):0;
+      var b=age<=0?'Not due':(age<=30?'1–30':(age<=60?'31–60':(age<=90?'61–90':'90+')));
+      rows.push([i.invNo,i.clientCompany,i.dueDate||'—',i.balance.toFixed(2),age>0?age:0,b]);
+    });
+    var tot=DB.invoices.reduce(function(s,i){return s+(i.payStatus!=='Void'?i.balance:0);},0);
+    summary='Total outstanding '+rm(tot);
+  } else if(kind==='certs'){
+    head=['Name','Role','Cert','Cert #','Expiry','Days left','Status'];
+    DB.personnel.slice().sort(function(a,b){return (a.expiryDate||'9999').localeCompare(b.expiryDate||'9999');}).forEach(function(p){
+      rows.push([p.name,p.role,CERT_LABEL[p.certType]||p.certType,p.certNo,p.expiryDate||'—',p.daysToExpiry==null?'—':p.daysToExpiry,p.certStatus]);
+    });
+    summary=rows.length+' certification record(s)';
+  }
+  var html='<div class="hint" style="margin-bottom:8px">'+esc(summary)+'</div><table><thead><tr>'+head.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead><tbody>';
+  if(!rows.length) html+='<tr><td colspan="'+head.length+'"><div class="empty">Nothing to show.</div></td></tr>';
+  rows.forEach(function(r){ html+='<tr>'+r.map(function(c,i){return '<td'+(i>=head.length-1&&kind==='revenue'?' class="right"':'')+'>'+esc(c)+'</td>';}).join('')+'</tr>'; });
+  html+='</tbody></table>';
+  return {html:html, head:head, rows:rows, title:title, summary:summary};
+}
+
+/* ============ APP (modals / actions) ============ */
+var App={
+  _files:{},
+  closeModal:function(){ document.getElementById('modal').close(); App._files={}; },
+  openModal:function(title, body, foot){
+    document.getElementById('modalTitle').innerHTML=title;
+    document.getElementById('modalBody').innerHTML=body;
+    document.getElementById('modalFoot').innerHTML=foot||'';
+    document.getElementById('modal').showModal();
+  },
+  drop:function(ev,h){ ev.preventDefault(); ev.currentTarget.classList.remove('over'); App._readFiles(ev.dataTransfer.files,h); },
+  pick:function(ev,h){ App._readFiles(ev.target.files,h); },
+  _readFiles:function(files,h){
+    App._files[h]=App._files[h]||[];
+    Array.prototype.forEach.call(files,function(f){
+      var r=new FileReader(); r.onload=function(){ App._files[h].push({name:f.name,mime:f.type,base64:r.result}); App._renderChips(h); }; r.readAsDataURL(f);
+    });
+  },
+  _renderChips:function(h){ var el=document.getElementById(h+'_f'); if(!el) return;
+    el.innerHTML=(App._files[h]||[]).map(function(f,i){return '<span class="dz-chip">'+esc(f.name)+' <b onclick="App._rmFile(\''+h+'\','+i+')">×</b></span>';}).join(''); },
+  _rmFile:function(h,i){ App._files[h].splice(i,1); App._renderChips(h); },
+
+  alertJump:function(kind,id){
+    if(kind==='collection'){ show('onsite'); App.openJobDetail(id); }
+    else if(kind==='greentag'||kind==='job'||kind==='material'){ show('jobs'); App.openJobDetail(id); }
+    else if(kind==='invoice'){ show('invoices'); App.openInvoiceDetail(id); }
+    else if(kind==='cert'){ show('personnel'); App.openPerson(id); }
+  },
+
+  /* ---------- NEW / EDIT JOB ---------- */
+  openJob:function(id){
+    var e=id?byId(DB.engagements,id):{serviceType:'Aluminium',scope:'Full',greenTag:'Yes',inspectIntervalDays:7,startDate:DB.today,status:'Active'};
+    var inspectors=DB.personnel.filter(function(p){return p.certType==='ScaffoldInspector'||p.certType==='ScaffoldErector';});
+    var body=''+
+    '<div class="sec"><h3>Service</h3><div class="row">'+
+      field('Service type','<select id="f_serviceType" onchange="App._svcChange()">'+Object.keys(SERVICE_LABEL).map(function(k){return opt(k,SERVICE_LABEL[k],e.serviceType);}).join('')+'</select>')+
+      field('Scope','<select id="f_scope">'+Object.keys(SCOPE_LABEL).map(function(k){return opt(k,SCOPE_LABEL[k],e.scope);}).join('')+'</select>')+
+      field('Status','<select id="f_status">'+STATUS_LIST.map(function(k){return opt(k[0],k[1],e.status||'Active');}).join('')+'</select>')+
+    '</div></div>'+
+    '<div class="sec"><h3>Client</h3><div class="row">'+
+      field('Company *','<input id="f_clientCompany" value="'+esc(e.clientCompany)+'">')+
+      field('PIC (person in charge)','<input id="f_clientPIC" value="'+esc(e.clientPIC)+'">')+
+    '</div><div class="row">'+
+      field('Contact (phone)','<input id="f_clientContact" value="'+esc(e.clientContact)+'">')+
+      field('Email','<input id="f_clientEmail" value="'+esc(e.clientEmail)+'">')+
+    '</div>'+field('Client address','<input id="f_clientAddress" value="'+esc(e.clientAddress)+'">')+'</div>'+
+    '<div class="sec"><h3>Site &amp; scaffold</h3><div class="row">'+
+      field('Site name','<input id="f_siteName" value="'+esc(e.siteName)+'" placeholder="e.g. Mid Valley Lot 3">')+
+      field('Site address','<input id="f_siteAddress" value="'+esc(e.siteAddress)+'">')+
+    '</div>'+field('Scaffold description','<textarea id="f_scaffoldDesc" placeholder="e.g. 3 x mobile tower 2.0m x 1.0m x 6.0m working height">'+esc(e.scaffoldDesc)+'</textarea>')+
+    '<div class="row">'+
+      field('3rd-party supplier <span class="muted">(customized only)</span>','<input id="f_thirdParty" value="'+esc(e.thirdParty)+'">')+
+    '</div></div>'+
+    '<div class="sec"><h3>PE endorsement &amp; period</h3><div class="row">'+
+      field('PE / endorsement no.','<input id="f_peNo" value="'+esc(e.peNo)+'">')+
+      field('Endorsed by','<input id="f_peEndorsedBy" value="'+esc(e.peEndorsedBy)+'">')+
+      field('PE date','<input id="f_peEndorsedDate" type="date" value="'+esc(e.peEndorsedDate)+'">')+
+    '</div><div class="row">'+
+      field('Start / delivery *','<input id="f_startDate" type="date" value="'+esc(e.startDate)+'">')+
+      field('Expected end','<input id="f_expectedEndDate" type="date" value="'+esc(e.expectedEndDate)+'">')+
+      field('Actual return','<input id="f_actualReturnDate" type="date" value="'+esc(e.actualReturnDate)+'">')+
+    '</div></div>'+
+    '<div class="sec"><h3>Green tag</h3><div class="row">'+
+      field('Green tag required?','<select id="f_greenTag">'+['Yes','No'].map(function(k){return opt(k,k,e.greenTag||'Yes');}).join('')+'</select>')+
+      field('Inspection interval (days)','<input id="f_inspectIntervalDays" type="number" value="'+(e.inspectIntervalDays||7)+'">','Weekly = 7')+
+      field('Assigned inspector','<select id="f_assignedInspector"><option value="">—</option>'+inspectors.map(function(p){return opt(p.name,p.name+' ('+p.certType+')',e.assignedInspector);}).join('')+(e.assignedInspector&&!inspectors.some(function(p){return p.name===e.assignedInspector;})?opt(e.assignedInspector,e.assignedInspector,e.assignedInspector):'')+'</select>')+
+    '</div></div>'+
+    '<div class="sec"><h3>Photos</h3><div class="grid2">'+
+      '<div><label>Site location</label>'+fileDrop('ph_site',true)+'</div>'+
+      '<div><label>Before start</label>'+fileDrop('ph_before',true)+'</div>'+
+      '<div><label>After install</label>'+fileDrop('ph_after',true)+'</div>'+
+      '<div><label>Defects (if any)</label>'+fileDrop('ph_defect',true)+'</div>'+
+    '</div><div class="hint">After-collection photos are added from the job detail when scaffold comes back.</div></div>'+
+    field('Handled by','<input id="f_handledBy" value="'+esc(e.handledBy||DB.currentUser)+'">')+
+    field('Remarks','<textarea id="f_remarks">'+esc(e.remarks)+'</textarea>');
+    var foot='<button class="ghost" type="button" onclick="App.closeModal()">Cancel</button><button class="btn" type="button" onclick="App.saveJob(\''+(id||'')+'\')">'+(id?'Save changes':'Create job')+'</button>';
+    App.openModal((id?'Edit job · '+esc(e.jobNo):'New job'), body, foot);
+    App._svcChange();
+  },
+  _svcChange:function(){ var v=document.getElementById('f_serviceType').value; var sc=document.getElementById('f_scope');
+    if(v==='GreenTag'){ sc.value='EndorseOnly'; sc.disabled=true; } else { sc.disabled=false; if(sc.value==='EndorseOnly') sc.value='Full'; } },
+  saveJob:function(id){
+    var g=function(k){var el=document.getElementById('f_'+k); return el?el.value:'';};
+    var p={ id:id||'', serviceType:g('serviceType'), scope:g('scope'), status:g('status'),
+      clientCompany:g('clientCompany'), clientPIC:g('clientPIC'), clientContact:g('clientContact'), clientEmail:g('clientEmail'), clientAddress:g('clientAddress'),
+      siteName:g('siteName'), siteAddress:g('siteAddress'), scaffoldDesc:g('scaffoldDesc'), thirdParty:g('thirdParty'),
+      peNo:g('peNo'), peEndorsedBy:g('peEndorsedBy'), peEndorsedDate:g('peEndorsedDate'),
+      startDate:g('startDate'), expectedEndDate:g('expectedEndDate'), actualReturnDate:g('actualReturnDate'),
+      greenTag:g('greenTag'), inspectIntervalDays:g('inspectIntervalDays'), assignedInspector:g('assignedInspector'),
+      handledBy:g('handledBy'), remarks:g('remarks'),
+      photoUploads:{ site:App._files.ph_site||[], before:App._files.ph_before||[], after:App._files.ph_after||[], defect:App._files.ph_defect||[] } };
+    act('saveEngagement',[p]);
+  },
+
+  /* ---------- JOB DETAIL ---------- */
+  openJobDetail:function(id){
+    var e=byId(DB.engagements,id); if(!e) return;
+    var charges=DB.charges.filter(function(c){return c.engagementId===id;});
+    var mats=DB.materials.filter(function(m){return m.engagementId===id;});
+    var ins=DB.inspections.filter(function(i){return i.engagementId===id;}).sort(function(a,b){return (b.inspectDate||'').localeCompare(a.inspectDate||'');});
+    var g=e.greenTagDue;
+
+    var body='<div class="row" style="margin-bottom:6px"><div><span class="tag svc">'+esc(SERVICE_LABEL[e.serviceType])+'</span> <span class="tag">'+esc(SCOPE_LABEL[e.scope]||e.scope)+'</span> '+pill(e.status)+'</div></div>';
+    body+='<table class="kv">'+
+      kv('Client', '<b>'+esc(e.clientCompany)+'</b>'+(e.clientPIC?' · '+esc(e.clientPIC):'')+(e.clientContact?' · '+esc(e.clientContact):'')+(e.clientEmail?' · '+esc(e.clientEmail):''))+
+      kv('Site', esc(e.siteName||'—')+(e.siteAddress?' · '+esc(e.siteAddress):''))+
+      kv('Scaffold', esc(e.scaffoldDesc||'—')+(e.thirdParty?' <span class="muted">(3rd-party: '+esc(e.thirdParty)+')</span>':''))+
+      kv('PE endorsement', esc(e.peNo||'—')+(e.peEndorsedBy?' by '+esc(e.peEndorsedBy):'')+(e.peEndorsedDate?' · '+esc(e.peEndorsedDate):''))+
+      kv('Period', esc(e.startDate||'—')+(e.expectedEndDate?' → '+esc(e.expectedEndDate):'')+(e.actualReturnDate?' · returned '+esc(e.actualReturnDate):''))+
+      kv('Handled by', esc(e.handledBy||'—'))+
+      (e.remarks?kv('Remarks', esc(e.remarks)):'')+
+    '</table>';
+
+    /* CHARGES */
+    body+='<div class="sec"><h3>Charges <button class="btn sm" style="float:right" onclick="App.openCharge(\''+id+'\')">+ Add charge</button></h3>';
+    if(!charges.length) body+='<div class="hint">No charges yet — add PE, rental, install, transport, dismantle, green tag…</div>';
+    else { body+='<table><thead><tr><th>Type</th><th>Description</th><th class="right">Qty</th><th class="right">Rate</th><th>Basis</th><th class="right">Amount</th><th></th></tr></thead><tbody>';
+      charges.forEach(function(c){ body+='<tr><td>'+esc(chargeLabel(c.type))+'</td><td class="muted">'+esc(c.description)+(c.invoiceId?' <span class="tag">billed</span>':'')+'</td>'+
+        '<td class="right">'+(c.qty||'')+'</td><td class="right">'+(c.rate?rm(c.rate):'')+'</td><td class="muted">'+esc(c.basis||'')+'</td><td class="right"><b>'+rm(c.amount)+'</b></td>'+
+        '<td class="right">'+(c.invoiceId?'':'<button class="ghost btn sm" onclick="App.openCharge(\''+id+'\',\''+c.id+'\')">✎</button> <button class="danger btn sm" onclick="App.delCharge(\''+c.id+'\')">×</button>')+'</td></tr>'; });
+      body+='</tbody></table><div class="totbar"><span class="muted">Total charges</span> <span class="big">'+rm(e.chargeTotal)+'</span></div>'; }
+    if(e.uninvoiced>0.005) body+='<div style="margin-top:8px"><button class="okbtn btn sm" onclick="App.invoiceFrom(\''+id+'\')">🧾 Invoice unbilled charges ('+rm(e.uninvoiced)+')</button></div>';
+    body+='</div>';
+
+    /* MATERIALS */
+    var matOut=mats.reduce(function(s,m){return s+Math.max(0,m.qtyOut-m.qtyReturned);},0);
+    body+='<div class="sec"><h3>Scaffold material — checkout &amp; return '+
+      '<span style="float:right"><button class="btn sm" onclick="App.openMaterialAdd(\''+id+'\')">+ Kit out</button> '+
+      (mats.length?'<button class="ghost btn sm" onclick="App.returnAll(\''+id+'\')">✓ Return all</button>':'')+'</span></h3>';
+    if(!mats.length) body+='<div class="hint">No material recorded. Use “Kit out” to record what goes to site.</div>';
+    else { body+='<table><thead><tr><th>Code</th><th>Item / spec</th><th class="right">Out</th><th class="right">Back</th><th class="right">Short</th><th class="right">Damage</th><th>Remarks</th><th></th></tr></thead><tbody>';
+      mats.forEach(function(m){ var sh=Math.max(0,m.qtyOut-m.qtyReturned);
+        body+='<tr><td>'+(m.code?'<span class="tag">'+esc(m.code)+'</span>':'—')+'</td><td><b>'+esc(m.item)+'</b>'+(m.spec&&m.spec!=='—'?'<br><span class="muted">'+esc(m.spec)+'</span>':'')+'</td><td class="right">'+m.qtyOut+' '+esc(m.unit)+'</td>'+
+        '<td class="right">'+m.qtyReturned+'</td><td class="right '+(sh>0?'short':'')+'">'+(sh||'✓')+'</td><td class="right">'+(m.damageQty||0)+(m.damageCharge?'<br>'+rm(m.damageCharge):'')+'</td>'+
+        '<td class="muted">'+esc(m.remarks||'')+'</td><td class="right"><button class="ghost btn sm" onclick="App.openMaterial(\''+id+'\',\''+m.id+'\')">✎</button></td></tr>'; });
+      body+='</tbody></table>';
+      body+='<div class="totbar"><span class="muted">'+(matOut>0?'<span class="short">'+matOut+' item(s) still out</span>':'All material returned ✓')+'</span></div>'; }
+    /* sign-off */
+    body+='<div class="grid2" style="margin-top:12px">'+
+      '<div class="card" style="margin:0"><b>Delivery sign-off</b><div class="hint">Client confirms what was delivered.</div>'+
+        (e.deliverySignName?'<div style="margin-top:6px">✅ '+esc(e.deliverySignName)+' · '+esc(e.deliverySignDate)+(e.deliverySignUrl?' · <a href="'+esc(e.deliverySignUrl)+'" target="_blank">signed↗</a>':'')+'</div>':'')+
+        '<button class="ghost btn sm" style="margin-top:8px" onclick="App.openSignoff(\''+id+'\',\'delivery\')">'+(e.deliverySignName?'Update':'Record sign-off')+'</button></div>'+
+      '<div class="card" style="margin:0"><b>Collection / return sign-off</b><div class="hint">Client confirms returned condition &amp; shortfall.</div>'+
+        (e.returnSignName?'<div style="margin-top:6px">✅ '+esc(e.returnSignName)+' · '+esc(e.returnSignDate)+(e.returnSignUrl?' · <a href="'+esc(e.returnSignUrl)+'" target="_blank">signed↗</a>':'')+'</div>':'')+
+        '<button class="ghost btn sm" style="margin-top:8px" onclick="App.openSignoff(\''+id+'\',\'return\')">'+(e.returnSignName?'Update':'Record sign-off')+'</button></div>'+
+    '</div></div>';
+
+    /* GREEN TAG */
+    body+='<div class="sec"><h3>Green tag inspections <button class="btn sm" style="float:right" onclick="App.openInspection(\''+id+'\')">+ Inspect</button></h3>';
+    if(g&&g.applies) body+='<div class="alert '+(g.days<0?'expired':'expiring')+'" style="cursor:default">🟢 '+(g.never?'First green tag due':(g.days<0?'OVERDUE '+(-g.days)+'d':'Next due '+esc(g.due)+' (in '+g.days+'d)'))+'</div>';
+    if(!ins.length) body+='<div class="hint">No inspections yet.</div>';
+    else { body+='<table><thead><tr><th>Date</th><th>Inspector</th><th>Result</th><th>Tag#</th><th>Findings</th></tr></thead><tbody>';
+      ins.forEach(function(i){ body+='<tr><td>'+esc(i.inspectDate)+'</td><td>'+esc(i.inspector)+'</td><td>'+pill(i.result)+'</td><td>'+esc(i.tagNo||'—')+'</td><td class="muted">'+esc(i.findings||'')+(i.photosUrl?' 📷':'')+(i.certUrl?' <a href="'+esc(i.certUrl)+'" target="_blank">cert↗</a>':'')+'</td></tr>'; });
+      body+='</tbody></table>'; }
+    body+='</div>';
+
+    /* PHOTOS */
+    body+='<div class="sec"><h3>Photos <button class="ghost btn sm" style="float:right" onclick="App.openCollectionPhotos(\''+id+'\')">+ Collection photos</button></h3>';
+    [['photosSite','Site'],['photosBefore','Before'],['photosAfter','After'],['photosCollection','Collection'],['photosDefect','Defect']].forEach(function(p){
+      if(e[p[0]]) body+='<div style="margin-bottom:6px"><span class="tag">'+p[1]+'</span>'+photoStrip(e[p[0]])+'</div>';
+    });
+    if(!e.photosSite&&!e.photosBefore&&!e.photosAfter&&!e.photosCollection&&!e.photosDefect) body+='<div class="hint">No photos yet.</div>';
+    body+='</div>';
+
+    var foot='<button class="danger" type="button" onclick="App.delJob(\''+id+'\')">Delete</button>'+
+      '<button class="ghost" type="button" onclick="App.printDossier(\''+id+'\')">🖨 Job sheet</button>'+
+      (['Active','Extension','OnHold'].indexOf(e.status)>=0?'<button class="okbtn btn" type="button" onclick="App.complete(\''+id+'\')">✓ Mark completed</button>':'')+
+      '<button class="ghost" type="button" onclick="App.openJob(\''+id+'\')">✎ Edit</button>'+
+      '<button class="btn" type="button" onclick="App.closeModal()">Done</button>';
+    App.openModal('Job '+esc(e.jobNo), body, foot);
+  },
+  complete:function(id){ if(confirm('Mark this job completed? (records actual return date)')) act('setEngagementStatus',[id,'Completed','']); },
+  delJob:function(id){ if(confirm('Delete this job and its charges/materials/inspections? Invoices must be removed first.')) act('deleteEngagement',[id]); },
+
+  /* ---------- CHARGE ---------- */
+  openCharge:function(engId,cid){
+    var c=cid?byId(DB.charges,cid):{type:'PE',qty:1,basis:''};
+    var body='<div class="row">'+
+      field('Type','<select id="c_type" onchange="App._chargeType()">'+CHARGE_TYPES.map(function(t){return opt(t[0],t[1],c.type);}).join('')+'</select>')+
+      field('Basis','<select id="c_basis">'+['','Day','Week','Month','Trip','Visit','Lump sum'].map(function(b){return opt(b,b||'—',c.basis);}).join('')+'</select>')+
+    '</div>'+field('Description','<input id="c_description" value="'+esc(c.description||'')+'" placeholder="e.g. 3 towers x 4 weeks">')+
+    '<div class="row">'+
+      field('Qty','<input id="c_qty" type="number" step="any" value="'+(c.qty||1)+'" oninput="App._chargeCalc()">')+
+      field('Rate (RM)','<input id="c_rate" type="number" step="any" value="'+(c.rate||'')+'" oninput="App._chargeCalc()">')+
+      field('Amount (RM)','<input id="c_amount" type="number" step="any" value="'+(c.amount||'')+'" oninput="this.dataset.auto=\'0\'">','Auto = qty × rate; override if needed')+
+    '</div>';
+    App.openModal((cid?'Edit charge':'Add charge'), body,
+      '<button class="ghost" type="button" onclick="App.closeModal()">Cancel</button><button class="btn" type="button" onclick="App.saveCharge(\''+engId+'\',\''+(cid||'')+'\')">Save</button>');
+    App._chargeCalc();
+  },
+  _chargeType:function(){ var t=document.getElementById('c_type').value; var basis=document.getElementById('c_basis');
+    if(t==='Rental'&&!basis.value) basis.value='Week'; if(t==='Transport'&&!basis.value) basis.value='Trip'; if(t==='GreenTag'&&!basis.value) basis.value='Visit'; },
+  _chargeCalc:function(){ var q=num(document.getElementById('c_qty').value), r=num(document.getElementById('c_rate').value), a=document.getElementById('c_amount');
+    if(!a.value || a.dataset.auto!=='0'){ a.value=(q*r).toFixed(2); a.dataset.auto='1'; } },
+  saveCharge:function(engId,cid){ var g=function(k){return document.getElementById('c_'+k).value;};
+    act('saveCharge',[{id:cid||'',engagementId:engId,type:g('type'),description:g('description'),qty:g('qty'),rate:g('rate'),amount:g('amount'),basis:g('basis')}]); },
+  delCharge:function(id){ if(confirm('Delete this charge?')) act('deleteCharge',[id]); },
+  invoiceFrom:function(id){ var pct=Math.round((DB.sstRate||0.06)*100); if(confirm('Create one invoice from all unbilled charges on this job?\n\nSST '+pct+'% will be added — you can toggle it off afterwards via the invoice → Edit / SST.')) act('invoiceFromCharges',[{engagementId:id,sstEnabled:true}]); },
+
+  /* ---------- MATERIAL ---------- */
+  openMaterialAdd:function(engId){
+    var cat=DB.catalogue;
+    var body='<div class="hint">Tick the HG scaffold material going to site and set the quantity. These start as “out”.</div>'+
+      '<table><thead><tr><th></th><th>Code</th><th>Item / spec</th><th>Unit</th><th class="right">Qty out</th></tr></thead><tbody>'+
+      cat.map(function(it,i){ return '<tr><td><input type="checkbox" id="m_chk_'+i+'" style="width:auto"></td>'+
+        '<td><span class="tag">'+esc(it.code)+'</span></td>'+
+        '<td><b>'+esc(it.item)+'</b>'+(it.spec&&it.spec!=='—'?'<br><span class="muted">'+esc(it.spec)+'</span>':'')+'</td>'+
+        '<td>'+esc(it.unit)+'</td>'+
+        '<td class="right"><input type="number" id="m_qty_'+i+'" value="0" style="width:80px;text-align:right"></td></tr>'; }).join('')+
+      '</tbody></table>'+
+      '<div class="row" style="margin-top:10px">'+field('Or add a custom item','<input id="m_custom" placeholder="item name">')+field('Spec','<input id="m_customspec" placeholder="e.g. 2.4m">')+field('Qty','<input id="m_customqty" type="number" value="0">')+field('Unit','<input id="m_customunit" value="pcs">')+'</div>';
+    App.openModal('Kit out — material to site', body,
+      '<button class="ghost" type="button" onclick="App.closeModal()">Cancel</button><button class="btn" type="button" onclick="App.saveKit(\''+engId+'\')">Add to job</button>');
+  },
+  saveKit:function(engId){
+    var cat=DB.catalogue, items=[];
+    cat.forEach(function(it,i){ var chk=document.getElementById('m_chk_'+i), q=num(document.getElementById('m_qty_'+i).value);
+      if(chk.checked && q>0) items.push({code:it.code,item:it.item,spec:it.spec,category:it.category,unit:it.unit,qtyOut:q}); });
+    var cust=document.getElementById('m_custom').value, cq=num(document.getElementById('m_customqty').value);
+    if(cust && cq>0) items.push({code:'',item:cust,spec:document.getElementById('m_customspec').value||'',category:'Custom',unit:document.getElementById('m_customunit').value||'pcs',qtyOut:cq});
+    if(!items.length){ toast('Tick at least one item with qty > 0', true); return; }
+    act('addMaterials',[engId,items]);
+  },
+  openMaterial:function(engId,mid){
+    var m=byId(DB.materials,mid);
+    var body='<div class="row">'+field('Code','<input id="mm_code" value="'+esc(m.code||'')+'">')+field('Item','<input id="mm_item" value="'+esc(m.item)+'">')+field('Spec','<input id="mm_spec" value="'+esc(m.spec||'')+'">')+field('Unit','<input id="mm_unit" value="'+esc(m.unit)+'">')+'</div>'+
+      '<div class="row">'+field('Qty out','<input id="mm_qtyOut" type="number" value="'+m.qtyOut+'">')+field('Qty returned','<input id="mm_qtyReturned" type="number" value="'+m.qtyReturned+'">')+'</div>'+
+      '<div class="row">'+field('Damaged qty','<input id="mm_damageQty" type="number" value="'+m.damageQty+'">')+field('Damage charge (RM)','<input id="mm_damageCharge" type="number" step="any" value="'+(m.damageCharge||'')+'">')+'</div>'+
+      field('Remarks','<input id="mm_remarks" value="'+esc(m.remarks||'')+'">');
+    App.openModal('Material — '+esc(m.item), body,
+      '<button class="danger" type="button" onclick="App.delMaterial(\''+mid+'\')">Delete</button>'+
+      '<button class="ghost" type="button" onclick="App.closeModal()">Cancel</button><button class="btn" type="button" onclick="App.saveMaterial(\''+engId+'\',\''+mid+'\')">Save</button>');
+  },
+  saveMaterial:function(engId,mid){ var g=function(k){return document.getElementById('mm_'+k).value;};
+    act('saveMaterial',[{id:mid,engagementId:engId,code:g('code'),item:g('item'),spec:g('spec'),unit:g('unit'),qtyOut:g('qtyOut'),qtyReturned:g('qtyReturned'),damageQty:g('damageQty'),damageCharge:g('damageCharge'),remarks:g('remarks')}]); },
+  delMaterial:function(id){ if(confirm('Delete this material line?')) act('deleteMaterial',[id]); },
+  returnAll:function(id){ if(confirm('Mark ALL material on this job as fully returned?')) act('returnAllMaterials',[id]); },
+
+  /* ---------- SIGN-OFF ---------- */
+  openSignoff:function(id,which){
+    var e=byId(DB.engagements,id);
+    var name=which==='delivery'?e.deliverySignName:e.returnSignName;
+    var date=(which==='delivery'?e.deliverySignDate:e.returnSignDate)||DB.today;
+    var mats=DB.materials.filter(function(m){return m.engagementId===id;});
+    var body='<div class="hint">'+(which==='delivery'?'Client confirms the material delivered (qty out below).':'Client confirms returned material &amp; any shortfall/damage.')+'</div>';
+    if(mats.length){ body+='<table><thead><tr><th>Code</th><th>Item / spec</th><th class="right">Out</th>'+(which==='return'?'<th class="right">Back</th><th class="right">Short</th>':'')+'</tr></thead><tbody>'+
+      mats.map(function(m){var sh=Math.max(0,m.qtyOut-m.qtyReturned);return '<tr><td>'+(m.code?'<span class="tag">'+esc(m.code)+'</span>':'')+'</td><td>'+esc(m.item)+(m.spec&&m.spec!=='—'?' <span class="muted">'+esc(m.spec)+'</span>':'')+'</td><td class="right">'+m.qtyOut+'</td>'+(which==='return'?'<td class="right">'+m.qtyReturned+'</td><td class="right '+(sh>0?'short':'')+'">'+(sh||'✓')+'</td>':'')+'</tr>';}).join('')+'</tbody></table>'; }
+    body+='<div class="row" style="margin-top:10px">'+field('Signed by (client name)','<input id="so_name" value="'+esc(name)+'">')+field('Date','<input id="so_date" type="date" value="'+esc(date)+'">')+'</div>'+
+      '<label>Signed document / photo (optional)</label>'+fileDrop('so_file',false,'image/*,application/pdf');
+    App.openModal((which==='delivery'?'Delivery':'Collection')+' sign-off · '+esc(e.jobNo), body,
+      '<button class="ghost" type="button" onclick="App.closeModal()">Cancel</button><button class="btn" type="button" onclick="App.saveSignoff(\''+id+'\',\''+which+'\')">Save sign-off</button>');
+  },
+  saveSignoff:function(id,which){ var f=(App._files.so_file||[])[0]||null;
+    act('saveSignoff',[{id:id,which:which,name:document.getElementById('so_name').value,date:document.getElementById('so_date').value,signFile:f}]); },
+  openCollectionPhotos:function(id){
+    var body='<label>After-collection photos (scaffold returned)</label>'+fileDrop('cp',true);
+    App.openModal('Add collection photos', body,
+      '<button class="ghost" type="button" onclick="App.closeModal()">Cancel</button><button class="btn" type="button" onclick="App.saveCollectionPhotos(\''+id+'\')">Upload</button>');
+  },
+  saveCollectionPhotos:function(id){ var e=byId(DB.engagements,id);
+    act('saveEngagement',[{id:id, serviceType:e.serviceType, clientCompany:e.clientCompany, startDate:e.startDate, photoUploads:{collection:App._files.cp||[]}}]); },
+
+  /* ---------- INSPECTION ---------- */
+  openInspection:function(engId,iid){
+    var e=byId(DB.engagements,engId);
+    var i=iid?byId(DB.inspections,iid):{result:'Green',inspectDate:DB.today,inspector:e&&e.assignedInspector||'',nextDueDate:''};
+    var inspectors=DB.personnel.filter(function(p){return p.certType==='ScaffoldInspector'||p.certType==='ScaffoldErector';});
+    var body='<div class="row">'+
+      field('Date','<input id="i_inspectDate" type="date" value="'+esc(i.inspectDate)+'">')+
+      field('Result','<select id="i_result">'+['Green','Red','Hold'].map(function(r){return opt(r,r==='Green'?'🟢 Green (safe to use)':(r==='Red'?'🔴 Red (do not use)':'🟡 Hold'),i.result);}).join('')+'</select>')+
+      field('Tag #','<input id="i_tagNo" value="'+esc(i.tagNo||'')+'">')+
+    '</div><div class="row">'+
+      field('Inspector','<input id="i_inspector" list="insList" value="'+esc(i.inspector)+'"><datalist id="insList">'+inspectors.map(function(p){return '<option value="'+esc(p.name)+'">';}).join('')+'</datalist>')+
+      field('Inspector cert #','<input id="i_inspectorCertNo" value="'+esc(i.inspectorCertNo||'')+'">')+
+      field('Next due','<input id="i_nextDueDate" type="date" value="'+esc(i.nextDueDate||'')+'">','Blank = +interval')+
+    '</div>'+field('Findings / remarks','<textarea id="i_findings">'+esc(i.findings||'')+'</textarea>')+
+    '<div class="grid2"><div><label>Inspection photos</label>'+fileDrop('i_photos',true)+'</div>'+
+    '<div><label>Signed green-tag cert (optional)</label>'+fileDrop('i_cert',false,'image/*,application/pdf')+'</div></div>';
+    App.openModal((iid?'Edit inspection':'Green tag inspection')+(e?' · '+esc(e.jobNo):''), body,
+      (iid?'<button class="danger" type="button" onclick="App.delInspection(\''+iid+'\')">Delete</button>':'')+
+      '<button class="ghost" type="button" onclick="App.closeModal()">Cancel</button><button class="btn" type="button" onclick="App.saveInspection(\''+engId+'\',\''+(iid||'')+'\')">Save</button>');
+  },
+  saveInspection:function(engId,iid){ var g=function(k){return document.getElementById('i_'+k).value;};
+    act('saveInspection',[{id:iid||'',engagementId:engId,inspectDate:g('inspectDate'),result:g('result'),tagNo:g('tagNo'),
+      inspector:g('inspector'),inspectorCertNo:g('inspectorCertNo'),nextDueDate:g('nextDueDate'),findings:g('findings'),
+      photoFiles:App._files.i_photos||[], certFile:(App._files.i_cert||[])[0]||null}]); },
+  delInspection:function(id){ if(confirm('Delete this inspection?')) act('deleteInspection',[id]); },
+
+  /* ---------- INVOICE ---------- */
+  openInvoice:function(id){
+    var inv=id?byId(DB.invoices,id):{invDate:DB.today,sstEnabled:true};
+    var pct=Math.round((DB.sstRate||0.06)*100);
+    var jobs=DB.engagements.slice().sort(function(a,b){return (b.createdAt||'').localeCompare(a.createdAt||'');});
+    var sstSel=(inv.sstEnabled?'1':'0');
+    var body='<div class="row">'+
+      field('Link to job (optional)','<select id="iv_engagementId" onchange="App._invJob()"><option value="">— none —</option>'+jobs.map(function(e){return opt(e.id,e.jobNo+' · '+e.clientCompany,inv.engagementId);}).join('')+'</select>')+
+      field('Invoice no. *','<input id="iv_invNo" value="'+esc(inv.invNo||'')+'">','Type your number, or leave to auto')+
+    '</div><div class="row">'+
+      field('Client *','<input id="iv_clientCompany" value="'+esc(inv.clientCompany||'')+'">')+
+      field('Invoice date *','<input id="iv_invDate" type="date" value="'+esc(inv.invDate||DB.today)+'">')+
+      field('Due date','<input id="iv_dueDate" type="date" value="'+esc(inv.dueDate||'')+'">')+
+    '</div>'+field('Description','<textarea id="iv_description">'+esc(inv.description||'')+'</textarea>')+
+    '<div class="row">'+field('Amount (RM, ex-SST) *','<input id="iv_amount" type="number" step="any" value="'+(inv.amount||'')+'" oninput="App._invTot()">')+
+      field('SST '+pct+'%','<select id="iv_sst" onchange="App._invTot()">'+opt('1','Add '+pct+'% SST',sstSel)+opt('0','No SST (exempt)',sstSel)+'</select>','Toggle off for B2B-exempt. Default rate in ⚙ Settings.')+
+      field('Total','<input id="iv_total" readonly value="">')+'</div>'+
+    '<label>Attach invoice PDF (optional)</label>'+fileDrop('iv_file',false,'application/pdf,image/*');
+    App.openModal((id?'Edit invoice · '+esc(inv.invNo):'New invoice'), body,
+      '<button class="ghost" type="button" onclick="App.closeModal()">Cancel</button><button class="btn" type="button" onclick="App.saveInvoice(\''+(id||'')+'\')">'+(id?'Save changes':'Create invoice')+'</button>');
+    App._invTot();
+  },
+  _invJob:function(){ var id=document.getElementById('iv_engagementId').value; var e=byId(DB.engagements,id); if(e){ document.getElementById('iv_clientCompany').value=e.clientCompany; } },
+  _invTot:function(){ var a=num(document.getElementById('iv_amount').value); var sst=document.getElementById('iv_sst').value==='1'; document.getElementById('iv_total').value=(a*(1+(sst?(DB.sstRate||0.06):0))).toFixed(2); },
+  saveInvoice:function(id){ var g=function(k){return document.getElementById('iv_'+k).value;};
+    act('saveInvoice',[{id:id||'',engagementId:g('engagementId'),invNo:g('invNo'),clientCompany:g('clientCompany'),invDate:g('invDate'),dueDate:g('dueDate'),
+      description:g('description'),amount:g('amount'),sstEnabled:g('sst'),file:(App._files.iv_file||[])[0]||null}]); },
+  openInvoiceDetail:function(id){
+    var i=byId(DB.invoices,id); if(!i) return;
+    var pays=DB.payments.filter(function(p){return p.invoiceId===id;}).sort(function(a,b){return (b.payDate||'').localeCompare(a.payDate||'');});
+    var e=i.engagementId?byId(DB.engagements,i.engagementId):null;
+    var body='<table class="kv">'+kv('Client',esc(i.clientCompany)+(e?' · Job '+esc(e.jobNo):''))+kv('Date',esc(i.invDate)+(i.dueDate?' · due '+esc(i.dueDate):''))+
+      kv('Amount',rm(i.amount)+(i.sstEnabled?' + SST '+rm(i.sstAmount):' (no SST)'))+kv('Total','<b>'+rm(i.total)+'</b>')+
+      kv('Paid',rm(i.amountPaid))+kv('Balance','<b>'+rm(i.balance)+'</b> '+pill(i.overdue?'Overdue':i.payStatus))+
+      (i.description?kv('Description','<span class="muted" style="white-space:pre-wrap">'+esc(i.description)+'</span>'):'')+
+      (i.fileUrl?kv('File','<a href="'+esc(i.fileUrl)+'" target="_blank">open ↗</a>'):'')+'</table>';
+    body+='<div class="sec"><h3>Payments <button class="btn sm" style="float:right" onclick="App.openPayment(\''+id+'\')">+ Record payment</button></h3>';
+    if(!pays.length) body+='<div class="hint">No payments recorded.</div>';
+    else { body+='<table><thead><tr><th>Date</th><th class="right">Amount</th><th>Method</th><th>Ref</th><th>By</th><th></th></tr></thead><tbody>';
+      pays.forEach(function(p){ body+='<tr><td>'+esc(p.payDate)+'</td><td class="right">'+rm(p.amount)+'</td><td>'+esc(p.method||'—')+'</td><td class="muted">'+esc(p.reference||'')+'</td><td class="muted">'+esc(p.receivedBy||'')+'</td><td class="right"><button class="danger btn sm" onclick="App.delPayment(\''+p.id+'\')">×</button></td></tr>'; });
+      body+='</tbody></table>'; }
+    body+='</div>';
+    App.openModal('Invoice '+esc(i.invNo), body,
+      (i.payStatus!=='Void'&&!pays.length?'<button class="danger" type="button" onclick="App.voidInvoice(\''+id+'\')">Void</button>':'')+
+      (i.payStatus!=='Void'?'<button class="ghost" type="button" onclick="App.openInvoice(\''+id+'\')">✎ Edit / SST</button>':'')+
+      '<button class="ghost" type="button" onclick="App.printInvoice(\''+id+'\')">🖨 Print</button>'+
+      '<button class="btn" type="button" onclick="App.closeModal()">Done</button>');
+  },
+  voidInvoice:function(id){ var r=prompt('Void reason?'); if(r!==null) act('voidInvoice',[id,r]); },
+  openPayment:function(invId){
+    var body='<div class="row">'+field('Amount (RM) *','<input id="pp_amount" type="number" step="any" value="">')+field('Date','<input id="pp_payDate" type="date" value="'+DB.today+'">')+'</div>'+
+      '<div class="row">'+field('Method','<select id="pp_method">'+['','Bank transfer','Cheque','Cash','Online','Other'].map(function(m){return opt(m,m||'—','');}).join('')+'</select>')+field('Reference','<input id="pp_reference" value="">')+'</div>';
+    App.openModal('Record payment', body,
+      '<button class="ghost" type="button" onclick="App.closeModal()">Cancel</button><button class="btn" type="button" onclick="App.savePayment(\''+invId+'\')">Save payment</button>');
+  },
+  savePayment:function(invId){ var g=function(k){return document.getElementById('pp_'+k).value;};
+    act('recordPayment',[{invoiceId:invId,amount:g('amount'),payDate:g('payDate'),method:g('method'),reference:g('reference')}]); },
+  delPayment:function(id){ if(confirm('Delete this payment?')) act('deletePayment',[id]); },
+
+  /* ---------- PERSONNEL ---------- */
+  openPerson:function(id){
+    var p=id?byId(DB.personnel,id):{certType:'ScaffoldInspector'};
+    var body='<div class="row">'+field('Name *','<input id="pe_name" value="'+esc(p.name||'')+'">')+field('Role','<input id="pe_role" value="'+esc(p.role||'')+'" placeholder="e.g. Site supervisor">')+'</div>'+
+      '<div class="row">'+field('Certification *','<select id="pe_certType">'+CERT_TYPES.map(function(t){return opt(t,CERT_LABEL[t],p.certType);}).join('')+'</select>')+field('Cert #','<input id="pe_certNo" value="'+esc(p.certNo||'')+'">')+'</div>'+
+      '<div class="row">'+field('Issued','<input id="pe_issuedDate" type="date" value="'+esc(p.issuedDate||'')+'">')+field('Expiry','<input id="pe_expiryDate" type="date" value="'+esc(p.expiryDate||'')+'">')+field('Contact','<input id="pe_contact" value="'+esc(p.contact||'')+'">')+'</div>'+
+      field('Remarks','<input id="pe_remarks" value="'+esc(p.remarks||'')+'">');
+    App.openModal((id?'Edit person':'Add person'), body,
+      (id?'<button class="danger" type="button" onclick="App.delPerson(\''+id+'\')">Delete</button>':'')+
+      '<button class="ghost" type="button" onclick="App.closeModal()">Cancel</button><button class="btn" type="button" onclick="App.savePerson(\''+(id||'')+'\')">Save</button>');
+  },
+  savePerson:function(id){ var g=function(k){return document.getElementById('pe_'+k).value;};
+    act('savePerson',[{id:id||'',name:g('name'),role:g('role'),certType:g('certType'),certNo:g('certNo'),issuedDate:g('issuedDate'),expiryDate:g('expiryDate'),contact:g('contact'),remarks:g('remarks')}]); },
+  delPerson:function(id){ if(confirm('Delete this person?')) act('deletePerson',[id]); },
+
+  /* ---------- SETTINGS ---------- */
+  openSettings:function(){
+    var c=DB.config;
+    var body='<div class="sec"><h3>Company (printed on invoices)</h3>'+
+      '<div class="row">'+field('Company name','<input id="s_COMPANY_NAME" value="'+esc(c.COMPANY_NAME)+'">')+field('Reg no.','<input id="s_COMPANY_REG" value="'+esc(c.COMPANY_REG)+'">')+'</div>'+
+      field('Address','<input id="s_COMPANY_ADDRESS" value="'+esc(c.COMPANY_ADDRESS)+'">')+
+      '<div class="row">'+field('Phone','<input id="s_COMPANY_PHONE" value="'+esc(c.COMPANY_PHONE)+'">')+field('SST no.','<input id="s_SST_NO" value="'+esc(c.SST_NO)+'">')+field('SST rate (%)','<input id="s_SST_RATE_PCT" type="number" step="any" value="'+esc(c.SST_RATE_PCT)+'">','Default for new invoices. 0 = none. Toggle per invoice too.')+'</div></div>'+
+    '<div class="sec"><h3>Reminders &amp; numbering</h3>'+
+      field('Reminder email (ops inbox)','<input id="s_REMINDER_TO" value="'+esc(c.REMINDER_TO)+'">','Green-tag, overdue-invoice & cert alerts go here daily ~7am')+
+      '<div class="row">'+field('Green tag interval (days)','<input id="s_GREENTAG_INTERVAL_DAYS" value="'+esc(c.GREENTAG_INTERVAL_DAYS)+'">')+field('Collection due window (days)','<input id="s_COLLECTION_DUE_SOON_DAYS" value="'+esc(c.COLLECTION_DUE_SOON_DAYS)+'">','Flag material to collect this many days before return date')+field('Cert warn (days)','<input id="s_CERT_EXPIRY_WARN_DAYS" value="'+esc(c.CERT_EXPIRY_WARN_DAYS)+'">')+field('Invoice terms (days)','<input id="s_INVOICE_TERMS_DAYS" value="'+esc(c.INVOICE_TERMS_DAYS)+'">')+'</div>'+
+      '<div class="row">'+field('Invoice prefix','<input id="s_INVOICE_PREFIX" value="'+esc(c.INVOICE_PREFIX)+'">')+field('Job prefix','<input id="s_JOB_PREFIX" value="'+esc(c.JOB_PREFIX)+'">')+'</div></div>';
+    App.openModal('Settings', body,
+      '<button class="ghost" type="button" onclick="App.closeModal()">Cancel</button><button class="btn" type="button" onclick="App.saveSettings()">Save settings</button>');
+  },
+  saveSettings:function(){
+    var keys=['COMPANY_NAME','COMPANY_REG','COMPANY_ADDRESS','COMPANY_PHONE','SST_NO','SST_RATE_PCT','REMINDER_TO','GREENTAG_INTERVAL_DAYS','COLLECTION_DUE_SOON_DAYS','CERT_EXPIRY_WARN_DAYS','INVOICE_TERMS_DAYS','INVOICE_PREFIX','JOB_PREFIX'];
+    var o={}; keys.forEach(function(k){ o[k]=document.getElementById('s_'+k).value; }); act('saveConfig',[o]);
+  },
+
+  /* ---------- PRINT ---------- */
+  printDossier:function(id){
+    google.script.run.withSuccessHandler(function(d){ App._printJob(d); }).withFailureHandler(function(e){toast(e.message,true);}).getJobDossier(id);
+  },
+  _printJob:function(d){
+    var e=d.engagement, c=d.config;
+    var w=window.open('','_blank');
+    var rowsCharge=d.charges.map(function(x){return '<tr><td>'+chargeLabel(x.type)+'</td><td>'+esc(x.description)+'</td><td style="text-align:right">'+rm(x.amount)+'</td></tr>';}).join('');
+    var rowsMat=d.materials.map(function(m){var sh=Math.max(0,m.qtyOut-m.qtyReturned);return '<tr><td>'+esc(m.code||'')+'</td><td>'+esc(m.item)+(m.spec&&m.spec!=='—'?' <span style="color:#666">'+esc(m.spec)+'</span>':'')+'</td><td style="text-align:right">'+m.qtyOut+' '+esc(m.unit)+'</td><td style="text-align:right">'+m.qtyReturned+'</td><td style="text-align:right">'+(sh||'-')+'</td><td>'+esc(m.remarks||'')+'</td></tr>';}).join('');
+    var rowsIns=d.inspections.map(function(i){return '<tr><td>'+esc(i.inspectDate)+'</td><td>'+esc(i.inspector)+'</td><td>'+esc(i.result)+'</td><td>'+esc(i.tagNo||'')+'</td><td>'+esc(i.findings||'')+'</td></tr>';}).join('');
+    w.document.write('<html><head><title>Job '+esc(e.jobNo)+'</title><style>body{font-family:Arial;margin:30px;color:#111;font-size:13px}h1{font-size:20px;margin:0}h2{font-size:13px;text-transform:uppercase;color:#666;border-bottom:1px solid #ccc;padding-bottom:4px;margin-top:22px}table{width:100%;border-collapse:collapse;margin-top:6px}td,th{border:1px solid #ccc;padding:6px;text-align:left}.sig{margin-top:30px;display:flex;gap:40px}.sig div{flex:1;border-top:1px solid #333;padding-top:6px;font-size:12px}</style></head><body>'+
+      '<h1>'+esc(c.COMPANY_NAME||'HG Group')+'</h1><div>'+esc(c.COMPANY_ADDRESS||'')+(c.COMPANY_PHONE?' · '+esc(c.COMPANY_PHONE):'')+'</div>'+
+      '<h2>Scaffold job sheet — '+esc(e.jobNo)+'</h2>'+
+      '<table><tr><td><b>Client</b></td><td>'+esc(e.clientCompany)+' '+esc(e.clientPIC?'('+e.clientPIC+')':'')+'</td><td><b>Service</b></td><td>'+esc(SERVICE_LABEL[e.serviceType])+'</td></tr>'+
+      '<tr><td><b>Site</b></td><td>'+esc(e.siteName||'')+' '+esc(e.siteAddress||'')+'</td><td><b>Period</b></td><td>'+esc(e.startDate||'')+' → '+esc(e.expectedEndDate||'')+'</td></tr>'+
+      '<tr><td><b>Scaffold</b></td><td colspan="3">'+esc(e.scaffoldDesc||'')+'</td></tr>'+
+      '<tr><td><b>PE endorsement</b></td><td>'+esc(e.peNo||'')+' '+esc(e.peEndorsedBy?'by '+e.peEndorsedBy:'')+'</td><td><b>Handled by</b></td><td>'+esc(e.handledBy||'')+'</td></tr></table>'+
+      (rowsCharge?'<h2>Charges</h2><table><tr><th>Type</th><th>Description</th><th style="text-align:right">Amount</th></tr>'+rowsCharge+'</table>':'')+
+      (rowsMat?'<h2>Material checkout / return</h2><table><tr><th>Code</th><th>Item / spec</th><th style="text-align:right">Out</th><th style="text-align:right">Returned</th><th style="text-align:right">Short</th><th>Remarks</th></tr>'+rowsMat+'</table>':'')+
+      (rowsIns?'<h2>Green tag inspections</h2><table><tr><th>Date</th><th>Inspector</th><th>Result</th><th>Tag#</th><th>Findings</th></tr>'+rowsIns+'</table>':'')+
+      '<div class="sig"><div>HG representative<br><br>Name &amp; date</div><div>Client acknowledgement<br><br>Name &amp; date</div></div>'+
+      '<script>window.print()<\/script></body></html>');
+    w.document.close();
+  },
+  printInvoice:function(id){
+    google.script.run.withSuccessHandler(function(d){ App._printInv(d); }).withFailureHandler(function(e){toast(e.message,true);}).getInvoiceData(id);
+  },
+  _printInv:function(d){
+    var i=d.invoice, c=d.config, e=d.engagement||{};
+    var w=window.open('','_blank');
+    var lines=(d.charges&&d.charges.length)?d.charges.map(function(x){return '<tr><td>'+chargeLabel(x.type)+(x.description?' — '+esc(x.description):'')+'</td><td style="text-align:right">'+rm(x.amount)+'</td></tr>';}).join(''):'<tr><td>'+esc(i.description||'Scaffold services')+'</td><td style="text-align:right">'+rm(i.amount)+'</td></tr>';
+    var pays=d.payments.map(function(p){return '<tr><td>'+esc(p.payDate)+'</td><td>'+esc(p.method||'')+'</td><td style="text-align:right">'+rm(p.amount)+'</td></tr>';}).join('');
+    w.document.write('<html><head><title>Invoice '+esc(i.invNo)+'</title><style>body{font-family:Arial;margin:34px;color:#111;font-size:13px}h1{font-size:22px;margin:0}.r{text-align:right}table{width:100%;border-collapse:collapse;margin-top:10px}td,th{border:1px solid #ccc;padding:7px}.tot td{font-weight:bold}.muted{color:#666;font-size:12px}</style></head><body>'+
+      '<div style="display:flex;justify-content:space-between"><div><h1>'+esc(c.COMPANY_NAME||'HG Group')+'</h1><div class="muted">'+esc(c.COMPANY_ADDRESS||'')+'<br>'+esc(c.COMPANY_PHONE||'')+(c.COMPANY_REG?' · Reg '+esc(c.COMPANY_REG):'')+(c.SST_NO?' · SST '+esc(c.SST_NO):'')+'</div></div>'+
+      '<div class="r"><h1>TAX INVOICE</h1><div><b>'+esc(i.invNo)+'</b><br>Date: '+esc(i.invDate)+'<br>Due: '+esc(i.dueDate||'-')+'</div></div></div>'+
+      '<table><tr><td><b>Bill to</b><br>'+esc(i.clientCompany)+'<br><span class="muted">'+esc(e.siteName||'')+'</span></td><td><b>Job</b><br>'+esc(e.jobNo||'-')+'<br><span class="muted">'+esc(SERVICE_LABEL[e.serviceType]||'')+'</span></td></tr></table>'+
+      '<table><tr><th>Description</th><th class="r">Amount (RM)</th></tr>'+lines+
+      '<tr><td class="r">Subtotal</td><td class="r">'+rm(i.amount)+'</td></tr>'+
+      (i.sstEnabled?'<tr><td class="r">SST '+(i.amount>0?Math.round(i.sstAmount/i.amount*100):Math.round((d.sstRate||0.06)*100))+'%</td><td class="r">'+rm(i.sstAmount)+'</td></tr>':'')+
+      '<tr class="tot"><td class="r">TOTAL</td><td class="r">'+rm(i.total)+'</td></tr>'+
+      (i.amountPaid>0?'<tr><td class="r">Paid</td><td class="r">'+rm(i.amountPaid)+'</td></tr><tr class="tot"><td class="r">BALANCE</td><td class="r">'+rm(i.balance)+'</td></tr>':'')+'</table>'+
+      (pays?'<h3>Payments</h3><table><tr><th>Date</th><th>Method</th><th class="r">Amount</th></tr>'+pays+'</table>':'')+
+      '<p class="muted" style="margin-top:30px">Thank you. Please quote the invoice number on payment.</p>'+
+      '<script>window.print()<\/script></body></html>');
+    w.document.close();
+  },
+  printReport:function(){
+    var r=buildReport(window._rep||'revenue'); var w=window.open('','_blank');
+    w.document.write('<html><head><title>'+esc(r.title)+'</title><style>body{font-family:Arial;margin:30px;color:#111;font-size:12px}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin-top:10px}td,th{border:1px solid #ccc;padding:6px;text-align:left}</style></head><body><h1>'+esc((DB.config.COMPANY_NAME||'HG')+' — '+r.title)+'</h1><div>'+esc(r.summary)+' · '+esc(DB.today)+'</div><table><tr>'+r.head.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr>'+r.rows.map(function(row){return '<tr>'+row.map(function(c){return '<td>'+esc(c)+'</td>';}).join('')+'</tr>';}).join('')+'</table><script>window.print()<\/script></body></html>');
+    w.document.close();
+  },
+  csvReport:function(){
+    var r=buildReport(window._rep||'revenue');
+    var csv=[r.head].concat(r.rows).map(function(row){return row.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+    var a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download=(window._rep||'report')+'-'+DB.today+'.csv'; a.click();
+  }
+};
+function kv(k,v){ return '<tr><td class="k">'+k+'</td><td>'+v+'</td></tr>'; }
+function chargeLabel(t){ for(var i=0;i<CHARGE_TYPES.length;i++) if(CHARGE_TYPES[i][0]===t) return CHARGE_TYPES[i][1]; return t; }
+</script>
+</body>
+</html>
