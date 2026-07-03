@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>HG Group — Master Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root {
     --bg: #0a0e1a;
@@ -458,6 +459,7 @@
     const t = CATS[ci].tools[ti];
     if (t.file) {
       CURRENT = { ci, ti };
+      try { localStorage.setItem("hg_last_tool", JSON.stringify({ ci, ti })); } catch (e) {}
       document.getElementById("homeView").style.display = "none";
       document.getElementById("toolView").style.display = "block";
       const fr = document.getElementById("toolFrame");
@@ -643,8 +645,34 @@
   document.getElementById("cloudModal").addEventListener("click", e => { if (e.target.id === "cloudModal") closeCloudManager(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape") closeCloudManager(); });
 
+  /* ── OAuth return handler ──
+     After Google sign-in, Supabase sends the token back to THIS hub page
+     (the tools sign in from inside an iframe; Google can't run in a frame,
+     so the top window handles the callback). We consume the token here using
+     the Supabase URL+key the user already saved when connecting a tool. That
+     stores the session in this browser — shared with every tool on this domain
+     — then we reopen the tool they were signing into, now logged in. */
+  async function handleAuthReturn() {
+    if (location.hash.indexOf("access_token") < 0) return;
+    const url = localStorage.getItem("hg_supabase_url");
+    const key = localStorage.getItem("hg_supabase_key");
+    if (url && key && window.supabase) {
+      try {
+        const c = window.supabase.createClient(url, key);   // auto-detects token in URL, stores session
+        await new Promise(r => setTimeout(r, 600));
+        await c.auth.getSession();                           // ensure it's persisted
+      } catch (e) {}
+    }
+    history.replaceState(null, "", location.pathname + location.search);  // strip #access_token
+    toast("Signed in ✓ — opening your tool…");
+    let last = null;
+    try { last = JSON.parse(localStorage.getItem("hg_last_tool") || "null"); } catch (e) {}
+    if (last && CATS[last.ci] && CATS[last.ci].tools[last.ti]) openTool(last.ci, last.ti);
+  }
+
   renderSidebar();
   renderCatalog();
+  handleAuthReturn();
 </script>
 </body>
 </html>
