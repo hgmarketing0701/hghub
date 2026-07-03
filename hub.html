@@ -216,6 +216,31 @@
   }
   #toast.show { transform: translateX(-50%) translateY(0); }
 
+  /* ═══════════ LOGIN GATE ═══════════ */
+  .gate { position: fixed; inset: 0; z-index: 2000; display: none; align-items: center; justify-content: center;
+    padding: 24px; background: var(--bg); }
+  .gate.show { display: flex; }
+  .gate-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    max-width: 430px; width: 100%; text-align: center; padding: 38px 32px; box-shadow: var(--shadow); }
+  .gate-logo { width: 62px; height: 62px; margin: 0 auto 18px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 6px 20px rgba(245,158,11,0.25); }
+  .gate-logo img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
+  .gate-card h2 { font-size: 1.3rem; font-weight: 800; }
+  .gate-card p { color: var(--text-dim); font-size: 0.88rem; margin: 8px 0 4px; }
+  .gate-card label { display: block; text-align: left; font-size: 0.74rem; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; margin: 14px 0 5px; }
+  .gate-card input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    border-radius: 9px; padding: 11px 13px; font-size: 0.92rem; font-family: inherit; }
+  .gate-card input:focus { outline: none; border-color: var(--accent); }
+  .gate-msg { font-size: 0.84rem; min-height: 20px; margin-top: 10px; }
+  .gate-msg.err { color: #f87171; } .gate-msg.ok { color: var(--green); }
+  .gate-btn { width: 100%; margin-top: 16px; border: none; border-radius: 10px; padding: 13px;
+    font-weight: 700; font-size: 0.95rem; cursor: pointer; font-family: inherit; }
+  .gate-btn.primary { background: var(--accent); color: #0a0e1a; }
+  .gate-btn.google { background: #fff; color: #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .gate-btn.ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+
   /* ═══════════ MOBILE ═══════════ */
   @media (max-width: 860px) {
     aside { position: fixed; z-index: 900; transform: translateX(-100%); box-shadow: var(--shadow); }
@@ -228,7 +253,46 @@
 </head>
 <body>
 
-<div class="shell">
+<!-- ═══════════ GATE 0 · CONNECT SUPABASE ═══════════ -->
+<div class="gate" id="gateConfig">
+  <div class="gate-card">
+    <div class="gate-logo"><img src="hg-logo.png" alt="HG" /></div>
+    <h2>Connect to Supabase</h2>
+    <p>One-time setup. Find both in <b>Supabase → Project Settings → API</b>.</p>
+    <label>Project URL</label>
+    <input id="cfgUrl" placeholder="https://xxxx.supabase.co" autocomplete="off" />
+    <label>Anon / public key</label>
+    <input id="cfgKey" placeholder="eyJhbGci… or sb_publishable_…" autocomplete="off" />
+    <div id="cfgMsg" class="gate-msg"></div>
+    <button class="gate-btn primary" onclick="saveConfig()">Connect</button>
+  </div>
+</div>
+
+<!-- ═══════════ GATE 1 · LOGIN ═══════════ -->
+<div class="gate" id="gateLogin">
+  <div class="gate-card">
+    <div class="gate-logo"><img src="hg-logo.png" alt="HG" /></div>
+    <h2>HG Group — Tools</h2>
+    <p>Sign in with the Google account your admin has allowlisted.</p>
+    <button class="gate-btn google" onclick="hubSignIn()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41 35.3 44 30.1 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+      Sign in with Google
+    </button>
+    <div id="loginMsg" class="gate-msg"></div>
+  </div>
+</div>
+
+<!-- ═══════════ GATE 2 · NOT ALLOWLISTED ═══════════ -->
+<div class="gate" id="gateDenied">
+  <div class="gate-card">
+    <div class="gate-logo">🔒</div>
+    <h2>Not authorised</h2>
+    <p><span id="deniedEmail"></span> is not on the access list. Ask your admin to add you under any tool's <b>Settings → Team access</b>.</p>
+    <button class="gate-btn ghost" onclick="hubSignOut()">Use a different account</button>
+  </div>
+</div>
+
+<div class="shell" id="shell" style="display:none;">
 
   <!-- ═══════════ SIDEBAR (the directory) ═══════════ -->
   <aside id="sidebar">
@@ -246,7 +310,10 @@
       </div>
     </div>
     <div class="sb-nav" id="sbNav"></div>
-    <div class="sb-foot"><button onclick="openCloudManager()">⚙ Cloud app links</button></div>
+    <div class="sb-foot" style="display:flex; gap:8px;">
+      <button onclick="openCloudManager()" style="flex:1;">⚙ Cloud links</button>
+      <button onclick="hubSignOut()" style="flex:0 0 auto;" title="Sign out">Sign out</button>
+    </div>
   </aside>
 
   <!-- ═══════════ CONTENT ═══════════ -->
@@ -645,34 +712,74 @@
   document.getElementById("cloudModal").addEventListener("click", e => { if (e.target.id === "cloudModal") closeCloudManager(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape") closeCloudManager(); });
 
-  /* ── OAuth return handler ──
-     After Google sign-in, Supabase sends the token back to THIS hub page
-     (the tools sign in from inside an iframe; Google can't run in a frame,
-     so the top window handles the callback). We consume the token here using
-     the Supabase URL+key the user already saved when connecting a tool. That
-     stores the session in this browser — shared with every tool on this domain
-     — then we reopen the tool they were signing into, now logged in. */
-  async function handleAuthReturn() {
-    if (location.hash.indexOf("access_token") < 0) return;
-    const url = localStorage.getItem("hg_supabase_url");
-    const key = localStorage.getItem("hg_supabase_key");
-    if (url && key && window.supabase) {
-      try {
-        const c = window.supabase.createClient(url, key);   // auto-detects token in URL, stores session
-        await new Promise(r => setTimeout(r, 600));
-        await c.auth.getSession();                           // ensure it's persisted
-      } catch (e) {}
-    }
-    history.replaceState(null, "", location.pathname + location.search);  // strip #access_token
-    toast("Signed in ✓ — opening your tool…");
-    let last = null;
-    try { last = JSON.parse(localStorage.getItem("hg_last_tool") || "null"); } catch (e) {}
-    if (last && CATS[last.ci] && CATS[last.ci].tools[last.ti]) openTool(last.ci, last.ti);
+  /* ════════════════ HUB AUTH GATE ════════════════
+     The HUB is the single front door: connect once, sign in once, then the
+     directory appears and every tool opens already logged-in (the session is
+     shared with all tools on this domain via the browser). No per-tool login. */
+  let SB = null;              // hub's supabase client
+  let RENDERED = false;
+
+  function showGate(id) {
+    document.getElementById("shell").style.display = "none";
+    ["gateConfig", "gateLogin", "gateDenied"].forEach(g =>
+      document.getElementById(g).classList.toggle("show", g === id));
+  }
+  function gateMsg(id, t, ok) {
+    const m = document.getElementById(id); m.textContent = t; m.className = "gate-msg " + (ok ? "ok" : "err");
   }
 
-  renderSidebar();
-  renderCatalog();
-  handleAuthReturn();
+  function saveConfig() {
+    const u = document.getElementById("cfgUrl").value.trim().replace(/\/+$/, "");
+    const k = document.getElementById("cfgKey").value.trim();
+    if (!/^https:\/\/.+\.supabase\.co$/.test(u)) { gateMsg("cfgMsg", "URL must look like https://xxxx.supabase.co", false); return; }
+    if (!(k.indexOf("eyJ") === 0 || k.indexOf("sb_publishable_") === 0) || k.length < 30) {
+      gateMsg("cfgMsg", "That doesn't look like the anon/public key (starts with eyJ… or sb_publishable_…).", false); return; }
+    localStorage.setItem("hg_supabase_url", u);
+    localStorage.setItem("hg_supabase_key", k);
+    location.reload();
+  }
+
+  function hubSignIn() {
+    const here = window.location.href.split("#")[0];
+    SB.auth.signInWithOAuth({ provider: "google", options: { redirectTo: here } })
+      .then(r => { if (r.error) gateMsg("loginMsg", r.error.message, false); });
+  }
+  function hubSignOut() { if (SB) SB.auth.signOut().then(() => location.reload()); else location.reload(); }
+
+  function enterApp() {
+    ["gateConfig", "gateLogin", "gateDenied"].forEach(g => document.getElementById(g).classList.remove("show"));
+    document.getElementById("shell").style.display = "flex";
+    if (!RENDERED) { renderSidebar(); renderCatalog(); RENDERED = true; }
+    goHome();
+  }
+
+  async function route() {
+    const url = localStorage.getItem("hg_supabase_url");
+    const key = localStorage.getItem("hg_supabase_key");
+    if (!url || !key) { showGate("gateConfig"); return; }
+    if (!window.supabase) { showGate("gateConfig"); gateMsg("cfgMsg", "Loading… refresh if this persists.", false); return; }
+    if (!SB) SB = window.supabase.createClient(url, key);   // auto-consumes any #access_token in the URL
+
+    let session = null;
+    try { session = (await SB.auth.getSession()).data.session; } catch (e) {}
+    if (location.hash.indexOf("access_token") > -1) {       // just returned from Google
+      await new Promise(r => setTimeout(r, 500));
+      try { session = (await SB.auth.getSession()).data.session; } catch (e) {}
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+    if (!session) { showGate("gateLogin"); return; }
+
+    const email = (session.user.email || "").toLowerCase();
+    let allowed = null;
+    try { allowed = (await SB.from("allowed_users").select("email").ilike("email", email).maybeSingle()).data; } catch (e) {}
+    if (!allowed) { document.getElementById("deniedEmail").textContent = email; showGate("gateDenied"); return; }
+    enterApp();
+    toast("Signed in as " + email);
+  }
+
+  SB && SB.auth ? null : null;
+  if (window.supabase) { route(); }
+  else { window.addEventListener("load", route); }
 </script>
 </body>
 </html>
