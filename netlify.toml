@@ -1,0 +1,13 @@
+# HG Group — Netlify config
+# The site root should open the internal tools HUB, not the public landing page.
+# (index.html is the public "Contractor Support Hub" marketing site — still reachable
+#  at /index.html and via the hub's own "Contractor Support Hub (Public)" card.)
+
+[build]
+  publish = "."
+
+# Serve hub.html at the root URL (rewrite, status 200 — URL stays "/")
+[[redirects]]
+  from = "/"
+  to = "/hub.html"
+  status = 200
