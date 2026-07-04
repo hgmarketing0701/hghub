@@ -40,9 +40,11 @@ Write-Host "Logging in to Supabase (a browser will open - approve it)..." -Foreg
 supabase login
 
 # 3. Move into the project root (parent of this /supabase folder) ---------------------
-# NOTE: -LiteralPath only on Push-Location - the folder name has [ ] brackets.
+# The folder name has [ ] brackets -> use literal + force the PROCESS cwd so the
+# native 'supabase' exe (and absolute Test-Path checks) resolve correctly.
 $root = Split-Path -Parent $PSScriptRoot
-Push-Location -LiteralPath $root
+Set-Location -LiteralPath $root
+[System.IO.Directory]::SetCurrentDirectory($root)
 Write-Host ""
 Write-Host ("Project folder: " + $root) -ForegroundColor DarkGray
 
@@ -52,7 +54,7 @@ Write-Host "TIP: in Google AI Studio, click 'Copy key' so you paste the exact ke
 $gem = (Read-Host "Paste your Gemini API key").Trim()
 if ($gem.Length -lt 20) {
   Write-Host "That key looks too short. Get one at https://aistudio.google.com/apikey" -ForegroundColor Red
-  Pop-Location; exit 1
+  exit 1
 }
 Write-Host "Setting GEMINI_API_KEY..." -ForegroundColor Cyan
 supabase secrets set --project-ref $ProjectRef GEMINI_API_KEY=$gem
@@ -63,16 +65,15 @@ Write-Host "Deploying Edge Functions..." -ForegroundColor Cyan
 $funcs = @("assistant","gemini-receipt","gemini-generate","daily-alarms")
 $deployed = 0
 foreach ($f in $funcs) {
-  if (Test-Path -LiteralPath "supabase\functions\$f\index.ts") {
+  $idx = Join-Path $root ("supabase\functions\" + $f + "\index.ts")
+  if (Test-Path -LiteralPath $idx) {
     Write-Host ("  - " + $f) -ForegroundColor Yellow
     supabase functions deploy $f --project-ref $ProjectRef
     if ($LASTEXITCODE -eq 0) { $deployed++ }
   } else {
-    Write-Host ("  ! missing: supabase\functions\$f\index.ts") -ForegroundColor DarkYellow
+    Write-Host ("  ! missing: " + $idx) -ForegroundColor DarkYellow
   }
 }
-
-Pop-Location
 Write-Host ""
 if ($deployed -gt 0) {
   Write-Host ("Deployed $deployed function(s). Refresh the hub - the AI Daily Briefing should fill in.") -ForegroundColor Green
