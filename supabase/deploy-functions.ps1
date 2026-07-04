@@ -52,14 +52,15 @@ supabase login
 # 3. Link this project ----------------------------------------------------------------
 Write-Host ""
 Write-Host "Linking project $ProjectRef ..." -ForegroundColor Cyan
-Push-Location (Split-Path $PSScriptRoot -Parent)
+# -LiteralPath: the folder name has [ ] brackets which PowerShell treats as wildcards
+Push-Location -LiteralPath (Split-Path -LiteralPath $PSScriptRoot -Parent)
 supabase link --project-ref $ProjectRef
 
-# 4. Gemini API key (must start with AIza) --------------------------------------------
+# 4. Gemini API key (AIza... old format, or AQ.... new format) -------------------------
 Write-Host ""
-$gem = Read-Host "Paste your Gemini API key (starts with AIza...)"
-if ($gem -notmatch '^AIza') {
-  Write-Host "That does not look like a Gemini key (should start with AIza). Get one at https://aistudio.google.com/apikey" -ForegroundColor Red
+$gem = (Read-Host "Paste your Gemini API key (AIza... or AQ...)").Trim()
+if ($gem.Length -lt 20) {
+  Write-Host "That key looks too short. Get one at https://aistudio.google.com/apikey" -ForegroundColor Red
   Pop-Location
   exit 1
 }
