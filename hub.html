@@ -290,8 +290,20 @@
     text-shadow: 0 0 16px rgba(245,158,11,0.35); }
   .hs-date { font-size: 0.72rem; color: var(--text-dim2); text-transform: uppercase; letter-spacing: 0.2em; }
 
-  /* HUD ring — orbital tool counter */
+  /* HUD ring — holographic orbital tool counter */
   .hero-hud { flex: 0 0 auto; margin-inline: auto; position: relative; }
+  .hero-hud::after {  /* projection cone glow under the hologram */
+    content: ""; position: absolute; left: 50%; bottom: -26px; width: 150px; height: 44px; transform: translateX(-50%);
+    background: radial-gradient(ellipse at center top, rgba(245,158,11,0.25), transparent 70%);
+    filter: blur(6px); pointer-events: none;
+  }
+  .hud-ring2, .hud-ring3 { position: absolute; top: 50%; left: 50%; border-radius: 50%; pointer-events: none; }
+  .hud-ring2 { width: 210px; height: 210px; transform: translate(-50%,-50%);
+    border: 1px dashed rgba(96,165,250,0.28); animation: spin 40s linear infinite; }
+  .hud-ring2::before { content:""; position:absolute; bottom:-3px; left:50%; width:6px; height:6px; border-radius:50%;
+    background: var(--blue); box-shadow: 0 0 12px var(--blue); }
+  .hud-ring3 { width: 150px; height: 150px; transform: translate(-50%,-50%);
+    border: 1px dotted rgba(245,158,11,0.22); animation: spinRev 22s linear infinite; }
   .hud-ring {
     width: 176px; height: 176px; border-radius: 50%; position: relative;
     display: flex; align-items: center; justify-content: center;
@@ -571,6 +583,73 @@
   .ai-send:disabled { opacity: 0.5; cursor: default; }
   @media (max-width: 860px) { .ai-drawer { width: auto; left: 0; height: 82vh; } }
 
+  /* ═══════════ STATUS TICKER ═══════════ */
+  .ticker { flex: 0 0 auto; height: 30px; overflow: hidden; position: relative;
+    border-bottom: 1px solid var(--border); background: rgba(8,11,20,0.6); backdrop-filter: blur(10px); }
+  .ticker::before, .ticker::after { content: ""; position: absolute; top: 0; bottom: 0; width: 60px; z-index: 2; pointer-events: none; }
+  .ticker::before { left: 0; background: linear-gradient(90deg, var(--bg), transparent); }
+  .ticker::after { right: 0; background: linear-gradient(270deg, var(--bg), transparent); }
+  .ticker-track { display: inline-flex; align-items: center; gap: 34px; white-space: nowrap; height: 100%; padding-left: 34px;
+    animation: tickerScroll 42s linear infinite; will-change: transform;
+    font-family: var(--font-display); font-size: 0.74rem; letter-spacing: 0.08em; color: var(--text-dim); }
+  .ticker:hover .ticker-track { animation-play-state: paused; }
+  .ticker-track b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .ticker-track .tk { display: inline-flex; align-items: center; gap: 8px; }
+  .ticker-track .tk::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .ticker-track .tk.g::before { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .ticker-track .tk.r::before { background: #f87171; box-shadow: 0 0 8px #f87171; }
+  .ticker-track .tk.b::before { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+  @keyframes tickerScroll { to { transform: translateX(-50%); } }
+
+  /* ═══════════ RADAR (Needs Attention) ═══════════ */
+  .radar { position: relative; width: 26px; height: 26px; border-radius: 50%; margin-left: auto; flex: 0 0 26px;
+    border: 1px solid rgba(245,158,11,0.3); overflow: hidden;
+    background: radial-gradient(circle, rgba(245,158,11,0.06), transparent 70%); }
+  .radar::before { content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: repeating-radial-gradient(circle, transparent 0 5px, rgba(245,158,11,0.12) 5px 6px); }
+  .radar-sweep { position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(from 0deg, rgba(245,158,11,0.55), transparent 55%);
+    -webkit-mask: radial-gradient(circle, #000 60%, transparent 61%); mask: radial-gradient(circle, #000 60%, transparent 61%);
+    animation: spin 2.6s linear infinite; }
+  .radar-blips { position: absolute; inset: 0; }
+  .radar-blips i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #fbbf24;
+    box-shadow: 0 0 5px #fbbf24; transform: translate(-50%,-50%); animation: blink 1.6s ease-in-out infinite; }
+  .radar-blips i.r { background: #f87171; box-shadow: 0 0 6px #f87171; }
+
+  /* ═══════════ COMMAND PALETTE ═══════════ */
+  .cmdk { position: fixed; inset: 0; z-index: 2500; display: none; align-items: flex-start; justify-content: center;
+    padding-top: 14vh; background: rgba(3,5,10,0.62); backdrop-filter: blur(6px); }
+  .cmdk.open { display: flex; animation: rise 0.18s ease-out both; }
+  .cmdk-box { width: 620px; max-width: 92vw; border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--border-strong); background: rgba(15,19,32,0.92);
+    backdrop-filter: blur(22px); box-shadow: var(--shadow), 0 0 70px rgba(245,158,11,0.1); }
+  .cmdk-input { display: flex; align-items: center; gap: 11px; padding: 15px 18px; border-bottom: 1px solid var(--border); position: relative; }
+  .cmdk-input svg { width: 18px; height: 18px; color: var(--accent); flex: 0 0 auto; }
+  .cmdk-input input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-size: 1rem; font-family: inherit; }
+  .cmdk-input input::placeholder { color: var(--text-dim2); }
+  .cmdk-cursor { width: 8px; height: 18px; background: var(--accent); box-shadow: 0 0 10px var(--accent);
+    animation: caret 1.1s steps(1) infinite; flex: 0 0 auto; }
+  @keyframes caret { 50% { opacity: 0; } }
+  .cmdk-esc { font-size: 0.62rem; color: var(--text-dim2); border: 1px solid var(--border); border-radius: 5px; padding: 3px 6px; font-family: var(--font-ui); }
+  .cmdk-list { max-height: 52vh; overflow-y: auto; padding: 8px; scrollbar-width: thin; }
+  .cmdk-list::-webkit-scrollbar { width: 6px; } .cmdk-list::-webkit-scrollbar-thumb { background: rgba(245,158,11,0.16); border-radius: 3px; }
+  .cmdk-item { display: flex; align-items: center; gap: 12px; padding: 11px 13px; border-radius: 10px; cursor: pointer; color: var(--text-dim); }
+  .cmdk-item .ck-ic { width: 30px; height: 30px; flex: 0 0 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.06); color: var(--cat, var(--accent)); }
+  .cmdk-item .ck-ic svg { width: 16px; height: 16px; }
+  .cmdk-item .ck-main { flex: 1; min-width: 0; }
+  .cmdk-item .ck-title { color: var(--text); font-weight: 500; font-size: 0.92rem; }
+  .cmdk-item .ck-sub { font-size: 0.72rem; color: var(--text-dim2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cmdk-item .ck-hint { font-size: 0.66rem; color: var(--text-dim2); opacity: 0; }
+  .cmdk-item.sel { background: linear-gradient(90deg, rgba(245,158,11,0.16), rgba(245,158,11,0.04)); color: var(--text); }
+  .cmdk-item.sel .ck-hint { opacity: 1; color: var(--accent); }
+  .cmdk-item.ask .ck-ic { color: var(--accent); background: rgba(245,158,11,0.14); border-color: rgba(245,158,11,0.3); }
+  .cmdk-empty { padding: 24px; text-align: center; color: var(--text-dim2); font-size: 0.85rem; }
+
+  /* decrypt cursor for the briefing */
+  .brief-body .caret { display: inline-block; width: 7px; height: 14px; background: var(--accent); box-shadow: 0 0 8px var(--accent);
+    vertical-align: -2px; margin-left: 2px; animation: caret 1s steps(1) infinite; }
+
   /* ═══════════ LIVE DASHBOARD (KPIs + panels) ═══════════ */
   .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 20px 0 26px; }
   .kpi {
@@ -749,9 +828,12 @@
       <button class="tb-btn" id="menuBtn" onclick="toggleSidebar()"><i data-lucide="menu"></i></button>
       <button class="tb-btn" onclick="goHome()" title="Home"><i data-lucide="home"></i></button>
       <div class="tb-title" id="tbTitle">Welcome</div>
+      <button class="tb-btn" onclick="openPalette()" title="Command palette (Ctrl+K)"><i data-lucide="command"></i></button>
       <button class="tb-btn" id="tbReload" onclick="reloadTool()" title="Reload tool" style="display:none;"><i data-lucide="rotate-cw"></i></button>
       <button class="tb-btn" id="tbPop" onclick="popOut()" title="Open in new tab" style="display:none;"><i data-lucide="external-link"></i></button>
     </div>
+    <!-- ═══════ STATUS TICKER ═══════ -->
+    <div class="ticker" id="ticker"><div class="ticker-track" id="tickerTrack"></div></div>
 
     <div class="views">
       <!-- HOME -->
@@ -768,6 +850,8 @@
             </div>
           </div>
           <div class="hero-hud">
+            <div class="hud-ring2"></div>
+            <div class="hud-ring3"></div>
             <div class="hud-orbit"></div>
             <div class="hud-ring"></div>
             <div class="hud-core"><b id="stTools">—</b><span>Tools</span></div>
@@ -808,7 +892,9 @@
         <!-- ═══════ NEEDS ATTENTION + RECENT ACTIVITY ═══════ -->
         <div class="dash-row">
           <div class="dash-panel">
-            <div class="dash-h"><i data-lucide="triangle-alert"></i> Needs Attention</div>
+            <div class="dash-h"><i data-lucide="triangle-alert"></i> Needs Attention
+              <span class="radar" id="radar"><span class="radar-sweep"></span><span class="radar-blips" id="radarBlips"></span></span>
+            </div>
             <div id="attnList" class="dash-body"><div class="dash-load"><span class="brief-spin"></span></div></div>
           </div>
           <div class="dash-panel">
@@ -857,6 +943,19 @@
     <input id="aiText" placeholder="Ask about your business…" autocomplete="off" />
     <button type="submit" class="ai-send" id="aiSend">➤</button>
   </form>
+</div>
+
+<!-- ═══════ COMMAND PALETTE (Ctrl+K) ═══════ -->
+<div class="cmdk" id="cmdk">
+  <div class="cmdk-box">
+    <div class="cmdk-input">
+      <i data-lucide="search"></i>
+      <input id="cmdkText" placeholder="Search tools or ask the assistant…" autocomplete="off" spellcheck="false" />
+      <span class="cmdk-cursor"></span>
+      <kbd class="cmdk-esc">ESC</kbd>
+    </div>
+    <div class="cmdk-list" id="cmdkList"></div>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -1216,6 +1315,73 @@
   document.getElementById("cloudModal").addEventListener("click", e => { if (e.target.id === "cloudModal") closeCloudManager(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape") closeCloudManager(); });
 
+  /* ════════════════ COMMAND PALETTE (Ctrl+K) ════════════════ */
+  let cmdkSel = 0, cmdkResults = [];
+  function paletteTools() {
+    const out = [];
+    CATS.forEach((c, ci) => c.tools.forEach((t, ti) => out.push({ ci, ti, name: t.name, icon: t.icon, color: c.color, cat: c.name })));
+    return out;
+  }
+  function openPalette() {
+    if (!RENDERED) return;
+    document.getElementById("cmdk").classList.add("open");
+    const t = document.getElementById("cmdkText"); t.value = "";
+    renderPalette(""); setTimeout(() => t.focus(), 40);
+  }
+  function closePalette() { document.getElementById("cmdk").classList.remove("open"); }
+  function renderPalette(q) {
+    q = (q || "").trim().toLowerCase();
+    cmdkResults = [];
+    let html = "";
+    if (IS_ADMIN && q) {
+      cmdkResults.push({ ask: true, q: q });
+      html += '<div class="cmdk-item ask" data-i="0"><span class="ck-ic">' + ico("sparkles") +
+        '</span><div class="ck-main"><div class="ck-title">Ask HG Assistant: “' + esc(q) + '”</div>' +
+        '<div class="ck-sub">Query your database</div></div><span class="ck-hint">Enter</span></div>';
+    }
+    paletteTools().filter(t => !q || (t.name + " " + t.cat).toLowerCase().includes(q)).forEach(t => {
+      const i = cmdkResults.length; cmdkResults.push(t);
+      html += '<div class="cmdk-item" data-i="' + i + '" style="--cat:' + t.color + '"><span class="ck-ic">' + ico(t.icon) +
+        '</span><div class="ck-main"><div class="ck-title">' + esc(t.name) + '</div><div class="ck-sub">' + esc(t.cat) +
+        '</div></div><span class="ck-hint">Enter</span></div>';
+    });
+    if (!cmdkResults.length) html = '<div class="cmdk-empty">No matches.</div>';
+    document.getElementById("cmdkList").innerHTML = html;
+    cmdkSel = 0; markCmdkSel(); paintIcons();
+    document.querySelectorAll("#cmdkList .cmdk-item").forEach(el => {
+      el.addEventListener("click", () => { cmdkSel = Number(el.dataset.i); runCmdk(); });
+      el.addEventListener("mousemove", () => { cmdkSel = Number(el.dataset.i); markCmdkSel(); });
+    });
+  }
+  function markCmdkSel() {
+    const items = document.querySelectorAll("#cmdkList .cmdk-item");
+    items.forEach((el, idx) => el.classList.toggle("sel", idx === cmdkSel));
+    if (items[cmdkSel]) items[cmdkSel].scrollIntoView({ block: "nearest" });
+  }
+  function runCmdk() {
+    const r = cmdkResults[cmdkSel]; if (!r) return;
+    closePalette();
+    if (r.ask) {
+      if (IS_ADMIN) { openChat(); setTimeout(() => { const t = document.getElementById("aiText"); t.value = r.q; sendChat(new Event("submit")); }, 220); }
+      return;
+    }
+    openTool(r.ci, r.ti);
+  }
+  document.getElementById("cmdkText").addEventListener("input", e => renderPalette(e.target.value));
+  document.getElementById("cmdk").addEventListener("click", e => { if (e.target.id === "cmdk") closePalette(); });
+  document.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) {
+      e.preventDefault();
+      document.getElementById("cmdk").classList.contains("open") ? closePalette() : openPalette();
+      return;
+    }
+    if (!document.getElementById("cmdk").classList.contains("open")) return;
+    if (e.key === "Escape") { closePalette(); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); cmdkSel = Math.min(cmdkSel + 1, cmdkResults.length - 1); markCmdkSel(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); cmdkSel = Math.max(cmdkSel - 1, 0); markCmdkSel(); }
+    else if (e.key === "Enter") { e.preventDefault(); runCmdk(); }
+  });
+
   /* ════════════════ HUB AUTH GATE ════════════════
      The HUB is the single front door: connect once, sign in once, then the
      directory appears and every tool opens already logged-in (the session is
@@ -1281,13 +1447,30 @@
     try {
       const { data, error } = await SB.functions.invoke("assistant", { body: { mode: "briefing", force: !!force } });
       if (error || (data && data.error)) throw new Error((data && data.error) || error.message);
-      body.innerHTML = mdLite(data.summary || "Nothing to report.");
+      decryptInto(body, data.summary || "Nothing to report.");
       document.getElementById("briefDate").textContent = "Briefing · " + (data.date || "");
     } catch (e) {
       body.innerHTML = '<div class="brief-err">The assistant isn\'t connected yet. Deploy the <b>assistant</b> Edge Function ' +
         'and set <b>GEMINI_API_KEY</b> (see supabase/EDGE-FUNCTIONS.md). Everything else works without it.</div>';
       document.getElementById("briefDate").textContent = "";
     }
+  }
+
+  // Terminal-style decrypt reveal, then swap to formatted HTML
+  function decryptInto(el, text) {
+    if (el._dec) clearInterval(el._dec);
+    if (REDUCED || text.length > 1500) { el.innerHTML = mdLite(text); return; }
+    const glyphs = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789#$%&*/<>=+";
+    const speed = Math.max(6, Math.floor(text.length / 90));
+    let i = 0;
+    el._dec = setInterval(() => {
+      i += speed;
+      if (i >= text.length) { clearInterval(el._dec); el._dec = null; el.innerHTML = mdLite(text); return; }
+      let out = "";
+      const end = Math.min(i + 18, text.length);
+      for (let k = 0; k < end; k++) out += (k < i) ? text[k] : glyphs[Math.floor(Math.random() * glyphs.length)];
+      el.innerHTML = esc(out) + '<span class="caret"></span>';
+    }, 26);
   }
 
   function openChat() { document.getElementById("aiDrawer").classList.add("open"); setTimeout(() => document.getElementById("aiText").focus(), 100); }
@@ -1370,7 +1553,38 @@
     renderSpark(spark);
     renderAttn(attn);
     renderActivity(recent);
+    renderTicker({ openCount, openValue, attn: attn.length, lastAct: recent[0] });
+    renderRadar(attn);
     paintIcons();
+  }
+
+  function renderTicker(d) {
+    const el = document.getElementById("tickerTrack"); if (!el) return;
+    const lastAgo = d.lastAct ? fmtAgo(d.lastAct.at) + " ago" : "—";
+    const rm = "RM " + Number(d.openValue).toLocaleString("en-MY", { maximumFractionDigits: 0 });
+    const items = [
+      ["", "SYSTEM ONLINE"],
+      ["b", "<b>" + d.openCount + "</b> quotes open"],
+      ["g", "<b>" + rm + "</b> pending"],
+      ["r", "<b>" + d.attn + "</b> need attention"],
+      ["b", "last activity <b>" + lastAgo + "</b>"],
+      ["g", "<b>16</b> tools live on one database"],
+    ];
+    const seq = items.map(x => '<span class="tk ' + x[0] + '">' + x[1] + "</span>").join("");
+    el.innerHTML = seq + seq;   // duplicated for a seamless -50% loop
+  }
+
+  function renderRadar(items) {
+    const el = document.getElementById("radarBlips"); if (!el) return;
+    const n = Math.min(items.length, 6);
+    let html = "";
+    for (let i = 0; i < n; i++) {
+      const a = items[i], overdue = a.due_date && new Date(a.due_date) < new Date();
+      const ang = (i * 137.5) * Math.PI / 180, rad = 5 + (i % 3) * 3;
+      const cx = 13 + Math.cos(ang) * rad, cy = 13 + Math.sin(ang) * rad;
+      html += '<i class="' + (overdue ? "r" : "") + '" style="left:' + cx.toFixed(1) + "px;top:" + cy.toFixed(1) + "px;animation-delay:" + (i * 0.2).toFixed(1) + 's"></i>';
+    }
+    el.innerHTML = html;
   }
 
   function renderSpark(data) {
