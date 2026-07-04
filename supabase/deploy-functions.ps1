@@ -18,29 +18,19 @@ Write-Host ""
 # 1. Ensure Supabase CLI is installed -------------------------------------------------
 if (-not (Get-Command supabase -ErrorAction SilentlyContinue)) {
   Write-Host "Supabase CLI not found - installing via Scoop..." -ForegroundColor Cyan
-
   if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
     try { Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression }
     catch { Write-Host ("Scoop note: " + $_.Exception.Message) -ForegroundColor DarkYellow }
     Refresh-Path
   }
-
-  if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
-    Write-Host "Could not install Scoop automatically." -ForegroundColor Red
-    Write-Host "Please install the Supabase CLI manually, then re-run this script:" -ForegroundColor Red
-    Write-Host "  https://supabase.com/docs/guides/local-development/cli/getting-started" -ForegroundColor Red
-    exit 1
-  }
-
   try { scoop bucket add supabase https://github.com/supabase/scoop-bucket.git } catch {}
   scoop install supabase
   Refresh-Path
 } else {
   Write-Host "Supabase CLI found." -ForegroundColor Green
 }
-
 if (-not (Get-Command supabase -ErrorAction SilentlyContinue)) {
-  Write-Host "Supabase CLI still not on PATH. Close this window, open a NEW PowerShell, and run the command again." -ForegroundColor Red
+  Write-Host "Supabase CLI not on PATH yet. Close this window, open a NEW PowerShell, and run the command again." -ForegroundColor Red
   exit 1
 }
 
@@ -49,42 +39,44 @@ Write-Host ""
 Write-Host "Logging in to Supabase (a browser will open - approve it)..." -ForegroundColor Cyan
 supabase login
 
-# 3. Link this project ----------------------------------------------------------------
+# 3. Move into the project root (parent of this /supabase folder) ---------------------
+# NOTE: -LiteralPath only on Push-Location - the folder name has [ ] brackets.
+$root = Split-Path -Parent $PSScriptRoot
+Push-Location -LiteralPath $root
 Write-Host ""
-Write-Host "Linking project $ProjectRef ..." -ForegroundColor Cyan
-# -LiteralPath: the folder name has [ ] brackets which PowerShell treats as wildcards
-Push-Location -LiteralPath (Split-Path -LiteralPath $PSScriptRoot -Parent)
-supabase link --project-ref $ProjectRef
+Write-Host ("Project folder: " + $root) -ForegroundColor DarkGray
 
-# 4. Gemini API key (AIza... old format, or AQ.... new format) -------------------------
+# 4. Gemini API key (AIza... old format, or AQ.... new format) ------------------------
 Write-Host ""
-$gem = (Read-Host "Paste your Gemini API key (AIza... or AQ...)").Trim()
+Write-Host "TIP: in Google AI Studio, click 'Copy key' so you paste the exact key." -ForegroundColor DarkGray
+$gem = (Read-Host "Paste your Gemini API key").Trim()
 if ($gem.Length -lt 20) {
   Write-Host "That key looks too short. Get one at https://aistudio.google.com/apikey" -ForegroundColor Red
-  Pop-Location
-  exit 1
+  Pop-Location; exit 1
 }
-supabase secrets set GEMINI_API_KEY=$gem
+Write-Host "Setting GEMINI_API_KEY..." -ForegroundColor Cyan
+supabase secrets set --project-ref $ProjectRef GEMINI_API_KEY=$gem
 
-# Optional extras (press Enter to skip)
-$resend = Read-Host "Optional - Resend API key for alarm emails (Enter to skip)"
-if ($resend) { supabase secrets set RESEND_API_KEY=$resend }
-$cron = Read-Host "Optional - a random secret for the daily cron (Enter to skip)"
-if ($cron) { supabase secrets set CRON_SECRET=$cron }
-
-# 5. Deploy the functions -------------------------------------------------------------
+# 5. Deploy the functions (directly, by project ref - no linking needed) --------------
 Write-Host ""
 Write-Host "Deploying Edge Functions..." -ForegroundColor Cyan
 $funcs = @("assistant","gemini-receipt","gemini-generate","daily-alarms")
+$deployed = 0
 foreach ($f in $funcs) {
-  if (Test-Path "supabase\functions\$f\index.ts") {
+  if (Test-Path -LiteralPath "supabase\functions\$f\index.ts") {
     Write-Host ("  - " + $f) -ForegroundColor Yellow
-    supabase functions deploy $f
+    supabase functions deploy $f --project-ref $ProjectRef
+    if ($LASTEXITCODE -eq 0) { $deployed++ }
+  } else {
+    Write-Host ("  ! missing: supabase\functions\$f\index.ts") -ForegroundColor DarkYellow
   }
 }
 
 Pop-Location
 Write-Host ""
-Write-Host "Done. Refresh the hub - the AI Daily Briefing should fill in." -ForegroundColor Green
-Write-Host "If it still says 'not connected', check Supabase -> Edge Functions -> assistant -> Logs."
+if ($deployed -gt 0) {
+  Write-Host ("Deployed $deployed function(s). Refresh the hub - the AI Daily Briefing should fill in.") -ForegroundColor Green
+} else {
+  Write-Host "No functions were deployed. Copy the red text above and send it over." -ForegroundColor Red
+}
 Write-Host ""
