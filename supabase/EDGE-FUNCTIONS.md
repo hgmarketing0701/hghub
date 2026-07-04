@@ -7,6 +7,12 @@ Three functions replace the server-only parts of the old Apps Script tools:
 | `gemini-receipt` | Gemini receipt-photo reading (server-side key) | Claims, Expenses |
 | `gemini-generate` | Gemini text generation | Blog / LinkedIn |
 | `daily-alarms` | Every time-trigger email (permit warnings, doc expiry digest, collection reminders, renewal notices) | Dispatch, Workers, Scaffold, Storage |
+| `assistant` | The AI **Daily Briefing** + admin **ask-anything chat** on the hub home page | hub.html |
+
+**Before deploying `assistant`:** run `supabase/schema-assistant.sql` in the SQL Editor
+(adds `ai_briefings` + the guarded `ai_run_select` query runner). It only needs `GEMINI_API_KEY`
+(same key as the others). Deploy with `supabase functions deploy assistant`.
+The Daily Briefing works for all staff; the free-form chat is admin-only (checked server-side).
 
 All three check the caller is signed in AND on `allowed_users` (the scheduler
 uses a `CRON_SECRET` header instead).

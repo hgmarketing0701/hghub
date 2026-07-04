@@ -490,6 +490,78 @@
   .gate-btn.google:hover { box-shadow: 0 8px 30px rgba(255,255,255,0.2); }
   .gate-btn.ghost { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border); }
 
+  /* ═══════════ AI BRIEFING CARD ═══════════ */
+  .brief-orb { width: 12px; height: 12px; border-radius: 50%; flex: 0 0 12px; display: inline-block;
+    background: radial-gradient(circle at 35% 30%, #ffe1a6, var(--accent)); box-shadow: 0 0 12px var(--accent);
+    animation: blink 2.6s ease-in-out infinite; }
+  .brief-card {
+    position: relative; margin-bottom: 34px; border-radius: 18px; overflow: hidden;
+    border: 1px solid rgba(245,158,11,0.28);
+    background:
+      radial-gradient(500px 200px at 0% 0%, rgba(245,158,11,0.12), transparent 60%),
+      linear-gradient(180deg, rgba(24,20,12,0.7), rgba(14,16,26,0.85));
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    padding: 20px 24px; animation: rise 0.5s ease-out both;
+  }
+  .brief-card::before { content: ""; position: absolute; top: 0; left: 20px; right: 20px; height: 1px;
+    background: linear-gradient(90deg, var(--accent-glow), transparent); }
+  .brief-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .brief-title { display: flex; align-items: center; gap: 10px; font-family: var(--font-display);
+    font-weight: 600; font-size: 0.98rem; letter-spacing: 0.01em; }
+  .brief-refresh { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-dim);
+    width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: transform 0.4s, color 0.2s, border-color 0.2s; }
+  .brief-refresh:hover { color: var(--accent); border-color: var(--accent); transform: rotate(180deg); }
+  .brief-body { font-size: 0.88rem; color: var(--text-dim); line-height: 1.62; }
+  .brief-body strong, .brief-body b { color: var(--text); }
+  .brief-body ul { margin: 6px 0 6px 2px; list-style: none; }
+  .brief-body li { position: relative; padding-left: 16px; margin: 3px 0; }
+  .brief-body li::before { content: "▸"; position: absolute; left: 0; color: var(--accent); }
+  .brief-body h1, .brief-body h2, .brief-body h3, .brief-body .h { color: var(--accent); font-family: var(--font-display);
+    font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.1em; margin: 12px 0 4px; font-weight: 600; }
+  .brief-loading { display: flex; align-items: center; gap: 10px; color: var(--text-dim2); }
+  .brief-spin { width: 15px; height: 15px; border: 2px solid var(--accent); border-top-color: transparent;
+    border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .brief-date { margin-top: 12px; font-size: 0.68rem; color: var(--text-dim2); text-transform: uppercase; letter-spacing: 0.14em; }
+  .brief-err { color: #f5b78a; font-size: 0.84rem; line-height: 1.6; }
+  .brief-err b { color: var(--accent); }
+
+  /* ═══════════ AI CHAT ═══════════ */
+  .ai-fab {
+    position: fixed; bottom: 22px; right: 22px; z-index: 1500;
+    display: flex; align-items: center; gap: 9px; padding: 12px 20px; cursor: pointer;
+    border: 1px solid rgba(245,158,11,0.5); border-radius: 999px; color: #0a0e1a; font-weight: 700;
+    font-family: var(--font-display); font-size: 0.9rem; letter-spacing: 0.02em;
+    background: linear-gradient(135deg, var(--accent), #e08b06);
+    box-shadow: 0 8px 30px rgba(245,158,11,0.4); transition: transform 0.15s, box-shadow 0.2s;
+  }
+  .ai-fab:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(245,158,11,0.55); }
+  .ai-fab-orb { width: 9px; height: 9px; border-radius: 50%; background: #0a0e1a; box-shadow: 0 0 8px rgba(0,0,0,0.4); animation: blink 2s ease-in-out infinite; }
+  .ai-drawer {
+    position: fixed; bottom: 0; right: 0; z-index: 1600; width: 400px; max-width: 96vw; height: 560px; max-height: 88vh;
+    display: none; flex-direction: column; margin: 16px; border-radius: 18px; overflow: hidden;
+    border: 1px solid var(--border-strong);
+    background: rgba(13,17,28,0.92); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+    box-shadow: var(--shadow), 0 0 60px rgba(245,158,11,0.08);
+  }
+  .ai-drawer.open { display: flex; animation: rise 0.28s ease-out both; }
+  .ai-dhead { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .ai-dtitle { display: flex; align-items: center; gap: 9px; font-family: var(--font-display); font-weight: 600; font-size: 0.95rem; }
+  .ai-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; scrollbar-width: thin; }
+  .ai-msgs::-webkit-scrollbar { width: 6px; } .ai-msgs::-webkit-scrollbar-thumb { background: rgba(245,158,11,0.18); border-radius: 3px; }
+  .ai-msg { max-width: 88%; padding: 11px 14px; border-radius: 14px; font-size: 0.86rem; line-height: 1.55; white-space: pre-wrap; }
+  .ai-msg.bot { align-self: flex-start; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-bottom-left-radius: 5px; color: var(--text); }
+  .ai-msg.bot i { color: var(--accent); font-style: normal; }
+  .ai-msg.me { align-self: flex-end; background: linear-gradient(135deg, rgba(245,158,11,0.9), #d97706); color: #0a0e1a; font-weight: 500; border-bottom-right-radius: 5px; }
+  .ai-msg.think { color: var(--text-dim2); font-style: italic; }
+  .ai-input { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); }
+  .ai-input input { flex: 1; background: rgba(5,7,13,0.6); border: 1px solid var(--border); border-radius: 11px;
+    color: var(--text); padding: 11px 13px; font-size: 0.86rem; font-family: inherit; }
+  .ai-input input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .ai-send { flex: 0 0 auto; width: 42px; border: none; border-radius: 11px; cursor: pointer; font-size: 0.95rem;
+    background: linear-gradient(135deg, var(--accent), #d97706); color: #0a0e1a; font-weight: 700; }
+  .ai-send:disabled { opacity: 0.5; cursor: default; }
+  @media (max-width: 860px) { .ai-drawer { width: auto; left: 0; height: 82vh; } }
+
   /* ═══════════ MOBILE ═══════════ */
   @media (max-width: 860px) {
     aside { position: fixed; z-index: 900; transform: translateX(-100%); box-shadow: var(--shadow); }
@@ -601,6 +673,19 @@
           <div class="stat"><b id="stDocs">—</b> reference docs</div>
           <div class="stat"><b>1</b> shared database</div>
         </div>
+
+        <!-- ═══════ AI DAILY BRIEFING ═══════ -->
+        <div class="brief-card" id="briefCard">
+          <div class="brief-head">
+            <div class="brief-title"><span class="brief-orb"></span> HG Assistant — Daily Briefing</div>
+            <button class="brief-refresh" id="briefRefresh" title="Regenerate">↻</button>
+          </div>
+          <div class="brief-body" id="briefBody">
+            <div class="brief-loading"><span class="brief-spin"></span> Reading today's activity…</div>
+          </div>
+          <div class="brief-date" id="briefDate"></div>
+        </div>
+
         <div id="catalog"></div>
         <div class="no-results" id="noResults">No tools match your search.</div>
       </div>
@@ -623,6 +708,24 @@
     <div class="modal-sub">Each cloud tool is a deployed web app. Links below are pre-configured; you can override or reset any of them (overrides are saved in this browser).</div>
     <div id="urlList"></div>
   </div>
+</div>
+
+<!-- ═══════ AI CHAT (admin only) ═══════ -->
+<button class="ai-fab" id="aiFab" onclick="openChat()" title="Ask HG Assistant" style="display:none;">
+  <span class="ai-fab-orb"></span> Ask HG
+</button>
+<div class="ai-drawer" id="aiDrawer">
+  <div class="ai-dhead">
+    <div class="ai-dtitle"><span class="brief-orb"></span> HG Assistant</div>
+    <button class="x-btn" onclick="closeChat()">✕</button>
+  </div>
+  <div class="ai-msgs" id="aiMsgs">
+    <div class="ai-msg bot">Hi — ask me anything about your data. Try <i>"how many quotes this month?"</i>, <i>"which permits expire soon?"</i>, or <i>"who owes us money?"</i></div>
+  </div>
+  <form class="ai-input" id="aiForm" onsubmit="sendChat(event)">
+    <input id="aiText" placeholder="Ask about your business…" autocomplete="off" />
+    <button type="submit" class="ai-send" id="aiSend">➤</button>
+  </form>
 </div>
 
 <div id="toast"></div>
@@ -980,6 +1083,7 @@
      shared with all tools on this domain via the browser). No per-tool login. */
   let SB = null;              // hub's supabase client
   let RENDERED = false;
+  let IS_ADMIN = false;       // is the signed-in user an admin?
 
   function showGate(id) {
     document.getElementById("shell").style.display = "none";
@@ -1011,9 +1115,69 @@
   function enterApp() {
     ["gateConfig", "gateLogin", "gateDenied"].forEach(g => document.getElementById(g).classList.remove("show"));
     document.getElementById("shell").style.display = "flex";
-    if (!RENDERED) { renderSidebar(); renderCatalog(); RENDERED = true; runCountUps(); }
+    if (!RENDERED) {
+      renderSidebar(); renderCatalog(); RENDERED = true; runCountUps();
+      if (IS_ADMIN) document.getElementById("aiFab").style.display = "flex";
+      loadBriefing(false);
+    }
     goHome();
   }
+
+  /* ════════════════ AI ASSISTANT (briefing + chat) ════════════════ */
+  // tiny markdown → html for the briefing (bold, bullets, headings)
+  function mdLite(s) {
+    let h = esc(s);
+    h = h.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    h = h.replace(/^\s*#{1,3}\s*(.+)$/gm, '<div class="h">$1</div>');
+    h = h.replace(/(?:^|\n)\s*[-•*]\s+(.+)/g, "\n<li>$1</li>");
+    h = h.replace(/(<li>[\s\S]*?<\/li>)(?!\s*<li>)/g, "<ul>$1</ul>");
+    h = h.replace(/\n{2,}/g, "<br><br>").replace(/\n(?!<)/g, "<br>");
+    return h;
+  }
+  async function loadBriefing(force) {
+    const body = document.getElementById("briefBody");
+    body.innerHTML = '<div class="brief-loading"><span class="brief-spin"></span> ' +
+      (force ? "Regenerating…" : "Reading today's activity…") + "</div>";
+    try {
+      const { data, error } = await SB.functions.invoke("assistant", { body: { mode: "briefing", force: !!force } });
+      if (error || (data && data.error)) throw new Error((data && data.error) || error.message);
+      body.innerHTML = mdLite(data.summary || "Nothing to report.");
+      document.getElementById("briefDate").textContent = "Briefing · " + (data.date || "");
+    } catch (e) {
+      body.innerHTML = '<div class="brief-err">The assistant isn\'t connected yet. Deploy the <b>assistant</b> Edge Function ' +
+        'and set <b>GEMINI_API_KEY</b> (see supabase/EDGE-FUNCTIONS.md). Everything else works without it.</div>';
+      document.getElementById("briefDate").textContent = "";
+    }
+  }
+
+  function openChat() { document.getElementById("aiDrawer").classList.add("open"); setTimeout(() => document.getElementById("aiText").focus(), 100); }
+  function closeChat() { document.getElementById("aiDrawer").classList.remove("open"); }
+  function addMsg(cls, html) {
+    const m = document.getElementById("aiMsgs");
+    const d = document.createElement("div"); d.className = "ai-msg " + cls; d.innerHTML = html;
+    m.appendChild(d); m.scrollTop = m.scrollHeight; return d;
+  }
+  async function sendChat(e) {
+    e.preventDefault();
+    const input = document.getElementById("aiText");
+    const q = input.value.trim(); if (!q) return;
+    input.value = ""; document.getElementById("aiSend").disabled = true;
+    addMsg("me", esc(q));
+    const thinking = addMsg("bot think", "Thinking…");
+    try {
+      const { data, error } = await SB.functions.invoke("assistant", { body: { mode: "chat", question: q } });
+      if (error || (data && data.error)) throw new Error((data && data.error) || error.message);
+      thinking.className = "ai-msg bot";
+      thinking.innerHTML = mdLite(data.answer || "No answer.");
+    } catch (err) {
+      thinking.className = "ai-msg bot";
+      thinking.innerHTML = '<span style="color:#f5b78a">' + esc(String(err.message || err)) +
+        '</span><br><br>If this says "not connected", the <b>assistant</b> Edge Function needs deploying (see EDGE-FUNCTIONS.md).';
+    }
+    document.getElementById("aiSend").disabled = false;
+    document.getElementById("aiMsgs").scrollTop = 1e9;
+  }
+  document.getElementById("briefRefresh").addEventListener("click", () => loadBriefing(true));
 
   async function route() {
     const url = localStorage.getItem("hg_supabase_url");
@@ -1033,7 +1197,8 @@
 
     const email = (session.user.email || "").toLowerCase();
     let allowed = null;
-    try { allowed = (await SB.from("allowed_users").select("email").ilike("email", email).maybeSingle()).data; } catch (e) {}
+    try { allowed = (await SB.from("allowed_users").select("email, is_admin").ilike("email", email).maybeSingle()).data; } catch (e) {}
+    IS_ADMIN = !!(allowed && allowed.is_admin);
     if (!allowed) { document.getElementById("deniedEmail").textContent = email; showGate("gateDenied"); return; }
     enterApp();
     toast("Signed in as " + email);
