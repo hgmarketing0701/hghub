@@ -170,13 +170,16 @@
   .sb-item:hover .cl { opacity: 1; }
   .sb-item .cl:hover { background: var(--blue-soft); }
 
-  .sb-foot { border-top: 1px solid var(--border); padding: 10px 14px; }
+  .sb-foot { border-top: 1px solid var(--border); padding: 10px 14px; display: flex; gap: 8px; align-items: stretch; }
   .sb-foot button {
-    width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text-dim);
-    padding: 9px; border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 0.8rem; font-weight: 600;
-    transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text-dim);
+    padding: 9px 12px; border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 0.8rem; font-weight: 600;
+    white-space: nowrap; line-height: 1; transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
   }
+  .sb-foot .btn-cloud   { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .sb-foot .btn-signout { flex: 0 0 auto; }
   .sb-foot button:hover { border-color: var(--accent); color: var(--text); box-shadow: 0 0 14px rgba(245,158,11,0.15); }
+  .sb-foot .btn-signout:hover { border-color: #f87171; color: #f87171; box-shadow: 0 0 14px rgba(239,68,68,0.15); }
 
   /* ═══════════ TOPBAR ═══════════ */
   .topbar {
@@ -556,9 +559,9 @@
       </div>
     </div>
     <div class="sb-nav" id="sbNav"></div>
-    <div class="sb-foot" style="display:flex; gap:8px;">
-      <button onclick="openCloudManager()" style="flex:1;">⚙ Cloud links</button>
-      <button onclick="hubSignOut()" style="flex:0 0 auto;" title="Sign out">Sign out</button>
+    <div class="sb-foot">
+      <button class="btn-cloud" onclick="openCloudManager()">⚙ Cloud links</button>
+      <button class="btn-signout" onclick="hubSignOut()" title="Sign out">Sign out</button>
     </div>
   </aside>
 
