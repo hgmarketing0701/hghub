@@ -1636,14 +1636,22 @@
     ["gateConfig", "gateLogin", "gateDenied"].forEach(g => document.getElementById(g).classList.remove("show"));
     document.getElementById("shell").style.display = "flex";
     if (!RENDERED) {
-      applyIdentity();
-      renderSidebar(); renderCatalog(); renderToolTabs(); renderQuickShortcuts(); RENDERED = true; runCountUps();
-      if (IS_ADMIN) { document.getElementById("aiFab").style.display = "flex"; document.getElementById("tbAi").style.display = "flex"; }
-      loadBriefing(false);
-      loadDashboard();
+      RENDERED = true;
+      // render the directory FIRST and independently — nothing else may block it
+      safe("renderSidebar", renderSidebar);
+      safe("renderCatalog", renderCatalog);
+      safe("renderToolTabs", renderToolTabs);
+      safe("renderQuickShortcuts", renderQuickShortcuts);
+      safe("applyIdentity", applyIdentity);
+      safe("runCountUps", runCountUps);
+      if (IS_ADMIN) { const f = document.getElementById("aiFab"); if (f) f.style.display = "flex"; const a = document.getElementById("tbAi"); if (a) a.style.display = "flex"; }
+      // data loads are async and must never block the UI
+      Promise.resolve().then(() => { try { loadBriefing(false); } catch (e) { console.error(e); } });
+      Promise.resolve().then(() => { try { loadDashboard(); } catch (e) { console.error(e); } });
     }
     goHome();
   }
+  function safe(label, fn) { try { fn(); } catch (e) { console.error("[hub] " + label + " failed:", e); } }
 
   // greeting + profile from the signed-in user
   function applyIdentity() {
@@ -1784,23 +1792,20 @@
       const r = await SB.from("quotes").select("created_at").gte("created_at", since);
       if (!r.error && r.data) r.data.forEach(q => { const d = Math.floor((Date.now() - new Date(q.created_at)) / 864e5); if (d >= 0 && d < 14) spark[13 - d]++; });
     } catch (e) {}
-    // needs attention — union of alarm views (each optional / may not exist)
-    for (const [v, label] of [["dsp_alarms", "Dispatch"], ["wkr_alarms", "Workers"], ["scf_alarms", "Scaffold"], ["str_alarms", "Storage"]]) {
-      try {
-        const r = await SB.from(v).select("alarm_type,ref,detail,due_date").limit(20);
-        if (!r.error && r.data) r.data.forEach(a => attn.push(Object.assign({ area: label }, a)));
-      } catch (e) {}
+    // needs attention (alarm views) + activity — ALL in parallel so nothing stacks latency
+    const mid = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kuala_Lumpur" })); mid.setHours(0, 0, 0, 0);
+    const alarmDefs = [["dsp_alarms", "Dispatch"], ["wkr_alarms", "Workers"], ["scf_alarms", "Scaffold"], ["str_alarms", "Storage"]];
+    const jobs = alarmDefs.map(([v, label]) =>
+      SB.from(v).select("alarm_type,ref,detail,due_date").limit(20).then(r => ({ label, r })).catch(() => null));
+    jobs.push(SB.from("audit_log").select("*", { count: "exact", head: true }).gte("at", mid.toISOString()).then(r => ({ count: r.count, err: r.error })).catch(() => null));
+    jobs.push(SB.from("audit_log").select("at,user_email,action,details").order("at", { ascending: false }).limit(8).then(r => ({ recent: r.data, err: r.error })).catch(() => null));
+    const results = await Promise.all(jobs);
+    for (let i = 0; i < alarmDefs.length; i++) {
+      const res = results[i];
+      if (res && res.r && !res.r.error && res.r.data) res.r.data.forEach(a => attn.push(Object.assign({ area: res.label }, a)));
     }
-    // activity today + recent feed
-    try {
-      const mid = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kuala_Lumpur" })); mid.setHours(0, 0, 0, 0);
-      const r = await SB.from("audit_log").select("*", { count: "exact", head: true }).gte("at", mid.toISOString());
-      if (!r.error) actToday = r.count || 0;
-    } catch (e) {}
-    try {
-      const r = await SB.from("audit_log").select("at,user_email,action,details").order("at", { ascending: false }).limit(8);
-      if (!r.error && r.data) recent = r.data;
-    } catch (e) {}
+    const actRes = results[alarmDefs.length]; if (actRes && !actRes.err) actToday = actRes.count || 0;
+    const recRes = results[alarmDefs.length + 1]; if (recRes && !recRes.err && recRes.recent) recent = recRes.recent;
 
     setKpi("kpiQuotes", openCount);
     setKpi("kpiValue", "RM " + openValue.toLocaleString("en-MY", { maximumFractionDigits: 0 }));
