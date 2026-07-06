@@ -460,24 +460,25 @@
     padding: 24px; background: transparent; overflow: hidden; }
   .gate.show { display: flex; }
   .gate::before {  /* rotating aurora halo behind the card */
-    content: ""; position: absolute; width: 640px; height: 640px; border-radius: 50%;
+    content: ""; position: absolute; pointer-events: none; width: 640px; height: 640px; border-radius: 50%;
     background: conic-gradient(from 0deg,
-      rgba(245,158,11,0.32), rgba(96,165,250,0.14), rgba(168,85,247,0.16),
-      rgba(245,158,11,0.05), rgba(245,158,11,0.32));
+      rgba(91,140,255,0.32), rgba(139,92,246,0.18), rgba(34,211,238,0.14),
+      rgba(91,140,255,0.05), rgba(91,140,255,0.32));
     filter: blur(90px); opacity: 0.6;
     animation: spin 26s linear infinite;
   }
   .gate::after {  /* orbit ring around the card */
-    content: ""; position: absolute; width: 560px; height: 560px; border-radius: 50%;
-    border: 1px dashed rgba(245,158,11,0.22);
+    content: ""; position: absolute; pointer-events: none; width: 560px; height: 560px; border-radius: 50%;
+    border: 1px dashed rgba(91,140,255,0.22);
     animation: spinRev 60s linear infinite;
   }
   .gate-card {
-    background: rgba(15,19,32,0.8); border: 1px solid var(--border-strong); border-radius: 20px;
+    position: relative; z-index: 2;
+    background: rgba(15,19,32,0.86); border: 1px solid var(--border-strong); border-radius: 20px;
     max-width: 432px; width: 100%; text-align: center; padding: 42px 34px;
-    box-shadow: var(--shadow), 0 0 80px rgba(245,158,11,0.06);
+    box-shadow: var(--shadow), 0 0 80px rgba(91,140,255,0.08);
     backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
-    position: relative; overflow: hidden; animation: rise 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    overflow: hidden; animation: rise 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) both;
   }
   .gate-card::before {  /* top gradient hairline */
     content: ""; position: absolute; top: 0; left: 24px; right: 24px; height: 1px;
