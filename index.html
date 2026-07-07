@@ -538,6 +538,23 @@
     border: 1px solid #e3e0dd; box-shadow: 0 1px 2px rgba(23,23,23,0.05); }
   .gate-btn.google:hover { box-shadow: 0 8px 26px rgba(23,23,23,0.08); }
   .gate-provider-logo { width: 20px; height: 20px; object-fit: contain; flex: 0 0 20px; }
+  @media (min-width: 641px) and (max-aspect-ratio: 4 / 3) {
+    .gate-scene { inset: 0; left: 0; top: 0; width: auto; height: auto; transform: none; overflow: hidden; }
+    .gate-asset.desktop-left {
+      left: clamp(-160px, -13vw, -105px); top: clamp(-10px, 2vh, 24px);
+      width: clamp(360px, 40vw, 430px);
+    }
+    .gate-asset.desktop-right {
+      left: auto; right: clamp(-300px, -25vw, -190px); top: clamp(92px, 11vh, 150px);
+      width: clamp(430px, 52vw, 560px);
+    }
+  }
+  @media (min-width: 641px) and (max-width: 899px) and (max-aspect-ratio: 4 / 3) {
+    .gate-asset.desktop-left, .gate-asset.desktop-right { display: none; }
+    .gate-asset.mobile-top-left { display: block; left: -54px; top: -74px; width: 350px; height: auto; }
+    .gate-asset.mobile-right { display: block; right: -142px; top: -80px; width: 530px; height: auto; }
+    .gate-asset.mobile-bottom { display: block; left: -58px; bottom: -116px; width: 800px; height: auto; }
+  }
   @media (max-width: 640px) {
     .gate { padding: 0 24px; align-items: center; }
     .gate-scene { inset: 0; left: 0; top: 0; width: auto; height: auto; transform: none; overflow: hidden; }
