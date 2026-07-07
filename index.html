@@ -8,7 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #05070d;
@@ -456,68 +456,103 @@
   #toast.show { transform: translateX(-50%) translateY(0); }
 
   /* ═══════════ LOGIN GATE ═══════════ */
-  .gate { position: fixed; inset: 0; z-index: 2000; display: none; align-items: center; justify-content: center;
-    padding: 24px; background: transparent; overflow: hidden; }
+  .gate {
+    position: fixed; inset: 0; z-index: 2000; display: none; align-items: center; justify-content: center;
+    padding: 24px; background: #fcfaf9; overflow: hidden; color: #171717; font-family: "Manrope", var(--font-ui);
+  }
   .gate.show { display: flex; }
-  .gate::before {  /* rotating aurora halo behind the card */
-    content: ""; position: absolute; pointer-events: none; width: 640px; height: 640px; border-radius: 50%;
-    background: conic-gradient(from 0deg,
-      rgba(91,140,255,0.32), rgba(139,92,246,0.18), rgba(34,211,238,0.14),
-      rgba(91,140,255,0.05), rgba(91,140,255,0.32));
-    filter: blur(90px); opacity: 0.6;
-    animation: spin 26s linear infinite;
-  }
-  .gate::after {  /* orbit ring around the card */
-    content: ""; position: absolute; pointer-events: none; width: 560px; height: 560px; border-radius: 50%;
-    border: 1px dashed rgba(91,140,255,0.22);
-    animation: spinRev 60s linear infinite;
-  }
+  .gate::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 52%, rgba(255,255,255,0.9) 0%, rgba(252,250,249,0.9) 44%, rgba(247,244,242,0.78) 100%); z-index: 0; }
+  .gate::after { content: ""; position: absolute; inset: auto 0 0 0; height: 36%; pointer-events: none; background: linear-gradient(180deg, rgba(252,250,249,0), rgba(252,250,249,0.35)); z-index: 1; }
+  .gate-scene { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
+  .gate-asset { position: absolute; object-fit: fill; pointer-events: none; user-select: none; }
+  .gate-asset.desktop-left { left: 0.27vw; top: 5.94vh; width: min(33.47vw, 482px); height: auto; }
+  .gate-asset.desktop-right { right: -5.62vw; top: 11.44vh; width: min(36.6vw, 527px); height: auto; }
+  .gate-asset.mobile-top-left,
+  .gate-asset.mobile-right,
+  .gate-asset.mobile-bottom { display: none; }
   .gate-card {
-    position: relative; z-index: 2;
-    background: rgba(15,19,32,0.86); border: 1px solid var(--border-strong); border-radius: 20px;
-    max-width: 432px; width: 100%; text-align: center; padding: 42px 34px;
-    box-shadow: var(--shadow), 0 0 80px rgba(91,140,255,0.08);
-    backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
-    overflow: hidden; animation: rise 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    position: relative; z-index: 2; max-width: 440px; width: 100%; text-align: center; padding: 0;
+    background: transparent; border: 0; box-shadow: none; overflow: visible;
+    animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    display: flex; flex-direction: column; align-items: center; gap: 17px;
   }
-  .gate-card::before {  /* top gradient hairline */
-    content: ""; position: absolute; top: 0; left: 24px; right: 24px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
-  }
+  .gate-card.config { max-width: 460px; gap: 15px; }
   .gate-logo {
-    width: 66px; height: 66px; margin: 0 auto 20px; border-radius: 16px;
-    background: linear-gradient(135deg, var(--accent), #d97706);
-    display: flex; align-items: center; justify-content: center; overflow: hidden;
-    box-shadow: 0 0 0 1px rgba(245,158,11,0.4), 0 0 34px rgba(245,158,11,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
-    animation: pulse 3s ease-in-out infinite; font-size: 1.6rem;
+    width: 74px; height: 41px; display: flex; align-items: center; justify-content: center; overflow: visible;
+    margin: 0; background: transparent; border-radius: 0; box-shadow: none;
   }
-  @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 1px rgba(245,158,11,0.4), 0 0 26px rgba(245,158,11,0.3), inset 0 1px 0 rgba(255,255,255,0.3); }
-    50%      { box-shadow: 0 0 0 1px rgba(245,158,11,0.6), 0 0 52px rgba(245,158,11,0.55), inset 0 1px 0 rgba(255,255,255,0.3); }
+  .gate-logo img { width: 100%; height: 100%; object-fit: contain; padding: 0; opacity: 0.9; }
+  .gate-status {
+    width: 52px; height: 52px; border-radius: 14px; background: #fff; border: 1px solid #e3e0dd;
+    box-shadow: 0 8px 24px rgba(23,23,23,0.08); display: flex; align-items: center; justify-content: center;
   }
-  .gate-logo img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
-  .gate-card h2 { font-size: 1.35rem; font-weight: 700; letter-spacing: 0.01em; }
-  .gate-card p { color: var(--text-dim); font-size: 0.88rem; margin: 9px 0 4px; }
-  .gate-card label { display: block; text-align: left; font-size: 0.7rem; color: var(--text-dim);
-    text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; margin: 15px 0 6px; }
-  .gate-card input { width: 100%; background: rgba(5,7,13,0.65); border: 1px solid var(--border); color: var(--text);
-    border-radius: 10px; padding: 12px 14px; font-size: 0.92rem; font-family: inherit;
+  .gate-status.round { border-radius: 50%; }
+  .gate-status img { width: 31px; height: 31px; object-fit: contain; }
+  .gate-status-mark {
+    width: 27px; height: 27px; border-radius: 50%; background: #171717; color: #fff; display: flex;
+    align-items: center; justify-content: center; font-size: 15px; line-height: 20px; font-weight: 800;
+  }
+  .gate-copy { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
+  .gate-card h2 { font-family: "Manrope", var(--font-ui); font-size: 31px; line-height: 39px; font-weight: 750; letter-spacing: 0; color: #171717; }
+  .gate-card.login h2 { font-size: 34px; line-height: 42px; }
+  .gate-card p { color: #6b7280; font-size: 14px; line-height: 21px; margin: 0; max-width: 382px; }
+  .gate-card.login p { font-size: 15px; line-height: 22px; max-width: 360px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .gate-fields { width: 420px; max-width: 100%; display: flex; flex-direction: column; gap: 10px; }
+  .gate-card input {
+    width: 100%; height: 46px; background: rgba(255,255,255,0.88); border: 1px solid #e3e0dd; color: #2b2b2b;
+    border-radius: 8px; padding: 0 15px; font-size: 13px; line-height: 18px; font-family: inherit; font-weight: 500;
     transition: border-color 0.2s, box-shadow 0.2s; }
-  .gate-card input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .gate-msg { font-size: 0.84rem; min-height: 20px; margin-top: 10px; }
-  .gate-msg.err { color: #f87171; } .gate-msg.ok { color: var(--green); }
-  .gate-btn { width: 100%; margin-top: 18px; border: none; border-radius: 12px; padding: 13px;
-    font-weight: 700; font-size: 0.95rem; cursor: pointer; font-family: inherit;
+  .gate-card input::placeholder { color: #8a837e; opacity: 1; }
+  .gate-card input:focus { outline: none; border-color: #171717; box-shadow: 0 0 0 3px rgba(23,23,23,0.08); }
+  .gate-email-pill {
+    height: 36px; border: 1px solid #e3e0dd; border-radius: 999px; background: rgba(255,255,255,0.84);
+    display: inline-flex; align-items: center; justify-content: center; padding: 0 16px; max-width: 100%;
+    color: #2b2b2b; font-size: 13px; line-height: 18px; font-weight: 650;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .gate-helper { color: #8a837e; font-size: 12px; line-height: 17px; font-weight: 500; max-width: 380px; }
+  .gate-msg { font-size: 12px; line-height: 17px; min-height: 0; margin: 0; font-weight: 600; }
+  .gate-msg:empty { display: none; }
+  .gate-msg.err { color: #b42318; } .gate-msg.ok { color: #15803d; }
+  .gate-btn {
+    width: 420px; max-width: 100%; height: 48px; margin: 0; border: none; border-radius: 8px; padding: 0 16px;
+    font-weight: 700; font-size: 15px; line-height: 20px; cursor: pointer; font-family: inherit;
     transition: transform 0.15s, box-shadow 0.2s, filter 0.2s; }
   .gate-btn:hover { transform: translateY(-1px); }
   .gate-btn:active { transform: translateY(0) scale(0.99); }
-  .gate-btn.primary { background: linear-gradient(135deg, var(--accent), #e08b06); color: #0a0e1a;
-    box-shadow: 0 6px 22px rgba(245,158,11,0.28); }
-  .gate-btn.primary:hover { box-shadow: 0 8px 30px rgba(245,158,11,0.45); filter: brightness(1.05); }
+  .gate-btn.primary, .gate-btn.ghost { background: #171717; color: #fff; border: 1px solid #171717; box-shadow: 0 1px 2px rgba(23,23,23,0.06); }
+  .gate-btn.primary:hover, .gate-btn.ghost:hover { box-shadow: 0 8px 26px rgba(23,23,23,0.12); filter: brightness(1.05); }
   .gate-btn.google { background: #fff; color: #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 10px;
-    box-shadow: 0 6px 22px rgba(255,255,255,0.12); }
-  .gate-btn.google:hover { box-shadow: 0 8px 30px rgba(255,255,255,0.2); }
-  .gate-btn.ghost { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border); }
+    border: 1px solid #e3e0dd; box-shadow: 0 1px 2px rgba(23,23,23,0.05); }
+  .gate-btn.google:hover { box-shadow: 0 8px 26px rgba(23,23,23,0.08); }
+  .gate-provider-logo { width: 20px; height: 20px; object-fit: contain; flex: 0 0 20px; }
+  @media (max-width: 640px) {
+    .gate { padding: 0 24px; align-items: center; }
+    .gate-asset.desktop-left, .gate-asset.desktop-right { display: none; }
+    .gate-asset.mobile-top-left { display: block; left: -7.69vw; top: -6.81vh; width: 55.64vw; height: auto; }
+    .gate-asset.mobile-right { display: block; right: -7.95vw; top: -8.29vh; width: 82.82vw; height: auto; }
+    .gate-asset.mobile-bottom { display: block; left: -1.79vw; bottom: -6.4vh; width: 121.79vw; height: auto; }
+    .gate-card { max-width: 342px; gap: 15px; }
+    .gate-card.config { gap: 11px; }
+    .gate-logo { width: 58px; height: 32px; }
+    .gate-status { width: 46px; height: 46px; border-radius: 12px; }
+    .gate-status.round { border-radius: 50%; }
+    .gate-status img { width: 27px; height: 27px; }
+    .gate-status-mark { width: 24px; height: 24px; font-size: 14px; line-height: 18px; }
+    .gate-copy { gap: 6px; }
+    .gate-card h2 { font-size: 25px; line-height: 32px; }
+    .gate-card.login h2 { font-size: 28px; line-height: 35px; }
+    .gate-card p, .gate-card.login p { font-size: 12px; line-height: 17px; max-width: 302px; }
+    .gate-card.login p { font-size: 13px; line-height: 19px; max-width: 286px; }
+    .gate-fields { width: 342px; gap: 8px; }
+    .gate-card input { height: 42px; padding: 0 13px; font-size: 12px; line-height: 17px; }
+    .gate-btn { width: 342px; height: 44px; font-size: 14px; line-height: 19px; }
+    .gate-btn.google { height: 46px; }
+    .gate-provider-logo { width: 19px; height: 19px; flex-basis: 19px; }
+    .gate-email-pill { height: 34px; font-size: 12px; line-height: 17px; padding: 0 14px; }
+    .gate-helper { display: none; }
+  }
 
   /* ═══════════ AI BRIEFING CARD ═══════════ */
   .brief-orb { width: 12px; height: 12px; border-radius: 50%; flex: 0 0 12px; display: inline-block;
@@ -919,40 +954,75 @@
 
 <!-- ═══════════ GATE 0 · CONNECT SUPABASE ═══════════ -->
 <div class="gate" id="gateConfig">
-  <div class="gate-card">
+  <div class="gate-scene" aria-hidden="true">
+    <img class="gate-asset desktop-left" src="hub/screen-contracts/assets/paper-layers/entry-auth-left-objects-feathered-v1.png" alt="" />
+    <img class="gate-asset desktop-right" src="hub/screen-contracts/assets/paper-layers/entry-auth-right-objects-feathered-v1.png" alt="" />
+    <img class="gate-asset mobile-top-left" src="hub/screen-contracts/assets/paper-layers/entry-auth-mobile-top-left-objects-feathered-v1.png" alt="" />
+    <img class="gate-asset mobile-right" src="hub/screen-contracts/assets/paper-layers/entry-auth-mobile-right-objects-feathered-v1.png" alt="" />
+    <img class="gate-asset mobile-bottom" src="hub/screen-contracts/assets/paper-layers/entry-auth-mobile-bottom-objects-feathered-v1.png" alt="" />
+  </div>
+  <div class="gate-card config">
     <div class="gate-logo"><img src="hg-logo.png" alt="HG" /></div>
-    <h2>Connect to Supabase</h2>
-    <p>One-time setup. Find both in <b>Supabase → Project Settings → API</b>.</p>
-    <label>Project URL</label>
-    <input id="cfgUrl" placeholder="https://xxxx.supabase.co" autocomplete="off" />
-    <label>Anon / public key</label>
-    <input id="cfgKey" placeholder="eyJhbGci… or sb_publishable_…" autocomplete="off" />
+    <div class="gate-status"><img src="hub/screen-contracts/assets/logos/supabase-logo-icon.png" alt="Supabase" /></div>
+    <div class="gate-copy">
+      <h2>Connect HG Hub</h2>
+      <p>Add the Supabase project details to start this workspace.</p>
+    </div>
+    <div class="gate-fields">
+      <label class="sr-only" for="cfgUrl">Supabase project URL</label>
+      <input id="cfgUrl" placeholder="Supabase project URL" autocomplete="off" />
+      <label class="sr-only" for="cfgKey">Public anon key</label>
+      <input id="cfgKey" placeholder="Public anon key" autocomplete="off" />
+    </div>
     <div id="cfgMsg" class="gate-msg"></div>
     <button class="gate-btn primary" onclick="saveConfig()">Connect</button>
+    <div class="gate-helper">Shown only when auth configuration is missing</div>
   </div>
 </div>
 
 <!-- ═══════════ GATE 1 · LOGIN ═══════════ -->
 <div class="gate" id="gateLogin">
-  <div class="gate-card">
+  <div class="gate-scene" aria-hidden="true">
+    <img class="gate-asset desktop-left" src="hub/screen-contracts/assets/paper-layers/entry-auth-left-objects-feathered-v1.png" alt="" />
+    <img class="gate-asset desktop-right" src="hub/screen-contracts/assets/paper-layers/entry-auth-right-objects-feathered-v1.png" alt="" />
+    <img class="gate-asset mobile-top-left" src="hub/screen-contracts/assets/paper-layers/entry-auth-mobile-top-left-objects-feathered-v1.png" alt="" />
+    <img class="gate-asset mobile-right" src="hub/screen-contracts/assets/paper-layers/entry-auth-mobile-right-objects-feathered-v1.png" alt="" />
+    <img class="gate-asset mobile-bottom" src="hub/screen-contracts/assets/paper-layers/entry-auth-mobile-bottom-objects-feathered-v1.png" alt="" />
+  </div>
+  <div class="gate-card login">
     <div class="gate-logo"><img src="hg-logo.png" alt="HG" /></div>
-    <h2>HG Group — Tools</h2>
-    <p>Sign in with the Google account your admin has allowlisted.</p>
+    <div class="gate-copy">
+      <h2>Welcome back</h2>
+      <p>Sign in to open your HG Hub command center.</p>
+    </div>
     <button class="gate-btn google" onclick="hubSignIn()">
-      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41 35.3 44 30.1 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
-      Sign in with Google
+      <img class="gate-provider-logo" src="hub/screen-contracts/assets/logos/google-g-logo.png" alt="" />
+      Continue with Google
     </button>
+    <div class="gate-helper">Authorized HG account required</div>
     <div id="loginMsg" class="gate-msg"></div>
   </div>
 </div>
 
 <!-- ═══════════ GATE 2 · NOT ALLOWLISTED ═══════════ -->
 <div class="gate" id="gateDenied">
-  <div class="gate-card">
-    <div class="gate-logo">🔒</div>
-    <h2>Not authorised</h2>
-    <p><span id="deniedEmail"></span> is not on the access list. Ask your admin to add you under any tool's <b>Settings → Team access</b>.</p>
+  <div class="gate-scene" aria-hidden="true">
+    <img class="gate-asset desktop-left" src="hub/screen-contracts/assets/paper-layers/entry-auth-left-objects-feathered-v1.png" alt="" />
+    <img class="gate-asset desktop-right" src="hub/screen-contracts/assets/paper-layers/entry-auth-right-objects-feathered-v1.png" alt="" />
+    <img class="gate-asset mobile-top-left" src="hub/screen-contracts/assets/paper-layers/entry-auth-mobile-top-left-objects-feathered-v1.png" alt="" />
+    <img class="gate-asset mobile-right" src="hub/screen-contracts/assets/paper-layers/entry-auth-mobile-right-objects-feathered-v1.png" alt="" />
+    <img class="gate-asset mobile-bottom" src="hub/screen-contracts/assets/paper-layers/entry-auth-mobile-bottom-objects-feathered-v1.png" alt="" />
+  </div>
+  <div class="gate-card denied">
+    <div class="gate-logo"><img src="hg-logo.png" alt="HG" /></div>
+    <div class="gate-status round"><span class="gate-status-mark">!</span></div>
+    <div class="gate-copy">
+      <h2>Access not approved</h2>
+      <p>This Google account is not on the HG Hub access list.</p>
+    </div>
+    <span id="deniedEmail" class="gate-email-pill"></span>
     <button class="gate-btn ghost" onclick="hubSignOut()">Use a different account</button>
+    <div class="gate-helper">Ask an admin to add this email to team access.</div>
   </div>
 </div>
 
