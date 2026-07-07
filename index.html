@@ -465,34 +465,37 @@
   .gate::after { content: ""; position: absolute; inset: auto 0 0 0; height: 36%; pointer-events: none; background: linear-gradient(180deg, rgba(252,250,249,0), rgba(252,250,249,0.35)); z-index: 1; }
   .gate-scene { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
   .gate-asset { position: absolute; object-fit: fill; pointer-events: none; user-select: none; }
-  .gate-asset.desktop-left { left: 0.27vw; top: 5.94vh; width: min(33.47vw, 482px); height: auto; }
-  .gate-asset.desktop-right { right: -5.62vw; top: 11.44vh; width: min(36.6vw, 527px); height: auto; }
+  .gate-asset.desktop-left { left: min(0.27vw, 3.854px); top: min(5.94vh, 53.487px); width: min(37.85vw, 545px); height: auto; }
+  .gate-asset.desktop-right { right: max(-17px, -1.18vw); top: min(11.44vh, 103px); width: min(32.15vw, 463px); height: auto; }
   .gate-asset.mobile-top-left,
   .gate-asset.mobile-right,
   .gate-asset.mobile-bottom { display: none; }
   .gate-card {
-    position: relative; z-index: 2; max-width: 440px; width: 100%; text-align: center; padding: 0;
+    position: absolute; z-index: 2; left: 50%; top: min(22.78vh, 205px); margin-left: -220px;
+    max-width: calc(100vw - 48px); width: 440px; text-align: center; padding: 0;
     background: transparent; border: 0; box-shadow: none; overflow: visible;
     animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) both;
     display: flex; flex-direction: column; align-items: center; gap: 17px;
   }
-  .gate-card.config { max-width: 460px; gap: 15px; }
+  .gate-card.config { width: 460px; margin-left: -230px; top: min(18.89vh, 170px); gap: 15px; }
+  .gate-card.login { top: min(25.56vh, 230px); gap: 20px; }
   .gate-logo {
     width: 74px; height: 41px; display: flex; align-items: center; justify-content: center; overflow: visible;
     margin: 0; background: transparent; border-radius: 0; box-shadow: none;
   }
   .gate-logo img { width: 100%; height: 100%; object-fit: contain; padding: 0; opacity: 0.9; }
   .gate-status {
-    width: 52px; height: 52px; border-radius: 14px; background: #fff; border: 1px solid #e3e0dd;
+    width: 34px; height: 33px; border-radius: 14px; background: #fff; border: 1px solid #e3e0dd;
     box-shadow: 0 8px 24px rgba(23,23,23,0.08); display: flex; align-items: center; justify-content: center;
   }
-  .gate-status.round { border-radius: 50%; }
+  .gate-status.round { width: 28px; height: 22px; border-radius: 50%; overflow: visible; }
   .gate-status img { width: 31px; height: 31px; object-fit: contain; }
   .gate-status-mark {
-    width: 27px; height: 27px; border-radius: 50%; background: #171717; color: #fff; display: flex;
+    width: 36px; height: 35px; border-radius: 50%; background: #171717; color: #fff; display: flex;
     align-items: center; justify-content: center; font-size: 15px; line-height: 20px; font-weight: 800;
   }
   .gate-copy { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
+  .gate-card.login .gate-copy { gap: 9px; }
   .gate-card h2 { font-family: "Manrope", var(--font-ui); font-size: 31px; line-height: 39px; font-weight: 750; letter-spacing: 0; color: #171717; }
   .gate-card.login h2 { font-size: 34px; line-height: 42px; }
   .gate-card p { color: #6b7280; font-size: 14px; line-height: 21px; margin: 0; max-width: 382px; }
@@ -512,6 +515,10 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .gate-helper { color: #8a837e; font-size: 12px; line-height: 17px; font-weight: 500; max-width: 380px; }
+  .gate-card.login .gate-helper {
+    width: 420px; max-width: 100%; height: 34px; border-top: 1px solid #ece8e5;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
   .gate-msg { font-size: 12px; line-height: 17px; min-height: 0; margin: 0; font-weight: 600; }
   .gate-msg:empty { display: none; }
   .gate-msg.err { color: #b42318; } .gate-msg.ok { color: #15803d; }
@@ -523,7 +530,7 @@
   .gate-btn:active { transform: translateY(0) scale(0.99); }
   .gate-btn.primary, .gate-btn.ghost { background: #171717; color: #fff; border: 1px solid #171717; box-shadow: 0 1px 2px rgba(23,23,23,0.06); }
   .gate-btn.primary:hover, .gate-btn.ghost:hover { box-shadow: 0 8px 26px rgba(23,23,23,0.12); filter: brightness(1.05); }
-  .gate-btn.google { background: #fff; color: #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 10px;
+  .gate-btn.google { background: #fff; color: #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 12px;
     border: 1px solid #e3e0dd; box-shadow: 0 1px 2px rgba(23,23,23,0.05); }
   .gate-btn.google:hover { box-shadow: 0 8px 26px rgba(23,23,23,0.08); }
   .gate-provider-logo { width: 20px; height: 20px; object-fit: contain; flex: 0 0 20px; }
@@ -533,25 +540,35 @@
     .gate-asset.mobile-top-left { display: block; left: -7.69vw; top: -6.81vh; width: 55.64vw; height: auto; }
     .gate-asset.mobile-right { display: block; right: -7.95vw; top: -8.29vh; width: 82.82vw; height: auto; }
     .gate-asset.mobile-bottom { display: block; left: -1.79vw; bottom: -6.4vh; width: 121.79vw; height: auto; }
-    .gate-card { max-width: 342px; gap: 15px; }
-    .gate-card.config { gap: 11px; }
+    .gate-card {
+      left: max(24px, calc(50% - 171px)); right: max(24px, calc(50% - 171px));
+      margin-left: 0; width: auto; max-width: none; gap: 15px;
+    }
+    .gate-card.config { top: min(29.62vh, 250px); margin-left: 0; width: auto; gap: 11px; }
+    .gate-card.login { top: min(35.55vh, 300px); gap: 15px; }
+    #gateDenied .gate-card { top: min(32.94vh, 278px); gap: 12px; }
     .gate-logo { width: 58px; height: 32px; }
-    .gate-status { width: 46px; height: 46px; border-radius: 12px; }
-    .gate-status.round { border-radius: 50%; }
-    .gate-status img { width: 27px; height: 27px; }
-    .gate-status-mark { width: 24px; height: 24px; font-size: 14px; line-height: 18px; }
+    .gate-status { width: 30px; height: 27px; border-radius: 12px; }
+    .gate-status.round { width: 35px; height: 34px; border-radius: 50%; }
+    .gate-status img { width: 32.5px; height: 29.4px; }
+    .gate-status-mark { width: 34px; height: 33px; font-size: 14px; line-height: 18px; }
     .gate-copy { gap: 6px; }
     .gate-card h2 { font-size: 25px; line-height: 32px; }
+    .gate-card.config h2 { font-size: 26px; line-height: 32px; }
     .gate-card.login h2 { font-size: 28px; line-height: 35px; }
     .gate-card p, .gate-card.login p { font-size: 12px; line-height: 17px; max-width: 302px; }
     .gate-card.login p { font-size: 13px; line-height: 19px; max-width: 286px; }
     .gate-fields { width: 342px; gap: 8px; }
     .gate-card input { height: 42px; padding: 0 13px; font-size: 12px; line-height: 17px; }
     .gate-btn { width: 342px; height: 44px; font-size: 14px; line-height: 19px; }
-    .gate-btn.google { height: 46px; }
+    .gate-btn.google { height: 46px; gap: 10px; }
     .gate-provider-logo { width: 19px; height: 19px; flex-basis: 19px; }
     .gate-email-pill { height: 34px; font-size: 12px; line-height: 17px; padding: 0 14px; }
     .gate-helper { display: none; }
+    .gate-card.login .gate-helper {
+      display: flex; width: 300px; height: auto; max-width: 100%; border-top: 0;
+      align-items: center; font-size: 11px; line-height: 16px;
+    }
   }
 
   /* ═══════════ AI BRIEFING CARD ═══════════ */
