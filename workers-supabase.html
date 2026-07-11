@@ -6,6 +6,10 @@
 <title>HG Workers Documentation &amp; Work Permits — Supabase</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <style>
   :root {
     --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335; --border:#2a3245;
@@ -114,9 +118,116 @@
   .gate input { text-align:left; margin-bottom:4px; }
   a.filelink { color:var(--accent); font-size:0.8rem; text-decoration:none; }
   a.filelink:hover { text-decoration:underline; }
+
+  /* HG Hub light tool shell */
+  :root { --bg:#fff; --surface:#fff; --surface-2:#f8f7f4; --border:#e4ded6; --text:#171717; --text-dim:#817970; --text-dimmer:#9b938a; --accent:#143d4a; --accent-hover:#0e303b; --accent-soft:#eef6f3; --green:#15945d; --green-soft:#edf8f3; --red:#d84d4f; --red-soft:#fff1ee; --blue:#2f7fa5; --blue-soft:#eef7fb; --amber:#a66b00; --amber-soft:#fff7e7; --yellow:#a66b00; --yellow-soft:#fff7e7; --radius:8px; }
+  body { font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; color:var(--text); line-height:1.5; }
+  #app { padding:26px 28px 0; }
+  .topbar { align-items:center; padding:0 0 20px; margin:0 0 18px; border-bottom:1px solid var(--border); }
+  body.embedded .topbar { display:none; }
+  .brand-block { gap:9px; }
+  .brand-logo { width:24px; height:24px; padding:0; background:transparent; border-radius:0; color:var(--accent); }
+  .brand-logo svg { width:20px; height:20px; stroke-width:2; }
+  .brand-name { display:flex; align-items:center; gap:10px; color:var(--text); font-size:1.05rem; font-weight:800; letter-spacing:-.02em; }
+  .brand-sub { color:var(--text-dim); font-size:.78rem; margin-top:3px; }
+  .tool-live { display:inline-flex; align-items:center; height:21px; padding:0 9px; border-radius:999px; background:var(--green-soft); color:var(--green); font-size:.64rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .user-pill { background:var(--surface); border-color:var(--border); border-radius:999px; padding:8px 12px; color:var(--text-dim); font-size:.78rem; }
+  .user-pill b { color:var(--accent); font-weight:700; } .user-pill button { color:#a66b00; }
+  nav { gap:26px; padding:0; margin:0 0 24px; flex-wrap:nowrap; overflow-x:auto; border-bottom:1px solid var(--border); }
+  nav button { flex:0 0 auto; padding:0 0 12px; border:0; border-bottom:3px solid transparent; border-radius:0; background:transparent; color:#716b65; font-size:.78rem; font-weight:800; }
+  nav button:hover { background:transparent; border-color:transparent; color:var(--accent); }
+  nav button.active { background:transparent; color:var(--accent); border-color:var(--accent); }
+  main { max-width:none; padding:0 0 72px; }
+  .section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin:0 0 14px; }
+  .section-title { color:var(--text); font-size:1.22rem; font-weight:800; letter-spacing:-.025em; }
+  .section-meta,.sub { color:#716b65; font-size:.86rem; }
+  .section-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .card { background:var(--surface); border-color:var(--border); border-radius:var(--radius); padding:18px; margin-bottom:12px; box-shadow:none; }
+  .settings-work-unit { padding:2px 0 22px; margin-bottom:18px; border-bottom:1px solid var(--border); }
+  .report-builder { padding:0; overflow:hidden; }
+  .report-builder-head,.report-group { padding:18px; }
+  .report-group { border-top:1px solid var(--border); }
+  .report-group-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:12px; }
+  .report-group-head h2 { margin:0 0 3px; }
+  .report-pick-actions { display:flex; align-items:center; gap:12px; flex:0 0 auto; }
+  .report-pick-actions a { font-weight:700; }
+  .report-doc-grid,.report-division-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+  .report-builder .chk { min-height:50px; margin:0; padding:9px 11px; color:#5f5a54; font-size:.78rem; font-weight:700; line-height:1.3; letter-spacing:0; text-transform:none; }
+  .report-builder .chk.on { border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
+  .report-empty { display:flex; align-items:center; justify-content:space-between; grid-column:1/-1; gap:16px; min-height:64px; padding:12px 14px; border:0; border-radius:8px; background:var(--surface-2); }
+  .report-empty strong { display:block; font-size:.84rem; }
+  .report-empty span { display:block; margin-top:2px; color:#817970; font-size:.78rem; }
+  .report-actions { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; padding:16px 18px; border-top:1px solid var(--border); background:var(--surface-2); }
+  .report-builder > .msg { margin:0 18px; }
+  .report-history-card .toolbar { margin-bottom:0; padding-bottom:14px; border-bottom:1px solid var(--border); }
+  .report-history-empty { min-height:84px; border:0; padding:20px; }
+  h2 { color:var(--text); font-size:.98rem; font-weight:800; margin-bottom:4px; letter-spacing:-.02em; }
+  h3 { color:var(--accent); font-size:.78rem; font-weight:800; margin:18px 0 9px; text-transform:uppercase; letter-spacing:.04em; }
+  label { color:#716b65; font-size:.72rem; font-weight:800; margin:10px 0 5px; }
+  input,select,textarea { background:#fff; border-color:#ded8cf; color:var(--text); border-radius:8px; padding:10px 12px; font-size:.88rem; }
+  select { padding-right:12px; }
+  .hub-select { position:relative; width:100%; } .hub-select-native { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+  button.hub-select-trigger { position:relative; display:flex; align-items:center; width:100%; min-height:42px; padding:10px 42px 10px 12px; background:#fff; border:1px solid #ded8cf; border-radius:8px; color:var(--text); font:inherit; font-size:.88rem; font-weight:500; text-align:left; }
+  button.hub-select-trigger:hover { background:#fff; border-color:#cfc8bd; color:var(--text); } button.hub-select-trigger:focus-visible,.hub-select.open .hub-select-trigger { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  button.hub-select-trigger::after { content:""; position:absolute; right:16px; top:50%; width:7px; height:7px; border-right:1.7px solid var(--accent); border-bottom:1.7px solid var(--accent); transform:translateY(-68%) rotate(45deg); }
+  button.hub-select-trigger:disabled { opacity:.6; cursor:default; } .hub-select-menu { position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:120; display:none; max-height:260px; overflow-y:auto; padding:5px; background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:0 12px 30px rgba(23,23,23,.12); }
+  .hub-select.open .hub-select-menu { display:block; } .hub-select.open-up .hub-select-menu { top:auto; bottom:calc(100% + 4px); } button.hub-select-option { display:block; width:100%; min-height:40px; padding:9px 10px; border:0; border-radius:6px; background:transparent; color:var(--text); font:inherit; font-size:.84rem; font-weight:600; text-align:left; }
+  button.hub-select-option:hover,button.hub-select-option.selected { background:var(--surface-2); color:var(--accent); }
+  input:focus,select:focus,textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  button.primary,button.ghost,button.danger { border-radius:8px; padding:9px 12px; font-size:.82rem; font-weight:700; }
+  button.primary { background:var(--accent); color:#fff; } button.primary:hover { background:var(--accent-hover); }
+  button.ghost { background:#fff; color:var(--accent); border-color:var(--border); } button.ghost:hover { background:var(--surface-2); border-color:#cfc8bd; }
+  button.danger { background:#fff; color:var(--red); border-color:#f1c8c5; } button.danger:hover { background:var(--red-soft); border-color:#efaaa7; }
+  button.sm { padding:7px 10px; font-size:.78rem; }
+  .tool-snapshot { padding:18px; } .tool-snapshot-title { color:var(--text); font-size:.9rem; font-weight:800; margin-bottom:14px; }
+  .stat-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; }
+  .stat { min-height:74px; background:transparent; border:0; border-right:1px solid var(--border); border-radius:0; padding:6px 16px; }
+  .stat:nth-child(4n) { border-right:0; } .stat:nth-child(n+5) { border-top:1px solid var(--border); padding-top:14px; }
+  .stat .n { color:var(--accent); font-size:1.52rem; font-weight:800; } .stat .l { color:#716b65; font-size:.66rem; font-weight:800; margin-top:2px; }
+  .stat.red .n { color:var(--red); } .stat.amber .n,.stat.yellow .n { color:var(--amber); } .stat.green .n { color:var(--green); }
+  .toolbar { gap:14px; margin-bottom:14px; } .filters { gap:10px; } .filters > div { min-width:180px; }
+  .filter-row { align-items:flex-end; margin-bottom:12px; } .filter-row > div:first-child { flex:1 1 320px; } .filter-row > div:not(:first-child) { flex:0 1 220px; } .filter-row-compact { max-width:320px; }
+  .register-card { padding:0; overflow-x:auto; } .register-card table.grid { min-width:820px; } .register-card .empty,.list-card .empty { min-height:144px; border:0; display:flex; align-items:center; justify-content:center; } table.grid td.empty { border:0; border-radius:0; }
+  #tab-dashboard > .card:last-child .toolbar { margin-bottom:0; padding-bottom:14px; border-bottom:1px solid var(--border); }
+  .empty { border:1px dashed #ded8cf; border-radius:8px; padding:36px 20px; color:#817970; font-size:.88rem; }
+  .card .empty { border:0; }
+  .empty strong { display:block; color:var(--text); font-size:.9rem; font-weight:800; margin-bottom:4px; } .empty span { display:block; }
+  #alarmsList .empty.empty-clear { display:flex; align-items:center; justify-content:center; gap:12px; min-height:0; border:0; padding:10px 0; text-align:left; }
+  .empty-clear svg { width:24px; height:24px; flex:0 0 auto; color:var(--green); stroke-width:2; } .empty-clear strong { margin-bottom:1px; }
+  table.grid { font-size:.82rem; } table.grid th { background:var(--surface-2); color:#716b65; font-size:.66rem; font-weight:800; padding:10px 12px; border-bottom-color:var(--border); } table.grid td { padding:11px 12px; border-bottom-color:var(--border); } table.grid tr.click:hover td { background:var(--surface-2); }
+  .tag { background:var(--surface-2); border-color:transparent; color:#716b65; border-radius:999px; padding:3px 8px; }
+  .badge { font-size:.64rem; padding:4px 8px; } .badge-green { background:var(--green-soft); color:var(--green); } .badge-amber,.badge-yellow { background:var(--amber-soft); color:var(--amber); } .badge-red { background:var(--red-soft); color:var(--red); } .badge-grey { background:var(--surface-2); color:#716b65; } .badge-blue { background:var(--blue-soft); color:var(--blue); }
+  .chk { background:#fff; border-color:#ded8cf; border-radius:8px; } .chk.on { border-color:var(--accent); background:var(--accent-soft); }
+  .access-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; } .access-count { flex:0 0 auto; margin-top:2px; color:#716b65; font-size:.74rem; font-weight:800; }
+  .access-add { display:grid; grid-template-columns:minmax(260px,1.4fr) minmax(200px,1fr) 144px auto; gap:12px; align-items:end; margin-top:16px; }
+  .access-add .field label { margin-top:0; } .access-add .primary { height:42px; white-space:nowrap; }
+  .access-members { margin-top:16px; border-top:1px solid var(--border); } .access-member { display:grid; grid-template-columns:minmax(0,1fr) 112px auto; gap:16px; align-items:center; min-height:68px; border-bottom:1px solid var(--border); }
+  .access-person b { display:block; color:var(--text); font-size:.86rem; font-weight:800; } .access-person span { display:block; margin-top:2px; color:#817970; font-size:.78rem; }
+  .access-role { display:inline-flex; justify-content:center; width:max-content; min-width:64px; border-radius:999px; padding:4px 9px; font-size:.65rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+  .access-role.admin { background:var(--accent-soft); color:var(--accent); } .access-role.staff { background:var(--surface-2); color:#716b65; }
+  .access-member .danger { justify-self:end; background:#fff; }
+  .expiry-list { border-top:1px solid var(--border); } .expiry-row { display:grid; grid-template-columns:minmax(180px,.8fr) minmax(260px,1.5fr) minmax(160px,.6fr); gap:18px; align-items:center; min-height:68px; border-bottom:1px solid var(--border); padding:10px 0; }
+  .expiry-row:last-child { border-bottom:0; } .expiry-ref b,.expiry-due b { display:block; color:var(--text); font-size:.84rem; font-weight:800; } .expiry-ref span,.expiry-detail,.expiry-due span { color:#817970; font-size:.78rem; } .expiry-due { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .division-list { width:100%; } button.division-row { display:grid; grid-template-columns:minmax(0,1fr) 120px 100px; gap:18px; align-items:center; width:100%; min-height:68px; padding:12px 0; border:0; border-bottom:1px solid var(--border); border-radius:0; background:#fff; color:var(--text); font:inherit; text-align:left; cursor:pointer; }
+  button.division-row:last-child { border-bottom:0; } button.division-row:hover { background:var(--surface-2); } .division-name b { display:block; font-size:.86rem; font-weight:800; } .division-name span { display:block; margin-top:2px; color:#817970; font-size:.78rem; } .division-count { color:#716b65; font-size:.76rem; font-weight:700; }
+  .worker-detail-head,.detail-section-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; } .worker-detail-head { padding-bottom:14px; border-bottom:1px solid var(--border); }
+  .worker-meta { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0; margin:14px 0 18px; } .worker-meta span { padding:0 14px; border-right:1px solid var(--border); } .worker-meta span:first-child { padding-left:0; } .worker-meta span:last-child { border-right:0; } .worker-meta em { display:block; color:#817970; font-size:.66rem; font-style:normal; font-weight:800; letter-spacing:.04em; text-transform:uppercase; } .worker-meta b { display:block; margin-top:3px; color:var(--text); font-size:.82rem; font-weight:700; }
+  .detail-section-head { align-items:center; margin-bottom:10px; } .detail-section-head h3 { margin:0; } .detail-actions { display:flex; gap:8px; flex-wrap:wrap; } .detail-table-wrap { overflow-x:auto; border-top:1px solid var(--border); } .detail-table-wrap table { min-width:680px; }
+  .audit-table { width:100%; margin-top:16px; min-width:680px; table-layout:fixed; } .audit-table th:nth-child(1) { width:36%; } .audit-table th:nth-child(2) { width:19%; } .audit-table th:nth-child(3) { width:30%; } .audit-table th:nth-child(4) { width:15%; }
+  .audit-table th,.audit-table td { text-align:left; } .audit-table td { vertical-align:middle; } .audit-action { color:var(--text); font-size:.84rem; font-weight:800; } .audit-action.created { color:var(--green); } .audit-action.deleted { color:var(--red); } .audit-action.updated { color:var(--accent); }
+  .modal-bg { background:rgba(23,23,23,.38); backdrop-filter:blur(4px); } .modal { max-height:calc(100vh - 60px); overflow-y:auto; background:var(--surface); border-color:var(--border); border-radius:12px; box-shadow:0 12px 30px rgba(23,23,23,.12); } .modal > h2:first-child { margin-bottom:3px; } .modal > .row:last-child { position:sticky; bottom:-24px; margin:18px -24px -24px !important; padding:16px 24px; border-top:1px solid var(--border); background:rgba(255,255,255,.98); z-index:4; }
+  .gate .card { background:var(--surface); } .gate .brand-logo { width:28px; height:28px; margin:0 auto 16px; color:var(--accent); } .gbtn { border:1px solid var(--border); border-radius:8px; }
+  #alarmsList,#workersList,#permitsList,#insuranceList,#formsList,#divisionsList,#reportHistoryList,#auditList,#auList { overflow-x:auto; }
+  @media (max-width:900px) { .stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .stat:nth-child(2n) { border-right:0; } .stat:nth-child(4n) { border-right:0; } .stat:nth-child(n+3) { border-top:1px solid var(--border); padding-top:14px; } .stat:nth-child(3),.stat:nth-child(4) { padding-top:14px; } .report-doc-grid,.report-division-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:680px) { #app { padding:18px 16px 0; } .topbar { align-items:flex-start; gap:12px; } .brand-sub { display:none; } nav { gap:20px; margin-bottom:18px; } main { padding-bottom:56px; } .section-head,.toolbar { align-items:flex-start; flex-direction:column; } .section-actions { width:100%; } .section-actions button { flex:1; } .toolbar > div:last-child { width:100%; } .toolbar > div:last-child button { flex:1; } .filters { width:100%; } .filters > div { width:100%; min-width:0; } .filter-row { align-items:stretch; } .filter-row > div:first-child,.filter-row > div:not(:first-child) { flex:1 1 100%; } .report-group-head,.report-empty { align-items:flex-start; flex-direction:column; } .report-doc-grid,.report-division-grid { grid-template-columns:1fr; } .report-actions { flex-direction:column; } .report-actions button { width:100%; } .stat { padding:6px 12px; } .access-add { grid-template-columns:1fr; } .access-add .primary { width:100%; } .access-member { grid-template-columns:minmax(0,1fr) auto; gap:10px; padding:12px 0; } .access-member .danger { grid-column:2; grid-row:1; } .access-role { grid-column:1; grid-row:2; } .expiry-row { grid-template-columns:1fr; gap:5px; padding:14px 0; } .expiry-due { justify-content:flex-start; } button.division-row { grid-template-columns:1fr auto; gap:8px; padding:14px 0; } .division-count { grid-column:1; grid-row:2; } button.division-row .badge { grid-column:2; grid-row:1; } .worker-detail-head,.detail-section-head { flex-direction:column; } .worker-meta { grid-template-columns:1fr; gap:10px; } .worker-meta span,.worker-meta span:first-child { padding:0; border-right:0; } .detail-actions { width:100%; } .detail-actions button { flex:1; } }
+  @media (max-width:680px) { .hub-select-menu { max-height:min(260px,45vh); } button.hub-select-option { min-height:44px; } }
 </style>
 </head>
 <body>
+
+<script>
+  if (window.self !== window.top) document.body.classList.add('embedded');
+</script>
 
 <!-- ══════════ GATE 0 · SUPABASE CONFIG ══════════ -->
 <div class="gate" id="gateConfig" style="display:none;">
@@ -163,24 +274,24 @@
 <div id="app" style="display:none;">
   <div class="topbar">
     <div class="brand-block">
-      <div class="brand-logo">HG</div>
+      <div class="brand-logo" aria-hidden="true"><i data-lucide="user-check"></i></div>
       <div>
-        <div class="brand-name">Workers Documentation &amp; Work Permits</div>
-        <div class="brand-sub">Supabase edition · Compliance docs · permits · insurance · expiry reminders</div>
+        <div class="brand-name">Workers Documentation &amp; Permits <span class="tool-live">Live</span></div>
+        <div class="brand-sub">Manage worker access, work permits, insurance, and expiry action.</div>
       </div>
     </div>
     <div class="user-pill"><b id="userPill">…</b><button onclick="signOut()">Sign out</button></div>
   </div>
 
   <nav>
-    <button class="active" data-tab="dashboard" onclick="showTab('dashboard')">📊 Dashboard</button>
-    <button data-tab="workers" onclick="showTab('workers')">👷 Workers</button>
-    <button data-tab="permits" onclick="showTab('permits')">🛂 Work Permits</button>
-    <button data-tab="insurance" onclick="showTab('insurance')">🛡️ Insurance</button>
-    <button data-tab="forms" onclick="showTab('forms')">📥 Form Library</button>
-    <button data-tab="divisions" onclick="showTab('divisions')">🏷️ Divisions</button>
-    <button data-tab="report" onclick="showTab('report')">📄 Generate Report</button>
-    <button data-tab="settings" onclick="showTab('settings')">⚙️ Settings</button>
+    <button class="active" data-tab="dashboard" onclick="showTab('dashboard')">Overview</button>
+    <button data-tab="workers" onclick="showTab('workers')">Workers</button>
+    <button data-tab="permits" onclick="showTab('permits')">Work Permits</button>
+    <button data-tab="insurance" onclick="showTab('insurance')">Insurance</button>
+    <button data-tab="forms" onclick="showTab('forms')">Form Library</button>
+    <button data-tab="divisions" onclick="showTab('divisions')">Divisions</button>
+    <button data-tab="report" onclick="showTab('report')">Reports</button>
+    <button data-tab="settings" onclick="showTab('settings')">Settings</button>
   </nav>
 
   <main>
@@ -188,15 +299,17 @@
 
     <!-- ════ DASHBOARD ════ -->
     <section id="tab-dashboard">
-      <div class="card">
-        <h2>Compliance overview</h2>
-        <div class="sub">Live snapshot of workers, documents and permits.</div>
+      <div class="section-head">
+        <div><div class="section-title">Worker access overview</div><div class="section-meta">Review document health, permit coverage, and expiry action across the workforce.</div></div>
+      </div>
+      <div class="card tool-snapshot">
+        <div class="tool-snapshot-title">Compliance Snapshot</div>
         <div class="stat-grid" id="dashStats"></div>
       </div>
       <div class="card">
         <div class="toolbar">
-          <div><h2>⏰ Expiry alarms</h2><div class="sub" style="margin:0;">Same list the weekly reminder email would send — worker docs (active workers) &amp; active permits due or overdue.</div></div>
-          <button class="ghost sm" onclick="exportAlarmsExcel()">⬇ Export Excel</button>
+          <div><h2>Expiry attention</h2><div class="sub" style="margin:0;">Worker documents and active permits due or overdue.</div></div>
+          <button class="ghost sm" onclick="exportAlarmsExcel()">Export Excel</button>
         </div>
         <div id="alarmsList" class="loading"><span class="spin"></span> Loading…</div>
       </div>
@@ -204,110 +317,113 @@
 
     <!-- ════ WORKERS ════ -->
     <section id="tab-workers" class="hide">
-      <div class="card">
-        <div class="toolbar">
-          <div><h2>Workers</h2><div class="sub" style="margin:0;">Master list. Click a row to view documents &amp; expiry status.</div></div>
-          <div style="display:flex; gap:8px;">
-            <button class="ghost sm" onclick="exportWorkersExcel()">⬇ Export Excel</button>
+      <div class="section-head">
+        <div><div class="section-title">Workers</div><div class="section-meta">Master list. Open a worker to review documents and expiry status.</div></div>
+        <div class="section-actions">
+            <button class="ghost sm" onclick="exportWorkersExcel()">Export Excel</button>
             <button class="primary sm" onclick="openWorkerEdit(null)">+ Add worker</button>
-          </div>
         </div>
-        <div class="filters">
+      </div>
+      <div class="filters filter-row">
           <div><label>Search</label><input id="wkSearch" placeholder="name / IC / passport" oninput="renderWorkers()"></div>
           <div><label>Division</label><select id="wkDivFilter" onchange="renderWorkers()"></select></div>
           <div><label>Status</label><select id="wkStatusFilter" onchange="renderWorkers()">
             <option value="">All</option><option value="active">Active</option><option value="inactive">Inactive</option><option value="resigned">Resigned</option></select></div>
-        </div>
-        <div id="workersList" style="margin-top:14px;"></div>
       </div>
+      <div class="card register-card"><div id="workersList"></div></div>
     </section>
 
     <!-- ════ PERMITS ════ -->
     <section id="tab-permits" class="hide">
-      <div class="card">
-        <div class="toolbar">
-          <div><h2>Work permits</h2><div class="sub" style="margin:0;">Issued mall / building permits linked to workers.</div></div>
-          <div style="display:flex; gap:8px;">
-            <button class="ghost sm" onclick="exportPermitsExcel()">⬇ Export Excel</button>
+      <div class="section-head">
+        <div><div class="section-title">Work permits</div><div class="section-meta">Issued mall and building permits linked to workers.</div></div>
+        <div class="section-actions">
+            <button class="ghost sm" onclick="exportPermitsExcel()">Export Excel</button>
             <button class="primary sm" onclick="openPermitEdit(null)">+ Add permit</button>
-          </div>
         </div>
-        <div class="filters">
+      </div>
+      <div class="filters filter-row">
           <div><label>Search</label><input id="pmSearch" placeholder="permit / mall / client" oninput="renderPermits()"></div>
           <div><label>Duration</label><select id="pmDurFilter" onchange="renderPermits()"></select></div>
           <div><label>Status</label><select id="pmStatusFilter" onchange="renderPermits()">
             <option value="">All</option><option value="active">Active</option><option value="cancelled">Cancelled</option><option value="superseded">Superseded</option></select></div>
-        </div>
-        <div id="permitsList" style="margin-top:14px;"></div>
       </div>
+      <div class="card register-card"><div id="permitsList"></div></div>
     </section>
 
     <!-- ════ INSURANCE ════ -->
     <section id="tab-insurance" class="hide">
-      <div class="card">
-        <div class="toolbar">
-          <div><h2>Insurance policies</h2><div class="sub" style="margin:0;">HG's own cover-note library — track premium, what we charge the client, quotes &amp; payments.</div></div>
-          <div style="display:flex; gap:8px;">
-            <button class="ghost sm" onclick="exportInsuranceExcel()">⬇ Export Excel</button>
+      <div class="section-head">
+        <div><div class="section-title">Insurance policies</div><div class="section-meta">Track cover notes, premiums, client charges, quotes, and payments.</div></div>
+        <div class="section-actions">
+            <button class="ghost sm" onclick="exportInsuranceExcel()">Export Excel</button>
             <button class="primary sm" onclick="openInsuranceEdit(null)">+ Add policy</button>
-          </div>
         </div>
-        <div id="insuranceList" style="margin-top:8px;"></div>
       </div>
+      <div class="card register-card"><div id="insuranceList"></div></div>
     </section>
 
     <!-- ════ FORM LIBRARY ════ -->
     <section id="tab-forms" class="hide">
-      <div class="card">
-        <div class="toolbar">
-          <div><h2>Form library</h2><div class="sub" style="margin:0;">Blank permit forms per mall — grab the right template when applying.</div></div>
-          <div style="display:flex; gap:8px;">
-            <button class="ghost sm" onclick="exportFormsExcel()">⬇ Export Excel</button>
+      <div class="section-head">
+        <div><div class="section-title">Form library</div><div class="section-meta">Blank permit forms by mall, ready for new applications.</div></div>
+        <div class="section-actions">
+            <button class="ghost sm" onclick="exportFormsExcel()">Export Excel</button>
             <button class="primary sm" onclick="openFormEdit(null)">+ Add form</button>
-          </div>
         </div>
-        <div class="filters">
-          <div><label>Filter mall</label><select id="fmMallFilter" onchange="renderForms()"></select></div>
-        </div>
-        <div id="formsList" style="margin-top:14px;"></div>
       </div>
+      <div class="filters filter-row filter-row-compact">
+          <div><label>Filter mall</label><select id="fmMallFilter" onchange="renderForms()"></select></div>
+      </div>
+      <div class="card register-card"><div id="formsList"></div></div>
     </section>
 
     <!-- ════ DIVISIONS ════ -->
     <section id="tab-divisions" class="hide">
-      <div class="card">
-        <div class="toolbar">
-          <div><h2>Divisions</h2><div class="sub" style="margin:0;">Group workers by department / trade.</div></div>
-          <button class="primary sm" onclick="openDivisionEdit(null)">+ Add division</button>
-        </div>
-        <div id="divisionsList" style="margin-top:8px;"></div>
+      <div class="section-head">
+        <div><div class="section-title">Divisions</div><div class="section-meta">Group workers by department or trade.</div></div>
+        <button class="primary sm" onclick="openDivisionEdit(null)">+ Add division</button>
       </div>
+      <div class="card list-card"><div id="divisionsList"></div></div>
     </section>
 
     <!-- ════ GENERATE REPORT ════ -->
     <section id="tab-report" class="hide">
-      <div class="card">
-        <h2>Compliance report</h2>
-        <div class="sub">Pick divisions + doc types → generate a per-project compliance checklist or full pack (print / PDF).</div>
-        <div class="row">
-          <div><label>Project name</label><input id="repProjectName" placeholder="e.g. Lot 2.15 fit-out"></div>
-          <div><label>Mall / building</label><input id="repMallName" placeholder="e.g. Mid Valley"></div>
+      <div class="section-head"><div><div class="section-title">Compliance reports</div><div class="section-meta">Build a project checklist or full worker-document pack.</div></div></div>
+      <div class="card report-builder">
+        <div class="report-builder-head"><h2>Report setup</h2><div class="sub">Choose the project, workforce, and documents to include.</div></div>
+        <div class="report-group">
+          <div class="report-group-head"><div><h2>Project information</h2><div class="sub" style="margin:0;">Identify the project covered by this compliance report.</div></div></div>
+          <div class="row">
+            <div><label>Project name</label><input id="repProjectName" placeholder="e.g. Lot 2.15 fit-out"></div>
+            <div><label>Mall / building</label><input id="repMallName" placeholder="e.g. Mid Valley"></div>
+          </div>
+          <div class="row">
+            <div><label>Contractor ref</label><input id="repContractorRef" placeholder="e.g. ABC Sdn Bhd"></div>
+            <div><label>Report date</label><input id="repDate" type="date"></div>
+          </div>
         </div>
-        <div class="row">
-          <div><label>Contractor ref</label><input id="repContractorRef" placeholder="e.g. ABC Sdn Bhd"></div>
-          <div><label>Report date</label><input id="repDate" type="date"></div>
+        <div class="report-group">
+          <div class="report-group-head">
+            <div><h2>Workforce divisions</h2><div class="sub" style="margin:0;">Limit the report to selected divisions, or leave all clear to include every active worker.</div></div>
+            <div class="report-pick-actions" id="repDivisionActions"><a href="#" class="filelink" onclick="repToggleAll('div',true);return false;">Select all</a><a href="#" class="filelink" onclick="repToggleAll('div',false);return false;">Clear</a></div>
+          </div>
+          <div class="chk-grid report-division-grid" id="repDivisions"></div>
         </div>
-        <h3>Divisions <a href="#" class="filelink" onclick="repToggleAll('div',true);return false;">all</a> · <a href="#" class="filelink" onclick="repToggleAll('div',false);return false;">none</a></h3>
-        <div class="chk-grid" id="repDivisions"></div>
-        <h3>Document types <a href="#" class="filelink" onclick="repToggleAll('doc',true);return false;">all</a> · <a href="#" class="filelink" onclick="repToggleAll('doc',false);return false;">none</a></h3>
-        <div class="chk-grid" id="repDocTypes"></div>
+        <div class="report-group">
+          <div class="report-group-head">
+            <div><h2>Document types</h2><div class="sub" style="margin:0;">Choose the records required in the checklist or full document pack.</div></div>
+            <div class="report-pick-actions"><a href="#" class="filelink" onclick="repToggleAll('doc',true);return false;">Select all</a><a href="#" class="filelink" onclick="repToggleAll('doc',false);return false;">Clear</a></div>
+          </div>
+          <div class="chk-grid report-doc-grid" id="repDocTypes"></div>
+        </div>
         <div id="repMsg" class="msg"></div>
-        <div class="row" style="margin-top:18px; justify-content:flex-end;">
-          <div style="flex:0 0 auto;"><button class="ghost" onclick="generateReport('checklist')">Checklist (print/PDF)</button></div>
-          <div style="flex:0 0 auto;"><button class="primary" onclick="generateReport('fullpack')">Full pack (print/PDF)</button></div>
+        <div class="report-actions">
+          <button class="ghost" onclick="generateReport('checklist')">Print checklist</button>
+          <button class="primary" onclick="generateReport('fullpack')">Generate full document pack</button>
         </div>
       </div>
-      <div class="card">
+      <div class="card report-history-card">
         <div class="toolbar"><div><h2>Report history</h2><div class="sub" style="margin:0;">Past report runs.</div></div></div>
         <div id="reportHistoryList"></div>
       </div>
@@ -315,24 +431,25 @@
 
     <!-- ════ SETTINGS ════ -->
     <section id="tab-settings" class="hide">
-      <div class="card">
+      <div class="section-head"><div><div class="section-title">Settings</div><div class="section-meta">Manage reminders, access, and recent administrative activity.</div></div></div>
+      <div class="settings-work-unit">
         <h2>Reminder settings</h2>
         <div class="sub">Controls the expiry alarm windows &amp; who the daily-alarms email digest goes to.</div>
         <div id="setForm" class="loading"><span class="spin"></span> Loading…</div>
       </div>
       <div class="card" id="teamCard" style="display:none;">
-        <h2>Team access (admin)</h2>
-        <div class="sub">Who can sign in. Google login + this list = access.</div>
-        <div class="row">
-          <div><label>Email</label><input id="au_email" placeholder="name@gmail.com"></div>
-          <div><label>Name</label><input id="au_name" placeholder="optional"></div>
-          <div style="flex:0 0 auto; display:flex; align-items:flex-end; gap:8px;">
-            <label class="chk" style="margin:0 0 0;"><input type="checkbox" id="au_admin"> Admin</label>
-            <button class="primary" onclick="addAllowed()">Add</button>
-          </div>
+        <div class="access-head">
+          <div><h2>Team access</h2><div class="sub" style="margin:0;">Control who can sign in with their Google account.</div></div>
+          <span class="access-count" id="auCount">0 members</span>
+        </div>
+        <div class="access-add">
+          <div class="field"><label>Email</label><input id="au_email" placeholder="name@gmail.com"></div>
+          <div class="field"><label>Name</label><input id="au_name" placeholder="Optional"></div>
+          <div class="field"><label>Role</label><select id="au_role"><option value="staff">Staff</option><option value="admin">Admin</option></select></div>
+          <button class="primary" onclick="addAllowed()">Add member</button>
         </div>
         <div id="auMsg" class="msg"></div>
-        <div id="auList" style="margin-top:10px;"></div>
+        <div id="auList" class="access-members"></div>
       </div>
       <div class="card">
         <h2>Audit log</h2>
@@ -586,6 +703,7 @@ var DATA = {
   settings:{}, alarms:[]
 };
 var repSel = { divisions:new Set(), docTypes:new Set() };
+var ALLOWED_USERS = [];
 
 // ═══════════════════════════ HELPERS ═══════════════════════════
 function el(id){ return document.getElementById(id); }
@@ -593,18 +711,59 @@ function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){retu
 function fmt(s){ return s ? String(s).slice(0,10) : ''; }
 function rm(n){ return 'RM '+(Number(n)||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fail(e){ toast(e && e.message ? e.message : String(e), true); }
-function openModalEl(id){ el(id).classList.add('show'); }
+function openModalEl(id){ el(id).classList.add('show'); requestAnimationFrame(function(){ syncHubSelects(el(id)); }); }
 function closeModal(id){ el(id).classList.remove('show'); }
-function openModal(id){ el(id).classList.add('show'); }
+function openModal(id){ el(id).classList.add('show'); requestAnimationFrame(function(){ syncHubSelects(el(id)); }); }
 document.addEventListener('click', function(e){ if(e.target.classList && e.target.classList.contains('modal-bg')) e.target.classList.remove('show'); });
 function showMsg(id,t,ok){ var m=el(id); if(!m)return; m.textContent=t; m.className='msg show '+(ok?'ok':'err'); setTimeout(function(){m.classList.remove('show');},4500); }
-function toast(msg,isErr){ var box=el('__toast'); if(!box){ box=document.createElement('div'); box.id='__toast'; box.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1c2335;border:1px solid #2a3245;color:#fff;padding:12px 20px;border-radius:10px;z-index:99;font-size:0.9rem;box-shadow:0 8px 24px rgba(0,0,0,.4);transition:opacity .2s;'; document.body.appendChild(box); } box.textContent=msg; box.style.borderColor=isErr?'#ef4444':'#2a3245'; box.style.color=isErr?'#f87171':'#fff'; box.style.opacity='1'; clearTimeout(window.__tt); window.__tt=setTimeout(function(){box.style.opacity='0';},2600); }
+function toast(msg,isErr){ var box=el('__toast'); if(!box){ box=document.createElement('div'); box.id='__toast'; box.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid #e4ded6;color:#143d4a;padding:12px 20px;border-radius:8px;z-index:99;font-size:0.86rem;font-weight:700;box-shadow:0 12px 30px rgba(23,23,23,.12);transition:opacity .2s;'; document.body.appendChild(box); } box.textContent=msg; box.style.borderColor=isErr?'#efaaa7':'#e4ded6'; box.style.color=isErr?'#d84d4f':'#143d4a'; box.style.opacity='1'; clearTimeout(window.__tt); window.__tt=setTimeout(function(){box.style.opacity='0';},2600); }
 function docTypeLabel(k){ var t=DOC_TYPES.find(function(x){return x.key===k;}); return t?t.label:k; }
 function docTypeDef(k){ return DOC_TYPES.find(function(x){return x.key===k;})||{}; }
 function divisionName(id){ var d=DATA.divisions.find(function(x){return x.id===id;}); return d?d.name:'—'; }
 function workerById(id){ return DATA.workers.find(function(w){return w.id===id;}); }
 function docsForWorker(id){ return DATA.documents.filter(function(d){return d.worker_id===id;}); }
 function parseDateLocal(s){ if(!s)return null; var m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})/); if(!m)return null; return new Date(Number(m[1]),Number(m[2])-1,Number(m[3])); }
+
+// Shared visual select shell. The native select stays in place for existing form code and change handlers.
+function closeHubSelects(except){
+  document.querySelectorAll('.hub-select.open').forEach(function(w){ if(w!==except){ w.classList.remove('open','open-up'); var b=w.querySelector('.hub-select-trigger'); if(b) b.setAttribute('aria-expanded','false'); } });
+}
+function syncHubSelects(root){
+  (root||document).querySelectorAll('select[data-hub-select]').forEach(function(select){ if(select._hubSelectSync) select._hubSelectSync(); });
+}
+function initHubSelects(root){
+  (root||document).querySelectorAll('select:not([data-hub-select])').forEach(function(select){
+    var wrap=document.createElement('div'); wrap.className='hub-select';
+    select.parentNode.insertBefore(wrap,select); wrap.appendChild(select);
+    select.dataset.hubSelect='true'; select.classList.add('hub-select-native');
+    var trigger=document.createElement('button'); trigger.type='button'; trigger.className='hub-select-trigger'; trigger.setAttribute('aria-haspopup','listbox'); trigger.setAttribute('aria-expanded','false');
+    var menu=document.createElement('div'); menu.className='hub-select-menu'; menu.setAttribute('role','listbox');
+    wrap.appendChild(trigger); wrap.appendChild(menu);
+    function sync(){
+      var selected=select.options[select.selectedIndex];
+      trigger.textContent=selected ? selected.textContent : 'Select';
+      trigger.disabled=select.disabled;
+      menu.innerHTML='';
+      Array.from(select.options).forEach(function(option){
+        var item=document.createElement('button'); item.type='button'; item.className='hub-select-option'+(option.selected?' selected':''); item.textContent=option.textContent; item.disabled=option.disabled; item.setAttribute('role','option'); item.setAttribute('aria-selected',option.selected?'true':'false');
+        item.addEventListener('click',function(){ select.value=option.value; select.dispatchEvent(new Event('change',{bubbles:true})); closeHubSelects(); });
+        menu.appendChild(item);
+      });
+    }
+    select._hubSelectSync=sync;
+    select.addEventListener('change',sync);
+    new MutationObserver(sync).observe(select,{childList:true,subtree:true,attributes:true});
+    trigger.addEventListener('click',function(){
+      var open=!wrap.classList.contains('open'); closeHubSelects(wrap); sync();
+      if(open){ var rect=trigger.getBoundingClientRect(), estimated=Math.min(260,menu.children.length*44+10); wrap.classList.toggle('open-up',window.innerHeight-rect.bottom-16<estimated&&rect.top>window.innerHeight-rect.bottom); }
+      else wrap.classList.remove('open-up');
+      wrap.classList.toggle('open',open); trigger.setAttribute('aria-expanded',open?'true':'false');
+    });
+    sync();
+  });
+}
+document.addEventListener('pointerdown',function(e){ if(!e.target.closest('.hub-select')) closeHubSelects(); },true);
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeHubSelects(); });
 function statusFromExpiry(expiry){
   if(!expiry) return {label:'No expiry', cls:'badge-grey', days:null};
   var today=new Date(); today.setHours(0,0,0,0);
@@ -758,14 +917,15 @@ function renderDashboard(){
   ].map(function(x){ return '<div class="stat '+x[0]+'"><div class="n">'+x[1]+'</div><div class="l">'+x[2]+'</div></div>'; }).join('');
 }
 function renderAlarms(){
-  if(!DATA.alarms.length){ el('alarmsList').innerHTML='<div class="empty">✅ Nothing due or overdue.</div>'; return; }
+  if(!DATA.alarms.length){ el('alarmsList').innerHTML='<div class="empty empty-clear"><i data-lucide="shield-check" aria-hidden="true"></i><div><strong>All clear</strong><span>No expiry action needed right now.</span></div></div>'; if(window.lucide) window.lucide.createIcons(); return; }
   var rows=DATA.alarms.slice().sort(function(a,b){return String(a.due_date||'').localeCompare(String(b.due_date||''));});
-  el('alarmsList').innerHTML='<table class="grid"><thead><tr><th>Type</th><th>Ref</th><th>Detail</th><th>Due</th><th>Status</th></tr></thead><tbody>'+
+  el('alarmsList').innerHTML='<div class="expiry-list">'+
     rows.map(function(a){
       var s=statusFromExpiry(a.due_date);
-      return '<tr><td><span class="tag">'+esc(a.alarm_type)+'</span></td><td>'+esc(a.ref)+'</td><td class="muted">'+esc(a.detail)+'</td>'+
-        '<td>'+esc(fmt(a.due_date))+'</td><td><span class="badge '+s.cls+'">'+esc(s.label)+'</span></td></tr>';
-    }).join('')+'</tbody></table>';
+      var type=String(a.alarm_type||'Expiry').replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+      return '<div class="expiry-row"><div class="expiry-ref"><b>'+esc(a.ref||'Unassigned')+'</b><span>'+esc(type)+'</span></div><div class="expiry-detail">'+esc(a.detail||'No additional detail.')+'</div>'+
+        '<div class="expiry-due"><div><b>'+esc(fmt(a.due_date)||'No date')+'</b><span>Due date</span></div><span class="badge '+s.cls+'">'+esc(s.label)+'</span></div></div>';
+    }).join('')+'</div>';
 }
 
 // ═══════════════════════════ WORKERS ═══════════════════════════
@@ -777,7 +937,7 @@ function renderWorkers(){
     if(q){ var hay=(w.full_name+' '+(w.ic_number||'')+' '+(w.passport_number||'')).toLowerCase(); if(hay.indexOf(q)<0) return false; }
     return true;
   });
-  if(!rows.length){ el('workersList').innerHTML='<div class="empty">No workers match.</div>'; return; }
+  if(!rows.length){ el('workersList').innerHTML='<div class="empty"><div><strong>'+(q||fd||fs?'No workers match the filters':'No workers added')+'</strong><span>'+(q||fd||fs?'Adjust the search or filters and try again.':'Add a worker to begin tracking documents and expiry status.')+'</span></div></div>'; return; }
   el('workersList').innerHTML='<table class="grid"><thead><tr><th>Name</th><th>Division</th><th>Position</th><th>IC / Passport</th><th>Docs</th><th>Worst expiry</th><th>Status</th></tr></thead><tbody>'+
     rows.map(function(w){
       var docs=docsForWorker(w.id);
@@ -827,14 +987,14 @@ function openWorkerDetail(id){
       '<td><span class="badge '+s.cls+'">'+esc(s.label)+'</span></td><td onclick="event.stopPropagation()">'+fileBtn+'</td></tr>';
   }).join(''):'<tr><td colspan="6" class="empty">No documents yet.</td></tr>';
   el('wdBody').innerHTML=
-    '<div class="toolbar"><div><h2>'+esc(w.full_name)+' <span class="badge badge-'+(w.status==='active'?'green':'grey')+'">'+esc(w.status)+'</span></h2>'+
+    '<div class="worker-detail-head"><div><h2>'+esc(w.full_name)+' <span class="badge badge-'+(w.status==='active'?'green':'grey')+'">'+esc(w.status)+'</span></h2>'+
       '<div class="sub" style="margin:0;">'+esc(divisionName(w.division_id))+' · '+esc(w.position||'')+' · '+esc(w.nationality||'')+'</div></div>'+
       '<button class="ghost sm" onclick="closeModal(\'mWorkerDetail\')">✕ Close</button></div>'+
-    '<div class="sub">IC: '+esc(w.ic_number||'—')+' · Passport: '+esc(w.passport_number||'—')+' · Phone: '+esc(w.phone||'—')+'</div>'+
-    '<div class="toolbar"><h3>Documents</h3><div style="display:flex;gap:8px;"><button class="ghost sm" onclick="openWorkerEdit(\''+id+'\')">Edit worker</button>'+
+    '<div class="worker-meta"><span><em>IC number</em><b>'+esc(w.ic_number||'—')+'</b></span><span><em>Passport</em><b>'+esc(w.passport_number||'—')+'</b></span><span><em>Phone</em><b>'+esc(w.phone||'—')+'</b></span></div>'+
+    '<div class="detail-section-head"><h3>Documents</h3><div class="detail-actions"><button class="ghost sm" onclick="openWorkerEdit(\''+id+'\')">Edit worker</button>'+
       '<button class="danger sm" onclick="confirmDeleteWorker(\''+id+'\')">Delete worker</button>'+
       '<button class="primary sm" onclick="openDocEdit(null,\''+id+'\')">+ Add document</button></div></div>'+
-    '<table class="grid"><thead><tr><th>Type</th><th>Number</th><th>Issued</th><th>Expiry</th><th>Status</th><th>File</th></tr></thead><tbody>'+docRows+'</tbody></table>';
+    '<div class="detail-table-wrap"><table class="grid"><thead><tr><th>Type</th><th>Number</th><th>Issued</th><th>Expiry</th><th>Status</th><th>File</th></tr></thead><tbody>'+docRows+'</tbody></table></div>';
   openModal('mWorkerDetail');
 }
 async function confirmDeleteWorker(id){
@@ -905,7 +1065,7 @@ function renderPermits(){
     if(q){ var hay=((p.permit_number||'')+' '+(p.title||'')+' '+(p.mall_name||'')+' '+(p.contractor_client||'')).toLowerCase(); if(hay.indexOf(q)<0) return false; }
     return true;
   });
-  if(!rows.length){ el('permitsList').innerHTML='<div class="empty">No permits match.</div>'; return; }
+  if(!rows.length){ el('permitsList').innerHTML='<div class="empty"><div><strong>'+(q||fdur||fs?'No permits match the filters':'No work permits added')+'</strong><span>'+(q||fdur||fs?'Adjust the search or filters and try again.':'Add a permit to begin tracking worker access and validity.')+'</span></div></div>'; return; }
   el('permitsList').innerHTML='<table class="grid"><thead><tr><th>Permit / Title</th><th>Mall</th><th>Client</th><th>Workers</th><th>Duration</th><th>Valid until</th><th>Status</th></tr></thead><tbody>'+
     rows.map(function(p){
       var wc=DATA.workPermitWorkers.filter(function(j){return j.permit_id===p.id;}).length;
@@ -993,7 +1153,7 @@ async function deletePermit(){
 
 // ═══════════════════════════ INSURANCE ═══════════════════════════
 function renderInsurance(){
-  if(!DATA.insurancePolicies.length){ el('insuranceList').innerHTML='<div class="empty">No policies yet.</div>'; return; }
+  if(!DATA.insurancePolicies.length){ el('insuranceList').innerHTML='<div class="empty"><div><strong>No insurance policies added</strong><span>Add a policy to track coverage, premiums, and client charges.</span></div></div>'; return; }
   el('insuranceList').innerHTML='<table class="grid"><thead><tr><th>Policy</th><th>Provider</th><th>Coverage</th><th>Valid until</th><th style="text-align:right">Premium</th><th style="text-align:right">Charged</th><th>Status</th></tr></thead><tbody>'+
     DATA.insurancePolicies.map(function(p){
       var s=statusFromExpiry(p.valid_until);
@@ -1071,7 +1231,7 @@ async function deleteInsurance(){
 function renderForms(){
   var fm=el('fmMallFilter').value;
   var rows=DATA.permitForms.filter(function(f){ return !fm || f.mall_name===fm; });
-  if(!rows.length){ el('formsList').innerHTML='<div class="empty">No forms yet.</div>'; return; }
+  if(!rows.length){ el('formsList').innerHTML='<div class="empty"><div><strong>'+(fm?'No forms match this mall':'No permit forms added')+'</strong><span>'+(fm?'Choose another mall to view its forms.':'Add a form to build the permit application library.')+'</span></div></div>'; return; }
   el('formsList').innerHTML='<table class="grid"><thead><tr><th>Mall</th><th>Form</th><th>Type</th><th>Version</th><th>Lead time</th><th>Last verified</th><th>File</th></tr></thead><tbody>'+
     rows.map(function(f){
       var fileBtn=f.file_url?'<a href="#" class="filelink" onclick="openFile(\''+esc(f.file_url).replace(/'/g,"\\'")+'\');return false;">open</a>':'';
@@ -1121,13 +1281,13 @@ async function deleteForm(){
 
 // ═══════════════════════════ DIVISIONS ═══════════════════════════
 function renderDivisions(){
-  if(!DATA.divisions.length){ el('divisionsList').innerHTML='<div class="empty">No divisions yet.</div>'; return; }
-  el('divisionsList').innerHTML='<table class="grid"><thead><tr><th>Name</th><th>Description</th><th>Workers</th><th>Active</th></tr></thead><tbody>'+
+  if(!DATA.divisions.length){ el('divisionsList').innerHTML='<div class="empty"><div><strong>No divisions added</strong><span>Add a division to group workers by department or trade.</span></div></div>'; return; }
+  el('divisionsList').innerHTML='<div class="division-list">'+
     DATA.divisions.map(function(d){
       var wc=DATA.workers.filter(function(w){return w.division_id===d.id;}).length;
-      return '<tr class="click" onclick="openDivisionEdit(\''+d.id+'\')"><td><b>'+esc(d.name)+'</b></td><td class="muted">'+esc(d.description||'')+'</td>'+
-        '<td>'+wc+'</td><td>'+(d.active!==false?'<span class="badge badge-green">yes</span>':'<span class="badge badge-grey">no</span>')+'</td></tr>';
-    }).join('')+'</tbody></table>';
+      return '<button type="button" class="division-row" onclick="openDivisionEdit(\''+d.id+'\')"><span class="division-name"><b>'+esc(d.name)+'</b><span>'+esc(d.description||'No description')+'</span></span>'+
+        '<span class="division-count">'+wc+' worker'+(wc===1?'':'s')+'</span>'+(d.active!==false?'<span class="badge badge-green">Active</span>':'<span class="badge badge-grey">Inactive</span>')+'</button>';
+    }).join('')+'</div>';
 }
 function openDivisionEdit(id){
   var d=id?DATA.divisions.find(function(x){return x.id===id;}):null;
@@ -1160,9 +1320,10 @@ async function deleteDivision(){
 // ═══════════════════════════ REPORT ═══════════════════════════
 function renderReportPickers(){
   if(!el('repDate').value) el('repDate').value=new Date().toISOString().slice(0,10);
+  el('repDivisionActions').style.display=DATA.divisions.length?'flex':'none';
   el('repDivisions').innerHTML=DATA.divisions.map(function(d){
     return '<label class="chk'+(repSel.divisions.has(d.id)?' on':'')+'"><input type="checkbox" data-div="'+d.id+'"'+(repSel.divisions.has(d.id)?' checked':'')+' onchange="repToggle(\'div\',\''+d.id+'\',this)"> '+esc(d.name)+'</label>';
-  }).join('')||'<span class="muted">No divisions yet.</span>';
+  }).join('')||'<div class="report-empty"><div><strong>No workforce divisions</strong><span>Create a division before limiting reports by team or trade.</span></div><button class="ghost sm" onclick="showTab(\'divisions\')">Manage divisions</button></div>';
   el('repDocTypes').innerHTML=DOC_TYPES.map(function(t){
     return '<label class="chk'+(repSel.docTypes.has(t.key)?' on':'')+'"><input type="checkbox" data-doc="'+t.key+'"'+(repSel.docTypes.has(t.key)?' checked':'')+' onchange="repToggle(\'doc\',\''+t.key+'\',this)"> '+esc(t.label)+'</label>';
   }).join('');
@@ -1242,7 +1403,7 @@ function printReport(workers, docTypes, meta, format){
   var wnd=window.open('','_blank'); wnd.document.write(html); wnd.document.close();
 }
 function renderReportHistory(){
-  if(!DATA.reportHistory.length){ el('reportHistoryList').innerHTML='<div class="empty">No reports generated yet.</div>'; return; }
+  if(!DATA.reportHistory.length){ el('reportHistoryList').innerHTML='<div class="empty report-history-empty"><strong>No reports generated</strong><span>Completed report runs will appear here.</span></div>'; return; }
   el('reportHistoryList').innerHTML='<table class="grid"><thead><tr><th>When</th><th>Format</th><th>Project / Mall</th><th>Workers</th><th>Doc types</th><th>By</th><th></th></tr></thead><tbody>'+
     DATA.reportHistory.map(function(r){
       return '<tr><td class="muted">'+esc(new Date(r.generated_at).toLocaleString('en-MY'))+'</td><td><span class="tag">'+esc(r.format)+'</span></td>'+
@@ -1273,6 +1434,17 @@ function loadSettings(){
   loadAudit();
   if(IS_ADMIN) loadAllowed();
 }
+function auditActionMeta(action){
+  var raw=String(action||'Updated');
+  var parts=raw.replace(/^wkr\./,'').split('.');
+  var verb=parts.length>1?parts.pop():'';
+  var subject=parts.join(' ').replace(/[_-]/g,' ').trim();
+  var verbs={create:'Added',update:'Updated',delete:'Removed',generate:'Generated'};
+  if(verbs[verb]) return { verb:verbs[verb], subject:subject?subject.charAt(0).toUpperCase()+subject.slice(1):'Record', cls:verb==='delete'?'deleted':(verb==='create'?'created':'updated') };
+  if(/^add user$/i.test(raw)) return { verb:'Added', subject:'User', cls:'created' };
+  if(/^remove user$/i.test(raw)) return { verb:'Removed', subject:'User', cls:'deleted' };
+  return { verb:'Updated', subject:raw.replace(/^wkr\./,'').replace(/[._]/g,' ').replace(/\b\w/g,function(c){ return c.toUpperCase(); }), cls:'updated' };
+}
 async function saveSettings(){
   var rows=SETTING_KEYS.map(function(k){ return { key:k[0], value:el('set_'+k[0]).value }; });
   var r=await sb.from('app_settings').upsert(rows);
@@ -1285,29 +1457,38 @@ async function loadAudit(){
   var r=await sb.from('audit_log').select('*').order('at',{ascending:false}).limit(50);
   if(r.error){ el('auditList').innerHTML='<div class="empty">'+esc(r.error.message)+'</div>'; return; }
   if(!r.data.length){ el('auditList').innerHTML='<div class="empty">No activity yet.</div>'; return; }
-  el('auditList').innerHTML='<table class="grid"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>'+
-    r.data.map(function(a){ return '<tr><td class="muted">'+esc(new Date(a.at).toLocaleString('en-MY'))+'</td>'+
-      '<td>'+esc(String(a.user_email||'').split('@')[0])+'</td><td><b>'+esc(a.action)+'</b></td><td class="muted">'+esc(a.details)+'</td></tr>'; }).join('')+'</tbody></table>';
+  el('auditList').innerHTML='<table class="grid audit-table"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>'+r.data.map(function(a){
+    var meta=auditActionMeta(a.action);
+    return '<tr><td class="muted">'+esc(new Date(a.at).toLocaleString('en-MY'))+'</td><td>'+esc(String(a.user_email||'').split('@')[0]||'System')+'</td>'+
+      '<td><div class="audit-action '+meta.cls+'">'+esc(meta.verb+' '+meta.subject.toLowerCase())+'</div></td><td class="muted">'+esc(a.details||'No additional detail.')+'</td></tr>';
+  }).join('')+'</tbody></table>';
 }
 async function loadAllowed(){
   var r=await sb.from('allowed_users').select('*').order('added_at');
   if(r.error){ el('auList').innerHTML='<div class="empty">'+esc(r.error.message)+'</div>'; return; }
-  el('auList').innerHTML='<table class="grid"><thead><tr><th>Email</th><th>Name</th><th>Role</th><th></th></tr></thead><tbody>'+
-    r.data.map(function(u){ return '<tr><td>'+esc(u.email)+'</td><td>'+esc(u.full_name||'')+'</td>'+
-      '<td>'+(u.is_admin?'<span class="tag">admin</span>':'staff')+'</td>'+
-      '<td style="text-align:right"><button class="danger sm" onclick="removeAllowed(\''+esc(u.email)+'\')">Remove</button></td></tr>'; }).join('')+'</tbody></table>';
+  ALLOWED_USERS=r.data||[];
+  el('auCount').textContent=ALLOWED_USERS.length+' member'+(ALLOWED_USERS.length===1?'':'s');
+  el('auList').innerHTML=ALLOWED_USERS.length ? ALLOWED_USERS.map(function(u){
+    var role=u.is_admin?'Admin':'Staff';
+    return '<div class="access-member"><div class="access-person"><b>'+esc(u.full_name||u.email)+'</b><span>'+esc(u.email)+'</span></div>'+
+      '<span class="access-role '+(u.is_admin?'admin':'staff')+'">'+role+'</span>'+
+      '<button class="danger sm" onclick="removeAllowed(\''+esc(u.email)+'\')">Remove</button></div>';
+  }).join('') : '<div class="empty">No team members have access yet.</div>';
 }
 async function addAllowed(){
   var email=el('au_email').value.trim().toLowerCase();
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showMsg('auMsg','Enter a valid email.', false); return; }
-  var r=await sb.from('allowed_users').insert({ email:email, full_name:el('au_name').value.trim(), is_admin:el('au_admin').checked, added_by:SESSION.user.email });
+  var r=await sb.from('allowed_users').insert({ email:email, full_name:el('au_name').value.trim(), is_admin:el('au_role').value==='admin', added_by:SESSION.user.email });
   if(r.error){ showMsg('auMsg', r.error.message, false); return; }
   await sb.rpc('log_audit',{ p_action:'ADD User', p_details:email });
-  el('au_email').value=''; el('au_name').value=''; el('au_admin').checked=false;
+  el('au_email').value=''; el('au_name').value=''; el('au_role').value='staff'; syncHubSelects(el('teamCard'));
   showMsg('auMsg','Added '+email, true); loadAllowed();
 }
 async function removeAllowed(email){
   if(email.toLowerCase()===(SESSION.user.email||'').toLowerCase()){ alert('You cannot remove yourself.'); return; }
+  var target=ALLOWED_USERS.find(function(u){ return String(u.email).toLowerCase()===String(email).toLowerCase(); });
+  var adminCount=ALLOWED_USERS.filter(function(u){ return u.is_admin; }).length;
+  if(target && target.is_admin && adminCount<=1){ alert('Keep at least one admin with access.'); return; }
   if(!confirm('Remove '+email+' from access?')) return;
   var r=await sb.from('allowed_users').delete().eq('email',email);
   if(r.error){ fail(r.error); return; }
@@ -1365,6 +1546,8 @@ function showTab(t){
   if(t==='settings') loadSettings();
 }
 
+initHubSelects();
+if (window.lucide) window.lucide.createIcons();
 start();
 </script>
 </body>

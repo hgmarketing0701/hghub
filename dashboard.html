@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Black Lee — Daily Site Tracking Dashboard</title>
+<title>HG — Daily Site Tracking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0a0e1a;
@@ -285,32 +288,110 @@
     z-index: 2000;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+
+  /* HG Hub light tool shell */
+  :root { --bg:#fff; --surface:#fff; --surface-2:#f8f7f4; --border:#e4ded6; --text:#171717; --text-dim:#8b837b; --accent:#143d4a; --accent-hover:#0e303b; --accent-soft:#eef6f3; --green:#15945d; --green-soft:#edf8f3; --red:#d84d4f; --red-soft:#fff1ee; --blue:#2f7fa5; --blue-soft:#eef7fb; --grey:#6d756f; --grey-soft:#f1f0ed; --radius:8px; --shadow:0 12px 30px rgba(23,23,23,.08); }
+  body { font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; color:var(--text); line-height:1.55; }
+  .container { max-width:none; padding:26px 28px 88px; }
+  .tool-page-header { display:flex; align-items:center; justify-content:space-between; min-height:46px; padding:0 0 20px; margin-bottom:22px; border-bottom:1px solid var(--border); }
+  .tool-page-title { display:flex; align-items:center; gap:10px; color:var(--text); font-size:1.05rem; font-weight:800; letter-spacing:-.02em; }
+  body.embedded .tool-page-header { display:none; }
+  .topbar { align-items:center; padding-bottom:20px; margin-bottom:22px; gap:16px; }
+  .brand { color:var(--text); font-size:1.1rem; font-weight:800; }
+  .brand span { color:var(--accent); }
+  .brand .sub { color:var(--text-dim); font-size:.78rem; margin-top:3px; }
+  .brand-title { display:flex; align-items:center; gap:9px; }
+  .tool-icon { width:20px; height:20px; color:var(--accent); flex:0 0 20px; }
+  .tool-live { display:inline-flex; align-items:center; height:21px; padding:0 9px; border-radius:999px; background:var(--green-soft); color:var(--green); font-size:.64rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .date-pill { background:var(--surface-2); border-color:var(--border); color:#716b65; border-radius:8px; padding:8px 12px; font-size:.8rem; }
+  .actions { gap:10px; margin-bottom:18px; }
+  .btn { padding:10px 14px; border-radius:8px; font-size:.86rem; font-weight:700; }
+  .btn-primary { background:var(--accent); color:#fff; } .btn-primary:hover { background:var(--accent-hover); }
+  .btn-ghost { background:var(--surface); color:var(--accent); border-color:var(--border); } .btn-ghost:hover { background:var(--surface-2); border-color:#cfc8bd; }
+  .btn-danger { color:var(--red); background:var(--surface); border-color:var(--border); } .btn-danger:hover { background:var(--red-soft); border-color:#f1c8c5; }
+  .btn-sm { padding:7px 10px; font-size:.78rem; }
+  .tool-snapshot { margin-bottom:18px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .tool-snapshot-title { padding:16px 18px 10px; color:var(--text); font-size:.98rem; font-weight:800; }
+  .tool-snapshot-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); padding:0 0 10px; }
+  .meta { display:contents; }
+  .meta-item { position:relative; padding:10px 18px 8px; min-width:0; }
+  .meta-item:not(:last-child)::after { content:""; position:absolute; top:7px; right:0; bottom:10px; width:1px; background:var(--border); }
+  .meta-item .num { color:var(--accent); font-size:1.55rem; font-weight:800; }
+  .meta-item:nth-child(2) .num { color:var(--red); } .meta-item:nth-child(3) .num { color:var(--blue); } .meta-item:nth-child(4) .num { color:var(--grey); }
+  .meta-item .lbl { color:#817b75; font-size:.66rem; font-weight:800; letter-spacing:.07em; margin-top:4px; }
+  .board-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
+  .board-head h1 { color:var(--text); font-size:1.42rem; font-weight:800; letter-spacing:-.03em; }
+  .board-head p { color:#716b65; font-size:.92rem; margin-top:3px; }
+  .grid { grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:14px; }
+  .card { background:var(--surface); border-color:var(--border); border-radius:var(--radius); padding:18px; gap:14px; box-shadow:none; }
+  .card:hover { border-color:#cfc8bd; } .card-title { color:var(--text); font-size:1rem; font-weight:800; } .card-sub { color:var(--text-dim); font-size:.82rem; }
+  .badge { padding:4px 9px; border:0; font-size:.68rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+  .badge-green { background:var(--green-soft); color:var(--green); } .badge-red { background:var(--red-soft); color:var(--red); } .badge-blue { background:var(--blue-soft); color:var(--blue); } .badge-grey { background:var(--grey-soft); color:var(--grey); }
+  .field-row { font-size:.88rem; } .field-row .k { color:#817b75; font-size:.66rem; font-weight:800; letter-spacing:.07em; margin-bottom:4px; } .field-row .v { color:#413d39; } .field-row .v.dim { color:var(--text-dim); }
+  .field-row.blockers .k, .field-row.blockers .v { color:var(--red); } .field-row.actions-row .k { color:var(--accent); }
+  .progress { background:#f1efeb; border:0; height:7px; } .progress-fill { background:#16847a; } .progress-row { color:var(--text-dim); font-size:.78rem; }
+  .card-actions { border-top-color:var(--border); margin-top:auto; padding-top:13px; }
+  .empty { background:var(--surface); border-color:var(--border); border-radius:var(--radius); color:var(--text-dim); padding:56px 20px; } .empty h3 { color:var(--text); font-size:1rem; }
+  .modal-bg { background:rgba(23,23,23,.38); backdrop-filter:blur(4px); } .modal { background:var(--surface); border-color:var(--border); border-radius:12px; padding:22px; box-shadow:var(--shadow); }
+  .modal-head { border-bottom:1px solid var(--border); margin:-22px -22px 20px; padding:18px 22px; } .modal-head h2 { color:var(--text); font-size:1.05rem; font-weight:800; } .x-btn { color:var(--text-dim); }
+  .form-field label { color:#716b65; font-size:.72rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+  #siteForm .form-grid { padding-inline:4px; }
+  .form-field input, .form-field textarea, .form-field select { background:#fff; border-color:#ded8cf; color:var(--text); border-radius:8px; padding:10px 11px; font-size:.9rem; }
+  .status-select { position:relative; }
+  .status-select-native { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+  .status-select-trigger { display:flex; align-items:center; justify-content:space-between; width:100%; min-height:44px; padding:10px 16px 10px 11px; border:1px solid #ded8cf; border-radius:8px; background:#fff; color:var(--text); font:inherit; font-size:.9rem; text-align:left; cursor:pointer; }
+  .status-select-trigger:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  .status-select-trigger svg { width:16px; height:16px; color:var(--accent); flex:0 0 16px; }
+  .status-select-menu { position:absolute; z-index:30; top:calc(100% + 6px); left:0; display:none; width:100%; padding:4px; border:1px solid var(--border); border-radius:8px; background:#fff; box-shadow:var(--shadow); }
+  .status-select-menu.open { display:block; }
+  .status-select.open-up .status-select-menu { top:auto; bottom:calc(100% + 6px); }
+  .status-select-option { display:block; width:100%; min-height:44px; padding:10px 11px; border:0; border-radius:6px; background:transparent; color:#413d39; font:inherit; font-size:.88rem; font-weight:600; text-align:left; cursor:pointer; }
+  .status-select-option:hover, .status-select-option:focus { outline:none; background:var(--surface-2); color:var(--accent); }
+  .status-select-option[aria-selected="true"] { background:var(--accent-soft); color:var(--accent); }
+  .form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  .form-foot { border-top:1px solid var(--border); margin:20px -22px -22px; padding:16px 22px; }
+  .report-box { background:var(--surface-2); border-color:var(--border); color:#413d39; font-family:ui-monospace,"Cascadia Code",Consolas,monospace; }
+  .toast { background:var(--accent); color:#fff; box-shadow:0 10px 30px rgba(20,61,74,.2); }
+  @media (max-width:680px) { .container { padding:18px 16px 56px; } .topbar { align-items:flex-start; margin-bottom:18px; } .date-pill { width:100%; } .tool-snapshot-row { grid-template-columns:repeat(2,minmax(0,1fr)); } .meta-item:nth-child(2)::after,.meta-item:nth-child(4)::after { display:none; } .meta-item { padding:10px 14px 8px; } .meta-item:nth-child(n + 3) { border-top:1px solid var(--border); } .tool-snapshot-title { padding-left:14px; } .board-head h1 { font-size:1.25rem; } .actions { display:grid; grid-template-columns:1fr 1fr; } .actions .btn { justify-content:center; } .actions .btn-danger { grid-column:1 / -1; } .grid { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
 
+<script>
+  if (window.self !== window.top) document.body.classList.add('embedded');
+</script>
+
 <div class="container">
 
-  <div class="topbar">
+  <div class="tool-page-header">
+    <div class="tool-page-title">Daily Site Tracking <span class="tool-live">Live</span></div>
+  </div>
+
+  <div class="board-head">
     <div>
-      <div class="brand">Black Lee<span>.</span>
-        <span class="sub">Daily Site Tracking Dashboard</span>
-      </div>
+      <h1>Today’s Site Board</h1>
+      <p>Capture progress, blockers, and tomorrow’s plan in one shared daily board.</p>
     </div>
-    <div class="meta">
-      <div class="date-pill" id="todayDate">—</div>
+    <div class="date-pill" id="todayDate">—</div>
+  </div>
+
+  <div class="tool-snapshot">
+    <div class="tool-snapshot-title">Site Snapshot</div>
+    <div class="tool-snapshot-row">
+      <div class="meta">
       <div class="meta-item"><div class="num" id="cntActive">0</div><div class="lbl">Active</div></div>
       <div class="meta-item"><div class="num" id="cntDelayed">0</div><div class="lbl">Delayed</div></div>
       <div class="meta-item"><div class="num" id="cntWaiting">0</div><div class="lbl">Awaiting</div></div>
       <div class="meta-item"><div class="num" id="cntDone">0</div><div class="lbl">Done</div></div>
+      </div>
     </div>
   </div>
 
   <div class="actions">
     <button class="btn btn-primary" onclick="openAdd()">+ Add Site</button>
-    <button class="btn btn-ghost" onclick="openReport()">📋 Generate Daily Report</button>
-    <button class="btn btn-ghost" onclick="loadSample()">🧪 Load Sample Data</button>
-    <button class="btn btn-danger" onclick="clearAll()">🗑 Clear All</button>
+    <button class="btn btn-ghost" onclick="openReport()">Generate daily report</button>
+    <button class="btn btn-ghost" onclick="loadSample()">Load example sites</button>
+    <button class="btn btn-danger" onclick="clearAll()">Clear local data</button>
   </div>
 
   <div id="board"></div>
@@ -336,28 +417,37 @@
           <input type="text" id="fProject" placeholder="e.g. KL Tower lvl 12 fit-out" />
         </div>
         <div class="form-field">
-          <label for="fStatus">Status</label>
-          <select id="fStatus" required>
-            <option value="in_progress">🟢 In Progress</option>
-            <option value="delayed">🔴 Delayed</option>
-            <option value="awaiting_client">🔵 Awaiting Client</option>
-            <option value="completed">⚫ Completed</option>
-          </select>
+          <label id="fStatusLabel" for="fStatus">Status</label>
+          <div class="status-select">
+            <select class="status-select-native" id="fStatus" required tabindex="-1" aria-hidden="true">
+              <option value="in_progress">In Progress</option>
+              <option value="delayed">Delayed</option>
+              <option value="awaiting_client">Awaiting Client</option>
+              <option value="completed">Completed</option>
+            </select>
+            <button type="button" class="status-select-trigger" id="fStatusTrigger" aria-labelledby="fStatusLabel fStatusValue" aria-haspopup="listbox" aria-expanded="false" onclick="toggleStatusSelect()"><span id="fStatusValue">In Progress</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            <div class="status-select-menu" id="fStatusMenu" role="listbox" aria-labelledby="fStatusLabel">
+              <button type="button" class="status-select-option" role="option" aria-selected="true" data-status="in_progress" onclick="setStatusSelect('in_progress')">In Progress</button>
+              <button type="button" class="status-select-option" role="option" aria-selected="false" data-status="delayed" onclick="setStatusSelect('delayed')">Delayed</button>
+              <button type="button" class="status-select-option" role="option" aria-selected="false" data-status="awaiting_client" onclick="setStatusSelect('awaiting_client')">Awaiting Client</button>
+              <button type="button" class="status-select-option" role="option" aria-selected="false" data-status="completed" onclick="setStatusSelect('completed')">Completed</button>
+            </div>
+          </div>
         </div>
         <div class="form-field">
           <label for="fPercent">% Complete</label>
           <input type="number" id="fPercent" min="0" max="100" value="0" />
         </div>
         <div class="form-field full">
-          <label for="fToday">Today's work done</label>
+          <label for="fToday">Today's update</label>
           <textarea id="fToday" placeholder="e.g. Hoarding install 80m completed"></textarea>
         </div>
         <div class="form-field full">
-          <label for="fTomorrow">Tomorrow's plan</label>
+          <label for="fTomorrow">Next shift plan</label>
           <textarea id="fTomorrow" placeholder="e.g. Visual tarpaulin paste"></textarea>
         </div>
         <div class="form-field full">
-          <label for="fIssues">Issues / Blockers</label>
+          <label for="fIssues">Blockers</label>
           <textarea id="fIssues" placeholder="e.g. Sliding door — supplier delay"></textarea>
         </div>
         <div class="form-field full">
@@ -378,14 +468,14 @@ Get design confirmation from client"></textarea>
 <div class="modal-bg" id="reportModal">
   <div class="modal" style="max-width: 760px;">
     <div class="modal-head">
-      <h2>📋 Daily Hoarding Tracking Report</h2>
+      <h2>Daily Site Tracking Report</h2>
       <button class="x-btn" onclick="closeReport()">✕</button>
     </div>
     <div class="report-box" id="reportText">—</div>
     <div class="form-foot">
       <button class="btn btn-ghost" onclick="closeReport()">Close</button>
-      <button class="btn btn-primary" onclick="copyReport()">📋 Copy to Clipboard</button>
-      <button class="btn btn-ghost" onclick="sendReportWA()">💬 Send via WhatsApp</button>
+      <button class="btn btn-primary" onclick="copyReport()">Copy report</button>
+      <button class="btn btn-ghost" onclick="sendReportWA()">Send via WhatsApp</button>
     </div>
   </div>
 </div>
@@ -433,8 +523,8 @@ Get design confirmation from client"></textarea>
     if (sites.length === 0) {
       board.innerHTML = `
         <div class="empty">
-          <h3>No sites yet lah.</h3>
-          <p>Click <strong>+ Add Site</strong> to start tracking — or hit <strong>🧪 Load Sample Data</strong> to see how it works first.</p>
+          <h3>No sites being tracked</h3>
+          <p>Add a site to begin today’s board, or load example sites to review the full workflow.</p>
         </div>`;
       return;
     }
@@ -455,24 +545,24 @@ Get design confirmation from client"></textarea>
         </div>
 
         <div class="field-row">
-          <div class="k">Today's Work</div>
+          <div class="k">Today's update</div>
           <div class="v ${s.todayWork ? '' : 'dim'}">${escapeHtml(s.todayWork) || '—'}</div>
         </div>
 
         <div class="field-row">
-          <div class="k">Tomorrow's Plan</div>
+          <div class="k">Next shift</div>
           <div class="v ${s.tomorrowPlan ? '' : 'dim'}">${escapeHtml(s.tomorrowPlan) || '—'}</div>
         </div>
 
         ${s.issues ? `
-        <div class="field-row">
-          <div class="k">⚠️ Issues</div>
+        <div class="field-row blockers">
+          <div class="k">Blockers</div>
           <div class="v">${escapeHtml(s.issues)}</div>
         </div>` : ''}
 
         ${s.actions ? `
-        <div class="field-row">
-          <div class="k">🚨 Action Items</div>
+        <div class="field-row actions-row">
+          <div class="k">Action items</div>
           <div class="v">${escapeHtml(s.actions)}</div>
         </div>` : ''}
 
@@ -482,8 +572,8 @@ Get design confirmation from client"></textarea>
         </div>
 
         <div class="card-actions">
-          <button class="btn btn-ghost btn-sm" onclick="openEdit('${s.id}')">✏️ Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteSite('${s.id}')">🗑 Delete</button>
+          <button class="btn btn-ghost btn-sm" onclick="openEdit('${s.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteSite('${s.id}')">Delete</button>
         </div>
       </div>`;
   }
@@ -495,11 +585,41 @@ Get design confirmation from client"></textarea>
     }[c]));
   }
 
+  function closeStatusSelect() {
+    document.getElementById('fStatusMenu').classList.remove('open');
+    document.querySelector('.status-select').classList.remove('open-up');
+    document.getElementById('fStatusTrigger').setAttribute('aria-expanded', 'false');
+  }
+  function syncStatusSelect() {
+    const value = document.getElementById('fStatus').value;
+    const option = document.querySelector('#fStatusMenu [data-status="' + value + '"]');
+    document.getElementById('fStatusValue').textContent = option ? option.textContent : 'In Progress';
+    document.querySelectorAll('#fStatusMenu .status-select-option').forEach(btn => {
+      btn.setAttribute('aria-selected', String(btn.dataset.status === value));
+    });
+    closeStatusSelect();
+  }
+  function toggleStatusSelect() {
+    const menu = document.getElementById('fStatusMenu');
+    const isOpen = menu.classList.toggle('open');
+    const wrap = document.querySelector('.status-select');
+    if (isOpen) {
+      const rect = document.getElementById('fStatusTrigger').getBoundingClientRect();
+      wrap.classList.toggle('open-up', window.innerHeight - rect.bottom - 16 < 190 && rect.top > window.innerHeight - rect.bottom);
+    } else wrap.classList.remove('open-up');
+    document.getElementById('fStatusTrigger').setAttribute('aria-expanded', String(isOpen));
+  }
+  function setStatusSelect(value) {
+    document.getElementById('fStatus').value = value;
+    syncStatusSelect();
+  }
+
   function openAdd() {
     document.getElementById('formTitle').textContent = 'Add Site';
     document.getElementById('siteForm').reset();
     document.getElementById('fId').value = '';
     document.getElementById('fPercent').value = 0;
+    syncStatusSelect();
     document.getElementById('formModal').classList.add('open');
   }
   function openEdit(id) {
@@ -510,6 +630,7 @@ Get design confirmation from client"></textarea>
     document.getElementById('fClient').value = s.client || '';
     document.getElementById('fProject').value = s.project || '';
     document.getElementById('fStatus').value = s.status || 'in_progress';
+    syncStatusSelect();
     document.getElementById('fPercent').value = s.percent || 0;
     document.getElementById('fToday').value = s.todayWork || '';
     document.getElementById('fTomorrow').value = s.tomorrowPlan || '';
@@ -518,6 +639,7 @@ Get design confirmation from client"></textarea>
     document.getElementById('formModal').classList.add('open');
   }
   function closeForm() {
+    closeStatusSelect();
     document.getElementById('formModal').classList.remove('open');
   }
 
@@ -555,10 +677,10 @@ Get design confirmation from client"></textarea>
   }
 
   function clearAll() {
-    if (!confirm('Clear ALL sites? Cannot undo lah.')) return;
+    if (!confirm('Clear all local site data? This cannot be undone.')) return;
     setSites([]);
     render();
-    showToast('All cleared.');
+    showToast('Local data cleared.');
   }
 
   /* REPORT GENERATION */
@@ -570,7 +692,7 @@ Get design confirmation from client"></textarea>
     sites.forEach(s => { cnt[s.status] = (cnt[s.status] || 0) + 1; });
 
     const lines = [];
-    lines.push('📋 DAILY HOARDING TRACKING REPORT — ' + todayShort());
+    lines.push('DAILY SITE TRACKING REPORT — ' + todayShort());
     lines.push('');
     lines.push('═══════════════════════════════════════════════════');
     lines.push('');
@@ -592,7 +714,7 @@ Get design confirmation from client"></textarea>
 
     if (allActions.length) {
       lines.push('');
-      lines.push('🚨 ACTION REQUIRED:');
+      lines.push('ACTION REQUIRED:');
       let n = 1;
       allActions.forEach(a => {
         a.lines.forEach(line => {
@@ -688,6 +810,12 @@ Get design confirmation from client"></textarea>
     bg.addEventListener('click', e => {
       if (e.target === bg) bg.classList.remove('open');
     });
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.status-select')) closeStatusSelect();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeStatusSelect();
   });
 
   render();

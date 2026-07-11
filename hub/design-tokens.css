@@ -1,0 +1,162 @@
+/*
+  HG Hub design-language tokens v0.2.
+  This file is not wired into production yet.
+  Values reflect the approved light operational redesign and remain tenant-ready.
+*/
+
+:root,
+[data-theme="ops-light"] {
+  /* Typography */
+  --font-sans: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.875rem;
+  --text-lg: 1rem;
+  --text-xl: 1.125rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.75rem;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* Radius */
+  --radius-control: 8px;
+  --radius-option: 6px;
+  --radius-card: 8px;
+  --radius-overlay: 12px;
+  --radius-pill: 999px;
+
+  /* Dropdowns */
+  --select-min-height: 42px;
+  --select-mobile-option-height: 44px;
+  --select-arrow-inset: 16px;
+  --select-menu-offset: 4px;
+  --select-menu-max-height: 260px;
+  --select-menu-mobile-max-height: 45vh;
+
+  /* Core surfaces */
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f8f7f4;
+  --color-surface-raised: #ffffff;
+  --color-border: #e4ded6;
+  --color-border-strong: #cfc8bd;
+
+  /* Text */
+  --color-text: #171717;
+  --color-text-muted: #817970;
+  --color-text-faint: #9b948c;
+  --color-text-inverse: #ffffff;
+
+  /* Tenant brand defaults */
+  --brand-primary: #143d4a;
+  --brand-primary-hover: #0e303b;
+  --brand-accent: #143d4a;
+  --brand-accent-hover: #0e303b;
+  --brand-soft: #eef6f3;
+  --brand-contrast: #ffffff;
+
+  /* Workflow semantics */
+  --status-success: #15945d;
+  --status-success-soft: #edf8f3;
+  --status-warning: #a66b00;
+  --status-warning-soft: #fff7e7;
+  --status-danger: #d84d4f;
+  --status-danger-soft: #fff1ee;
+  --status-info: #2f7fa5;
+  --status-info-soft: #eef7fb;
+  --status-neutral: #6d756f;
+  --status-neutral-soft: #f1f0ed;
+
+  /* Shadows */
+  --shadow-card: none;
+  --shadow-popover: 0 12px 32px rgba(17, 24, 39, 0.14);
+  --shadow-modal: 0 24px 64px rgba(17, 24, 39, 0.22);
+
+  /* Shell */
+  --sidebar-width: 248px;
+  --sidebar-collapsed-width: 72px;
+  --topbar-height: 56px;
+  --content-max-width: 1440px;
+}
+
+/* Optional future tenant theme. Not part of the current HG redesign contract. */
+[data-theme="ops-dark"] {
+  --color-bg: #0b1020;
+  --color-surface: #121827;
+  --color-surface-muted: #1a2233;
+  --color-surface-raised: #1f2937;
+  --color-border: #2f394a;
+  --color-border-strong: #465367;
+
+  --color-text: #f8fafc;
+  --color-text-muted: #a5afbf;
+  --color-text-faint: #737f91;
+  --color-text-inverse: #111827;
+
+  --brand-primary: #f8fafc;
+  --brand-primary-hover: #e5e7eb;
+  --brand-accent: #f59e0b;
+  --brand-accent-hover: #d97706;
+  --brand-soft: rgba(245, 158, 11, 0.14);
+  --brand-contrast: #111827;
+
+  --status-success: #22c55e;
+  --status-success-soft: rgba(34, 197, 94, 0.14);
+  --status-warning: #f59e0b;
+  --status-warning-soft: rgba(245, 158, 11, 0.14);
+  --status-danger: #f87171;
+  --status-danger-soft: rgba(248, 113, 113, 0.14);
+  --status-info: #60a5fa;
+  --status-info-soft: rgba(96, 165, 250, 0.14);
+  --status-neutral: #9ca3af;
+  --status-neutral-soft: rgba(156, 163, 175, 0.14);
+
+  --shadow-popover: 0 14px 40px rgba(0, 0, 0, 0.42);
+  --shadow-modal: 0 24px 72px rgba(0, 0, 0, 0.55);
+}
+
+[data-tenant="hg"] {
+  --tenant-name: "HG Group";
+  --tenant-product-name: "HG Hub";
+  --brand-primary: #143d4a;
+  --brand-primary-hover: #0e303b;
+  --brand-accent: #143d4a;
+  --brand-accent-hover: #0e303b;
+  --brand-soft: #eef6f3;
+  --ask-hg-accent: #7067d9;
+}
+
+/* Component aliases */
+:root {
+  --button-primary-bg: var(--brand-accent);
+  --button-primary-bg-hover: var(--brand-accent-hover);
+  --button-primary-text: var(--brand-contrast);
+
+  --focus-ring: 0 0 0 3px var(--brand-soft);
+  --focus-border: var(--brand-accent);
+
+  --card-bg: var(--color-surface);
+  --card-border: var(--color-border);
+
+  /* Border-minimal surface contract */
+  --work-unit-bg: var(--color-surface);
+  --work-unit-border: var(--color-border);
+  --section-divider: var(--color-border);
+  --record-border: var(--color-border);
+  --overlay-border: var(--color-border-strong);
+
+  --input-bg: var(--color-surface);
+  --input-border: var(--color-border);
+  --input-text: var(--color-text);
+  --input-placeholder: var(--color-text-faint);
+}

@@ -4,6 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>HG Services — Job Completion Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <style>
   :root {
     --bg: #0a0e1a;
@@ -285,6 +289,7 @@
     display: none;
   }
   .plist.open .plist-dropdown { display: block; }
+  .plist.open-up .plist-dropdown { top:auto; bottom:calc(100% + 4px); }
   .plist-item {
     padding: 8px 12px;
     font-size: 0.86rem;
@@ -641,31 +646,110 @@
     @page { size: A4; margin: 14mm 12mm; }
     .hg-photo, .hg-table tr, .hg-section { page-break-inside: avoid; break-inside: avoid; }
   }
+
+  /* HG Hub light tool shell */
+  :root { --bg:#fff; --surface:#fff; --surface-2:#f8f7f4; --border:#e4ded6; --text:#171717; --text-dim:#8b837b; --text-dimmer:#a29a92; --accent:#143d4a; --accent-hover:#0e303b; --accent-soft:#eef6f3; --green:#15945d; --green-soft:#edf8f3; --red:#d84d4f; --red-soft:#fff1ee; --blue:#2f7fa5; --blue-soft:#eef7fb; --radius:8px; --shadow:0 12px 30px rgba(23,23,23,.08); }
+  body { font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; color:var(--text); line-height:1.55; }
+  .container.app { max-width:none; padding:26px 28px 88px; }
+  .topbar { align-items:center; padding-bottom:20px; border-bottom:1px solid var(--border); margin-bottom:22px; }
+  body.embedded .topbar { display:none; }
+  .brand-block { gap:9px; }
+  .brand-logo { width:24px; height:24px; padding:0; background:transparent; border-radius:0; color:var(--accent); }
+  .brand-logo svg { width:20px; height:20px; stroke-width:2; }
+  .brand-name { display:flex; align-items:center; gap:10px; color:var(--text); font-size:1.05rem; font-weight:800; letter-spacing:-.02em; }
+  .brand-sub { color:var(--text-dim); font-size:.78rem; margin-top:3px; }
+  .tool-live { display:inline-flex; align-items:center; height:21px; padding:0 9px; border-radius:999px; background:var(--green-soft); color:var(--green); font-size:.64rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .meta-pills { gap:8px; }
+  .pill { background:var(--surface); border-color:var(--border); border-radius:8px; color:var(--accent); font-size:.78rem; padding:7px 10px; }
+  .pill strong { color:var(--accent); } .pill.cloud-on { color:var(--green); border-color:var(--border); } .pill.cloud-off { color:var(--text-dim); }
+  section { margin-bottom:28px; }
+  .section-head { align-items:flex-end; margin-bottom:14px; }
+  .section-title { color:var(--text); font-size:1.22rem; font-weight:800; letter-spacing:-.025em; }
+  .section-meta { color:#716b65; font-size:.88rem; }
+  .card { background:var(--surface); border-color:var(--border); border-radius:var(--radius); padding:18px; box-shadow:none; }
+  .card + .card { margin-top:12px; }
+  .card-title { color:var(--text); font-size:.88rem; letter-spacing:0; text-transform:none; margin-bottom:16px; padding-bottom:12px; border-bottom-color:var(--border); }
+  #stepDetails .details-section { margin:0; padding:18px 0 24px; border:0; border-radius:0; }
+  #stepDetails .details-section + .details-section { margin-top:0; padding-top:24px; border-top:1px solid var(--border); }
+  #stepDetails .details-section .card-title { margin-bottom:16px; padding-bottom:0; border-bottom:0; }
+  .dropzone { border-color:#ded8cf; border-radius:var(--radius); padding:34px 20px; background:var(--surface); }
+  .dropzone:hover,.dropzone.over { border-color:var(--accent); background:var(--accent-soft); }
+  .dropzone-big { display:none; } .dropzone-hint { color:var(--text-dim); font-size:.8rem; }
+  .dropzone-title { color:var(--text); font-size:1rem; font-weight:800; }
+  .photo-grid { gap:12px; }
+  .photo-card { background:var(--surface); border-color:var(--border); border-radius:var(--radius); }
+  .photo-canvas-wrap { background:#f1efeb; } .photo-body { padding:12px; } .photo-name { color:var(--text-dim); }
+  .stage-select,.caption-input,.field input[type="text"],.field input[type="date"],.field input[type="url"],.field select,.field textarea,.lm-picker select,.lm-add input { background:#fff; border-color:#ded8cf; color:var(--text); }
+  .field input:focus,.field select:focus,.field textarea:focus,.caption-input:focus,.lm-picker select:focus,.lm-add input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  .field label { color:#716b65; font-size:.72rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; } .field label .req { color:var(--red); }
+  .field-hint { color:var(--text-dim); }
+  .btn { background:var(--surface); color:var(--accent); border-color:var(--border); border-radius:8px; padding:9px 12px; font-size:.82rem; font-weight:700; }
+  .btn:hover { background:var(--surface-2); border-color:#cfc8bd; color:var(--accent); } .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; } .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; } .btn-danger { color:var(--red); border-color:#f1c8c5; } .btn-danger:hover { background:var(--red-soft); color:var(--red); }
+  .plist { min-height:44px; padding:4px 40px 4px 8px; background:#fff; border-color:#ded8cf; } .plist:hover { border-color:#cfc8bd; } .plist.open { border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  .plist-chip { background:var(--accent-soft); color:var(--accent); border-color:transparent; } .plist-input { color:var(--text); } .plist-input::placeholder { color:var(--text-dimmer); }
+  .plist .plist-input { background:transparent !important; border:0 !important; box-shadow:none !important; padding:5px 2px; }
+  .plist-chevron { position:absolute; top:50%; right:16px; width:16px; height:16px; color:var(--accent); pointer-events:none; transform:translateY(-50%); }
+  .plist-dropdown { background:var(--surface); border-color:var(--border); box-shadow:var(--shadow); } .plist-item { color:var(--text); } .plist-item:hover { background:var(--surface-2); color:var(--accent); } .plist-add { background:var(--accent-soft); color:var(--accent); }
+  .hub-select { position:relative; width:100%; }
+  .hub-select-native { position:absolute; width:1px !important; height:1px; opacity:0; pointer-events:none; }
+  button.hub-select-trigger { position:relative; display:flex; align-items:center; width:100%; min-height:42px; padding:10px 42px 10px 12px; background:#fff; border:1px solid #ded8cf; border-radius:8px; color:var(--text); font:inherit; font-size:.88rem; font-weight:500; text-align:left; cursor:pointer; }
+  button.hub-select-trigger:hover { border-color:#cfc8bd; }
+  button.hub-select-trigger:focus-visible,.hub-select.open .hub-select-trigger { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  button.hub-select-trigger::after { content:""; position:absolute; right:16px; top:50%; width:7px; height:7px; border-right:1.7px solid var(--accent); border-bottom:1.7px solid var(--accent); transform:translateY(-68%) rotate(45deg); }
+  .hub-select-menu { position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:140; display:none; max-height:260px; overflow-y:auto; padding:5px; background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow); }
+  .hub-select.open .hub-select-menu { display:block; }
+  .hub-select.open-up .hub-select-menu { top:auto; bottom:calc(100% + 4px); }
+  button.hub-select-option { display:block; width:100%; min-height:40px; padding:9px 10px; border:0; border-radius:6px; background:transparent; color:var(--text); font:inherit; font-size:.86rem; line-height:1.35; text-align:left; cursor:pointer; }
+  button.hub-select-option:hover,button.hub-select-option:focus-visible,button.hub-select-option.selected { outline:none; background:var(--surface-2); color:var(--accent); }
+  .photo-stage-row .hub-select { flex:0 0 112px; }
+  .photo-stage-row .hub-select-trigger { min-height:36px; padding-top:6px; padding-bottom:6px; font-size:.8rem; }
+  .lm-picker .hub-select { flex:1; }
+  .scope-group-title { color:var(--accent); } .scope-add-row { border-top-color:var(--border); } .scope-add-row input { background:#fff; border-color:#ded8cf; color:var(--text); }
+  .preview-empty { background:var(--surface); border-color:var(--border); border-radius:var(--radius); color:var(--text-dim); }
+  .submit-bar { border-top:1px solid var(--border); padding-top:18px; }
+  .completion-steps { position:sticky; top:0; z-index:12; display:flex; gap:20px; overflow-x:auto; margin:0 0 24px; padding:10px 0; border-bottom:1px solid var(--border); background:rgba(255,255,255,.96); backdrop-filter:blur(10px); }
+  .completion-steps a { flex:0 0 auto; color:#716b65; font-size:.78rem; font-weight:800; text-decoration:none; padding:3px 0 8px; border-bottom:3px solid transparent; transition:color .16s ease,border-color .16s ease; }
+  .completion-steps a:hover, .completion-steps a:focus { color:var(--accent); outline:none; }
+  .completion-steps a.is-active { color:var(--accent); font-weight:900; border-bottom-color:var(--accent); }
+  .project-grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .section-meta.draft { color:#a66b00; font-weight:700; }
+  .modal-bg { background:rgba(23,23,23,.38); backdrop-filter:blur(4px); } .modal { background:var(--surface); border-color:var(--border); border-radius:12px; box-shadow:var(--shadow); } .modal-head,.modal-foot { border-color:var(--border); } .modal-title { color:var(--text); } .x-btn { color:var(--text-dim); } .lm-items { background:var(--surface-2); border-color:var(--border); } .lm-item { background:var(--surface); border-color:var(--border); color:var(--text); }
+  @media (max-width:1050px) { .project-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:680px) { .container.app { padding:18px 16px 56px; } .topbar { align-items:flex-start; margin-bottom:18px; } .meta-pills { width:100%; } .completion-steps { gap:16px; margin-bottom:18px; } .project-grid,.form-grid.cols-2 { grid-template-columns:1fr; } .section-title { font-size:1.1rem; } .plist-dropdown,.hub-select-menu { max-height:min(260px,45vh); } .plist-item,button.hub-select-option { min-height:44px; display:flex; align-items:center; } }
 </style>
 </head>
 <body>
+
+<script>
+  if (window.self !== window.top) document.body.classList.add('embedded');
+</script>
 
 <div class="container app">
 
   <!-- HEADER -->
   <div class="topbar">
     <div class="brand-block">
-      <div class="brand-logo"><img src="hg-logo.png" alt="HG" /></div>
+      <div class="brand-logo" aria-hidden="true"><i data-lucide="clipboard-check"></i></div>
       <div>
-        <div class="brand-name">HG Services — Job Completion Report</div>
-        <div class="brand-sub">Upload → auto-straighten → fill fields → push to Drive + Sheet</div>
+        <div class="brand-name">Job Completion Report <span class="tool-live">Live</span></div>
+        <div class="brand-sub">Capture completion evidence, job details, and a Drive-ready handover.</div>
       </div>
     </div>
     <div class="meta-pills">
-      <a class="pill clickable" href="operations.html">← Ops</a>
-      <span class="pill clickable" onclick="openListManager()">⚙ Manage Lists</span>
+      <span class="pill clickable" onclick="openListManager()">Manage lists</span>
       <span class="pill" id="photoCountPill"><strong>0</strong> photos</span>
-      <span class="pill cloud-off clickable" id="cloudPill" onclick="openSettings()">☁ Not connected</span>
+      <span class="pill cloud-off clickable" id="cloudPill" onclick="openSettings()">Not connected</span>
     </div>
   </div>
 
+  <nav class="completion-steps" aria-label="Job completion steps">
+    <a href="#stepPhotos">1. Photos</a>
+    <a href="#stepDetails">2. Job Details</a>
+    <a href="#stepPreview">3. Report Preview</a>
+  </nav>
+
   <!-- STEP 1: PHOTOS -->
-  <section>
+  <section id="stepPhotos">
     <div class="section-head">
       <div>
         <div class="section-title">1. Upload Site Photos</div>
@@ -675,8 +759,8 @@
     </div>
 
     <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
-      <div class="dropzone-big">📷</div>
-      <div><strong>Drop photos here</strong> or click to browse</div>
+      <div class="dropzone-title">Drop site photos here</div>
+      <div>or click to browse</div>
       <div class="dropzone-hint">JPG / PNG / HEIC · multiple at a time · max 12 MB each</div>
       <input type="file" id="fileInput" accept="image/*" multiple style="display:none" />
     </div>
@@ -685,7 +769,7 @@
   </section>
 
   <!-- STEP 2: JOB DETAILS -->
-  <section>
+  <section id="stepDetails">
     <div class="section-head">
       <div>
         <div class="section-title">2. Job Details</div>
@@ -694,9 +778,9 @@
     </div>
 
     <!-- 2a. PROJECT INFORMATION -->
-    <div class="card">
+    <div class="card details-section">
       <div class="card-title">Project Information</div>
-      <div class="form-grid">
+      <div class="form-grid project-grid">
         <div class="field">
           <label>Job Date <span class="req">*</span></label>
           <input type="date" id="jobDate" />
@@ -749,7 +833,7 @@
     </div>
 
     <!-- 2b. ON-SITE MANPOWER -->
-    <div class="card">
+    <div class="card details-section">
       <div class="card-title">On-Site Manpower</div>
       <div class="form-grid">
         <div class="field">
@@ -785,7 +869,7 @@
     </div>
 
     <!-- 2c. MATERIALS USED -->
-    <div class="card">
+    <div class="card details-section">
       <div class="card-title">Materials Used</div>
       <div class="form-grid">
         <div class="field">
@@ -832,7 +916,7 @@
     </div>
 
     <!-- 2d. EXTRA TEXT -->
-    <div class="card">
+    <div class="card details-section">
       <div class="card-title">Notes</div>
       <div class="form-grid full">
         <div class="field">
@@ -848,11 +932,11 @@
   </section>
 
   <!-- STEP 3: REPORT + SUBMIT -->
-  <section>
+  <section id="stepPreview">
     <div class="section-head">
       <div>
         <div class="section-title">3. Report Preview</div>
-        <div class="section-meta">This is the exact layout that gets generated as the PDF.</div>
+        <div class="section-meta" id="previewMeta">This is the exact layout that gets generated as the PDF.</div>
       </div>
       <div style="display:flex; gap:8px;">
         <button class="btn btn-sm" onclick="window.print()">🖨 Print / Save PDF</button>
@@ -1166,7 +1250,9 @@ class PickableList {
   }
   fireChange() { if (this.opts.onChange) this.opts.onChange(this.value); renderPreview(); }
   render() {
-    const chips = this.selected.map(v =>
+    const singleValueSelected = !this.opts.multi && this.selected.length > 0;
+    const hasSelection = this.selected.length > 0;
+    const chips = (singleValueSelected && this.isOpen ? [] : this.selected).map(v =>
       `<span class="plist-chip">${escapeHtml(v)}<button type="button" data-rm="${escapeHtml(v)}" aria-label="Remove">×</button></span>`
     ).join('');
     const f = this.filter.toLowerCase();
@@ -1188,37 +1274,49 @@ class PickableList {
       ? `<div class="plist-add" data-add="${escapeHtml(trimmedFilter)}">＋ Add "${escapeHtml(trimmedFilter)}" to the list</div>`
       : '';
     this.root.classList.toggle('open', this.isOpen);
+    this.root.classList.remove('open-up');
+    const showInput = !hasSelection || this.isOpen;
+    const placeholder = this.opts.placeholder;
     this.root.innerHTML =
       chips +
-      `<input type="text" class="plist-input" placeholder="${escapeHtml(this.opts.placeholder)}" value="${escapeHtml(this.filter)}" />` +
+      (showInput ? `<input type="text" class="plist-input" placeholder="${escapeHtml(placeholder)}" value="${escapeHtml(this.filter)}" />` : '') +
+      `<i data-lucide="chevron-down" class="plist-chevron" aria-hidden="true"></i>` +
       (this.isOpen
         ? `<div class="plist-dropdown">${items}${addRow}</div>`
         : '');
+    if (this.isOpen) {
+      const rect = this.root.getBoundingClientRect();
+      const estimated = Math.min(260, filtered.length * 44 + (showAdd ? 44 : 0) + 10);
+      this.root.classList.toggle('open-up', window.innerHeight - rect.bottom - 16 < estimated && rect.top > window.innerHeight - rect.bottom);
+    }
+    if (window.lucide) lucide.createIcons();
     const input = this.root.querySelector('.plist-input');
-    input.addEventListener('input', e => {
-      this.filter = e.target.value;
-      if (!this.isOpen) this.openMenu();
-      else this.render();
-      const ip2 = this.root.querySelector('.plist-input');
-      if (ip2) { ip2.focus(); ip2.setSelectionRange(this.filter.length, this.filter.length); }
-    });
-    input.addEventListener('focus', () => { this.openMenu(); });
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const v = this.filter.trim();
-        if (!v) return;
-        const exact = this.options.find(o => String(o).toLowerCase() === v.toLowerCase());
-        if (exact) this.toggle(exact);
-        else if (this.opts.allowAdd) this.addNew(v);
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        this.close();
-        e.target.blur();
-      } else if (e.key === 'Backspace' && !this.filter && this.selected.length) {
-        this.remove(this.selected[this.selected.length - 1]);
-      }
-    });
+    if (input) {
+      input.addEventListener('input', e => {
+        this.filter = e.target.value;
+        if (!this.isOpen) this.openMenu();
+        else this.render();
+        const ip2 = this.root.querySelector('.plist-input');
+        if (ip2) { ip2.focus(); ip2.setSelectionRange(this.filter.length, this.filter.length); }
+      });
+      input.addEventListener('focus', () => { this.openMenu(); });
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const v = this.filter.trim();
+          if (!v) return;
+          const exact = this.options.find(o => String(o).toLowerCase() === v.toLowerCase());
+          if (exact) this.toggle(exact);
+          else if (this.opts.allowAdd) this.addNew(v);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          this.close();
+          e.target.blur();
+        } else if (e.key === 'Backspace' && !this.filter && this.selected.length) {
+          this.remove(this.selected[this.selected.length - 1]);
+        }
+      });
+    }
     if (this.isOpen) {
       setTimeout(() => {
         if (!this.isOpen) return;
@@ -1236,6 +1334,16 @@ class PickableList {
     if (addEl) {
       addEl.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); this.addNew(addEl.dataset.add); });
     }
+    this.root.addEventListener('pointerdown', e => {
+      if (e.target.closest('.plist-dropdown') || e.target.closest('.plist-chip button')) return;
+      if (this.isOpen && !e.target.closest('.plist-input')) {
+        e.preventDefault();
+        this.close();
+      } else if (!e.target.closest('.plist-input')) {
+        e.preventDefault();
+        this.openMenu();
+      }
+    });
   }
 }
 
@@ -1363,6 +1471,56 @@ const todayISO = () => {
   const tz = d.getTimezoneOffset() * 60000;
   return new Date(d - tz).toISOString().slice(0, 10);
 };
+
+function closeHubSelects(except) {
+  document.querySelectorAll('.hub-select.open').forEach(wrap => {
+    if (wrap !== except) {
+      wrap.classList.remove('open','open-up');
+      const trigger = wrap.querySelector('.hub-select-trigger');
+      if (trigger) trigger.setAttribute('aria-expanded','false');
+    }
+  });
+}
+function syncHubSelects(root) {
+  (root || document).querySelectorAll('select[data-hub-select]').forEach(select => {
+    if (select._hubSelectSync) select._hubSelectSync();
+  });
+}
+function initHubSelects(root) {
+  const scope = root || document;
+  const selects = [];
+  if (scope.nodeType === 1 && scope.matches('select:not([data-hub-select])')) selects.push(scope);
+  if (scope.querySelectorAll) selects.push(...scope.querySelectorAll('select:not([data-hub-select])'));
+  selects.forEach(select => {
+    const wrap = document.createElement('div'); wrap.className = 'hub-select';
+    select.parentNode.insertBefore(wrap,select); wrap.appendChild(select);
+    select.dataset.hubSelect = 'true'; select.classList.add('hub-select-native'); select.tabIndex = -1; select.setAttribute('aria-hidden','true');
+    const trigger = document.createElement('button'); trigger.type = 'button'; trigger.className = 'hub-select-trigger'; trigger.setAttribute('aria-haspopup','listbox'); trigger.setAttribute('aria-expanded','false');
+    const label = wrap.parentElement && wrap.parentElement.querySelector('label'); if (label) trigger.setAttribute('aria-label',label.textContent.trim());
+    const menu = document.createElement('div'); menu.className = 'hub-select-menu'; menu.setAttribute('role','listbox'); wrap.appendChild(trigger); wrap.appendChild(menu);
+    function sync() {
+      const selected = select.options[select.selectedIndex]; trigger.textContent = selected ? selected.textContent : 'Select'; trigger.disabled = select.disabled; menu.innerHTML = '';
+      Array.from(select.options).forEach(option => {
+        const item = document.createElement('button'); item.type = 'button'; item.className = 'hub-select-option' + (option.selected ? ' selected' : ''); item.textContent = option.textContent; item.disabled = option.disabled; item.setAttribute('role','option'); item.setAttribute('aria-selected',option.selected ? 'true' : 'false');
+        item.addEventListener('click', event => { event.stopPropagation(); select.value = option.value; select.dispatchEvent(new Event('change',{bubbles:true})); closeHubSelects(); }); menu.appendChild(item);
+      });
+    }
+    select._hubSelectSync = sync; select.addEventListener('change',sync); new MutationObserver(sync).observe(select,{childList:true,subtree:true,attributes:true});
+    trigger.addEventListener('click', event => {
+      event.stopPropagation(); const open = !wrap.classList.contains('open'); closeHubSelects(wrap); sync();
+      if (open) { const rect = trigger.getBoundingClientRect(); const estimated = Math.min(260,menu.children.length*44+10); wrap.classList.toggle('open-up',window.innerHeight-rect.bottom-16<estimated&&rect.top>window.innerHeight-rect.bottom); }
+      else wrap.classList.remove('open-up');
+      wrap.classList.toggle('open',open); trigger.setAttribute('aria-expanded',open?'true':'false');
+    }); sync();
+  });
+}
+function startHubSelects() {
+  initHubSelects(document);
+  new MutationObserver(mutations => mutations.forEach(m => m.addedNodes.forEach(node => { if (node.nodeType === 1) initHubSelects(node); }))).observe(document.body,{childList:true,subtree:true});
+}
+document.addEventListener('DOMContentLoaded',startHubSelects);
+document.addEventListener('pointerdown',e => { if (!e.target.closest('.hub-select')) closeHubSelects(); },true);
+document.addEventListener('keydown',e => { if (e.key === 'Escape') closeHubSelects(); });
 
 function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
 
@@ -1914,6 +2072,25 @@ function buildReportHtml() {
   `;
 }
 
+function updatePreviewReadiness() {
+  const job = getJob();
+  const missing = [];
+  if (!job.mall) missing.push('Mall / Site');
+  if (!job.lot) missing.push('Lot Number');
+  if (!job.trade) missing.push('Trade Name');
+  if (!job.scope) missing.push('Job Scope');
+  if (!state.photos.some(p => p.include && p.display)) missing.push('a photo');
+
+  const meta = $('previewMeta');
+  if (!missing.length) {
+    meta.textContent = 'Ready to review, print, or submit to Drive + Sheet.';
+    meta.classList.remove('draft');
+    return;
+  }
+  meta.textContent = 'Draft preview — add ' + missing.join(', ') + ' before submission.';
+  meta.classList.add('draft');
+}
+
 function renderPreview() {
   const html = buildReportHtml();
   const slot = $('previewSlot');
@@ -1924,6 +2101,7 @@ function renderPreview() {
     slot.innerHTML = `<div class="preview-wrap">${html}</div>`;
     $('printRoot').innerHTML = `<div class="preview-wrap">${html}</div>`;
   }
+  updatePreviewReadiness();
 }
 
 /* ===================== FORM SETUP ===================== */
@@ -1987,10 +2165,10 @@ function initPickers() {
   pickers.jobStatus   = new PickableList($('jobStatus'),   { key: 'statuses',        multi: false, store: ListStore, placeholder: 'Pick status' });
   pickers.mpLorry     = new PickableList($('mpLorry'),     { key: 'lorries',         multi: false, store: ListStore, placeholder: 'e.g. ST02 - VCA7999' });
   pickers.mpHoardSup  = new PickableList($('mpHoardSup'),  { key: 'supervisors',     multi: false, store: ListStore, sorted: true, allowAdd: true, placeholder: 'Pick or type new (e.g. Balan)' });
-  pickers.mpHoardWk   = new PickableList($('mpHoardWk'),   { key: 'workers',         multi: true,  store: ListStore, placeholder: 'Pick names…' });
+  pickers.mpHoardWk   = new PickableList($('mpHoardWk'),   { key: 'workers',         multi: true,  store: ListStore, placeholder: 'Pick or type new names' });
   pickers.mpVisSup    = new PickableList($('mpVisSup'),    { key: 'supervisors',     multi: true,  store: ListStore, sorted: true, allowAdd: true, placeholder: 'Pick or type new names' });
-  pickers.mpVisWk     = new PickableList($('mpVisWk'),     { key: 'workers',         multi: true,  store: ListStore, placeholder: 'Pick names…' });
-  pickers.mpOtherWk   = new PickableList($('mpOtherWk'),   { key: 'workers',         multi: true,  store: ListStore, placeholder: 'Pick names…' });
+  pickers.mpVisWk     = new PickableList($('mpVisWk'),     { key: 'workers',         multi: true,  store: ListStore, placeholder: 'Pick or type new names' });
+  pickers.mpOtherWk   = new PickableList($('mpOtherWk'),   { key: 'workers',         multi: true,  store: ListStore, placeholder: 'Pick or type new names' });
   pickers.matType     = new PickableList($('matType'),     { key: 'hoardingTypes',   multi: false, store: ListStore, sorted: true, allowAdd: true, placeholder: 'Pick or type new (e.g. Kiosk)' });
   pickers.matPanel    = new PickableList($('matPanel'),    { key: 'panels',          multi: false, store: ListStore, sorted: true, allowAdd: true, placeholder: 'Pick or type new (e.g. MDF)' });
   pickers.matDoor     = new PickableList($('matDoor'),     { key: 'doors',           multi: false, store: ListStore, placeholder: 'e.g. Swing' });
@@ -2095,7 +2273,7 @@ function refreshCloudPill() {
     pill.innerHTML = '☁ Connected';
   } else {
     pill.classList.add('cloud-off'); pill.classList.remove('cloud-on');
-    pill.innerHTML = '☁ Not connected';
+    pill.innerHTML = 'Not connected';
   }
 }
 
@@ -2193,9 +2371,42 @@ function sanitizeName(n) {
   return n.replace(/[\/\\:*?"<>|]+/g, '_').slice(0, 120);
 }
 
+function initCompletionStepTracking() {
+  const nav = document.querySelector('.completion-steps');
+  const links = [...nav.querySelectorAll('a[href^="#"]')];
+  const sections = links
+    .map(link => ({ link, section: document.querySelector(link.getAttribute('href')) }))
+    .filter(item => item.section);
+
+  function updateActiveStep() {
+    const activationLine = Math.max(
+      nav.getBoundingClientRect().bottom + 24,
+      window.innerHeight * 0.35
+    );
+    let active = sections[0];
+
+    for (const item of sections) {
+      if (item.section.getBoundingClientRect().top <= activationLine) active = item;
+    }
+
+    links.forEach(link => {
+      const isActive = link === active.link;
+      link.classList.toggle('is-active', isActive);
+      if (isActive) link.setAttribute('aria-current', 'step');
+      else link.removeAttribute('aria-current');
+    });
+  }
+
+  window.addEventListener('scroll', updateActiveStep, { passive:true });
+  window.addEventListener('resize', updateActiveStep);
+  updateActiveStep();
+}
+
 /* ===================== INIT ===================== */
 
 window.addEventListener('DOMContentLoaded', async () => {
+  if (window.lucide) lucide.createIcons();
+  initCompletionStepTracking();
   wireForm();
   wireUpload();
   renderPhotos();

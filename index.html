@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root {
+	  :root {
     --bg: #05070d;
     --surface: rgba(19, 24, 38, 0.62);
     --surface-solid: #12172480;
@@ -492,10 +492,10 @@
     width: 34px; height: 33px; border-radius: 14px; background: #fff; border: 1px solid #e3e0dd;
     box-shadow: 0 8px 24px rgba(23,23,23,0.08); display: flex; align-items: center; justify-content: center;
   }
-  .gate-status.round { width: 28px; height: 22px; border-radius: 50%; overflow: visible; }
+  .gate-status.round { width: 36px; height: 36px; border-radius: 50%; background: transparent; border: 0; box-shadow: none; overflow: visible; }
   .gate-status img { width: 31px; height: 31px; object-fit: contain; }
   .gate-status-mark {
-    width: 36px; height: 35px; border-radius: 50%; background: #171717; color: #fff; display: flex;
+    width: 36px; height: 36px; border-radius: 50%; background: #171717; color: #fff; display: flex;
     align-items: center; justify-content: center; font-size: 15px; line-height: 20px; font-weight: 800;
   }
   .gate-copy { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
@@ -571,9 +571,9 @@
     #gateDenied .gate-card { top: min(32.94vh, 278px); gap: 12px; }
     .gate-logo { width: 58px; height: 32px; }
     .gate-status { width: 30px; height: 27px; border-radius: 12px; }
-    .gate-status.round { width: 35px; height: 34px; border-radius: 50%; }
+    .gate-status.round { width: 34px; height: 34px; border-radius: 50%; }
     .gate-status img { width: 32.5px; height: 29.4px; }
-    .gate-status-mark { width: 34px; height: 33px; font-size: 14px; line-height: 18px; }
+    .gate-status-mark { width: 34px; height: 34px; font-size: 14px; line-height: 18px; }
     .gate-copy { gap: 6px; }
     .gate-card h2 { font-size: 25px; line-height: 32px; }
     .gate-card.config h2 { font-size: 26px; line-height: 32px; }
@@ -628,42 +628,109 @@
   .brief-err { color: #f5b78a; font-size: 0.84rem; line-height: 1.6; }
   .brief-err b { color: var(--accent); }
 
-  /* ═══════════ AI CHAT ═══════════ */
-  .ai-fab {
-    position: fixed; bottom: 22px; right: 22px; z-index: 1500;
-    display: flex; align-items: center; gap: 9px; padding: 12px 20px; cursor: pointer;
-    border: 1px solid rgba(245,158,11,0.5); border-radius: 999px; color: #0a0e1a; font-weight: 700;
-    font-family: var(--font-display); font-size: 0.9rem; letter-spacing: 0.02em;
-    background: linear-gradient(135deg, var(--accent), #e08b06);
-    box-shadow: 0 8px 30px rgba(245,158,11,0.4); transition: transform 0.15s, box-shadow 0.2s;
+  /* ═══════════ ASK HG ═══════════ */
+  .ask-sparkle { width: 23px; height: 23px; flex: 0 0 23px; }
+  #tbAi {
+    color: #7c3aed;
+    background: #ffffff;
+    border-color: #e4ded6;
   }
-  .ai-fab:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(245,158,11,0.55); }
-  .ai-fab-orb { width: 9px; height: 9px; border-radius: 50%; background: #0a0e1a; box-shadow: 0 0 8px rgba(0,0,0,0.4); animation: blink 2s ease-in-out infinite; }
+  #tbAi:hover {
+    border-color: #d8c8ff;
+    color: #7c3aed;
+  }
   .ai-drawer {
-    position: fixed; bottom: 0; right: 0; z-index: 1600; width: 400px; max-width: 96vw; height: 560px; max-height: 88vh;
-    display: none; flex-direction: column; margin: 16px; border-radius: 18px; overflow: hidden;
-    border: 1px solid var(--border-strong);
-    background: rgba(13,17,28,0.92); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
-    box-shadow: var(--shadow), 0 0 60px rgba(245,158,11,0.08);
+    position: fixed;
+    top: 86px;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1600;
+    width: 394px;
+    max-width: calc(100vw - 48px);
+    display: none;
+    flex-direction: column;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #e4ded6;
+    background: #ffffff;
+    color: #171717;
+    box-shadow: 0 18px 50px rgba(23,23,23,0.14);
   }
   .ai-drawer.open { display: flex; animation: rise 0.28s ease-out both; }
-  .ai-dhead { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); }
-  .ai-dtitle { display: flex; align-items: center; gap: 9px; font-family: var(--font-display); font-weight: 600; font-size: 0.95rem; }
-  .ai-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; scrollbar-width: thin; }
-  .ai-msgs::-webkit-scrollbar { width: 6px; } .ai-msgs::-webkit-scrollbar-thumb { background: rgba(245,158,11,0.18); border-radius: 3px; }
-  .ai-msg { max-width: 88%; padding: 11px 14px; border-radius: 14px; font-size: 0.86rem; line-height: 1.55; white-space: pre-wrap; }
-  .ai-msg.bot { align-self: flex-start; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-bottom-left-radius: 5px; color: var(--text); }
-  .ai-msg.bot i { color: var(--accent); font-style: normal; }
-  .ai-msg.me { align-self: flex-end; background: linear-gradient(135deg, rgba(245,158,11,0.9), #d97706); color: #0a0e1a; font-weight: 500; border-bottom-right-radius: 5px; }
-  .ai-msg.think { color: var(--text-dim2); font-style: italic; }
-  .ai-input { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); }
-  .ai-input input { flex: 1; background: rgba(5,7,13,0.6); border: 1px solid var(--border); border-radius: 11px;
-    color: var(--text); padding: 11px 13px; font-size: 0.86rem; font-family: inherit; }
-  .ai-input input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .ai-send { flex: 0 0 auto; width: 42px; border: none; border-radius: 11px; cursor: pointer; font-size: 0.95rem;
-    background: linear-gradient(135deg, var(--accent), #d97706); color: #0a0e1a; font-weight: 700; }
+  .ai-dhead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 20px 18px;
+    border-bottom: 1px solid #ebe7e1;
+  }
+  .ai-dtitle { display: flex; flex-direction: column; gap: 2px; font-family: var(--font-display); }
+  .ai-dtitle b { color: #171717; font-size: 24px; line-height: 30px; font-weight: 750; }
+  .ai-dtitle span { color: #6f777d; font-size: 13px; line-height: 18px; font-weight: 500; }
+  .ai-msgs { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 12px; scrollbar-width: thin; }
+  .ai-msgs::-webkit-scrollbar { width: 6px; } .ai-msgs::-webkit-scrollbar-thumb { background: #e4ded6; border-radius: 3px; }
+  .ai-msg { max-width: 88%; padding: 12px 14px; border-radius: 11px; font-size: 13px; line-height: 18px; white-space: pre-wrap; }
+  .ai-msg.bot { align-self: flex-start; background: #f8f7f4; border: 1px solid #ebe7e1; color: #173b48; }
+  .ai-msg.bot i { color: #7c3aed; font-style: normal; }
+  .ai-msg.me { align-self: flex-end; background: #f1efff; color: #44308f; font-weight: 650; }
+  .ai-msg.think { color: #8b837b; font-style: italic; }
+  .ai-input { display: flex; gap: 10px; padding: 14px 18px 16px; border-top: 1px solid #ebe7e1; }
+  .ai-input input {
+    flex: 1;
+    min-width: 0;
+    background: #ffffff;
+    border: 1px solid #ded8cf;
+    border-radius: 8px;
+    color: #171717;
+    padding: 12px 13px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .ai-input input:focus { outline: none; border-color: #cfc8bd; box-shadow: 0 0 0 3px rgba(124,58,237,0.1); }
+  .ai-send {
+    flex: 0 0 44px;
+    width: 44px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    background: #143d4a;
+    color: #ffffff;
+    font-weight: 750;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ai-send svg { width: 18px; height: 18px; }
   .ai-send:disabled { opacity: 0.5; cursor: default; }
-  @media (max-width: 860px) { .ai-drawer { width: auto; left: 0; height: 82vh; } }
+  @media (max-width: 860px) {
+    .ask-sparkle { width: 21px; height: 21px; }
+    .ai-drawer {
+      top: auto;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      max-width: none;
+      height: min(58vh, 488px);
+      max-height: calc(100dvh - 84px);
+      border-radius: 26px 26px 0 0;
+      border-left: 0;
+      border-right: 0;
+      border-bottom: 0;
+    }
+    .ai-drawer::before {
+      content: "";
+      width: 44px;
+      height: 4px;
+      border-radius: 999px;
+      background: #ded8cf;
+      margin: 12px auto 0;
+      flex: 0 0 auto;
+    }
+    .ai-dhead { padding: 18px 20px 14px; }
+    .ai-msgs { padding: 16px; }
+    .ai-input { padding: 12px 16px 20px; }
+  }
 
   /* ═══════════ STATUS TICKER ═══════════ */
   .ticker { flex: 0 0 auto; height: 30px; overflow: hidden; position: relative;
@@ -788,7 +855,6 @@
   svg.lucide { stroke-width: 2px; }
   .tb-btn svg { width: 17px; height: 17px; }
   .tb-title svg { width: 17px; height: 17px; vertical-align: -3px; color: var(--accent); }
-  .ai-fab svg, .ai-dtitle svg { width: 15px; height: 15px; }
   .sb-search .ico { display: inline-flex; } .sb-search .ico svg { width: 15px; height: 15px; }
   .sb-foot button svg { width: 15px; height: 15px; vertical-align: -3px; }
   .btn-cloud svg { margin-right: 2px; }
@@ -881,7 +947,9 @@
   .tb-hello { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; }
   .tb-hello .wave { -webkit-text-fill-color: initial; }
   .tb-sub { font-size: 0.8rem; color: var(--text-dim); margin-top: 1px; }
-  .tb-title { font-family: var(--font-display); font-weight: 600; font-size: 1rem; flex: 1; display: flex; align-items: center; gap: 9px; }
+  .tb-title { font-family: var(--font-display); font-weight: 600; font-size: 1rem; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; }
+  .tb-title-main { display: flex; align-items: center; gap: 9px; min-width: 0; white-space: nowrap; }
+  .tb-tool-sub { color: #8b837b; font-family: var(--font-ui); font-size: 11px; font-weight: 500; letter-spacing: 0; line-height: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tb-title svg { width: 18px; height: 18px; color: var(--accent); }
   .tb-actions { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
   .tb-search { display: flex; align-items: center; gap: 9px; width: 300px; max-width: 34vw; padding: 9px 13px; cursor: pointer;
@@ -935,8 +1003,7 @@
   .health-badge { color: var(--green); font-size: 0.7rem; font-weight: 600; }
   .gauge { position: relative; width: 150px; height: 150px; margin: 14px 0; }
   .gauge svg { width: 100%; height: 100%; }
-  #gaugeArc { transition: stroke-dashoffset 1.2s cubic-bezier(0.2,0.8,0.3,1); filter: drop-shadow(0 0 8px rgba(52,211,153,0.5)); }
-  .gauge-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+	  .gauge-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .gauge-mid b { font-family: var(--font-display); font-size: 2rem; font-weight: 700; }
   .gauge-mid b::after { content: "%"; font-size: 0.9rem; color: var(--text-dim2); }
   .gauge-mid span { font-size: 0.68rem; color: var(--text-dim2); text-transform: uppercase; letter-spacing: 0.1em; }
@@ -986,6 +1053,1465 @@
     #menuBtn { display: flex; }
     #homeView { padding: 20px 16px 60px; }
     .tiles { grid-template-columns: 1fr; }
+  }
+
+  /* ═══════════ 02 HOME V1 · OPERATIONS / SITE ═══════════ */
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-solid: #ffffff;
+    --surface-2: #f8f7f4;
+    --surface-3: #efede8;
+    --border: #e5e0d8;
+    --border-strong: #d8d0c6;
+    --text: #171717;
+    --text-dim: #6f777d;
+    --text-dim2: #8b837b;
+    --accent: #143d4a;
+    --accent-hover: #0f3340;
+    --accent-soft: #eaf6f2;
+    --amber: #f6a800;
+    --green: #12a36a;
+    --green-soft: #e9f8f1;
+    --blue: #68b9df;
+    --blue-soft: #eef8fc;
+    --red: #e2565c;
+    --red-soft: #fff0ef;
+    --purple: #7067d9;
+    --purple-soft: #f1efff;
+	    --sidebar-w: 248px;
+	    --sidebar-collapsed-w: 72px;
+    --radius: 8px;
+    --shadow: 0 10px 28px rgba(23,23,23,0.08);
+    --font-display: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-ui: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  body { background: #ffffff; color: var(--text); font-family: var(--font-ui); overflow: hidden; }
+  body::before, body::after, html::after { display: none; }
+  h1, h2, .sb-name, .cat-title, .tb-title, .modal-title, .gate-card h2 { font-family: var(--font-display); }
+	  .shell { background: #ffffff; color: var(--text); }
+	  .content { background: #ffffff; }
+		  aside {
+		    position: relative;
+		    background: #f4f3ee;
+		    border-right: 1px solid #ddd8d0;
+		    backdrop-filter: none;
+		    -webkit-backdrop-filter: none;
+		    margin-left: 0;
+		    transition: width 0.2s ease, flex-basis 0.2s ease, transform 0.22s ease;
+		  }
+	  .shell.collapsed aside {
+	    width: var(--sidebar-collapsed-w);
+	    flex-basis: var(--sidebar-collapsed-w);
+	  }
+	  .sb-brand {
+	    min-height: 108px;
+	    width: calc(100% - 32px);
+	    margin: 0 auto;
+	    padding: 26px 0 18px;
+	    gap: 14px;
+	    border-bottom: 0;
+	    cursor: pointer;
+	    justify-content: flex-start;
+	    transition: width 0.2s ease, padding 0.2s ease, justify-content 0.2s ease;
+	  }
+	  .sb-brand::after { display: none; }
+		  .sb-wordmark { width: 54px; height: auto; flex: 0 0 54px; object-fit: contain; opacity: 0.95; margin-left: 0; }
+	  .sb-identity { min-width: 0; }
+	  .sb-pname { color: #171717; font-size: 15px; line-height: 21px; font-weight: 750; letter-spacing: 0; }
+	  .sb-prole { color: #8b837b; font-size: 12.5px; line-height: 18px; font-weight: 500; }
+	  .sb-nav {
+	    width: calc(100% - 32px);
+	    margin: 0 auto;
+	    padding: 6px 0 12px;
+	    overflow-y: auto;
+	    transition: width 0.2s ease, padding 0.2s ease;
+	  }
+	  .sb-role-link, .sb-role-create {
+	    width: 100%;
+	    min-height: 44px;
+	    display: flex;
+	    align-items: center;
+	    gap: 12px;
+	    padding: 10px 10px;
+	    border: 1px solid transparent;
+	    border-radius: 8px;
+	    background: transparent;
+	    color: #173b48;
+	    font-family: inherit;
+	    font-size: 14px;
+	    line-height: 20px;
+	    font-weight: 750;
+	    text-align: left;
+	    cursor: pointer;
+	    margin: 5px 0;
+	    overflow: hidden;
+	    transition: width 0.2s ease, padding 0.2s ease, gap 0.2s ease, background 0.15s, border-color 0.15s;
+	  }
+  .sb-role-create { margin-bottom: 12px; }
+  .sb-role-link:hover, .sb-role-create:hover { background: rgba(255,255,255,0.52); }
+  .sb-role-link.active {
+    background: #ffffff;
+    border-color: #eee9e2;
+    box-shadow: 0 2px 9px rgba(23,23,23,0.04);
+    color: #173b48;
+  }
+	  .sb-role-link .ic, .sb-role-create .ic {
+	    width: 22px;
+	    height: 22px;
+	    flex: 0 0 22px;
+	    display: flex;
+	    align-items: center;
+	    justify-content: center;
+	    color: currentColor;
+	  }
+	  .sb-role-link .ic svg, .sb-role-create .ic svg { width: 18px; height: 18px; }
+	  .sb-label {
+	    min-width: 0;
+	    white-space: nowrap;
+	    overflow: hidden;
+	    text-overflow: ellipsis;
+	  }
+	  .sb-collapse-toggle {
+	    position: static;
+	    z-index: 5;
+	    width: calc(100% - 32px);
+	    min-height: 34px;
+	    margin: 4px auto 18px;
+	    padding: 0;
+	    gap: 0;
+	    flex: 0 0 auto;
+	    border-radius: 0;
+	    border: 0;
+	    background: transparent;
+	    color: #173b48;
+	    display: flex;
+	    align-items: center;
+	    justify-content: flex-start;
+	    cursor: pointer;
+	    box-shadow: none;
+	    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+	  }
+	  .sb-collapse-toggle:hover { color: #0f3340; }
+	  .sb-collapse-toggle svg { width: 20px; height: 20px; flex: 0 0 20px; }
+	  .sb-collapse-label {
+	    display: none;
+	  }
+	  .shell.collapsed .sb-brand {
+	    width: 100%;
+	    padding: 26px 0 18px;
+	    justify-content: center;
+	    gap: 0;
+	    flex-direction: row;
+	  }
+	  .shell.collapsed .sb-wordmark {
+	    width: 39px;
+	    flex-basis: 39px;
+	  }
+	  .shell.collapsed .sb-collapse-toggle {
+	    width: 42px;
+	    min-height: 34px;
+	    margin: 4px auto 18px;
+	    padding: 0;
+	    justify-content: center;
+	    gap: 0;
+	  }
+	  .shell.collapsed .sb-identity,
+	  .shell.collapsed .sb-label,
+	  .shell.collapsed .sb-collapse-label,
+	  .shell.collapsed .sb-status-copy {
+	    display: none;
+	  }
+	  .shell.collapsed .sb-nav {
+	    width: 100%;
+	    padding: 8px 10px 12px;
+	  }
+	  .shell.collapsed .sb-role-link,
+	  .shell.collapsed .sb-role-create {
+	    width: 42px;
+	    min-height: 42px;
+	    justify-content: center;
+	    margin: 5px auto;
+	    padding: 0;
+	    gap: 0;
+	  }
+	  .shell.collapsed .sb-role-link .ic,
+	  .shell.collapsed .sb-role-create .ic {
+	    width: 22px;
+	    height: 22px;
+	    flex-basis: 22px;
+	  }
+	  .shell.collapsed .sb-role-divider {
+	    width: 32px;
+	    margin: 16px auto;
+	  }
+	  .sb-role-divider { height: 1px; background: #e2ddd5; margin: 16px 10px; }
+	  .sb-status {
+	    width: calc(100% - 32px);
+	    margin: auto auto 12px;
+	    display: flex;
+	    align-items: center;
+	    gap: 11px;
+	    color: #173b48;
+	    transition: width 0.2s ease, margin 0.2s ease;
+	  }
+	  .shell.collapsed .sb-status {
+	    width: 100%;
+	    justify-content: center;
+	    margin: auto 0 12px;
+	    gap: 0;
+	  }
+  .sb-status-icon { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; }
+  .sb-status-icon svg { width: 19px; height: 19px; }
+  .sb-status-title { font-size: 15px; line-height: 19px; font-weight: 750; }
+  .sb-status-sub { color: #8b837b; font-size: 12.5px; line-height: 18px; }
+  .topbar {
+    height: 76px;
+    justify-content: flex-end;
+    padding: 22px 38px 10px;
+    gap: 14px;
+    background: #ffffff;
+    border-bottom: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .topbar::after { display: none; }
+  .tb-greet { flex: 1; }
+  .tb-title {
+    color: #173b48;
+    font-weight: 750;
+    font-size: 17px;
+    margin-right: auto;
+  }
+  .tb-actions { margin-left: auto; gap: 12px; }
+  .tb-search {
+    width: 252px;
+    max-width: none;
+    height: 40px;
+    padding: 0 10px 0 13px;
+    background: #f4f3ee;
+    border: 1px solid #ded8cf;
+    color: #61727a;
+    border-radius: 8px;
+    font-size: 14px;
+    box-shadow: 0 1px 2px rgba(23,23,23,0.04);
+  }
+  .tb-search:hover { border-color: #d2cbc2; }
+  .tb-search kbd {
+    background: #ffffff;
+    color: #173b48;
+    border-color: #ded8cf;
+    min-width: 26px;
+    height: 25px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  .tb-icon, .tb-btn {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #173b48;
+    border: 1px solid #e4ded6;
+    box-shadow: none;
+  }
+  .tb-icon:hover, .tb-btn:hover { border-color: #d2cbc2; color: #173b48; box-shadow: none; transform: none; }
+  #tbAi {
+    color: #7c3aed;
+  }
+  #tbAi:hover, #tbAi[aria-expanded="true"] {
+    color: #7c3aed;
+    border-color: #d8c8ff;
+    background: #ffffff;
+  }
+  #homeView {
+    padding: 14px 38px 42px;
+    background: #ffffff;
+    color: var(--text);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .hub-screen { display: none; min-width: 0; }
+  .hub-screen.is-active { display: block; }
+  .op-hero, .screen-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    margin: 8px 0 24px;
+  }
+  .op-hero {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #ffffff;
+    padding: 8px 0 14px;
+    margin-top: 0;
+    isolation: isolate;
+  }
+  .op-hero::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: -38px;
+    right: -38px;
+    top: -84px;
+    bottom: -8px;
+    background: #ffffff;
+    pointer-events: none;
+  }
+  .op-date, .screen-kicker {
+    color: #173b48;
+    font-size: 17px;
+    line-height: 24px;
+    font-weight: 750;
+    margin-bottom: 12px;
+  }
+  .op-hero h1, .screen-head h1 {
+    color: #173b48;
+    font-size: clamp(34px, 4vw, 46px);
+    line-height: 1.08;
+    letter-spacing: 0;
+    font-weight: 750;
+    margin: 0 0 8px;
+  }
+  .op-hero p, .screen-head p {
+    color: #667982;
+    max-width: 650px;
+    font-size: 16px;
+    line-height: 24px;
+  }
+  .op-actions { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
+  .btn-primary, .btn-ghost, .mini-btn {
+    height: 44px;
+    border-radius: 8px;
+    padding: 0 18px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 750;
+    cursor: pointer;
+    box-shadow: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .btn-primary {
+    background: #143d4a;
+    color: #ffffff;
+    border: 1px solid #143d4a;
+  }
+  .btn-primary:hover { background: #0f3340; border-color: #0f3340; transform: none; box-shadow: none; }
+  .btn-ghost, .mini-btn {
+    background: #ffffff;
+    color: #173b48;
+    border: 1px solid #ded8cf;
+  }
+  .btn-ghost:hover, .mini-btn:hover { border-color: #cfc8bd; color: #173b48; }
+  .mini-btn { height: 34px; padding: 0 14px; font-size: 13px; background: #fbfaf8; }
+  .op-main-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.32fr) minmax(330px, 0.78fr);
+    gap: 18px;
+    align-items: stretch;
+  }
+  .op-bottom-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(330px, 0.75fr);
+    gap: 20px;
+    margin-top: 20px;
+  }
+  .op-card {
+    background: #ffffff;
+    border: 1px solid #e4ded6;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: none;
+  }
+  .op-card-head {
+    min-height: 64px;
+    padding: 14px 16px 12px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid #ebe7e1;
+  }
+  .op-card h2 {
+    color: #171717;
+    font-size: 20px;
+    line-height: 26px;
+    font-weight: 750;
+    margin: 0;
+  }
+  .op-card p {
+    color: #8b837b;
+    font-size: 13px;
+    line-height: 18px;
+    margin: 0;
+  }
+  .op-tool-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    padding: 12px;
+  }
+  .op-tool-card, .detail-tool-card, .support-tool-card, .catalog-chip {
+    min-width: 0;
+    border: 1px solid #e6e1da;
+    background: #fbfaf8;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .op-tool-card:hover, .detail-tool-card:hover, .support-tool-card:hover, .catalog-chip:hover {
+    background: #ffffff;
+    border-color: #d2cbc2;
+  }
+  .op-tool-card { min-height: 92px; padding: 12px; position: relative; }
+  .tool-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef8fc;
+    color: #0f6c92;
+    font-size: 12px;
+    font-weight: 750;
+    margin-bottom: 16px;
+  }
+  .tool-status {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    color: #0d7c54;
+    font-size: 11px;
+    font-weight: 750;
+  }
+  .tool-status.cloud { color: #9b6a00; }
+  .op-tool-card h3, .detail-tool-card h3, .support-tool-card h3 {
+    color: #171717;
+    font-size: 14px;
+    line-height: 17px;
+    font-weight: 750;
+    margin: 0 0 3px;
+  }
+  .op-tool-card p, .detail-tool-card p, .support-tool-card p {
+    color: #8b837b;
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .op-list { padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; }
+  .op-list.compact { gap: 8px; }
+  .op-list.full { padding: 14px; }
+	  .op-list-item {
+	    width: 100%;
+	    display: flex;
+	    align-items: flex-start;
+	    gap: 12px;
+    padding: 12px;
+    border: 1px solid #ebe7e1;
+	    border-radius: 8px;
+	    background: #fbfaf8;
+	    color: inherit;
+	    font-family: inherit;
+	    text-align: left;
+	  }
+	  button.op-list-item { cursor: pointer; }
+	  button.op-list-item:hover { background: #ffffff; border-color: #d2cbc2; }
+  .op-list-item .dot, .source-list .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex: 0 0 8px;
+    margin-top: 7px;
+    background: #f6a800;
+  }
+  .op-list-item .dot.red, .source-list .dot.red { background: var(--red); }
+  .op-list-item .dot.green, .source-list .dot.green { background: var(--green); }
+  .op-list-item .dot.blue, .source-list .dot.blue { background: var(--blue); }
+  .op-list-main { flex: 1; min-width: 0; }
+  .op-list-title { color: #171717; font-size: 14px; line-height: 19px; font-weight: 750; }
+  .op-list-sub { color: #8b837b; font-size: 12px; line-height: 17px; margin-top: 1px; }
+  .op-list-time, .op-list-tag {
+    flex: 0 0 auto;
+    color: #8b837b;
+    font-size: 12px;
+    line-height: 18px;
+    white-space: nowrap;
+  }
+  .op-list-tag {
+    border-radius: 999px;
+    padding: 3px 10px;
+    background: #eef8fc;
+    color: #0f6c92;
+    font-weight: 750;
+  }
+  .op-wide-btn { width: calc(100% - 24px); margin: 0 12px 12px; }
+  .op-attn-card .op-list { min-height: 258px; }
+  .op-attn-card.is-clear .op-list {
+    min-height: 126px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .attention-clear {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 14px 18px;
+  }
+  .attention-clear svg { margin-bottom: 4px; }
+  .attention-clear b {
+    display: block;
+    color: #171717;
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 750;
+  }
+  .attention-clear span {
+    display: block;
+    color: #8b837b;
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .team-panel-body {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .team-panel-body .op-wide-btn { width: 100%; margin: 0; }
+  .team-signal {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #ebe7e1;
+    border-radius: 8px;
+    background: #fbfaf8;
+  }
+  .team-signal-icon {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: #eef8fc;
+    color: #0f6c92;
+  }
+  .team-signal-icon svg { width: 19px; height: 19px; }
+  .team-signal-copy, .flow-copy { min-width: 0; }
+  .team-signal-copy b,
+  .flow-copy b {
+    display: block;
+    color: #171717;
+    font-size: 14px;
+    line-height: 19px;
+    font-weight: 750;
+  }
+  .team-signal-copy span,
+  .flow-copy span {
+    display: block;
+    color: #8b837b;
+    font-size: 12px;
+    line-height: 17px;
+    margin-top: 2px;
+  }
+  .team-source-list {
+    display: grid;
+    gap: 8px;
+  }
+  .team-source-list div {
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid #ebe7e1;
+    border-radius: 7px;
+    color: #173b48;
+    background: #ffffff;
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .team-source-list em {
+    color: #8b837b;
+    font-style: normal;
+    font-size: 12px;
+  }
+  .ops-flow {
+    padding: 14px;
+    display: grid;
+    gap: 0;
+  }
+  .flow-step {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 62px;
+    padding: 10px 0;
+    border-bottom: 1px solid #ebe7e1;
+  }
+  .flow-step:last-child { border-bottom: 0; }
+  .flow-index {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef8fc;
+    color: #0f6c92;
+    font-size: 12px;
+    font-weight: 750;
+  }
+  .flow-step button {
+    height: 32px;
+    border-radius: 7px;
+    border: 1px solid #ded8cf;
+    background: #ffffff;
+    color: #173b48;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 750;
+    padding: 0 11px;
+    cursor: pointer;
+  }
+  .flow-step button:hover { border-color: #cfc8bd; }
+  .count-pill, .soft-pill {
+    min-width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff4d7;
+    color: #9b6a00;
+    border: 1px solid #f4dda5;
+    font-weight: 750;
+    padding: 0 10px;
+  }
+  .soft-pill { border-radius: 999px; font-size: 12px; height: 30px; }
+  .snapshot-card {
+    padding: 22px 0 0;
+    margin-bottom: 20px;
+  }
+  .snapshot-title {
+    color: #171717;
+    font-size: 28px;
+    line-height: 34px;
+    font-weight: 750;
+    padding: 0 30px 16px;
+  }
+  .snapshot-grid {
+    display: grid;
+    grid-template-columns: minmax(150px, 0.95fr) minmax(260px, 1.65fr) repeat(4, minmax(135px, 1fr));
+    align-items: stretch;
+    padding: 0 24px 18px;
+  }
+  .snapshot-segment {
+    min-width: 0;
+    min-height: 112px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px 24px 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+  }
+  button.snapshot-segment {
+    cursor: pointer;
+  }
+  button.snapshot-segment:hover .snapshot-label,
+  button.snapshot-segment:hover > svg {
+    color: #0f3340;
+  }
+  .snapshot-segment + .snapshot-segment::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 10px;
+    bottom: 12px;
+    width: 1px;
+    background: #e4ded6;
+  }
+  .snapshot-segment > svg {
+    position: absolute;
+    right: 22px;
+    top: 18px;
+    width: 19px;
+    height: 19px;
+    color: #173b48;
+    stroke-width: 3;
+  }
+  .snapshot-label {
+    display: block;
+    max-width: calc(100% - 28px);
+    color: #8b837b;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 750;
+    text-transform: uppercase;
+  }
+  .snapshot-value {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+  }
+  .snapshot-value b,
+  .readiness-metrics b {
+    color: #171717;
+    font-size: 32px;
+    line-height: 36px;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+  }
+  .snapshot-value em,
+  .readiness-metrics em {
+    color: #8b837b;
+    font-style: normal;
+    font-size: 14px;
+    line-height: 18px;
+  }
+  .readiness-metrics {
+    display: flex;
+    align-items: flex-end;
+    gap: 26px;
+  }
+  .readiness-metrics span {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .readiness-metrics span:nth-child(1) b,
+  .readiness-metrics span:nth-child(1) em,
+  #snapNeedsNote.clear,
+  #snapWorkerNote.clear,
+  #snapTeamNote.clear {
+    color: #0d9b67;
+  }
+  .readiness-metrics span:nth-child(2) b,
+  .readiness-metrics span:nth-child(2) em {
+    color: #9b6a00;
+  }
+  .readiness-metrics span:nth-child(3) b,
+  .readiness-metrics span:nth-child(3) em,
+  #snapNeedsNote.warn,
+  #snapWorkerNote.warn,
+  #snapTeamNote.warn {
+    color: #d94d4d;
+  }
+  .todo-card {
+    margin-bottom: 20px;
+  }
+  .todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 16px 16px;
+  }
+  .todo-item {
+    width: 100%;
+    min-height: 48px;
+    display: grid;
+    grid-template-columns: 12px minmax(190px, 1fr) minmax(220px, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 12px;
+    border: 1px solid #ebe7e1;
+    border-radius: 8px;
+    background: #fbfaf8;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+  }
+  button.todo-item {
+    cursor: pointer;
+  }
+  button.todo-item:hover {
+    background: #ffffff;
+    border-color: #d2cbc2;
+  }
+  .todo-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f6a800;
+  }
+  .todo-dot.red { background: #e95050; }
+  .todo-dot.blue { background: #77bde5; }
+  .todo-dot.green { background: #0d9b67; }
+  .todo-title {
+    color: #171717;
+    font-size: 14px;
+    line-height: 19px;
+    font-weight: 750;
+  }
+  .todo-source {
+    color: #8b837b;
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .todo-open {
+    color: #173b48;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 750;
+    white-space: nowrap;
+  }
+  .todo-card.focus-ring {
+    border-color: #cfc8bd;
+    box-shadow: 0 0 0 3px rgba(20, 61, 74, 0.08);
+  }
+  .todo-card.is-clear .todo-head {
+    min-height: 54px;
+    padding-bottom: 4px;
+  }
+  .todo-card.is-clear .todo-list {
+    min-height: 126px;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px 18px;
+  }
+  .todo-clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #173b48;
+    text-align: left;
+  }
+  .todo-clear svg {
+    width: 26px;
+    height: 26px;
+    color: #0d9b67;
+  }
+  .todo-clear b {
+    display: block;
+    color: #171717;
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 750;
+  }
+  .todo-clear span {
+    display: block;
+    color: #8b837b;
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .catalog-shortcuts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    padding: 12px;
+  }
+  .catalog-chip {
+    min-height: 54px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .catalog-chip .tool-badge { margin: 0; width: 30px; height: 30px; }
+  .catalog-chip b { display: block; color: #171717; font-size: 13px; line-height: 17px; }
+  .catalog-chip span { color: #8b837b; font-size: 11px; line-height: 15px; }
+  .tools-layout, .attention-layout, .activity-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 330px;
+    gap: 18px;
+    align-items: start;
+  }
+  .activity-layout {
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-width: 100%;
+  }
+  .right-stack { display: flex; flex-direction: column; gap: 18px; }
+  .detail-tool-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 14px;
+  }
+  .detail-tool-card, .support-tool-card {
+    min-height: 98px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 38px minmax(0,1fr) auto;
+    gap: 12px;
+    align-items: start;
+  }
+  .detail-tool-card .tool-badge, .support-tool-card .tool-badge { margin: 0; }
+  .support-card { margin-top: 18px; }
+  .support-tool-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding: 14px;
+  }
+  .route-list, .source-list {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .route-list button, .source-list div, .mapping-row {
+    width: 100%;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: 1px solid #ebe7e1;
+    border-radius: 7px;
+    background: #fbfaf8;
+    padding: 9px 10px;
+    color: #173b48;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 750;
+    cursor: pointer;
+  }
+  .route-list button span, .source-list em, .mapping-row span {
+    color: #8b837b;
+    font-style: normal;
+    font-weight: 500;
+  }
+  .dark-card {
+    background: #143d4a;
+    border-color: #143d4a;
+    color: #ffffff;
+  }
+  .dark-card h2 { color: #ffffff; }
+  .dark-card p, .dark-card .mapping-row span { color: rgba(255,255,255,0.72); }
+  .dark-card .mapping-row {
+    border-color: rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.04);
+    color: #ffffff;
+  }
+  .attention-stats, .catalog-stats {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin: -10px 0 18px;
+  }
+  .activity-snapshot-card {
+    margin: -6px 0 18px;
+    padding: 18px 18px 12px;
+  }
+  .activity-snapshot-card h2 {
+    color: #171717;
+    font-size: 22px;
+    line-height: 29px;
+    font-weight: 750;
+    margin: 0;
+  }
+  .activity-snapshot-row {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0;
+    margin: 16px 0 0;
+  }
+  .mini-stat {
+    border: 1px solid #e4ded6;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 12px 16px;
+    min-height: 70px;
+  }
+  .mini-stat.cloud { background: #fff9e9; }
+  .mini-stat.soft { background: #f7fbf9; }
+  .mini-stat.warn { background: #fff9e9; }
+  .mini-stat span { display: block; color: #8b837b; font-size: 12px; line-height: 17px; font-weight: 750; text-transform: uppercase; }
+  .mini-stat b { color: #173b48; font-size: 28px; line-height: 32px; font-weight: 750; }
+  .mini-stat em { color: #8b837b; font-style: normal; font-size: 13px; margin-left: 6px; }
+  .activity-snapshot-row .mini-stat {
+    min-height: 68px;
+    padding: 4px 20px 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .activity-snapshot-row .mini-stat + .mini-stat {
+    border-left: 1px solid #e4ded6;
+  }
+  .activity-snapshot-row .mini-stat.soft,
+  .activity-snapshot-row .mini-stat.warn {
+    background: transparent;
+  }
+  .activity-filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .activity-filter-actions .mini-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .activity-filter-actions .mini-btn svg {
+    width: 15px;
+    height: 15px;
+  }
+  .activity-inline-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 16px 12px;
+    border-bottom: 1px solid #ebe7e1;
+    background: #ffffff;
+  }
+  .activity-inline-filters[hidden] {
+    display: none;
+  }
+  .activity-inline-filters button {
+    min-height: 34px;
+    border: 1px solid #ded8cf;
+    border-radius: 8px;
+    background: #fbfaf8;
+    color: #173b48;
+    padding: 0 12px;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 750;
+    cursor: pointer;
+  }
+  .activity-inline-filters button.active {
+    background: #143d4a;
+    border-color: #143d4a;
+    color: #ffffff;
+  }
+  .activity-inline-filters button span {
+    color: #8b837b;
+    margin-left: 6px;
+    font-weight: 500;
+  }
+  .activity-inline-filters button.active span {
+    color: rgba(255,255,255,0.72);
+  }
+  .route-list button.active,
+  .activity-filter-actions .mini-btn.active {
+    background: #143d4a;
+    color: #ffffff;
+    border-color: #143d4a;
+  }
+  .route-list button.active span,
+  .activity-filter-actions .mini-btn.active span {
+    color: rgba(255,255,255,0.72);
+  }
+  .route-list button:disabled {
+    opacity: 0.48;
+    cursor: default;
+  }
+  .activity-row {
+    display: grid;
+    grid-template-columns: 54px 40px minmax(0, 1fr) minmax(130px, 0.34fr) 90px;
+    align-items: center;
+    gap: 12px;
+    min-height: 72px;
+    padding: 12px 14px;
+  }
+  .activity-row:first-child {
+    background: #f7fbf9;
+    border-color: #dceee7;
+  }
+  .activity-time {
+    color: #667982;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+  }
+  .activity-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef2f2;
+    color: #173b48;
+    font-size: 12px;
+    font-weight: 750;
+  }
+  .activity-row:first-child .activity-avatar {
+    background: #143d4a;
+    color: #ffffff;
+  }
+  .activity-tool {
+    color: #0f6c92;
+    font-size: 13px;
+    line-height: 17px;
+    font-weight: 750;
+  }
+  .activity-status {
+    justify-self: end;
+    min-width: 74px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: #eef8fc;
+    color: #0f6c92;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 750;
+    text-align: center;
+  }
+  .activity-status.updated { background: #e9f8f1; color: #0d7c54; }
+  .activity-status.cleared { background: #fff4d7; color: #9b6a00; }
+  .activity-status.added { background: #fff0ef; color: #c64a44; }
+  .tools-head {
+    margin: 14px 0 14px;
+    align-items: center;
+  }
+  .tools-title {
+    color: #173b48;
+    font-size: 18px;
+    line-height: 24px;
+    font-weight: 750;
+  }
+  .tool-tab {
+    background: #fbfaf8;
+    border-color: #e4ded6;
+    color: #667982;
+  }
+  .tool-tab.on {
+    background: #143d4a;
+    color: #ffffff;
+    border-color: #143d4a;
+    box-shadow: none;
+  }
+  section.cat {
+    background: #ffffff;
+    border: 1px solid #e4ded6;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .cat-head { margin-bottom: 12px; }
+  .cat-head::before, .cat-head::after { display: none; }
+  .cat-title { color: #173b48; font-size: 18px; line-height: 24px; font-weight: 750; }
+  .cat-count { color: #8b837b; letter-spacing: 0; text-transform: none; font-size: 13px; }
+  .tiles { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+  .tile {
+    background: #fbfaf8;
+    border: 1px solid #e6e1da;
+    border-radius: 8px;
+    padding: 14px;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .tile:hover { transform: none; border-color: #d2cbc2; box-shadow: none; }
+  .tile::before, .tile::after { display: none; }
+  .tile-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: #eef8fc;
+    border-color: #dceff6;
+  }
+  .tile-name { color: #171717; font-family: var(--font-ui); font-size: 14px; line-height: 19px; font-weight: 750; }
+  .tile-desc { color: #8b837b; font-size: 12px; line-height: 17px; }
+  .tile-foot { border-top-color: #ebe7e1; }
+  .tile-open { color: #143d4a; }
+  .badge-live, .badge-cloud, .badge-reference, .badge-prototype {
+    border-radius: 999px;
+    box-shadow: none;
+    font-size: 11px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .badge-live { background: #e9f8f1; color: #0d7c54; border-color: #d8f0e5; }
+  .badge-cloud { background: #fff4d7; color: #9b6a00; border-color: #f4dda5; }
+  .badge-reference { background: #f2f0ed; color: #6f777d; border-color: #e4ded6; }
+  .badge-prototype { background: #f1efff; color: #7067d9; border-color: #dedbff; }
+  .modal { background: #ffffff; color: #171717; border-color: #e4ded6; }
+  .modal-bg { background: rgba(23,23,23,0.34); }
+  .url-row { border-bottom-color: #ebe7e1; }
+  .url-val { color: #8b837b; }
+  #toast { background: #171717; color: #ffffff; border-color: #171717; box-shadow: var(--shadow); }
+  .cmdk-box { background: #ffffff; border-color: #e4ded6; color: #171717; box-shadow: var(--shadow); }
+  .cmdk { background: rgba(23,23,23,0.24); }
+  .cmdk-input { border-bottom-color: #ebe7e1; }
+  .cmdk-input input, .cmdk-item .ck-title { color: #171717; }
+  .cmdk-item { color: #667982; }
+  .cmdk-item.sel { background: #f4f3ee; color: #171717; }
+  @media (max-width: 1280px) {
+    .activity-layout { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 1180px) {
+    .op-main-grid, .op-bottom-grid, .tools-layout, .attention-layout, .activity-layout { grid-template-columns: 1fr; }
+    .op-tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .kpi-row, .attention-stats, .catalog-stats, .activity-snapshot-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .snapshot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .snapshot-segment { border-top: 1px solid #ebe7e1; padding: 14px 18px 4px; }
+    .snapshot-segment + .snapshot-segment::before { display: none; }
+    .activity-snapshot-row .mini-stat {
+      padding: 12px 18px 4px;
+      border-top: 1px solid #ebe7e1;
+    }
+    .activity-snapshot-row .mini-stat + .mini-stat { border-left: 0; }
+    .activity-row { grid-template-columns: 54px 40px minmax(0, 1fr) 88px; }
+    .activity-tool { display: none; }
+  }
+	  @media (max-width: 860px) {
+		    .content {
+		      min-width: 0;
+		      width: 100%;
+		      flex: 1 1 100%;
+		    }
+	    .topbar { height: 70px; padding: 18px 16px 8px; }
+	    #menuBtn { display: flex; }
+		    .sb-collapse-toggle {
+		      display: flex;
+		      width: calc(100% - 44px);
+		      min-height: 34px;
+		      margin: 0 auto 18px;
+		      justify-content: flex-start;
+		    }
+		    .sb-collapse-toggle svg {
+		      width: 20px;
+		      height: 20px;
+		    }
+	    .tb-search { flex: 1 1 auto; width: auto; max-width: none; }
+    .tb-actions { flex: 0 0 auto; gap: 6px; }
+    .tb-title { font-size: 13px; gap: 0; letter-spacing: -0.01em; }
+    .tb-title-main { gap: 4px; }
+    .tb-title svg { width: 14px; height: 14px; flex: 0 0 14px; }
+    .tb-tool-sub { display: none; }
+    .tb-title .badge { display: none; }
+    .tb-circle { display: none; }
+    #homeView { padding: 6px 16px 96px; }
+			    aside,
+			    .shell.collapsed aside {
+			      position: fixed;
+			      left: 0;
+			      top: 0;
+			      bottom: 0;
+			      z-index: 900;
+			      width: min(280px, 86vw);
+			      flex: 0 0 auto;
+			      margin-left: 0;
+			      background: #f4f3ee;
+			      box-shadow: 0 18px 44px rgba(23,23,23,0.16);
+			      transform: translateX(-100%);
+			    }
+			    aside.open,
+			    .shell.collapsed aside.open {
+			      transform: translateX(0);
+			    }
+		    .sb-brand,
+		    .shell.collapsed .sb-brand {
+		      width: calc(100% - 44px);
+		      padding: 28px 0 18px;
+		      justify-content: flex-start;
+		      gap: 16px;
+		      flex-direction: row;
+		      min-height: 112px;
+		    }
+		    .sb-wordmark,
+		    .shell.collapsed .sb-wordmark {
+		      width: 58px;
+		      flex-basis: 58px;
+		    }
+		    .shell.collapsed .sb-identity,
+		    .shell.collapsed .sb-label,
+		    .shell.collapsed .sb-status-copy {
+		      display: block;
+		    }
+		    .sb-nav,
+		    .shell.collapsed .sb-nav {
+		      width: calc(100% - 44px);
+		      padding: 12px 0 16px;
+		    }
+		    .sb-role-link,
+		    .sb-role-create,
+		    .shell.collapsed .sb-role-link,
+		    .shell.collapsed .sb-role-create {
+		      width: 100%;
+		      min-height: 48px;
+		      justify-content: flex-start;
+		      margin: 8px 0;
+		      padding: 12px 12px;
+		      gap: 14px;
+		    }
+		    .sb-status,
+		    .shell.collapsed .sb-status {
+		      width: calc(100% - 44px);
+		      justify-content: flex-start;
+		      margin: auto auto 12px;
+		      gap: 11px;
+		    }
+    .op-hero, .screen-head {
+      display: block;
+      margin: 4px 0 20px;
+    }
+    .op-hero {
+      margin-top: 0;
+      padding: 10px 0 16px;
+    }
+    .op-hero::before {
+      left: -16px;
+      right: -16px;
+      top: -76px;
+      bottom: -8px;
+    }
+    .op-hero h1, .screen-head h1 {
+      font-size: 30px;
+      line-height: 36px;
+    }
+    .op-hero p, .screen-head p {
+      font-size: 15px;
+      line-height: 22px;
+    }
+    .op-actions {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .btn-primary, .btn-ghost { width: 100%; padding: 0 12px; }
+    .op-tool-grid, .detail-tool-grid, .support-tool-grid, .catalog-shortcuts, .kpi-row, .attention-stats, .catalog-stats, .activity-snapshot-row {
+      grid-template-columns: 1fr;
+    }
+    .op-work-card .op-tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .op-tool-card { min-height: 88px; }
+    .kpi-row { gap: 10px; }
+    .kpi { min-height: 78px; }
+    .snapshot-card { margin-bottom: 16px; padding-top: 18px; }
+    .snapshot-title {
+      font-size: 22px;
+      line-height: 28px;
+      padding: 0 22px 12px;
+    }
+    .snapshot-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      padding: 0 12px 14px;
+    }
+    .snapshot-segment {
+      min-height: 92px;
+      padding: 12px 10px 4px;
+      gap: 10px;
+    }
+    .snapshot-segment > svg {
+      right: 8px;
+      top: 14px;
+      width: 16px;
+      height: 16px;
+    }
+    .snapshot-label {
+      font-size: 11px;
+      line-height: 15px;
+    }
+    .snapshot-value b,
+    .readiness-metrics b {
+      font-size: 26px;
+      line-height: 30px;
+    }
+    .snapshot-value em,
+    .readiness-metrics em {
+      font-size: 12px;
+      line-height: 16px;
+    }
+    .readiness-metrics {
+      gap: 13px;
+    }
+    .todo-card { margin-bottom: 16px; }
+    .todo-list { padding: 10px 12px 14px; }
+    .todo-item {
+      grid-template-columns: 10px minmax(0, 1fr) auto;
+      gap: 10px;
+      min-height: 44px;
+    }
+    .todo-source {
+      grid-column: 2 / 4;
+      font-size: 12px;
+      line-height: 16px;
+      margin-top: -5px;
+    }
+    .todo-open {
+      grid-column: 3;
+      grid-row: 1;
+    }
+    .op-bottom-grid { gap: 16px; margin-top: 16px; }
+    .screen-head .op-actions { grid-template-columns: 1fr; }
+    .op-list-item { align-items: flex-start; }
+    .op-list-time, .op-list-tag { display: none; }
+    .activity-row {
+      grid-template-columns: 34px minmax(0, 1fr) auto;
+      gap: 10px;
+      min-height: 64px;
+    }
+    .activity-time { display: none; }
+    .activity-avatar {
+      width: 32px;
+      height: 32px;
+    }
+    .activity-status {
+      min-width: 64px;
+      padding: 6px 8px;
+    }
+    .mobile-tabbar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 850;
+      height: 70px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      padding: 8px 14px 10px;
+      background: rgba(255,255,255,0.96);
+      border-top: 1px solid #e4ded6;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .mobile-tabbar button {
+      border: 0;
+      background: transparent;
+      color: #667982;
+      border-radius: 14px;
+      font-family: inherit;
+      font-size: 11px;
+      line-height: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .mobile-tabbar button.active {
+      background: #eaf6f2;
+      color: #173b48;
+      font-weight: 750;
+    }
+    .mobile-tabbar svg { width: 18px; height: 18px; }
+  }
+  @media (min-width: 861px) {
+    .mobile-tabbar { display: none; }
   }
 </style>
 </head>
@@ -1067,163 +2593,275 @@
 
 <div class="shell" id="shell" style="display:none;">
 
-  <!-- ═══════════ SIDEBAR (the directory) ═══════════ -->
-  <aside id="sidebar">
-    <div class="sb-brand">
-      <div class="sb-logo" onclick="goHome()"><img src="hg-logo.png" alt="HG" /></div>
-      <div class="sb-name-wrap" onclick="goHome()">
-        <div class="sb-name">HG GROUP</div>
-        <div class="sb-sub">TOOL HUB</div>
-      </div>
-      <button class="sb-collapse" onclick="toggleCollapse()" title="Collapse"><i data-lucide="chevron-left"></i></button>
-    </div>
-    <input id="sbSearch" type="text" style="display:none" autocomplete="off" />
-    <div class="sb-nav" id="sbNav"></div>
-    <div class="sb-profile" id="sbProfile" onclick="toggleProfileMenu(event)">
-      <div class="sb-avatar" id="sbAvatar">HG</div>
-      <div class="sb-pinfo">
-        <div class="sb-pname" id="sbPname">User</div>
-        <div class="sb-prole" id="sbProle">Member</div>
-      </div>
-      <i data-lucide="chevron-up" class="sb-pchev"></i>
-      <div class="sb-pmenu" id="sbPmenu">
-        <button onclick="event.stopPropagation();openCloudManager()"><i data-lucide="settings-2"></i> Cloud links</button>
-        <button onclick="event.stopPropagation();hubSignOut()"><i data-lucide="log-out"></i> Sign out</button>
-      </div>
-    </div>
-  </aside>
+	  <!-- ═══════════ SIDEBAR (02 Operations / Site) ═══════════ -->
+		  <aside id="sidebar">
+			    <div class="sb-brand" onclick="goHome()">
+			      <img class="sb-wordmark" src="hg-logo.png" alt="HG" />
+			      <div class="sb-identity">
+		        <div class="sb-pname" id="sbPname">Black Lee</div>
+		        <div class="sb-prole" id="sbProle">Operations / Site</div>
+		      </div>
+		    </div>
+	    <input id="sbSearch" type="text" style="display:none" autocomplete="off" />
+	    <div class="sb-nav" id="sbNav"></div>
+		    <div class="sb-status">
+	      <span class="sb-status-icon"><i data-lucide="badge-check"></i></span>
+	      <div class="sb-status-copy">
+	        <div class="sb-status-title">System online</div>
+	        <div class="sb-status-sub">All services ready</div>
+	      </div>
+	    </div>
+	    <button class="sb-collapse-toggle" type="button" onclick="toggleCollapse(event)" aria-label="Collapse sidebar" aria-expanded="true" title="Collapse sidebar">
+	      <i data-lucide="arrow-left"></i>
+	      <span class="sb-collapse-label">Collapse</span>
+	    </button>
+	  </aside>
 
   <!-- ═══════════ CONTENT ═══════════ -->
   <div class="content">
     <div class="topbar">
-      <button class="tb-btn" id="menuBtn" onclick="toggleSidebar()"><i data-lucide="menu"></i></button>
-      <div class="tb-greet" id="tbGreet">
+      <button class="tb-btn" id="menuBtn" onclick="toggleSidebar()" aria-label="Open navigation" aria-expanded="false"><i data-lucide="menu"></i></button>
+      <div class="tb-greet" id="tbGreet" style="display:none;">
         <div class="tb-hello" id="tbHello">Welcome back <span class="wave">👋</span></div>
         <div class="tb-sub">Here's what's happening with your operations today.</div>
       </div>
       <div class="tb-title" id="tbTitle" style="display:none;"></div>
       <div class="tb-actions">
-        <button class="tb-search" onclick="openPalette()"><i data-lucide="search"></i><span>Search tools, reports, tasks…</span><kbd>⌘K</kbd></button>
-        <button class="tb-icon" id="tbAi" onclick="openChat()" title="Ask HG Assistant" style="display:none;"><i data-lucide="sparkles"></i></button>
-        <button class="tb-icon" onclick="goHome()" title="Home"><i data-lucide="home"></i></button>
-        <button class="tb-icon" id="tbBell" onclick="scrollAttention()" title="Alerts"><i data-lucide="bell"></i><span class="tb-badge" id="tbBellCount" style="display:none;">0</span></button>
+        <button class="tb-search" onclick="openPalette()"><i data-lucide="map-pin"></i><span>Search</span><kbd>/</kbd></button>
+        <button class="tb-icon tb-circle" id="tbHelp" onclick="toast('Use search or All Tools to find a workflow.')" title="Help"><i data-lucide="circle-help"></i></button>
+        <button class="tb-icon tb-circle" id="tbSettings" onclick="openCloudManager()" title="Settings"><i data-lucide="settings"></i></button>
+        <button class="tb-icon" id="tbAi" onclick="openChat()" title="Ask HG" aria-label="Ask HG" aria-expanded="false" style="display:none;">
+          <svg class="ask-sparkle" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M11.4 5.4L13.2 10.2L18 12L13.2 13.8L11.4 18.6L9.6 13.8L4.8 12L9.6 10.2L11.4 5.4Z" stroke="currentColor" stroke-width="1.85" stroke-linejoin="round"/>
+            <path d="M17.7 3.9L18.3 5.45L19.85 6.05L18.3 6.65L17.7 8.2L17.1 6.65L15.55 6.05L17.1 5.45L17.7 3.9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M6.3 15.75L6.95 17.4L8.6 18.05L6.95 18.7L6.3 20.35L5.65 18.7L4 18.05L5.65 17.4L6.3 15.75Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="tb-icon" id="tbBell" onclick="scrollAttention()" title="Alerts" style="display:none;"><i data-lucide="bell"></i><span class="tb-badge" id="tbBellCount" style="display:none;">0</span></button>
         <button class="tb-icon" id="tbReload" onclick="reloadTool()" title="Reload tool" style="display:none;"><i data-lucide="rotate-cw"></i></button>
         <button class="tb-icon" id="tbPop" onclick="popOut()" title="Open in new tab" style="display:none;"><i data-lucide="external-link"></i></button>
-        <button class="tb-quick" onclick="openPalette()"><i data-lucide="zap"></i> Quick Action</button>
       </div>
     </div>
-    <!-- ═══════ STATUS TICKER ═══════ -->
-    <div class="ticker" id="ticker"><div class="ticker-track" id="tickerTrack"></div></div>
 
     <div class="views">
-      <!-- HOME -->
       <div id="homeView">
-        <div class="hero-row">
-          <div class="home-hero">
-            <div class="hero-left">
-              <div class="hero-eyebrow"><i data-lucide="box"></i> HG OPERATING SYSTEM <span>/ INTEGRATED</span></div>
-              <h1>Every tool.<br><span class="grad-text">One door.</span></h1>
-              <p>Pick a tool from the directory, or browse below. I can fetch open tools right here inside the hub.</p>
-              <div class="hero-cta">
-                <button class="btn-primary" onclick="document.getElementById('toolsAnchor').scrollIntoView({behavior:'smooth'})">Explore All Tools <i data-lucide="arrow-right"></i></button>
-                <button class="btn-ghost" onclick="openTool(1,0)"><i data-lucide="play-circle"></i> Watch Walkthrough</button>
+        <section class="hub-screen is-active" id="screenHome" data-screen="home">
+	          <header class="op-hero">
+	            <div>
+	              <div class="op-date" id="opDate">Wednesday, July 8</div>
+	              <h1 id="opGreeting">Good afternoon, Black Lee</h1>
+	              <p>Review operational blockers, dispatch readiness, and today's site-work actions.</p>
+	            </div>
+	            <div class="op-actions">
+	              <button class="btn-ghost" onclick="focusOpenBlockers()">Review blockers</button>
+	              <button class="btn-primary" onclick="openToolByName('Daily Readiness & Dispatch')">Open dispatch</button>
+	            </div>
+	          </header>
+
+	          <section class="op-card snapshot-card" id="operationsSnapshot">
+	            <div class="snapshot-title">Operations Snapshot</div>
+	            <div class="snapshot-grid">
+	              <button type="button" class="snapshot-segment" onclick="focusOpenBlockers()">
+	                <span class="snapshot-label">Needs Attention</span>
+	                <span class="snapshot-value"><b id="snapNeeds" data-skel>—</b><em id="snapNeedsNote">clear now</em></span>
+	                <i data-lucide="chevron-right"></i>
+	              </button>
+	              <button type="button" class="snapshot-segment snapshot-dispatch" onclick="openToolByName('Daily Readiness & Dispatch')">
+	                <span class="snapshot-label">Dispatch Readiness</span>
+	                <span class="readiness-metrics">
+	                  <span><b id="snapReady" data-skel>—</b><em>Ready</em></span>
+	                  <span><b id="snapRisk" data-skel>—</b><em>At risk</em></span>
+	                  <span><b id="snapBlocked" data-skel>—</b><em>Blocked</em></span>
+	                </span>
+	                <i data-lucide="chevron-right"></i>
+	              </button>
+	              <button type="button" class="snapshot-segment" onclick="openToolByName('Team Command Center')">
+	                <span class="snapshot-label">Team Actions</span>
+	                <span class="snapshot-value"><b id="snapTeam" data-skel>—</b><em id="snapTeamNote">review</em></span>
+	                <i data-lucide="chevron-right"></i>
+	              </button>
+	              <button type="button" class="snapshot-segment" onclick="openToolByName('Workers Documentation & Permits')">
+	                <span class="snapshot-label">Worker Access</span>
+	                <span class="snapshot-value"><b id="snapWorker" data-skel>—</b><em id="snapWorkerNote">permit due</em></span>
+	                <i data-lucide="chevron-right"></i>
+	              </button>
+	              <div class="snapshot-segment">
+	                <span class="snapshot-label">Open Quotations</span>
+	                <span class="snapshot-value"><b id="snapQuotes" data-skel>—</b><em>draft / sent</em></span>
+	              </div>
+	              <div class="snapshot-segment">
+	                <span class="snapshot-label">Open Value</span>
+	                <span class="snapshot-value"><b id="snapValue" data-skel>—</b><em>pending</em></span>
+	              </div>
+	            </div>
+	          </section>
+
+	          <section class="op-card todo-card" id="todoCard">
+	            <div class="op-card-head todo-head">
+	              <div>
+	                <h2>Needs Attention / Open Blockers</h2>
+	                <p>Priority blockers from dispatch, worker access, scaffold, and storage</p>
+	              </div>
+	              <span class="count-pill" id="todoPill">0</span>
+	            </div>
+	            <div id="todoList" class="todo-list"><div class="dash-load"><span class="brief-spin"></span></div></div>
+	          </section>
+
+	          <div class="op-bottom-grid">
+	            <section class="op-card">
+	              <div class="op-card-head">
+                <div>
+                  <h2>Operations flow</h2>
+                  <p>Use the current Operations / Site tools in the order site work moves</p>
+                </div>
+                <button class="mini-btn" onclick="showHubScreen('catalog')">Role tools</button>
               </div>
-              <div class="hero-time"><span class="ht-label">System Time</span> <b id="hubClock">--:--:--</b> · <span id="hubDate">—</span></div>
-            </div>
-            <div class="hero-art">
-              <svg viewBox="0 0 320 240" class="wire" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <defs>
-                  <linearGradient id="wg" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stop-color="#8b5cf6"/><stop offset="0.5" stop-color="#5b8cff"/><stop offset="1" stop-color="#22d3ee"/>
-                  </linearGradient>
-                </defs>
-                <g fill="none" stroke="url(#wg)" stroke-width="1.2" opacity="0.9">
-                  <path d="M60 200 L60 120 L120 90 L120 170 Z"/><path d="M120 90 L120 170 L60 200"/>
-                  <path d="M120 90 L180 110 L180 190 L120 170"/><path d="M120 170 L180 190"/>
-                  <path d="M120 90 L165 68 L225 88 L180 110"/><path d="M225 88 L225 168 L180 190"/><path d="M225 88 L165 68 L165 148 L120 170"/>
-                  <path d="M165 68 L165 30 L215 48 L215 88"/><path d="M215 48 L265 66 L265 146 L225 168"/><path d="M215 48 L215 88 L265 66"/>
-                  <path d="M40 210 L280 210" stroke-opacity="0.35"/><path d="M60 200 L260 200" stroke-opacity="0.2"/>
-                </g>
-                <g fill="#5b8cff"><circle cx="120" cy="90" r="2.4"/><circle cx="165" cy="68" r="2.4"/><circle cx="215" cy="48" r="2.4"/><circle cx="225" cy="88" r="2.4"/><circle cx="180" cy="110" r="2.4"/></g>
-              </svg>
-            </div>
-          </div>
-          <!-- SYSTEM HEALTH GAUGE -->
-          <div class="health-card">
-            <div class="health-head"><span>System Health</span><span class="health-badge" id="healthBadge">● Optimal</span></div>
-            <div class="gauge">
-              <svg viewBox="0 0 120 120">
-                <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(120,140,180,0.12)" stroke-width="9"/>
-                <circle id="gaugeArc" cx="60" cy="60" r="50" fill="none" stroke="url(#gg)" stroke-width="9" stroke-linecap="round"
-                  stroke-dasharray="314" stroke-dashoffset="314" transform="rotate(-90 60 60)"/>
-                <defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs>
-              </svg>
-              <div class="gauge-mid"><b id="gaugePct">—</b><span>Performance</span></div>
-            </div>
-            <button class="health-link" onclick="scrollAttention()"><i data-lucide="trending-up"></i> View System Status</button>
-          </div>
-        </div>
-        <!-- ═══════ LIVE KPI ROW ═══════ -->
-        <div class="kpi-row" id="kpiRow">
-          <div class="kpi">
-            <div class="kpi-top"><span class="kpi-lbl">Open Quotations</span><span class="kpi-ic blue"><i data-lucide="file-text"></i></span></div>
-            <b id="kpiQuotes" data-skel>—</b><a class="kpi-view" onclick="openTool(0,0)">View all</a>
-          </div>
-          <div class="kpi">
-            <div class="kpi-top"><span class="kpi-lbl">Open Value</span><span class="kpi-ic violet"><i data-lucide="banknote"></i></span></div>
-            <b id="kpiValue" data-skel>—</b><a class="kpi-view" onclick="openTool(0,0)">View all</a>
-          </div>
-          <div class="kpi">
-            <div class="kpi-top"><span class="kpi-lbl">Site Activity</span><span class="kpi-ic green"><i data-lucide="line-chart"></i></span></div>
-            <b id="kpiActs" data-skel>—</b><a class="kpi-view" onclick="scrollAttention()">View all</a>
-          </div>
-          <div class="kpi">
-            <div class="kpi-top"><span class="kpi-lbl">Needs Attention</span><span class="kpi-ic amber"><i data-lucide="bell-ring"></i></span></div>
-            <b id="kpiAttn" data-skel>—</b><a class="kpi-view" onclick="scrollAttention()">View all</a>
-          </div>
-          <div class="kpi">
-            <div class="kpi-top"><span class="kpi-lbl">Live Tools</span><span class="kpi-ic pink"><i data-lucide="layers"></i></span></div>
-            <b id="stTools">—</b><span class="kpi-spark" id="kpiSpark"></span>
-          </div>
-        </div>
+              <div class="ops-flow" id="operationsFlow"></div>
+            </section>
 
-        <!-- ═══════ BRIEFING · ACTIVITY · SHORTCUTS ═══════ -->
-        <div class="mid-row">
-          <div class="brief-card" id="briefCard">
-            <div class="brief-head">
-              <div class="brief-title"><span class="brief-orb"></span> HG Assistant — Daily Briefing</div>
-              <button class="brief-refresh" id="briefRefresh" title="Regenerate"><i data-lucide="refresh-cw"></i></button>
-            </div>
-            <div class="brief-body" id="briefBody">
-              <div class="brief-loading"><span class="brief-spin"></span> Reading today's activity…</div>
-            </div>
-            <div class="brief-date" id="briefDate"></div>
+            <section class="op-card">
+              <div class="op-card-head">
+                <div>
+                  <h2>Recent activity</h2>
+                  <p>Latest operations updates</p>
+                </div>
+                <button class="mini-btn" onclick="showHubScreen('activity')">View activity</button>
+              </div>
+              <div id="actList" class="op-list compact"><div class="dash-load"><span class="brief-spin"></span></div></div>
+            </section>
           </div>
-          <div class="dash-panel">
-            <div class="dash-h"><i data-lucide="history"></i> Recent Activity</div>
-            <div id="actList" class="dash-body"><div class="dash-load"><span class="brief-spin"></span></div></div>
-          </div>
-          <div class="dash-panel shortcuts">
-            <div class="dash-h"><i data-lucide="zap"></i> Quick Shortcuts</div>
-            <div class="qs-grid" id="qsGrid"></div>
-          </div>
-        </div>
+        </section>
 
-        <!-- ═══════ NEEDS ATTENTION ═══════ -->
-        <div class="dash-panel attn-wide">
-          <div class="dash-h"><i data-lucide="triangle-alert"></i> Needs Attention
-            <span class="radar" id="radar"><span class="radar-sweep"></span><span class="radar-blips" id="radarBlips"></span></span>
+        <section class="hub-screen" id="screenTools" data-screen="tools">
+          <header class="screen-head">
+            <div>
+              <div class="screen-kicker">Operations / Site</div>
+              <h1>Operations Tools</h1>
+              <p>Launch site tracking, dispatch, completion, scaffold, inventory, and worker documentation tools.</p>
+            </div>
+            <div class="op-actions">
+              <button class="btn-ghost" onclick="showHubScreen('catalog')">View full catalog</button>
+              <button class="btn-primary" onclick="openToolByName('Daily Readiness & Dispatch')">Open dispatch</button>
+            </div>
+          </header>
+          <div class="tools-layout">
+            <section class="op-card">
+              <div class="op-card-head"><div><h2>Core Operations / Site tools</h2><p>Direct tools inside the current main branch Operations & Site category</p></div><span class="soft-pill">6 tools</span></div>
+              <div class="detail-tool-grid" id="coreToolGrid"></div>
+            </section>
+            <aside class="right-stack">
+              <section class="op-card"><h2>Pick by task</h2><p>Plain-language routing into real tools</p><div id="taskRoutes" class="route-list"></div></section>
+              <section class="op-card dark-card"><h2>Catalog mapping</h2><p>How this screen ties back to main</p><div class="mapping-row"><span>Operations tab</span><b>TAB_MAP</b></div><div class="mapping-row"><span>Full catalog fallback</span><b>20 live, 1 cloud</b></div></section>
+            </aside>
           </div>
-          <div id="attnList" class="dash-body" style="max-height:200px"><div class="dash-load"><span class="brief-spin"></span></div></div>
-        </div>
+          <section class="op-card support-card">
+            <div class="op-card-head"><div><h2>Related operations support</h2><p>Tools surfaced here because Operations / Site teams rely on them during site work</p></div><span class="soft-pill">3 support tools</span></div>
+            <div class="support-tool-grid" id="supportToolGrid"></div>
+          </section>
+        </section>
 
-        <!-- ═══════ ALL TOOLS ═══════ -->
-        <div id="toolsAnchor" class="tools-head">
-          <div class="tools-title"><i data-lucide="layout-grid"></i> All Tools</div>
-          <div class="tool-tabs" id="toolTabs"></div>
+        <section class="hub-screen" id="screenAttention" data-screen="attention">
+          <header class="screen-head">
+            <div>
+              <div class="op-date">Wednesday, July 8</div>
+              <h1>Needs attention</h1>
+              <p>Review operational blockers from dispatch, worker, scaffold, and storage alarm sources before work moves forward.</p>
+            </div>
+            <div class="op-actions">
+              <button class="btn-ghost" onclick="showHubScreen('catalog')">View all tools</button>
+              <button class="btn-primary" onclick="openToolByName('Daily Readiness & Dispatch')">Open dispatch</button>
+            </div>
+          </header>
+          <div class="attention-stats" id="attentionStats"></div>
+          <div class="attention-layout">
+            <section class="op-card">
+              <div class="op-card-head"><div><h2>Open blockers</h2><p>Sorted by urgency across live alarm sources</p></div><button class="mini-btn">All sources</button></div>
+              <div id="attentionFullList" class="op-list full"><div class="dash-load"><span class="brief-spin"></span></div></div>
+            </section>
+            <aside class="right-stack">
+              <section class="op-card"><h2>Action routing</h2><p>Each alarm opens the real HG tool that owns it.</p><div id="alarmRoutes" class="route-list"></div></section>
+              <section class="op-card"><h2>Alarm sources</h2><p>Coverage follows the current main branch model.</p><div id="alarmSources" class="source-list"></div></section>
+            </aside>
+          </div>
+        </section>
+
+        <section class="hub-screen" id="screenActivity" data-screen="activity">
+          <header class="screen-head">
+            <div>
+              <div class="op-date">Wednesday, July 8</div>
+              <h1>Recent activity</h1>
+              <p>Track operational updates from the audit log across site tracking, dispatch, reports, workers, scaffold, and catalog activity.</p>
+            </div>
+            <div class="op-actions">
+              <button class="btn-ghost" onclick="showHubScreen('catalog')">View all tools</button>
+              <button class="btn-primary" onclick="toast('Export log is a V2 action.')">Export log</button>
+            </div>
+          </header>
+          <section class="op-card activity-snapshot-card">
+            <h2>Activity snapshot</h2>
+            <div class="activity-snapshot-row" id="activitySnapshot">
+              <div class="mini-stat"><span>Last 24 hours</span><b data-skel>—</b><em>updates</em></div>
+              <div class="mini-stat soft"><span>Operations</span><b data-skel>—</b><em>site changes</em></div>
+              <div class="mini-stat warn"><span>Dispatch</span><b data-skel>—</b><em>updates</em></div>
+              <div class="mini-stat"><span>Documents</span><b data-skel>—</b><em>files changed</em></div>
+              <div class="mini-stat"><span>Team</span><b data-skel>—</b><em>active users</em></div>
+            </div>
+          </section>
+          <div class="activity-layout">
+            <section class="op-card">
+              <div class="op-card-head">
+                <div><h2>Activity feed</h2><p>Latest audit_log entries from operational tools</p></div>
+                <div class="activity-filter-actions">
+                  <button class="mini-btn" id="activityFilterBtn" onclick="toggleActivityFilters()"><i data-lucide="sliders-horizontal"></i><span>Filter</span></button>
+                  <button class="mini-btn active" id="activityAllBtn" onclick="filterActivity('all')">All activity</button>
+                  <button class="mini-btn" id="activityOperationsBtn" onclick="filterActivity('operations')">Operations</button>
+                </div>
+              </div>
+              <div id="activityInlineFilters" class="activity-inline-filters" hidden></div>
+              <div id="activityFullList" class="op-list full"><div class="dash-load"><span class="brief-spin"></span></div></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="hub-screen" id="screenCatalog" data-screen="catalog">
+          <header class="screen-head">
+            <div>
+              <div class="screen-kicker">Operations / Site catalog</div>
+              <h1>All tools</h1>
+              <p>Browse the Operations / Site tools available to this role without leaving the operations workspace.</p>
+            </div>
+            <div class="op-actions">
+              <button class="btn-ghost" onclick="openCloudManager()">Manage access</button>
+              <button class="btn-primary" onclick="openPalette()">Open selected</button>
+            </div>
+          </header>
+          <div class="catalog-stats">
+            <div class="mini-stat"><span>Live tools</span><b id="stToolsCatalog">—</b><em>ready</em></div>
+            <div class="mini-stat cloud"><span>Cloud tool</span><b id="stCloud">—</b><em>link only</em></div>
+            <div class="mini-stat"><span>Categories</span><b id="stCategories">—</b><em>groups</em></div>
+            <div class="mini-stat"><span>Operations view</span><b>9</b><em>shown</em></div>
+            <div class="mini-stat"><span>Reference tools</span><b id="stDocs">—</b><em>docs</em></div>
+          </div>
+          <div id="toolsAnchor" class="tools-head">
+            <div class="tools-title"><i data-lucide="layout-grid"></i> Main branch catalog</div>
+            <div class="tool-tabs" id="toolTabs"></div>
+          </div>
+          <div id="catalog"></div>
+          <div class="no-results" id="noResults">No tools match your search.</div>
+        </section>
+
+        <div class="sr-only" aria-hidden="true">
+          <button id="briefRefresh" type="button"></button>
+          <div id="briefBody"></div>
+          <div id="briefDate"></div>
+          <span id="kpiSpark"></span>
+          <span id="hubClock">--:--:--</span>
+          <span id="hubDate">—</span>
+          <span id="gaugePct">—</span>
+          <span id="healthBadge">● Optimal</span>
+          <span id="radarBlips"></span>
+          <span id="tickerTrack"></span>
         </div>
-        <div id="catalog"></div>
-        <div class="no-results" id="noResults">No tools match your search.</div>
       </div>
 
       <!-- TOOL VIEWER -->
@@ -1232,6 +2870,12 @@
       </div>
     </div>
   </div>
+  <nav class="mobile-tabbar" aria-label="Mobile navigation">
+    <button class="active" data-screen-link="home" onclick="showHubScreen('home')"><i data-lucide="home"></i><span>Home</span></button>
+    <button data-tool-link="Daily Readiness & Dispatch" onclick="openToolByName('Daily Readiness & Dispatch')"><i data-lucide="truck"></i><span>Dispatch</span></button>
+    <button onclick="focusOpenBlockers()"><i data-lucide="bell"></i><span>Alerts</span></button>
+    <button data-screen-link="activity" onclick="showHubScreen('activity')"><i data-lucide="bar-chart-3"></i><span>Activity</span></button>
+  </nav>
 </div>
 
 <!-- CLOUD LINKS MANAGER -->
@@ -1246,21 +2890,22 @@
   </div>
 </div>
 
-<!-- ═══════ AI CHAT (admin only) ═══════ -->
-<button class="ai-fab" id="aiFab" onclick="openChat()" title="Ask HG Assistant" style="display:none;">
-  <span class="ai-fab-orb"></span> Ask HG
-</button>
+<!-- ═══════ ASK HG (admin only) ═══════ -->
 <div class="ai-drawer" id="aiDrawer">
   <div class="ai-dhead">
-    <div class="ai-dtitle"><span class="brief-orb"></span> HG Assistant</div>
+    <div class="ai-dtitle"><b>Ask HG</b><span>Operations assistant</span></div>
     <button class="x-btn" onclick="closeChat()">✕</button>
   </div>
   <div class="ai-msgs" id="aiMsgs">
-    <div class="ai-msg bot">Hi — ask me anything about your data. Try <i>"how many quotes this month?"</i>, <i>"which permits expire soon?"</i>, or <i>"who owes us money?"</i></div>
+    <div class="ai-msg bot">Ask about blockers, dispatch readiness, tools, or recent activity from this workspace.</div>
   </div>
   <form class="ai-input" id="aiForm" onsubmit="sendChat(event)">
-    <input id="aiText" placeholder="Ask about your business…" autocomplete="off" />
-    <button type="submit" class="ai-send" id="aiSend">➤</button>
+    <input id="aiText" placeholder="Ask about operations..." autocomplete="off" />
+    <button type="submit" class="ai-send" id="aiSend" aria-label="Send Ask HG message">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
   </form>
 </div>
 
@@ -1328,16 +2973,16 @@
         file:"operations.html", dark:true },
       { icon:"activity", name:"Daily Site Tracking", type:"live",
         desc:"Replaces the manual Google Sheet. Add sites, update progress, generate a WhatsApp-ready daily report.",
-        file:"dashboard.html", dark:true },
-      { icon:"send", name:"Daily Readiness & Dispatch", type:"live",
+        file:"dashboard.html", dark:false },
+      { icon:"truck", name:"Daily Readiness & Dispatch", type:"live",
         desc:"Supabase edition — readiness board gates every job (lot/sketch/quote/permit/visual/fab) + night-team dispatch with WhatsApp message.",
-        file:"dispatch-supabase.html", dark:true, cloud:{ key:"bl_dispatch_url" } },
+        file:"dispatch-supabase.html", dark:false, cloud:{ key:"bl_dispatch_url" } },
       { icon:"calendar-clock", name:"Daily Job Arrangement", type:"cloud",
         desc:"Night-team job arrangement board (Netlify — opens for anyone, no Google login needed).",
         cloud:{ key:"bl_arrangement_url" } },
       { icon:"camera", name:"Job Completion Report", type:"live",
         desc:"Upload tilted site photos → auto-straighten → fill job details → push PDF + photos to Drive + log to Sheet.",
-        file:"job-report.html", dark:true, cloud:{ key:"bl_jcr_url" } },
+        file:"job-report.html", dark:false, cloud:{ key:"bl_jcr_url" } },
       { icon:"users", name:"Team Command Center", type:"live",
         desc:"Internal team ops — task allocation, team coordination and status across departments.",
         file:"team-command.html", dark:true },
@@ -1345,7 +2990,7 @@
     { name: "Inventory & Stock", icon: "package", color: "#06b6d4", tools: [
       { icon:"package", name:"Inventory, Tools & Purchasing", type:"live",
         desc:"Supabase edition — materials, tools/equipment, suppliers, purchases, stock in/out with audit log + file uploads.",
-        file:"inventory-supabase.html", dark:true, cloud:{ key:"bl_cloud_inventory_url" } },
+        file:"inventory-supabase.html", dark:false, cloud:{ key:"bl_cloud_inventory_url" } },
     ]},
     { name: "Finance & Invoicing", icon: "wallet", color: "#22c55e", tools: [
       { icon:"file-text", name:"Subcon Invoice Generator", type:"live",
@@ -1367,7 +3012,7 @@
         file:"lorry-supabase.html", dark:true, cloud:{ key:"bl_lorry_url" } },
       { icon:"construction", name:"Scaffold & Green Tag System", type:"live",
         desc:"Supabase edition — rental / install / inspection, green-tag tracking, onsite inventory, collection reminders, invoicing.",
-        file:"scaffold-supabase.html", dark:true, cloud:{ key:"bl_scaffold_url" } },
+        file:"scaffold-supabase.html", dark:false, cloud:{ key:"bl_scaffold_url" } },
       { icon:"warehouse", name:"Temporary Storage Rental", type:"live",
         desc:"Supabase edition — lot occupancy grid, renewals, deposits, invoices/payments, refunds.",
         file:"storage-rental-supabase.html", dark:true, cloud:{ key:"bl_storage_url" } },
@@ -1378,7 +3023,7 @@
     { name: "HR & Workers", icon: "contact", color: "#ec4899", tools: [
       { icon:"contact", name:"Workers Documentation & Permits", type:"live",
         desc:"Supabase edition — worker master list, document & work-permit management with expiry alerts, insurance tracking.",
-        file:"workers-supabase.html", dark:true, cloud:{ key:"bl_workers_docs_url" } },
+        file:"workers-supabase.html", dark:false, cloud:{ key:"bl_workers_docs_url" } },
     ]},
     { name: "Marketing & Client", icon: "megaphone", color: "#fb923c", tools: [
       { icon:"pen-line", name:"LinkedIn Content Hub", type:"live",
@@ -1410,8 +3055,124 @@
     ]},
   ];
 
+  const ROLE_MODES = {
+    operations: {
+      label: "Operations / Site",
+      homeTools: [
+        "Operations Command Center",
+        "Daily Site Tracking",
+        "Daily Readiness & Dispatch",
+        "Daily Job Arrangement",
+        "Job Completion Report",
+        "Team Command Center",
+        "Scaffold & Green Tag System",
+        "Workers Documentation & Permits"
+      ],
+      coreTools: [
+        "Operations Command Center",
+        "Daily Site Tracking",
+        "Daily Readiness & Dispatch",
+        "Daily Job Arrangement",
+        "Job Completion Report",
+        "Team Command Center"
+      ],
+      supportTools: [
+        "Inventory, Tools & Purchasing",
+        "Scaffold & Green Tag System",
+        "Workers Documentation & Permits"
+      ],
+      catalogTools: [
+        "Operations Command Center",
+        "Daily Site Tracking",
+        "Daily Readiness & Dispatch",
+        "Daily Job Arrangement",
+        "Job Completion Report",
+        "Team Command Center",
+        "Inventory, Tools & Purchasing",
+        "Scaffold & Green Tag System",
+        "Workers Documentation & Permits"
+      ],
+      alarmSources: ["Dispatch", "Workers", "Scaffold", "Storage"]
+    }
+  };
+
+  const TOOL_LABELS = {
+    "Operations Command Center": { short: "Operations Command", initials: "OC", sub: "Ops entrance and launchers" },
+    "Daily Site Tracking": { short: "Daily Site Tracking", initials: "ST", sub: "Progress and daily report" },
+    "Daily Readiness & Dispatch": { short: "Readiness & Dispatch", initials: "RD", sub: "Job gates and dispatch" },
+    "Daily Job Arrangement": { short: "Daily Job Arrangement", initials: "JA", sub: "Night-team job board" },
+    "Job Completion Report": { short: "Job Completion Report", initials: "JC", sub: "Photos, PDF and Drive log" },
+    "Team Command Center": { short: "Team Command", initials: "TC", sub: "Task allocation and status" },
+    "Inventory, Tools & Purchasing": { short: "Inventory", initials: "IV", sub: "Materials, tools and suppliers" },
+    "Scaffold & Green Tag System": { short: "Scaffold Green Tag", initials: "GT", sub: "Inspection and tag status" },
+    "Workers Documentation & Permits": { short: "Worker Documents", initials: "WR", sub: "Permits and access docs" }
+  };
+
+  const OPERATION_FLOW = [
+    ["01", "Readiness & Dispatch", "Daily Readiness & Dispatch", "Confirm job readiness, dispatch gates, and night-team movement."],
+    ["02", "Site Tracking", "Daily Site Tracking", "Record site progress and daily operational updates."],
+    ["03", "Job Completion", "Job Completion Report", "Capture completion photos, details, PDF, and Drive record."],
+    ["04", "Workers / Permits", "Workers Documentation & Permits", "Check worker access, permits, and document readiness."],
+    ["05", "Scaffold / Green Tag", "Scaffold & Green Tag System", "Review scaffold inspections, green tags, and site safety status."]
+  ];
+
+  const ROUTE_TASKS = [
+    ["Track site progress", "Daily Site Tracking"],
+    ["Gate dispatch", "Daily Readiness & Dispatch"],
+    ["Submit completion", "Job Completion Report"],
+    ["Coordinate teams", "Team Command Center"]
+  ];
+
+  const ALARM_ROUTE_TOOLS = {
+    Dispatch: "Daily Readiness & Dispatch",
+    Workers: "Workers Documentation & Permits",
+    Scaffold: "Scaffold & Green Tag System",
+    Storage: "Inventory, Tools & Purchasing"
+  };
+  const ALARM_ACTION_LABELS = {
+    Dispatch: "Open dispatch",
+    Workers: "Open worker docs",
+    Scaffold: "Open scaffold",
+    Storage: "Open inventory"
+  };
+
   const STATUS_LABEL = { live:"Live", cloud:"Cloud", prototype:"Prototype", reference:"Reference" };
   let CURRENT = null;   // {ci, ti}
+  let CURRENT_SCREEN = "home";
+  let DASHBOARD_STATE = { attention: [], recent: [], activityToday: 0 };
+  let ACTIVITY_FILTER = "all";
+  let ACTIVITY_FILTERS_OPEN = false;
+
+  function eachTool(fn) {
+    CATS.forEach((cat, ci) => cat.tools.forEach((tool, ti) => fn(tool, cat, ci, ti)));
+  }
+  function findToolByName(name) {
+    let found = null;
+    eachTool((tool, cat, ci, ti) => { if (!found && tool.name === name) found = { tool, cat, ci, ti }; });
+    return found;
+  }
+  function openToolByName(name) {
+    const ref = findToolByName(name);
+    if (!ref) { toast("Tool not found: " + name); return; }
+    openTool(ref.ci, ref.ti);
+  }
+  function toolMeta(name) {
+    const ref = findToolByName(name);
+    const label = TOOL_LABELS[name] || {};
+    return Object.assign({ name, short: name, initials: name.slice(0, 2).toUpperCase(), sub: "", ref }, label);
+  }
+  function catalogCounts() {
+    const counts = { live: 0, cloud: 0, reference: 0, total: 0, cloudLinks: 0, categories: CATS.length };
+    eachTool(tool => {
+      counts.total++;
+      if (tool.type === "live") counts.live++;
+      if (tool.type === "cloud") counts.cloud++;
+      if (tool.type === "reference") counts.reference++;
+      if (tool.cloud) counts.cloudLinks++;
+    });
+    return counts;
+  }
+
 
   /* ── URL resolution + launchers (unchanged behavior) ── */
   function resolveUrl(key) { return localStorage.getItem(key) || DEFAULT_URLS[key] || ""; }
@@ -1444,9 +3205,18 @@
       tv.classList.remove("enter"); void tv.offsetWidth; if (!REDUCED) tv.classList.add("enter");   // restart slide-in
       const fr = document.getElementById("toolFrame");
       fr.className = t.dark ? "dark" : "";
-      if (fr.getAttribute("src") !== t.file) fr.setAttribute("src", t.file);
+      const localPreview = location.hostname === "127.0.0.1" || location.hostname === "localhost";
+      const nextSrc = localPreview
+        ? t.file + (t.file.indexOf("?") < 0 ? "?r=" : "&r=") + Date.now()
+        : t.file;
+      if (localPreview || fr.getAttribute("src") !== t.file) fr.setAttribute("src", nextSrc);
       const tt = document.getElementById("tbTitle");
-      tt.innerHTML = ico(t.icon) + " " + esc(t.name) + ' <span class="badge badge-' + t.type + '">' + STATUS_LABEL[t.type] + "</span>";
+      const toolTitle = window.innerWidth <= 860 ? ((TOOL_LABELS[t.name] || {}).short || t.name) : t.name;
+      const toolSubtitle = t.name === "Daily Readiness & Dispatch"
+        ? "Eason checks the gates · Calvin loads the teams · Everyone sees the same board"
+        : "";
+      tt.innerHTML = '<span class="tb-title-main">' + ico(t.icon) + " " + esc(toolTitle) + ' <span class="badge badge-' + t.type + '">' + STATUS_LABEL[t.type] + "</span></span>" +
+        (toolSubtitle ? '<span class="tb-tool-sub">' + esc(toolSubtitle) + "</span>" : "");
       tt.style.display = "flex";
       document.getElementById("tbGreet").style.display = "none";
       document.getElementById("tbReload").style.display = "flex";
@@ -1461,21 +3231,78 @@
 
   function goHome() {
     CURRENT = null;
+    CURRENT_SCREEN = "home";
     document.getElementById("toolView").style.display = "none";
     document.getElementById("homeView").style.display = "block";
     document.getElementById("toolFrame").setAttribute("src", "about:blank");
     document.getElementById("tbTitle").style.display = "none";
-    document.getElementById("tbGreet").style.display = "block";
+    document.getElementById("tbGreet").style.display = "none";
     document.getElementById("tbReload").style.display = "none";
     document.getElementById("tbPop").style.display = "none";
+    showHubScreen("home", false);
     markActive();
     closeSidebarMobile();
   }
-  function scrollAttention() { goHome(); const a = document.querySelector(".attn-wide"); if (a) a.scrollIntoView({ behavior: "smooth", block: "center" }); }
-  function toggleCollapse() { document.getElementById("shell").classList.toggle("collapsed"); }
-  function toggleProfileMenu(e) { if (e) e.stopPropagation(); document.getElementById("sbPmenu").classList.toggle("open"); }
-  document.addEventListener("click", e => { const p = document.getElementById("sbProfile"); if (p && !p.contains(e.target)) document.getElementById("sbPmenu").classList.remove("open"); });
-  function reloadTool() {
+  function showHubScreen(screen, resetTool = true) {
+    if (screen === "attention") {
+      showHubScreen("home", resetTool);
+      requestAnimationFrame(focusOpenBlockers);
+      return;
+    }
+    if (screen === "tools") screen = "catalog";
+    CURRENT_SCREEN = screen || "home";
+    if (resetTool) {
+      CURRENT = null;
+      document.getElementById("toolView").style.display = "none";
+      document.getElementById("homeView").style.display = "block";
+      document.getElementById("toolFrame").setAttribute("src", "about:blank");
+      document.getElementById("tbTitle").style.display = "none";
+      document.getElementById("tbGreet").style.display = "none";
+      document.getElementById("tbReload").style.display = "none";
+      document.getElementById("tbPop").style.display = "none";
+    }
+    document.querySelectorAll(".hub-screen").forEach(el => el.classList.toggle("is-active", el.dataset.screen === CURRENT_SCREEN));
+    document.querySelectorAll("[data-screen-link]").forEach(el => el.classList.toggle("active", el.dataset.screenLink === CURRENT_SCREEN));
+    markActive();
+    paintIcons();
+    closeSidebarMobile();
+  }
+	  function focusOpenBlockers() {
+	    showHubScreen("home");
+	    requestAnimationFrame(() => {
+	      const card = document.getElementById("todoCard");
+	      if (!card) return;
+	      card.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "center" });
+	      card.classList.add("focus-ring");
+	      setTimeout(() => card.classList.remove("focus-ring"), 1300);
+	    });
+	  }
+	  function scrollAttention() { focusOpenBlockers(); }
+	  function applySidebarCollapse(collapsed) {
+	    const shell = document.getElementById("shell");
+	    if (!shell) return;
+	    shell.classList.toggle("collapsed", !!collapsed);
+	    const btn = document.querySelector(".sb-collapse-toggle");
+	    if (btn) {
+	      btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+	      btn.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+	      btn.title = collapsed ? "Expand sidebar" : "Collapse sidebar";
+	      btn.innerHTML = ico(collapsed ? "arrow-right" : "arrow-left") + '<span class="sb-collapse-label">' + (collapsed ? "Expand" : "Collapse") + "</span>";
+	      paintIcons();
+	    }
+	  }
+		  function toggleCollapse(e) {
+		    if (e) e.stopPropagation();
+		    if (window.innerWidth <= 860) {
+		      closeSidebarMobile();
+		      return;
+		    }
+		    const shell = document.getElementById("shell");
+		    const collapsed = !(shell && shell.classList.contains("collapsed"));
+		    applySidebarCollapse(collapsed);
+	    try { localStorage.setItem("hg_sidebar_collapsed", collapsed ? "1" : "0"); } catch (err) {}
+	  }
+		  function reloadTool() {
     if (!CURRENT) return;
     const t = CATS[CURRENT.ci].tools[CURRENT.ti];
     document.getElementById("toolFrame").setAttribute("src", t.file + (t.file.indexOf("?")<0 ? "?r=" : "&r=") + Date.now());
@@ -1490,31 +3317,36 @@
   function paintIcons() { try { if (window.lucide) lucide.createIcons(); } catch (e) {} }
 
   function renderSidebar() {
-    document.getElementById("sbNav").innerHTML =
-      '<div class="sb-dash" onclick="goHome()">' + ico("layout-dashboard") + "<span>Dashboard</span></div>" +
-      CATS.map((cat, ci) =>
-      '<div class="sb-cat" data-ci="' + ci + '" style="--cat:' + cat.color + '">' +
-        '<div class="sb-cat-head">' + ico(cat.icon) + esc(cat.name) + "</div>" +
-        cat.tools.map((t, ti) => {
-          const cloudBtn = (t.file && t.cloud)
-            ? '<span class="cl" data-key="' + t.cloud.key + '" onclick="event.stopPropagation();openCloudByKey(\'' + t.cloud.key + '\',\'' + t.name.replace(/'/g,"") + '\')" title="Open cloud version">' + ico("cloud") + '</span>'
-            : "";
-          return '<div class="sb-item" data-ci="' + ci + '" data-ti="' + ti + '" data-search="' +
-              esc((t.name + " " + t.desc).toLowerCase()) + '" onclick="openTool(' + ci + "," + ti + ')">' +
-            '<span class="ic">' + ico(t.icon) + "</span>" +
-            '<span class="nm">' + esc(t.name) + "</span>" + cloudBtn +
-            '<span class="dot dot-' + t.type + '" title="' + STATUS_LABEL[t.type] + '"></span>' +
-          "</div>";
-        }).join("") +
-      "</div>"
-    ).join("");
+    const nav = [
+      { label: "Home", icon: "home", screen: "home" },
+      { label: "Readiness & Dispatch", icon: "truck", tool: "Daily Readiness & Dispatch" },
+      { label: "Site Tracking", icon: "map-pin", tool: "Daily Site Tracking" },
+      { label: "Job Completion", icon: "clipboard-check", tool: "Job Completion Report" },
+      { label: "Workers / Permits", icon: "user-check", tool: "Workers Documentation & Permits" },
+      { label: "Scaffold / Green Tag", icon: "badge-check", tool: "Scaffold & Green Tag System" },
+      { label: "Inventory", icon: "package", tool: "Inventory, Tools & Purchasing" },
+      { divider: true },
+      { label: "All Tools", icon: "layout-grid", screen: "catalog" }
+    ];
+    document.getElementById("sbNav").innerHTML = nav.map(item => {
+      if (item.divider) return '<div class="sb-role-divider"></div>';
+      const cls = item.cls || "sb-role-link";
+      const attrs = item.screen ? ' data-screen-link="' + item.screen + '" onclick="showHubScreen(\'' + item.screen + '\')"'
+        : item.tool ? ' data-tool-link="' + esc(item.tool) + '" onclick="openToolByName(\'' + item.tool.replace(/'/g, "\\'") + '\')"'
+        : ' onclick="' + item.action + '"';
+	      return '<button class="' + cls + '" title="' + esc(item.label) + '"' + attrs + '><span class="ic">' + ico(item.icon) + '</span><span class="sb-label">' + esc(item.label) + '</span></button>';
+    }).join("");
     paintIcons();
   }
 
   function markActive() {
-    document.querySelectorAll(".sb-item").forEach(elm => {
-      elm.classList.toggle("active",
-        !!CURRENT && Number(elm.dataset.ci) === CURRENT.ci && Number(elm.dataset.ti) === CURRENT.ti);
+    document.querySelectorAll("[data-screen-link]").forEach(elm => {
+      elm.classList.toggle("active", !CURRENT && elm.dataset.screenLink === CURRENT_SCREEN);
+    });
+    document.querySelectorAll("[data-tool-link]").forEach(elm => {
+      if (!CURRENT) { elm.classList.remove("active"); return; }
+      const t = CATS[CURRENT.ci] && CATS[CURRENT.ci].tools[CURRENT.ti];
+      elm.classList.toggle("active", !!t && elm.dataset.toolLink === t.name);
     });
   }
 
@@ -1533,20 +3365,31 @@
   }
 
   function renderCatalog() {
-    let html = "", nTools = 0, nCloud = 0, nDocs = 0;
+    const roleTools = new Set(ROLE_MODES.operations.catalogTools || []);
+    let html = "", nTools = 0, nLive = 0, nCloud = 0, nDocs = 0, nCats = 0;
     CATS.forEach((cat, ci) => {
-      nTools += cat.tools.length;
-      cat.tools.forEach(t => {
-        if (t.cloud) nCloud++;
+      const visibleTools = cat.tools
+        .map((tool, ti) => ({ tool, ti }))
+        .filter(({ tool }) => roleTools.has(tool.name));
+      if (!visibleTools.length) return;
+      nCats++;
+      nTools += visibleTools.length;
+      visibleTools.forEach(({ tool: t }) => {
+        if (t.type === "live") nLive++;
+        if (t.type === "cloud") nCloud++;
         if (t.type === "reference") nDocs++;
       });
       html += '<section class="cat reveal" style="--cat:' + cat.color + '"><div class="cat-head"><div class="cat-title">' + ico(cat.icon) + esc(cat.name) +
-        '</div><span class="cat-count">' + cat.tools.length + " tool" + (cat.tools.length>1?"s":"") + "</span></div>" +
-        '<div class="tiles">' + cat.tools.map((t, ti) => cardHTML(t, ci, ti)).join("") + "</div></section>";
+        '</div><span class="cat-count">' + visibleTools.length + " tool" + (visibleTools.length>1?"s":"") + "</span></div>" +
+        '<div class="tiles">' + visibleTools.map(({ tool, ti }) => cardHTML(tool, ci, ti)).join("") + "</div></section>";
     });
     document.getElementById("catalog").innerHTML = html;
     const setTxt = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-    setTxt("stTools", nTools); setTxt("stCloud", nCloud); setTxt("stDocs", nDocs);
+    setTxt("stTools", nLive);
+    setTxt("stToolsCatalog", nLive);
+    setTxt("stCloud", nCloud);
+    setTxt("stDocs", nDocs);
+    setTxt("stCategories", nCats);
     refreshCloudDots();
     paintIcons();
     if (typeof setupReveal === "function") setupReveal();
@@ -1632,8 +3475,20 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => t.classList.remove("show"), 3200);
   }
-  function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); }
-  function closeSidebarMobile() { if (window.innerWidth <= 860) document.getElementById("sidebar").classList.remove("open"); }
+  function setMenuButtonState(open) {
+    const button = document.getElementById("menuBtn");
+    if (!button) return;
+    button.setAttribute("aria-expanded", open ? "true" : "false");
+    button.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
+  }
+  function toggleSidebar() {
+    const open = document.getElementById("sidebar").classList.toggle("open");
+    setMenuButtonState(open);
+  }
+  function closeSidebarMobile() {
+    if (window.innerWidth <= 860) document.getElementById("sidebar").classList.remove("open");
+    setMenuButtonState(false);
+  }
 
   /* ── Wire up ── */
   document.getElementById("sbSearch").addEventListener("input", applySearch);
@@ -1661,7 +3516,7 @@
     if (IS_ADMIN && q) {
       cmdkResults.push({ ask: true, q: q });
       html += '<div class="cmdk-item ask" data-i="0"><span class="ck-ic">' + ico("sparkles") +
-        '</span><div class="ck-main"><div class="ck-title">Ask HG Assistant: “' + esc(q) + '”</div>' +
+        '</span><div class="ck-main"><div class="ck-title">Ask HG: “' + esc(q) + '”</div>' +
         '<div class="ck-sub">Query your database</div></div><span class="ck-hint">Enter</span></div>';
     }
     paletteTools().filter(t => !q || (t.name + " " + t.cat).toLowerCase().includes(q)).forEach(t => {
@@ -1711,9 +3566,10 @@
      The HUB is the single front door: connect once, sign in once, then the
      directory appears and every tool opens already logged-in (the session is
      shared with all tools on this domain via the browser). No per-tool login. */
-  let SB = null;              // hub's supabase client
-  let RENDERED = false;
-  let IS_ADMIN = false;       // is the signed-in user an admin?
+	  let SB = null;              // hub's supabase client
+	  let SESSION = null;
+	  let RENDERED = false;
+	  let IS_ADMIN = false;       // is the signed-in user an admin?
 
   function showGate(id) {
     document.getElementById("shell").style.display = "none";
@@ -1742,10 +3598,11 @@
   }
   function hubSignOut() { if (SB) SB.auth.signOut().then(() => location.reload()); else location.reload(); }
 
-  function enterApp() {
-    ["gateConfig", "gateLogin", "gateDenied"].forEach(g => document.getElementById(g).classList.remove("show"));
-    document.getElementById("shell").style.display = "flex";
-    if (!RENDERED) {
+	  function enterApp() {
+	    ["gateConfig", "gateLogin", "gateDenied"].forEach(g => document.getElementById(g).classList.remove("show"));
+	    document.getElementById("shell").style.display = "flex";
+	    try { applySidebarCollapse(localStorage.getItem("hg_sidebar_collapsed") === "1"); } catch (e) {}
+	    if (!RENDERED) {
       RENDERED = true;
       // render the directory FIRST and independently — nothing else may block it
       safe("renderSidebar", renderSidebar);
@@ -1754,7 +3611,7 @@
       safe("renderQuickShortcuts", renderQuickShortcuts);
       safe("applyIdentity", applyIdentity);
       safe("runCountUps", runCountUps);
-      if (IS_ADMIN) { const f = document.getElementById("aiFab"); if (f) f.style.display = "flex"; const a = document.getElementById("tbAi"); if (a) a.style.display = "flex"; }
+      if (IS_ADMIN) { const a = document.getElementById("tbAi"); if (a) a.style.display = "flex"; }
       // data loads are async and must never block the UI
       Promise.resolve().then(() => { try { loadBriefing(false); } catch (e) { console.error(e); } });
       Promise.resolve().then(() => { try { loadDashboard(); } catch (e) { console.error(e); } });
@@ -1764,20 +3621,26 @@
   function safe(label, fn) { try { fn(); } catch (e) { console.error("[hub] " + label + " failed:", e); } }
 
   // greeting + profile from the signed-in user
-  function applyIdentity() {
-    const email = (SB && SESSION && SESSION.user && SESSION.user.email) || localStorage.getItem("hg_last_email") || "";
-    const name = email ? email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : "there";
-    const first = name.split(" ")[0];
-    const hr = Number(new Date().toLocaleString("en-US", { hour: "numeric", hour12: false, timeZone: "Asia/Kuala_Lumpur" }));
-    const part = hr < 12 ? "Good morning" : hr < 18 ? "Good afternoon" : "Good evening";
-    document.getElementById("tbHello").innerHTML = part + ", " + esc(first) + ' <span class="wave">👋</span>';
-    document.getElementById("sbPname").textContent = name;
-    document.getElementById("sbProle").textContent = IS_ADMIN ? "Administrator" : "Team Member";
-    document.getElementById("sbAvatar").textContent = (first[0] || "H").toUpperCase() + (name.split(" ")[1] ? name.split(" ")[1][0].toUpperCase() : "");
-  }
+	  function applyIdentity() {
+	    const email = (SB && SESSION && SESSION.user && SESSION.user.email) || localStorage.getItem("hg_last_email") || "";
+	    const name = email ? email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : "there";
+	    const first = name.split(" ")[0];
+	    const hr = Number(new Date().toLocaleString("en-US", { hour: "numeric", hour12: false, timeZone: "Asia/Kuala_Lumpur" }));
+	    const part = hr < 12 ? "Good morning" : hr < 18 ? "Good afternoon" : "Good evening";
+	    const setTxt = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+	    setTxt("tbHello", part + ", " + first);
+	    setTxt("opGreeting", part + ", " + first);
+	    setTxt("sbPname", name);
+	    setTxt("sbProle", "Operations / Site");
+	    setTxt("sbAvatar", (first[0] || "H").toUpperCase() + (name.split(" ")[1] ? name.split(" ")[1][0].toUpperCase() : ""));
+	  }
 
   // filter tabs on the All-Tools grid
-  const TAB_MAP = { All: null, Operations: ["Operations & Site", "Inventory & Stock"], Sales: ["Sales & Quotation"], Finance: ["Finance & Invoicing"], Transport: ["Transport & Rental Services"], HR: ["HR & Workers"], Reference: ["Blueprints, Spec & Safety", "Marketing & Client"] };
+  const TAB_MAP = {
+    All: null,
+    Operations: ["Operations & Site"],
+    Support: ["Inventory & Stock", "Transport & Rental Services", "HR & Workers"]
+  };
   let activeTab = "All";
   function renderToolTabs() {
     document.getElementById("toolTabs").innerHTML = Object.keys(TAB_MAP).map(t =>
@@ -1792,14 +3655,92 @@
     });
   }
 
-  // quick shortcuts (a few high-use tools)
+  function toolCardHTML(name, cls) {
+    const meta = toolMeta(name);
+    if (!meta.ref) return "";
+    const status = meta.ref.tool.type === "cloud" ? "Cloud" : STATUS_LABEL[meta.ref.tool.type];
+    return '<button class="' + cls + '" onclick="openToolByName(\'' + name.replace(/'/g, "\\'") + '\')">' +
+      '<span class="tool-badge">' + esc(meta.initials) + '</span>' +
+      '<span class="tool-status ' + (meta.ref.tool.type === "cloud" ? "cloud" : "") + '">' + esc(status) + '</span>' +
+      '<span class="tool-copy"><h3>' + esc(meta.short) + '</h3><p>' + esc(meta.sub || meta.ref.tool.desc) + '</p></span>' +
+      '</button>';
+  }
+
+  function renderCatalogShortcuts() {
+    const items = [
+      ["Operations", "OP", "Site + inventory", "tools"],
+      ["Sales", "SA", "Quotation tools", "catalog"],
+      ["Finance", "FI", "Invoicing views", "catalog"],
+      ["Transport", "TR", "Rental services", "catalog"],
+      ["HR", "HR", "Workers tools", "catalog"],
+      ["Reference", "RF", "Specs + safety", "catalog"],
+      ["Open full catalog", "+", "All 20 live tools + 1 cloud tool", "catalog"]
+    ];
+    const el = document.getElementById("catalogShortcuts");
+    if (!el) return;
+    el.innerHTML = items.map(item =>
+      '<button class="catalog-chip" onclick="showHubScreen(\'' + item[3] + '\')"><span class="tool-badge">' + esc(item[1]) +
+      '</span><span><b>' + esc(item[0]) + '</b><span>' + esc(item[2]) + '</span></span></button>'
+    ).join("");
+  }
+
+  function renderOperationsFlow() {
+    const el = document.getElementById("operationsFlow");
+    if (!el) return;
+    el.innerHTML = OPERATION_FLOW.map(([idx, label, tool, desc]) =>
+      '<div class="flow-step"><span class="flow-index">' + esc(idx) + '</span>' +
+      '<span class="flow-copy"><b>' + esc(label) + '</b><span>' + esc(desc) + '</span></span>' +
+      '<button type="button" onclick="openToolByName(\'' + tool.replace(/'/g, "\\'") + '\')">Open</button></div>'
+    ).join("");
+  }
+
+  function renderRouteLists() {
+    const taskEl = document.getElementById("taskRoutes");
+    if (taskEl) taskEl.innerHTML = ROUTE_TASKS.map(([label, tool]) =>
+      '<button onclick="openToolByName(\'' + tool.replace(/'/g, "\\'") + '\')"><b>' + esc(label) + '</b><span>' + esc((TOOL_LABELS[tool] || {}).short || tool) + '</span></button>'
+    ).join("");
+
+    const alarmEl = document.getElementById("alarmRoutes");
+    if (alarmEl) alarmEl.innerHTML = Object.keys(ALARM_ROUTE_TOOLS).map(area =>
+      '<button onclick="openToolByName(\'' + ALARM_ROUTE_TOOLS[area].replace(/'/g, "\\'") + '\')"><b>' + esc(area) + '</b><span>' + esc((TOOL_LABELS[ALARM_ROUTE_TOOLS[area]] || {}).short || ALARM_ROUTE_TOOLS[area]) + '</span></button>'
+    ).join("");
+
+    const srcEl = document.getElementById("alarmSources");
+    if (srcEl) srcEl.innerHTML = ROLE_MODES.operations.alarmSources.map(area =>
+      '<div><span class="dot ' + (area === "Storage" ? "green" : area === "Scaffold" ? "blue" : area === "Workers" ? "red" : "") + '"></span><b>' + esc(area) + '</b><em>active</em></div>'
+    ).join("");
+
+    if (document.getElementById("activityInlineFilters")) renderActivityFilters(DASHBOARD_STATE.recent || []);
+  }
+
+  function renderAttentionStats(items) {
+    const el = document.getElementById("attentionStats");
+    if (!el) return;
+    const byArea = { Dispatch: 0, Workers: 0, Scaffold: 0, Storage: 0 };
+    items.forEach(item => { if (byArea[item.area] != null) byArea[item.area]++; });
+    const stats = [
+      ["Needs Attention", items.length, "open blockers"],
+      ["Dispatch", byArea.Dispatch, byArea.Dispatch ? "clear today" : "clear"],
+      ["Workers", byArea.Workers, byArea.Workers ? "missing doc" : "clear"],
+      ["Scaffold", byArea.Scaffold, byArea.Scaffold ? "tag review" : "clear"],
+      ["Storage", byArea.Storage, byArea.Storage ? "review" : "clear"]
+    ];
+    el.innerHTML = stats.map(s => '<div class="mini-stat"><span>' + esc(s[0]) + '</span><b>' + esc(s[1]) + '</b><em>' + esc(s[2]) + '</em></div>').join("");
+  }
+
+  // role shortcuts and 02 role surfaces
   function renderQuickShortcuts() {
-    const picks = [[0,0],[0,1],[0,2],[1,1],[2,0],[3,1]];
-    document.getElementById("qsGrid").innerHTML = picks.map(([ci,ti]) => {
-      const t = CATS[ci] && CATS[ci].tools[ti]; if (!t) return "";
-      return '<div class="qs" style="--cat:' + CATS[ci].color + '" onclick="openTool(' + ci + "," + ti + ')">' +
-        '<span class="qs-ic">' + ico(t.icon) + '</span><span class="qs-name">' + esc(t.name) + "</span></div>";
-    }).join("");
+    const role = ROLE_MODES.operations;
+	    const homeGrid = document.getElementById("homeToolGrid");
+	    if (homeGrid) homeGrid.innerHTML = role.homeTools.map(name => toolCardHTML(name, "op-tool-card")).join("");
+    const coreGrid = document.getElementById("coreToolGrid");
+    if (coreGrid) coreGrid.innerHTML = role.coreTools.map(name => toolCardHTML(name, "detail-tool-card")).join("");
+    const supportGrid = document.getElementById("supportToolGrid");
+    if (supportGrid) supportGrid.innerHTML = role.supportTools.map(name => toolCardHTML(name, "support-tool-card")).join("");
+	    renderCatalogShortcuts();
+	    renderOperationsFlow();
+	    renderRouteLists();
+    renderAttentionStats(DASHBOARD_STATE.attention || []);
     paintIcons();
   }
 
@@ -1814,21 +3755,24 @@
     h = h.replace(/\n{2,}/g, "<br><br>").replace(/\n(?!<)/g, "<br>");
     return h;
   }
-  async function loadBriefing(force) {
-    const body = document.getElementById("briefBody");
-    body.innerHTML = '<div class="brief-loading"><span class="brief-spin"></span> ' +
-      (force ? "Regenerating…" : "Reading today's activity…") + "</div>";
+	  async function loadBriefing(force) {
+	    const body = document.getElementById("briefBody");
+	    if (!body) return;
+	    body.innerHTML = '<div class="brief-loading"><span class="brief-spin"></span> ' +
+	      (force ? "Regenerating…" : "Reading today's activity…") + "</div>";
     try {
       const { data, error } = await SB.functions.invoke("assistant", { body: { mode: "briefing", force: !!force } });
       if (error || (data && data.error)) throw new Error((data && data.error) || error.message);
       decryptInto(body, data.summary || "Nothing to report.");
-      document.getElementById("briefDate").textContent = "Briefing · " + (data.date || "");
-    } catch (e) {
-      body.innerHTML = '<div class="brief-err">The assistant isn\'t connected yet. Deploy the <b>assistant</b> Edge Function ' +
-        'and set <b>GEMINI_API_KEY</b> (see supabase/EDGE-FUNCTIONS.md). Everything else works without it.</div>';
-      document.getElementById("briefDate").textContent = "";
-    }
-  }
+	      const dateEl = document.getElementById("briefDate");
+	      if (dateEl) dateEl.textContent = "Briefing · " + (data.date || "");
+	    } catch (e) {
+	      body.innerHTML = '<div class="brief-err">The assistant isn\'t connected yet. Deploy the <b>assistant</b> Edge Function ' +
+	        'and set <b>GEMINI_API_KEY</b> (see supabase/EDGE-FUNCTIONS.md). Everything else works without it.</div>';
+	      const dateEl = document.getElementById("briefDate");
+	      if (dateEl) dateEl.textContent = "";
+	    }
+	  }
 
   // Terminal-style decrypt reveal, then swap to formatted HTML
   function decryptInto(el, text) {
@@ -1847,8 +3791,23 @@
     }, 26);
   }
 
-  function openChat() { document.getElementById("aiDrawer").classList.add("open"); setTimeout(() => document.getElementById("aiText").focus(), 100); }
-  function closeChat() { document.getElementById("aiDrawer").classList.remove("open"); }
+  function openChat() {
+    const drawer = document.getElementById("aiDrawer");
+    const trigger = document.getElementById("tbAi");
+    if (!drawer) return;
+    drawer.classList.add("open");
+    if (trigger) trigger.setAttribute("aria-expanded", "true");
+    setTimeout(() => {
+      const input = document.getElementById("aiText");
+      if (input) input.focus();
+    }, 100);
+  }
+  function closeChat() {
+    const drawer = document.getElementById("aiDrawer");
+    const trigger = document.getElementById("tbAi");
+    if (drawer) drawer.classList.remove("open");
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
+  }
   function addMsg(cls, html) {
     const m = document.getElementById("aiMsgs");
     const d = document.createElement("div"); d.className = "ai-msg " + cls; d.innerHTML = html;
@@ -1874,7 +3833,10 @@
     document.getElementById("aiSend").disabled = false;
     document.getElementById("aiMsgs").scrollTop = 1e9;
   }
-  document.getElementById("briefRefresh").addEventListener("click", () => loadBriefing(true));
+	  {
+	    const refresh = document.getElementById("briefRefresh");
+	    if (refresh) refresh.addEventListener("click", () => loadBriefing(true));
+	  }
 
   /* ════════════════ LIVE DASHBOARD (KPIs + attention + activity) ════════════════ */
   function fmtDay(d) { try { return new Date(d).toLocaleDateString("en-MY", { day: "2-digit", month: "short" }); } catch (e) { return ""; } }
@@ -1886,10 +3848,63 @@
     return Math.floor(s / 86400) + "d";
   }
   function setKpi(id, val) { const e = document.getElementById(id); if (!e) return; e.classList.remove("skel"); e.textContent = val; }
+  function setNote(id, value, cls) {
+    const e = document.getElementById(id);
+    if (!e) return;
+    e.textContent = value;
+    e.classList.remove("clear", "warn");
+    if (cls) e.classList.add(cls);
+  }
+  function formatMoneyCompact(value) {
+    const n = Number(value) || 0;
+    if (Math.abs(n) >= 1000) return "RM " + Math.round(n / 1000).toLocaleString("en-MY") + "k";
+    return "RM " + n.toLocaleString("en-MY", { maximumFractionDigits: 0 });
+  }
+  function dispatchReadinessFrom(activeJobs, dispatchAlarms) {
+    const active = (activeJobs || []).filter(j => !["done", "cancelled"].includes(String(j.job_status || "").toLowerCase()));
+    const alarms = dispatchAlarms || [];
+    const blocked = alarms.filter(a => String(a.alarm_type || "").toLowerCase() === "blocked").length;
+    const atRisk = alarms.filter(a => /at_risk|permit_alarm/i.test(String(a.alarm_type || ""))).length;
+    const alarmRefs = new Set(alarms.map(a => a.ref).filter(Boolean));
+    return {
+      ready: active.length ? Math.max(active.length - alarmRefs.size, 0) : 0,
+      atRisk,
+      blocked
+    };
+  }
+  function readTeamActionCount() {
+    try {
+      const raw = localStorage.getItem("hg_team_v1");
+      if (!raw) return 0;
+      const data = JSON.parse(raw);
+      const jobs = Array.isArray(data.jobs) ? data.jobs : [];
+      return jobs.filter(j => ["quoted", "active"].includes(String(j.status || "").toLowerCase())).length;
+    } catch (e) {
+      return 0;
+    }
+  }
+  function renderOperationsSnapshot(data) {
+    data = data || {};
+    const attn = data.attention || [];
+    const dispatch = data.dispatch || { ready: 0, atRisk: 0, blocked: 0 };
+    const workers = attn.filter(a => a.area === "Workers").length;
+    const team = data.teamActions || 0;
+    setKpi("snapNeeds", attn.length);
+    setNote("snapNeedsNote", attn.length ? "clear now" : "clear", attn.length ? "warn" : "clear");
+    setKpi("snapReady", dispatch.ready);
+    setKpi("snapRisk", dispatch.atRisk);
+    setKpi("snapBlocked", dispatch.blocked);
+    setKpi("snapTeam", team || 0);
+    setNote("snapTeamNote", team ? "review" : "clear", team ? "warn" : "clear");
+    setKpi("snapWorker", workers);
+    setNote("snapWorkerNote", workers ? "permit due" : "clear", workers ? "warn" : "clear");
+    setKpi("snapQuotes", data.openCount || 0);
+    setKpi("snapValue", formatMoneyCompact(data.openValue || 0));
+  }
 
   async function loadDashboard() {
-    ["kpiQuotes", "kpiValue", "kpiAttn", "kpiActs"].forEach(id => { const e = document.getElementById(id); if (e) e.classList.add("skel"); });
-    let openCount = 0, openValue = 0, attn = [], actToday = 0, recent = [], spark = new Array(14).fill(0);
+    ["snapNeeds", "snapReady", "snapRisk", "snapBlocked", "snapTeam", "snapWorker", "snapQuotes", "snapValue"].forEach(id => { const e = document.getElementById(id); if (e) e.classList.add("skel"); });
+    let openCount = 0, openValue = 0, attn = [], actToday = 0, recent = [], spark = new Array(14).fill(0), dispatchJobs = [];
 
     // open quotes (Draft / Sent)
     try {
@@ -1903,25 +3918,33 @@
       if (!r.error && r.data) r.data.forEach(q => { const d = Math.floor((Date.now() - new Date(q.created_at)) / 864e5); if (d >= 0 && d < 14) spark[13 - d]++; });
     } catch (e) {}
     // needs attention (alarm views) + activity — ALL in parallel so nothing stacks latency
-    const mid = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kuala_Lumpur" })); mid.setHours(0, 0, 0, 0);
+    const last24 = new Date(Date.now() - 864e5).toISOString();
     const alarmDefs = [["dsp_alarms", "Dispatch"], ["wkr_alarms", "Workers"], ["scf_alarms", "Scaffold"], ["str_alarms", "Storage"]];
     const jobs = alarmDefs.map(([v, label]) =>
       SB.from(v).select("alarm_type,ref,detail,due_date").limit(20).then(r => ({ label, r })).catch(() => null));
-    jobs.push(SB.from("audit_log").select("*", { count: "exact", head: true }).gte("at", mid.toISOString()).then(r => ({ count: r.count, err: r.error })).catch(() => null));
-    jobs.push(SB.from("audit_log").select("at,user_email,action,details").order("at", { ascending: false }).limit(8).then(r => ({ recent: r.data, err: r.error })).catch(() => null));
+    jobs.push(SB.from("audit_log").select("*", { count: "exact", head: true }).gte("at", last24).then(r => ({ count: r.count, err: r.error })).catch(() => null));
+    jobs.push(SB.from("audit_log").select("at,user_email,action,details").order("at", { ascending: false }).limit(25).then(r => ({ recent: r.data, err: r.error })).catch(() => null));
+    jobs.push(SB.from("dsp_jobs").select("job_code,job_status").limit(500).then(r => ({ dispatchJobs: r.data, err: r.error })).catch(() => null));
     const results = await Promise.all(jobs);
     for (let i = 0; i < alarmDefs.length; i++) {
       const res = results[i];
       if (res && res.r && !res.r.error && res.r.data) res.r.data.forEach(a => attn.push(Object.assign({ area: res.label }, a)));
     }
-    const actRes = results[alarmDefs.length]; if (actRes && !actRes.err) actToday = actRes.count || 0;
-    const recRes = results[alarmDefs.length + 1]; if (recRes && !recRes.err && recRes.recent) recent = recRes.recent;
+	    const actRes = results[alarmDefs.length]; if (actRes && !actRes.err) actToday = actRes.count || 0;
+	    const recRes = results[alarmDefs.length + 1]; if (recRes && !recRes.err && recRes.recent) recent = recRes.recent;
+	    const dspRes = results[alarmDefs.length + 2]; if (dspRes && !dspRes.err && dspRes.dispatchJobs) dispatchJobs = dspRes.dispatchJobs;
+	    DASHBOARD_STATE.attention = attn;
+	    DASHBOARD_STATE.recent = recent;
+	    DASHBOARD_STATE.activityToday = actToday;
 
-    setKpi("kpiQuotes", openCount);
-    setKpi("kpiValue", "RM " + openValue.toLocaleString("en-MY", { maximumFractionDigits: 0 }));
-    setKpi("kpiAttn", attn.length);
-    setKpi("kpiActs", actToday);
-    updateGauge(Math.max(60, 100 - Math.min(attn.length * 4, 38)));
+	    renderOperationsSnapshot({
+	      openCount,
+	      openValue,
+	      attention: attn,
+	      dispatch: dispatchReadinessFrom(dispatchJobs, attn.filter(a => a.area === "Dispatch")),
+	      teamActions: readTeamActionCount()
+	    });
+	    updateGauge(Math.max(60, 100 - Math.min(attn.length * 4, 38)));
     updateBell(attn.length);
     renderSpark(spark);
     renderAttn(attn);
@@ -1931,27 +3954,27 @@
     paintIcons();
   }
 
-  function renderTicker(d) {
-    const el = document.getElementById("tickerTrack"); if (!el) return;
-    const lastAgo = d.lastAct ? fmtAgo(d.lastAct.at) + " ago" : "—";
-    const rm = "RM " + Number(d.openValue).toLocaleString("en-MY", { maximumFractionDigits: 0 });
-    const items = [
-      ["", "SYSTEM ONLINE"],
-      ["b", "<b>" + d.openCount + "</b> quotes open"],
-      ["g", "<b>" + rm + "</b> pending"],
-      ["r", "<b>" + d.attn + "</b> need attention"],
-      ["b", "last activity <b>" + lastAgo + "</b>"],
-      ["g", "<b>16</b> tools live on one database"],
-    ];
-    const seq = items.map(x => '<span class="tk ' + x[0] + '">' + x[1] + "</span>").join("");
-    el.innerHTML = seq + seq;   // duplicated for a seamless -50% loop
-  }
+	  function renderTicker(d) {
+	    const el = document.getElementById("tickerTrack"); if (!el) return;
+	    const lastAgo = d.lastAct ? fmtAgo(d.lastAct.at) + " ago" : "—";
+	    const rm = "RM " + Number(d.openValue).toLocaleString("en-MY", { maximumFractionDigits: 0 });
+	    const counts = catalogCounts();
+	    const items = [
+	      ["", "SYSTEM ONLINE"],
+	      ["b", "<b>" + d.openCount + "</b> quotes open"],
+	      ["g", "<b>" + rm + "</b> pending"],
+	      ["r", "<b>" + d.attn + "</b> need attention"],
+	      ["b", "last activity <b>" + lastAgo + "</b>"],
+	      ["g", "<b>" + counts.live + "</b> tools live on one database"],
+	    ];
+	    const seq = items.map(x => '<span class="tk ' + x[0] + '">' + x[1] + "</span>").join("");
+	    el.innerHTML = seq + seq;   // duplicated for a seamless -50% loop
+	  }
 
-  function updateGauge(pct) {
-    pct = Math.round(pct);
-    const arc = document.getElementById("gaugeArc"); const lbl = document.getElementById("gaugePct");
-    if (arc) arc.style.strokeDashoffset = (314 - (314 * pct / 100)).toFixed(1);
-    if (lbl) lbl.textContent = pct;
+	  function updateGauge(pct) {
+	    pct = Math.round(pct);
+	    const lbl = document.getElementById("gaugePct");
+	    if (lbl) lbl.textContent = pct;
     const badge = document.getElementById("healthBadge");
     if (badge) { const ok = pct >= 90; badge.textContent = (ok ? "● Optimal" : pct >= 75 ? "● Watch" : "● Attention"); badge.style.color = ok ? "var(--green)" : pct >= 75 ? "var(--amber)" : "#f87171"; }
   }
@@ -1982,30 +4005,210 @@
       '<polyline points="' + pts + '" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>' +
       '<circle cx="' + lx + '" cy="' + ly + '" r="2.2" fill="var(--accent)"/></svg>';
   }
-  function renderAttn(items) {
-    const el = document.getElementById("attnList"); if (!el) return;
-    if (!items.length) { el.innerHTML = '<div class="dash-empty">' + ico("shield-check") + "<br>All clear — nothing needs attention right now.</div>"; paintIcons(); return; }
-    items.sort((a, b) => String(a.due_date || "").localeCompare(String(b.due_date || "")));
-    el.innerHTML = items.slice(0, 40).map(a => {
-      const overdue = a.due_date && new Date(a.due_date) < new Date();
-      return '<div class="dash-item ' + (overdue ? "due" : "warn") + '">' +
-        '<span class="di-ic">' + ico(overdue ? "alarm-clock" : "triangle-alert") + "</span>" +
-        '<div class="di-main"><div class="di-title">' + esc(a.ref || a.alarm_type || "Item") + "</div>" +
-        '<div class="di-sub">' + esc((a.area || "") + " · " + (a.detail || "")) + "</div></div>" +
-        (a.due_date ? '<span class="di-time">' + esc(fmtDay(a.due_date)) + "</span>" : "") + "</div>";
-    }).join("");
-    paintIcons();
-  }
-  function renderActivity(rows) {
-    const el = document.getElementById("actList"); if (!el) return;
-    if (!rows.length) { el.innerHTML = '<div class="dash-empty" style="color:var(--text-dim2)">' + ico("inbox") + "<br>No activity yet — it shows here as your team uses the tools.</div>"; paintIcons(); return; }
-    el.innerHTML = rows.map(r =>
-      '<div class="dash-item"><span class="di-ic">' + ico("dot") + "</span>" +
-      '<div class="di-main"><div class="di-title">' + esc(r.action || "") + "</div>" +
-      '<div class="di-sub">' + esc(((r.user_email || "").split("@")[0] + " · " + (r.details || "")).slice(0, 80)) + "</div></div>" +
-      '<span class="di-time">' + esc(fmtAgo(r.at)) + "</span></div>").join("");
-    paintIcons();
-  }
+	  function areaDotClass(area) {
+	    if (area === "Workers") return "red";
+	    if (area === "Scaffold") return "blue";
+	    if (area === "Storage") return "green";
+	    return "";
+	  }
+	  function readable(s) {
+	    return String(s || "").replace(/[_-]/g, " ").replace(/\s+/g, " ").trim();
+	  }
+	  function jsArg(s) {
+	    return String(s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+	  }
+	  function detailsText(value) {
+	    if (value == null || value === "") return "";
+	    if (typeof value === "string") return value;
+	    try { return JSON.stringify(value); } catch (e) { return String(value); }
+	  }
+		  function emptyList(icon, copy) {
+		    return '<div class="dash-empty">' + ico(icon) + "<br>" + esc(copy) + "</div>";
+		  }
+		  function attentionClearHTML() {
+		    return '<div class="dash-empty attention-clear">' + ico("shield-check") +
+		      '<b>All clear</b><span>Nothing needs attention right now.</span></div>';
+		  }
+		  function todoClearHTML() {
+		    return '<div class="todo-clear">' + ico("shield-check") +
+		      '<span><b>All clear</b><span>No open blockers right now.</span></span></div>';
+		  }
+	  function attentionHTML(a) {
+	    const overdue = a.due_date && new Date(a.due_date) < new Date();
+	    const tool = ALARM_ROUTE_TOOLS[a.area] || "Operations Command Center";
+	    const title = readable(a.ref || a.alarm_type || a.area || "Attention item");
+	    const sub = [a.area, readable(a.alarm_type), detailsText(a.detail)].filter(Boolean).join(" · ");
+	    const tag = overdue ? "Overdue" : (a.due_date ? fmtDay(a.due_date) : (a.area || "Open"));
+	    const dot = overdue ? "red" : areaDotClass(a.area);
+	    return '<button type="button" class="op-list-item" onclick="openToolByName(\'' + jsArg(tool) + '\')">' +
+	      '<span class="dot ' + dot + '"></span>' +
+	      '<span class="op-list-main"><span class="op-list-title">' + esc(title) + '</span>' +
+	      '<span class="op-list-sub">' + esc(sub || "Open the owning tool to review this item.") + '</span></span>' +
+	      '<span class="op-list-tag">' + esc(tag) + '</span></button>';
+	  }
+	  function todoHTML(a) {
+	    const overdue = a.due_date && new Date(a.due_date) < new Date();
+	    const tool = ALARM_ROUTE_TOOLS[a.area] || "Operations Command Center";
+	    const label = (TOOL_LABELS[tool] || {}).short || tool;
+	    const title = readable(a.ref || a.alarm_type || a.area || "Action item");
+	    const source = [label, readable(a.alarm_type), detailsText(a.detail)].filter(Boolean).join(" · ");
+	    const dot = overdue ? "red" : areaDotClass(a.area);
+	    const action = ALARM_ACTION_LABELS[a.area] || "Open tool";
+	    return '<button type="button" class="todo-item" onclick="openToolByName(\'' + jsArg(tool) + '\')">' +
+	      '<span class="todo-dot ' + dot + '"></span>' +
+	      '<span class="todo-title">' + esc(title) + '</span>' +
+	      '<span class="todo-source">' + esc(source || "Open the owning tool to review this item.") + '</span>' +
+	      '<span class="todo-open">' + esc(action) + '</span></button>';
+	  }
+	  function renderAttn(items) {
+	    items = (items || []).slice().sort((a, b) => String(a.due_date || "9999").localeCompare(String(b.due_date || "9999")));
+	    DASHBOARD_STATE.attention = items;
+		    const pill = document.getElementById("todoPill"); if (pill) pill.textContent = items.length;
+		    renderAttentionStats(items);
+		    const home = document.getElementById("todoList");
+		    const full = document.getElementById("attentionFullList");
+		    const homeCard = document.getElementById("todoCard");
+		    if (!items.length) {
+		      const html = todoClearHTML();
+		      if (homeCard) homeCard.classList.add("is-clear");
+		      if (home) home.innerHTML = html;
+		      if (full) full.innerHTML = emptyList("shield-check", "All clear. Nothing needs attention right now.");
+		      paintIcons();
+		      return;
+		    }
+		    if (homeCard) homeCard.classList.remove("is-clear");
+			    if (home) home.innerHTML = items.slice(0, 4).map(todoHTML).join("");
+	    if (full) full.innerHTML = items.slice(0, 40).map(attentionHTML).join("");
+	    paintIcons();
+	  }
+	  function activityText(r) {
+	    return ((r && r.action) || "") + " " + detailsText(r && r.details) + " " + ((r && r.user_email) || "");
+	  }
+	  function activityToolLabel(r) {
+	    const text = activityText(r).toLowerCase();
+	    if (/dispatch|readiness/.test(text)) return "Readiness & Dispatch";
+	    if (/worker|permit|document/.test(text)) return "Worker Docs";
+	    if (/scaffold|green tag/.test(text)) return "Green Tag";
+	    if (/completion|report|photo/.test(text)) return "Job Completion";
+	    if (/site|tracking|daily/.test(text)) return "Daily Site Tracking";
+	    if (/inventory|storage|stock/.test(text)) return "Inventory";
+	    return "Operations";
+	  }
+	  function activityStatusMeta(r) {
+	    const text = activityText(r).toLowerCase();
+	    if (/resolve|resolved|clear|cleared|complete|completed/.test(text)) return ["Cleared", "cleared"];
+	    if (/add|added|upload|uploaded|create|created/.test(text)) return ["Added", "added"];
+	    if (/draft/.test(text)) return ["Draft", "draft"];
+	    return ["Updated", "updated"];
+	  }
+	  function activityMatches(r, filter) {
+	    const text = activityText(r).toLowerCase();
+	    if (filter === "operations") return /dispatch|site|job|worker|scaffold|storage|operation|inventory|readiness|completion/.test(text);
+	    if (filter === "documents") return /document|permit|photo|report|file|upload/.test(text);
+	    if (filter === "alerts") return /resolve|resolved|clear|cleared|alarm|alert|blocker|blocked|complete|completed/.test(text);
+	    return true;
+	  }
+	  function activityCounts(rows) {
+	    rows = rows || [];
+	    return {
+	      all: rows.length,
+	      operations: rows.filter(r => activityMatches(r, "operations")).length,
+	      dispatch: rows.filter(r => /dispatch|readiness/.test(activityText(r).toLowerCase())).length,
+	      documents: rows.filter(r => activityMatches(r, "documents")).length,
+	      alerts: rows.filter(r => activityMatches(r, "alerts")).length,
+	      team: new Set(rows.map(r => r && r.user_email).filter(Boolean)).size
+	    };
+	  }
+	  function renderActivitySnapshot(rows) {
+	    const el = document.getElementById("activitySnapshot");
+	    if (!el) return;
+	    const counts = activityCounts(rows);
+	    const last24 = DASHBOARD_STATE.activityToday || 0;
+	    const stats = [
+	      ["Last 24 hours", last24, "updates", ""],
+	      ["Operations", counts.operations, "site changes", "soft"],
+	      ["Dispatch", counts.dispatch, "updates", "warn"],
+	      ["Documents", counts.documents, "files changed", ""],
+	      ["Team", counts.team, "active users", ""]
+	    ];
+	    el.innerHTML = stats.map(s => '<div class="mini-stat ' + esc(s[3]) + '"><span>' + esc(s[0]) +
+	      '</span><b>' + esc(s[1]) + '</b><em>' + esc(s[2]) + '</em></div>').join("");
+	  }
+	  function renderActivityFilters(rows) {
+	    const counts = activityCounts(rows);
+	    const filters = document.getElementById("activityInlineFilters");
+	    if (filters) {
+	      const items = [
+	        ["documents", "Documents", counts.documents],
+	        ["alerts", "Alerts resolved", counts.alerts]
+	      ];
+	      filters.hidden = !ACTIVITY_FILTERS_OPEN;
+	      filters.innerHTML = items.map(([key, label, count]) =>
+	        '<button' + (ACTIVITY_FILTER === key ? ' class="active"' : '') +
+	        ' onclick="filterActivity(\'' + key + '\')"><b>' + esc(label) + '</b><span>' + esc(count) + '</span></button>'
+	      ).join("");
+	    }
+	    const allBtn = document.getElementById("activityAllBtn");
+	    const opBtn = document.getElementById("activityOperationsBtn");
+	    const filterBtn = document.getElementById("activityFilterBtn");
+	    if (allBtn) allBtn.classList.toggle("active", ACTIVITY_FILTER === "all");
+	    if (opBtn) opBtn.classList.toggle("active", ACTIVITY_FILTER === "operations");
+	    if (filterBtn) filterBtn.classList.toggle("active", ACTIVITY_FILTERS_OPEN || !["all", "operations"].includes(ACTIVITY_FILTER));
+	  }
+	  function toggleActivityFilters() {
+	    ACTIVITY_FILTERS_OPEN = !ACTIVITY_FILTERS_OPEN;
+	    renderActivityFilters(DASHBOARD_STATE.recent || []);
+	    paintIcons();
+	  }
+	  function filterActivity(kind) {
+	    ACTIVITY_FILTER = kind || "all";
+	    if (["documents", "alerts"].includes(ACTIVITY_FILTER)) ACTIVITY_FILTERS_OPEN = true;
+	    renderActivity(DASHBOARD_STATE.recent || []);
+	  }
+	  function activityInitials(email) {
+	    const name = String(email || "System").split("@")[0].replace(/[._-]/g, " ").trim();
+	    const parts = name.split(/\s+/).filter(Boolean);
+	    if (!parts.length) return "HG";
+	    return (parts[0][0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
+	  }
+	  function activityTime(ts) {
+	    try { return new Date(ts).toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", hour12: false }); }
+	    catch (e) { return "--:--"; }
+	  }
+	  function activityHTML(r) {
+	    const actor = (r.user_email || "System").split("@")[0].replace(/[._]/g, " ");
+	    const action = readable(r.action || "Activity update");
+	    const detail = [actor, detailsText(r.details)].filter(Boolean).join(" · ");
+	    const tool = activityToolLabel(r);
+	    const status = activityStatusMeta(r);
+	    return '<div class="op-list-item activity-row">' +
+	      '<span class="activity-time">' + esc(activityTime(r.at)) + '</span>' +
+	      '<span class="activity-avatar">' + esc(activityInitials(r.user_email)) + '</span>' +
+	      '<span class="op-list-main"><span class="op-list-title">' + esc(action) + '</span>' +
+	      '<span class="op-list-sub">' + esc(detail.slice(0, 140)) + '</span></span>' +
+	      '<span class="activity-tool">' + esc(tool) + '</span>' +
+	      '<span class="activity-status ' + esc(status[1]) + '">' + esc(status[0]) + '</span></div>';
+	  }
+	  function renderActivity(rows) {
+	    rows = rows || [];
+	    DASHBOARD_STATE.recent = rows;
+	    renderActivitySnapshot(rows);
+	    renderActivityFilters(rows);
+	    const home = document.getElementById("actList");
+	    const full = document.getElementById("activityFullList");
+	    const filtered = rows.filter(r => activityMatches(r, ACTIVITY_FILTER));
+	    if (!filtered.length) {
+	      const copy = rows.length ? "No activity matches this filter." : "No activity yet. Updates show here as the team uses the tools.";
+	      const html = emptyList("inbox", copy);
+	      if (home) home.innerHTML = html;
+	      if (full) full.innerHTML = html;
+	      paintIcons();
+	      return;
+	    }
+	    if (home) home.innerHTML = rows.slice(0, 3).map(activityHTML).join("");
+	    if (full) full.innerHTML = filtered.slice(0, 25).map(activityHTML).join("");
+	    paintIcons();
+	  }
 
   async function route() {
     const url = localStorage.getItem("hg_supabase_url");
@@ -2021,7 +4224,8 @@
       try { session = (await SB.auth.getSession()).data.session; } catch (e) {}
       history.replaceState(null, "", location.pathname + location.search);
     }
-    if (!session) { showGate("gateLogin"); return; }
+	    SESSION = session;
+	    if (!session) { showGate("gateLogin"); return; }
 
     const email = (session.user.email || "").toLowerCase();
     try { localStorage.setItem("hg_last_email", email); } catch (e) {}

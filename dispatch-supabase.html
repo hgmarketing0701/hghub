@@ -6,20 +6,23 @@
 <title>HG — Daily Job Readiness &amp; Dispatch (Supabase)</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0e1a; --surface: #141926; --surface-2: #1c2335; --border: #2a3245;
-    --text: #ffffff; --text-dim: #a0a8b8;
-    --accent: #f59e0b; --accent-hover: #d97706; --accent-soft: rgba(245,158,11,0.12);
-    --green: #22c55e; --green-soft: rgba(34,197,94,0.15);
-    --red: #ef4444; --red-soft: rgba(239,68,68,0.15);
-    --amber: #f59e0b; --amber-soft: rgba(245,158,11,0.18);
-    --blue: #3b82f6; --blue-soft: rgba(59,130,246,0.15);
-    --grey: #6b7280;
-    --radius: 14px; --shadow: 0 10px 40px rgba(0,0,0,0.4);
+    --bg: #ffffff; --surface: #ffffff; --surface-2: #f7f4ef; --border: #e4ded6;
+    --text: #171717; --text-dim: #8b837b;
+    --accent: #143d4a; --accent-hover: #0e303b; --accent-soft: #eef6f3;
+    --green: #15945d; --green-soft: #edf8f3;
+    --red: #d84d4f; --red-soft: #fff1ee;
+    --amber: #a66b00; --amber-soft: #fff8e8;
+    --blue: #2f7fa5; --blue-soft: #eef7fb;
+    --grey: #6d756f;
+    --radius: 8px; --shadow: 0 12px 30px rgba(23, 23, 23, 0.08);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  body { font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     background: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; min-height: 100vh; }
   .container { max-width: 1360px; margin: 0 auto; padding: 24px 20px 90px; }
   a { color: var(--accent); }
@@ -172,6 +175,460 @@
   #toast.err { border-color: var(--red); color: #fecaca; }
   .loader { text-align: center; color: var(--text-dim); padding: 60px 20px; }
 
+  /* HG Hub light tool shell */
+  .container { max-width: none; padding: 26px 28px 90px; }
+  .topbar {
+    align-items: center;
+    padding: 0 0 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 18px;
+  }
+  .topbar .brand-block {
+    gap: 9px;
+  }
+  .topbar .brand-logo {
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    color: var(--accent);
+    border-radius: 0;
+    font-size: 0;
+    letter-spacing: 0;
+    box-shadow: none;
+  }
+  .topbar .brand-logo svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+  }
+  .topbar .brand-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .topbar .brand-sub {
+    display: none;
+  }
+  .tool-live {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: var(--green-soft);
+    color: var(--green);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .user-pill {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--accent);
+    box-shadow: none;
+  }
+  .user-pill button { color: var(--amber); }
+  .tabs {
+    gap: 24px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    color: #6f7778;
+    padding: 12px 0;
+    border-bottom-width: 3px;
+    font-size: 0.94rem;
+    font-weight: 750;
+  }
+  .tab:hover { color: var(--accent); }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .panel-head {
+    align-items: flex-end;
+    margin-bottom: 18px;
+  }
+  .panel-title {
+    color: var(--text);
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+  .panel-sub {
+    color: #716b65;
+    font-size: 0.96rem;
+    max-width: 820px;
+  }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .summary-card {
+    border: 0;
+    border-right: 1px solid var(--border);
+    border-radius: 0;
+    padding: 18px 20px;
+    background: var(--surface);
+  }
+  .summary-card:last-child { border-right: 0; }
+  .summary-card.warn,
+  .summary-card.soon,
+  .summary-card.ok,
+  .summary-card.info { border-color: var(--border); }
+  .summary-card .lbl {
+    color: #817b75;
+    font-size: 0.73rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .summary-card .val {
+    color: var(--text);
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+  .summary-card.warn .val { color: var(--red); }
+  .summary-card.soon .val { color: var(--amber); }
+  .summary-card.ok .val { color: var(--green); }
+  .summary-card.info .val { color: var(--accent); }
+  .alarm-banner {
+    background: var(--red-soft);
+    border-color: #f2c7c1;
+    border-radius: var(--radius);
+    color: var(--text);
+  }
+  .alarm-banner h3 {
+    color: var(--red);
+    font-weight: 800;
+  }
+  .alarm-banner .row {
+    border-top-color: #f3d6d1;
+    color: #4f4a45;
+  }
+  .filter-bar {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: 18px;
+  }
+  .settings-work-unit { padding: 2px 0 20px; }
+  input,
+  textarea,
+  select {
+    background-color: var(--surface);
+    color: var(--text);
+    border-color: var(--border);
+    border-radius: var(--radius);
+  }
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23143d4a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 14px 14px;
+    padding-right: 42px;
+  }
+  .hub-select { position:relative; width:100%; }
+  .hub-select-native { position:absolute; width:1px !important; height:1px; opacity:0; pointer-events:none; }
+  button.hub-select-trigger { position:relative; display:flex; align-items:center; width:100%; min-height:42px; padding:10px 42px 10px 12px; background:#fff; border:1px solid #ded8cf; border-radius:8px; color:var(--text); font:inherit; font-size:.88rem; font-weight:500; text-align:left; cursor:pointer; }
+  button.hub-select-trigger:hover { border-color:#cfc8bd; }
+  button.hub-select-trigger:focus-visible,.hub-select.open .hub-select-trigger { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  button.hub-select-trigger::after { content:""; position:absolute; right:16px; top:50%; width:7px; height:7px; border-right:1.7px solid var(--accent); border-bottom:1.7px solid var(--accent); transform:translateY(-68%) rotate(45deg); }
+  button.hub-select-trigger:disabled { opacity:.6; cursor:default; }
+  .hub-select-menu { position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:140; display:none; max-height:260px; overflow-y:auto; padding:5px; background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow); }
+  .hub-select.open .hub-select-menu { display:block; }
+  .hub-select.open-up .hub-select-menu { top:auto; bottom:calc(100% + 4px); }
+  button.hub-select-option { display:block; width:100%; min-height:40px; padding:9px 10px; border:0; border-radius:6px; background:transparent; color:var(--text); font:inherit; font-size:.86rem; line-height:1.35; text-align:left; cursor:pointer; }
+  button.hub-select-option:hover,button.hub-select-option:focus-visible,button.hub-select-option.selected { outline:none; background:var(--surface-2); color:var(--accent); }
+  button.hub-select-option:disabled { color:var(--text-dim); cursor:default; }
+  .filter-bar .hub-select { flex:0 1 220px; min-width:180px; }
+  .hub-select.hub-select-mini { min-width:112px; }
+  input[type="checkbox"] {
+    appearance: auto;
+    -webkit-appearance: checkbox;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    margin: 0;
+    accent-color: var(--accent);
+    flex: 0 0 auto;
+  }
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(20, 61, 74, 0.08);
+  }
+  input[type="date"] { color-scheme: light; }
+  .btn {
+    border-radius: var(--radius);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-ghost {
+    background: var(--surface);
+    color: var(--accent);
+    border-color: var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--accent); }
+  .job-grid { gap: 10px; }
+  .job-card {
+    background: var(--surface);
+    border-color: var(--border);
+    border-left-width: 3px;
+    border-radius: var(--radius);
+    padding: 15px 16px;
+  }
+  .job-card:hover {
+    background: #fffdfa;
+    border-color: #d7d0c7;
+  }
+  .job-title {
+    color: var(--text);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .job-meta,
+  .missing-line,
+  .crew-line,
+  .help {
+    color: var(--text-dim);
+  }
+  .countdown {
+    background: var(--surface-2);
+    border-color: var(--border);
+    color: var(--accent);
+    border-radius: 999px;
+  }
+  .status-badge { border-radius: 999px; }
+  .gate-chip { background: #fbfaf7; border-color: var(--border); }
+  .gate-chip.ok { background: var(--green-soft); color: var(--green); border-color: #bde5d4; }
+  .gate-chip.bad { background: var(--red-soft); color: var(--red); border-color: #f0c7c2; }
+  .permit-alarm {
+    background: var(--red-soft);
+    border-color: #f0c7c2;
+    color: var(--red);
+  }
+  .empty {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text-dim);
+    padding: 48px 20px;
+  }
+  .readiness-empty strong {
+    display: block;
+    color: var(--text);
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+  .table-wrap,
+  .team-card,
+  .pool-box,
+  .modal-card,
+  .preview-box {
+    background: var(--surface);
+    border-color: var(--border);
+    border-radius: var(--radius);
+    box-shadow: none;
+  }
+  table.grid th { background: var(--surface-2); color: #817b75; }
+  table.grid td { border-top-color: var(--border); }
+  table.grid tr:hover td { background: #fffdfa; }
+  table.grid td.table-empty {
+    padding: 28px 16px;
+    text-align: center;
+    color: var(--text-dim);
+    background: var(--surface);
+  }
+  table.grid td.table-empty strong {
+    display: block;
+    color: var(--text);
+    font-size: 0.92rem;
+    margin-bottom: 3px;
+  }
+  table.grid td.table-empty span {
+    display: block;
+    font-size: 0.82rem;
+  }
+  table.grid td.table-empty-success strong { color: var(--green); }
+  table.grid td.table-empty-success .clear-state { display:flex; align-items:center; justify-content:center; gap:12px; text-align:left; }
+  table.grid td.table-empty-success .clear-state svg { width:24px; height:24px; flex:0 0 auto; color:var(--green); stroke-width:2; }
+  table.grid td.table-empty-success .clear-state strong { color:var(--text); margin:0 0 1px; }
+  table.grid td.table-empty-success .clear-state span { color:var(--text-dim); }
+  .check-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    color: var(--text-dim);
+    font-size: 0.84rem;
+  }
+  .modal { background: rgba(23, 23, 23, 0.28); }
+  .modal-head,
+  .modal-foot {
+    border-color: var(--border);
+  }
+  .out-area { background: var(--surface-2); color: var(--text); }
+  #toast {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  #toast.err {
+    border-color: var(--red);
+    background: var(--red);
+    color: #fff;
+  }
+
+  @media (max-width: 860px) {
+    .container { padding: 18px 16px 72px; }
+    .topbar { align-items: flex-start; }
+    .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .summary-card:nth-child(2n) { border-right: 0; }
+    .summary-card:nth-child(n+3) { border-top: 1px solid var(--border); }
+    .hub-select-menu { max-height:min(260px,45vh); }
+    button.hub-select-option { min-height:44px; }
+  }
+
+  body.embedded .topbar { display: none; }
+  body.embedded .container { padding-top: 18px; }
+  .readiness-snapshot {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .readiness-snapshot-title {
+    padding: 18px 20px 6px;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+  .readiness-snapshot-row {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .readiness-snapshot .summary-card {
+    position: relative;
+    border: 0;
+    border-radius: 0;
+    padding: 14px 20px 20px;
+  }
+  .readiness-snapshot .summary-card:not(:last-child)::after,
+  .tool-snapshot .summary-card:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 10px;
+    bottom: 12px;
+    width: 1px;
+    background: var(--border);
+  }
+  .readiness-snapshot .summary-card .lbl {
+    color: #817b75;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .readiness-snapshot .summary-card .val {
+    font-size: 2rem;
+    line-height: 1;
+  }
+  .readiness-empty .empty-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+  .readiness-empty .btn {
+    padding: 9px 14px;
+  }
+  .pool-box > .empty,
+  .team-card > .empty,
+  .table-wrap .empty { border: 0; border-radius: 0; }
+  .tool-snapshot {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .tool-snapshot-title {
+    padding: 18px 20px 6px;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+  .tool-snapshot-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+  .tool-snapshot .summary-card {
+    position: relative;
+    border: 0;
+    border-radius: 0;
+    padding: 14px 20px 20px;
+    min-height: 90px;
+  }
+  .tool-snapshot .summary-card .lbl {
+    color: #817b75;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .tool-snapshot .summary-card .val {
+    font-size: 2rem;
+    line-height: 1;
+  }
+  @media (max-width: 860px) {
+    .readiness-snapshot-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .readiness-snapshot .summary-card:nth-child(2n)::after,
+    .tool-snapshot .summary-card:nth-child(2n)::after { display: none; }
+    .readiness-snapshot .summary-card:nth-child(n+3) { border-top: 1px solid var(--border); }
+    .tabs {
+      gap: 22px;
+      margin: 0 -16px 24px;
+      padding: 0 16px;
+    }
+    .tab { padding: 12px 0; }
+    .tool-snapshot-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tool-snapshot .summary-card:nth-child(n+3) { border-top: 1px solid var(--border); }
+  }
+
   /* login + config gates (pattern: quotation-supabase.html) */
   .gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .gate .gcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
@@ -190,6 +647,9 @@
 </style>
 </head>
 <body>
+<script>
+  if (window.self !== window.top) document.body.classList.add('embedded');
+</script>
 
 <!-- ══════════ GATE 0 · SUPABASE CONFIG (shown once if keys not set) ══════════ -->
 <div class="gate" id="gateConfig" style="display:none;">
@@ -237,9 +697,16 @@
 
   <div class="topbar">
     <div class="brand-block">
-      <div class="brand-logo">HG</div>
+      <div class="brand-logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M10 17h4V5H2v12h3" />
+          <path d="M14 17h1.5m4 0H22v-5l-3-4h-5" />
+          <circle cx="7.5" cy="17.5" r="2.5" />
+          <circle cx="17.5" cy="17.5" r="2.5" />
+        </svg>
+      </div>
       <div>
-        <div class="brand-name">Daily Job Readiness &amp; Dispatch</div>
+        <div class="brand-name">Daily Readiness &amp; Dispatch <span class="tool-live">Live</span></div>
         <div class="brand-sub">Eason checks the gates · Calvin loads the teams · everyone sees the same board</div>
       </div>
     </div>
@@ -265,15 +732,15 @@
       <div class="panel-head">
         <div>
           <div class="panel-title">Job Readiness Board</div>
-          <div class="panel-sub">Every confirmed job and its checklist. A job goes GREEN only when all required gates pass. Permit alarms float to the top.</div>
+          <div class="panel-sub">Confirm readiness gates before jobs move into dispatch. Permit alarms and blocked jobs stay first.</div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn btn-ghost" onclick="exportExcel()">⬇ Export Excel</button>
+          <button class="btn btn-ghost" onclick="exportExcel()">Export Excel</button>
           <button class="btn btn-primary" onclick="openJobModal(null)">+ Add Job</button>
         </div>
       </div>
 
-      <div class="summary-grid" id="readinessSummary"></div>
+      <div class="readiness-snapshot" id="readinessSummary"></div>
       <div id="alarmBanner"></div>
 
       <div class="filter-bar">
@@ -309,14 +776,14 @@
           <label style="margin-bottom:3px;">Install night</label>
           <input type="date" id="dispDate" onchange="onDispDate()">
         </div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:0.84rem;color:var(--text-dim);">
-          <input type="checkbox" id="dispAllDates" style="width:auto;" onchange="renderDispatch()"> Pool: show all ready jobs (any date)
+        <label class="check-control">
+          <input type="checkbox" id="dispAllDates" onchange="renderDispatch()"> Show ready jobs from all dates
         </label>
         <button class="btn btn-ghost" onclick="openTeamModal(null)">+ Set up team crew</button>
         <button class="btn btn-primary" onclick="openDispatchMsg()">Generate WhatsApp message</button>
       </div>
 
-      <div class="summary-grid" id="dispSummary"></div>
+      <div class="tool-snapshot" id="dispSummary"></div>
       <div id="dispNotReady"></div>
 
       <div class="disp-cols">
@@ -335,12 +802,12 @@
     <div class="tab-panel" id="panel-alarms">
       <div class="panel-head">
         <div>
-          <div class="panel-title">Alarms — daily digest</div>
-          <div class="panel-sub">Exactly what the morning email (daily-alarms Edge Function) sends: permit alarms to chase NOW, at-risk jobs, and blocked jobs. Read live from the <code>dsp_alarms</code> view.</div>
+          <div class="panel-title">Daily Alarms</div>
+          <div class="panel-sub">Review permit alarms, at-risk jobs, and blocked jobs before dispatch.</div>
         </div>
-        <button class="btn btn-ghost" onclick="refreshAlarms()">↻ Refresh</button>
+        <button class="btn btn-ghost" onclick="refreshAlarms()">Refresh</button>
       </div>
-      <div class="summary-grid" id="alarmSummary"></div>
+      <div class="tool-snapshot" id="alarmSummary"></div>
       <div class="table-wrap"><table class="grid"><thead><tr>
         <th>Type</th><th>Job</th><th>Detail</th><th>Install date</th><th>Recipients</th>
       </tr></thead><tbody id="alarmBody"></tbody></table></div>
@@ -351,13 +818,14 @@
       <div class="panel-head">
         <div>
           <div class="panel-title">Crew &amp; Lorries</div>
-          <div class="panel-sub">Master list of drivers cum supervisors, workers, and lorries — these feed the dispatch dropdowns.</div>
+          <div class="panel-sub">Manage drivers, supervisors, workers, and lorries used in dispatch.</div>
         </div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
         <button class="btn btn-primary" onclick="openStaffModal(null)">+ Add staff</button>
         <button class="btn btn-ghost" onclick="openLorryModal(null)">+ Add lorry</button>
       </div>
+      <div class="tool-snapshot" id="crewSummary"></div>
       <h3 style="font-size:0.9rem;margin:10px 0;">Staff</h3>
       <div class="table-wrap" style="margin-bottom:24px;"><table class="grid"><thead><tr>
         <th>Name</th><th>Role</th><th>Phone</th><th>Status</th><th style="text-align:right;">Actions</th>
@@ -373,10 +841,10 @@
       <div class="panel-head">
         <div>
           <div class="panel-title">Settings</div>
-          <div class="panel-sub">Tune the readiness rules and who gets the daily email. Saved to the <code>dsp_config</code> table.</div>
+          <div class="panel-sub">Manage readiness rules, team limits, and recipients for the daily alarm email.</div>
         </div>
       </div>
-      <div class="table-wrap" style="padding:22px;">
+      <div class="settings-work-unit">
         <div class="form-grid">
           <div class="form-field"><label>Permit lead days</label><input type="number" id="cfgPermitLeadDays"><div class="help">Working days a permit needs before install. Drives the alarm.</div></div>
           <div class="form-field"><label>At-risk window (days)</label><input type="number" id="cfgAtRiskDays"><div class="help">Install within N days + not ready → AMBER.</div></div>
@@ -386,7 +854,7 @@
           <div class="form-field full"><label>Daily email recipients</label><input type="text" id="cfgEmailRecipients" placeholder="a@hggroup.com.my, b@hggroup.com.my"><div class="help">Comma-separated. Gets the morning permit-alarm + at-risk digest.</div></div>
         </div>
         <div style="margin-top:18px;"><button class="btn btn-primary" onclick="saveSettings()">Save settings</button></div>
-        <p class="help" style="margin-top:14px;">The daily email is sent by the shared <code>daily-alarms</code> Edge Function, which reads the <code>dsp_alarms</code> view — the same list shown on the Alarms tab.</p>
+        <p class="help" style="margin-top:14px;">The daily email uses the same permit, at-risk, and blocked job list shown on the Alarms tab.</p>
       </div>
     </div>
 
@@ -395,9 +863,10 @@
       <div class="panel-head">
         <div>
           <div class="panel-title">Activity log</div>
-          <div class="panel-sub">Who did what, when. This is your "if it's not in writing it didn't happen" trail — most recent first (shared audit_log, dispatch entries).</div>
+          <div class="panel-sub">Review readiness, dispatch, crew, and settings updates, most recent first.</div>
         </div>
       </div>
+      <div class="tool-snapshot" id="activitySummary"></div>
       <div class="table-wrap"><table class="grid"><thead><tr>
         <th>When</th><th>Who</th><th>Action</th><th>Detail</th>
       </tr></thead><tbody id="auditBody"></tbody></table></div>
@@ -538,7 +1007,7 @@
     if (!r.data) { document.getElementById('deniedEmail').textContent = email; document.getElementById('gateDenied').style.display = 'flex'; return; }
     IS_ADMIN = !!r.data.is_admin;
     document.getElementById('appWrap').style.display = 'block';
-    document.getElementById('userPill').textContent = '👤 ' + email;
+    document.getElementById('userPill').textContent = email;
     loadAll();
   }
 
@@ -710,8 +1179,80 @@
   }
   function labelOf(arr, key) { const f = (arr||[]).find(x => x.key === key); return f ? f.label : key; }
   function toast(msg, err) { const t = document.getElementById('toast'); t.textContent = msg; t.className = 'show' + (err ? ' err' : ''); setTimeout(() => t.className = '', 2600); }
-  function openModal(id) { document.getElementById(id).classList.add('open'); }
-  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  function closeHubSelects(except) {
+    document.querySelectorAll('.hub-select.open').forEach(wrap => {
+      if (wrap !== except) {
+        wrap.classList.remove('open','open-up');
+        const trigger = wrap.querySelector('.hub-select-trigger');
+        if (trigger) trigger.setAttribute('aria-expanded','false');
+      }
+    });
+  }
+  function syncHubSelects(root) {
+    (root || document).querySelectorAll('select[data-hub-select]').forEach(select => {
+      if (select._hubSelectSync) select._hubSelectSync();
+    });
+  }
+  function initHubSelects(root) {
+    const scope = root || document;
+    const selects = [];
+    if (scope.nodeType === 1 && scope.matches('select:not([data-hub-select])')) selects.push(scope);
+    if (scope.querySelectorAll) selects.push(...scope.querySelectorAll('select:not([data-hub-select])'));
+    selects.forEach(select => {
+      const wrap = document.createElement('div'); wrap.className = 'hub-select';
+      if (select.classList.contains('mini-select')) wrap.classList.add('hub-select-mini');
+      select.parentNode.insertBefore(wrap, select); wrap.appendChild(select);
+      select.dataset.hubSelect = 'true'; select.classList.add('hub-select-native');
+      select.tabIndex = -1; select.setAttribute('aria-hidden','true');
+      const trigger = document.createElement('button');
+      trigger.type = 'button'; trigger.className = 'hub-select-trigger';
+      trigger.setAttribute('aria-haspopup','listbox'); trigger.setAttribute('aria-expanded','false');
+      const label = wrap.parentElement && wrap.parentElement.querySelector('label');
+      if (label) trigger.setAttribute('aria-label', label.textContent.trim());
+      const menu = document.createElement('div'); menu.className = 'hub-select-menu'; menu.setAttribute('role','listbox');
+      wrap.appendChild(trigger); wrap.appendChild(menu);
+      function sync() {
+        const selected = select.options[select.selectedIndex];
+        trigger.textContent = selected ? selected.textContent : 'Select';
+        trigger.disabled = select.disabled; menu.innerHTML = '';
+        Array.from(select.options).forEach(option => {
+          const item = document.createElement('button');
+          item.type = 'button'; item.className = 'hub-select-option' + (option.selected ? ' selected' : '');
+          item.textContent = option.textContent; item.disabled = option.disabled;
+          item.setAttribute('role','option'); item.setAttribute('aria-selected', option.selected ? 'true' : 'false');
+          item.addEventListener('click', event => {
+            event.stopPropagation(); select.value = option.value;
+            select.dispatchEvent(new Event('change',{bubbles:true})); closeHubSelects();
+          });
+          menu.appendChild(item);
+        });
+      }
+      select._hubSelectSync = sync; select.addEventListener('change', sync);
+      new MutationObserver(sync).observe(select,{childList:true,subtree:true,attributes:true});
+      trigger.addEventListener('click', event => {
+        event.stopPropagation();
+        const open = !wrap.classList.contains('open'); closeHubSelects(wrap); sync();
+        if (open) {
+          const rect = trigger.getBoundingClientRect();
+          const estimated = Math.min(260, menu.children.length * 44 + 10);
+          wrap.classList.toggle('open-up', window.innerHeight - rect.bottom - 16 < estimated && rect.top > window.innerHeight - rect.bottom);
+        } else wrap.classList.remove('open-up');
+        wrap.classList.toggle('open', open); trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      sync();
+    });
+  }
+  function startHubSelects() {
+    initHubSelects(document);
+    new MutationObserver(mutations => mutations.forEach(m => m.addedNodes.forEach(node => {
+      if (node.nodeType === 1) initHubSelects(node);
+    }))).observe(document.body,{childList:true,subtree:true});
+  }
+  document.addEventListener('DOMContentLoaded', startHubSelects);
+  document.addEventListener('pointerdown', e => { if (!e.target.closest('.hub-select')) closeHubSelects(); }, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeHubSelects(); });
+  function openModal(id) { const modal = document.getElementById(id); modal.classList.add('open'); initHubSelects(modal); syncHubSelects(modal); }
+  function closeModal(id) { closeHubSelects(); document.getElementById(id).classList.remove('open'); }
   function switchTab(name) {
     document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
@@ -777,16 +1318,19 @@
     const counts = { ready:0, at_risk:0, blocked:0, alarm:0 };
     act.forEach(j => { counts[j.readiness]++; if (j.permitAlarm) counts.alarm++; });
     document.getElementById('readinessSummary').innerHTML =
-      card('info', 'Active jobs', act.length) +
-      card('warn', '🚨 Permit alarms', counts.alarm) +
-      card('soon', 'At risk', counts.at_risk) +
-      card('warn', 'Blocked', counts.blocked) +
-      card('ok', 'Ready', counts.ready);
+      '<div class="readiness-snapshot-title">Readiness Snapshot</div>' +
+      '<div class="readiness-snapshot-row">' +
+        card('warn', 'Permit alarms', counts.alarm) +
+        card('warn', 'Blocked', counts.blocked) +
+        card('soon', 'At risk', counts.at_risk) +
+        card('ok', 'Ready', counts.ready) +
+        card('info', 'Active jobs', act.length) +
+      '</div>';
 
     // alarm banner
     const alarms = act.filter(j => j.permitAlarm).sort((a,b) => (a.daysToInstall) - (b.daysToInstall));
     document.getElementById('alarmBanner').innerHTML = alarms.length ? (
-      '<div class="alarm-banner"><h3>🚨 Permit early-warning — chase these now</h3>' +
+      '<div class="alarm-banner"><h3>Permit early-warning</h3>' +
       alarms.map(j => '<div class="row"><b>' + esc(j.mall) + ' · ' + esc(j.lotNo) + '</b> — install ' + esc(j.installDate||'?') +
         ' (' + countdownText(j.daysToInstall) + ') — permit: ' + esc(labelOf(DATA.enums.permitBy, j.permitBy)) +
         ' / ' + esc(labelOf(DATA.enums.permitStatus, j.permitStatus)) + '</div>').join('') + '</div>'
@@ -808,17 +1352,28 @@
 
     document.getElementById('jobGrid').innerHTML = jobs.length
       ? jobs.map(jobCardHtml).join('')
-      : '<div class="empty">No jobs match. Add one with <b>+ Add Job</b>.</div>';
+      : '<div class="empty readiness-empty"><strong>No active jobs found</strong><span>Adjust the filters or add a job to start readiness tracking.</span><div class="empty-actions"><button class="btn btn-ghost" onclick="clearReadinessFilters()">Clear filters</button><button class="btn btn-primary" onclick="openJobModal(null)">+ Add Job</button></div></div>';
   }
 
   function card(kind, lbl, val) { return '<div class="summary-card ' + kind + '"><div class="lbl">' + lbl + '</div><div class="val">' + val + '</div></div>'; }
+  function toolSnapshot(title, cards) {
+    return '<div class="tool-snapshot-title">' + esc(title) + '</div><div class="tool-snapshot-row">' + cards + '</div>';
+  }
+
+  function clearReadinessFilters() {
+    document.getElementById('rSearch').value = '';
+    document.getElementById('rStatus').value = '';
+    document.getElementById('rWindow').value = 'open';
+    syncHubSelects(document);
+    renderReadiness();
+  }
 
   function jobCardHtml(j) {
     const g = gates(j);
     const days = j.daysToInstall;
     let cd = 'countdown';
     if (days !== null && days <= 0) cd += ' urgent'; else if (days !== null && days <= 3) cd += ' soon';
-    const chip = (ok, txt) => '<span class="gate-chip ' + (ok ? 'ok' : 'bad') + '">' + (ok ? '✓ ' : '✗ ') + txt + '</span>';
+    const chip = (ok, txt) => '<span class="gate-chip ' + (ok ? 'ok' : 'bad') + '">' + txt + '</span>';
     let chips = chip(g.loc, 'Lot/Mall') + chip(g.sketch, 'Sketch') + chip(g.quote, 'Quote') +
                 chip(g.permit, 'Permit');
     if (j.needsVisual === 'yes') chips += chip(g.visual, 'Visual');
@@ -838,7 +1393,7 @@
         '<span class="status-badge ' + j.readiness + '">' + j.readiness.replace('_',' ') + '</span>' +
       '</div></div>' +
       '<div class="gates">' + chips + '</div>' +
-      (j.permitAlarm ? '<div class="permit-alarm">🚨 Permit not approved — ' + countdownText(days) + ' to install</div>' : '') +
+      (j.permitAlarm ? '<div class="permit-alarm">Permit not approved — ' + countdownText(days) + ' to install</div>' : '') +
       ((j.missing && j.missing.length) ? '<div class="missing-line">Missing: <b>' + esc(j.missing.join(', ')) + '</b></div>' : '') +
     '</div>';
   }
@@ -979,22 +1534,24 @@
     const pool = active.filter(j => j.readiness === 'ready' && !j.teamNo && (showAll || j.installDate === date))
       .sort((a,b) => (a.mall||'').localeCompare(b.mall||''));
     const notReady = active.filter(j => j.installDate === date && j.readiness !== 'ready');
-
-    document.getElementById('dispSummary').innerHTML =
-      card('info', 'Assigned tonight', assigned.length) +
-      card('ok', 'Ready in pool', pool.length) +
-      card('warn', 'Scheduled but not ready', notReady.length);
-
-    document.getElementById('dispNotReady').innerHTML = notReady.length ? (
-      '<div class="alarm-banner" style="background:var(--amber-soft);border-color:var(--amber);"><h3 style="color:var(--amber);">⚠️ Scheduled tonight but NOT ready — fix before sharing</h3>' +
-      notReady.map(j => '<div class="row" style="border-color:rgba(245,158,11,0.25);"><b>' + esc(j.mall) + ' · ' + esc(j.lotNo) + '</b> — missing: ' + esc((j.missing||[]).join(', ')) + '</div>').join('') + '</div>'
-    ) : '';
-
-    // teams to show
     const teamNos = {};
     DATA.teams.filter(t => t.dispatchDate === date).forEach(t => teamNos[String(t.teamNo)] = true);
     assigned.forEach(j => teamNos[String(j.teamNo)] = true);
     const nums = Object.keys(teamNos).sort((a,b) => Number(a) - Number(b));
+
+    document.getElementById('dispSummary').innerHTML = toolSnapshot('Dispatch Snapshot',
+      card('info', 'Assigned tonight', assigned.length) +
+      card('ok', 'Ready in pool', pool.length) +
+      card('warn', 'Scheduled but not ready', notReady.length) +
+      card('info', 'Teams set', nums.length)
+    );
+
+    document.getElementById('dispNotReady').innerHTML = notReady.length ? (
+      '<div class="alarm-banner" style="background:var(--amber-soft);border-color:var(--amber);"><h3 style="color:var(--amber);">Scheduled tonight but not ready</h3>' +
+      notReady.map(j => '<div class="row" style="border-color:rgba(245,158,11,0.25);"><b>' + esc(j.mall) + ' · ' + esc(j.lotNo) + '</b> — missing: ' + esc((j.missing||[]).join(', ')) + '</div>').join('') + '</div>'
+    ) : '';
+
+    // teams to show
     const max = Number(DATA.config.maxJobsPerTeam || 5);
 
     document.getElementById('teamsWrap').innerHTML = nums.length ? nums.map(n => {
@@ -1017,7 +1574,7 @@
     document.getElementById('poolBox').innerHTML = pool.length
       ? pool.map(j => '<div class="pool-row"><span class="ptxt"><b>' + esc(j.mall) + '</b> · ' + esc(j.lotNo) + '<br><small style="color:var(--text-dim);">' +
           esc(labelOf(DATA.enums.jobTypes, j.jobType)) + (j.scope ? ' · ' + esc(j.scope) : '') + '</small></span>' + teamSelectHtml(j) + '</div>').join('')
-      : '<div class="empty" style="padding:24px;">No ready &amp; unassigned jobs for this night.<br><small>Tick "show all ready jobs" to pull from other dates.</small></div>';
+      : '<div class="empty" style="padding:24px;">No ready &amp; unassigned jobs for this night.<br><small>Select "Show ready jobs from all dates" to include other dates.</small></div>';
   }
 
   /* TEAM MODAL */
@@ -1144,19 +1701,20 @@
 
   /* ---------- ALARMS (dsp_alarms view, §6.2) ---------- */
   const ALARM_LABELS = {
-    permit_alarm: '🚨 Permit alarm — chase NOW',
-    at_risk:      '🟡 At risk — install soon, not ready',
-    blocked:      '🔴 Blocked — missing items',
+    permit_alarm: 'Permit alarm - chase now',
+    at_risk:      'At risk - install soon, not ready',
+    blocked:      'Blocked - missing items',
   };
   function renderAlarms() {
     if (!DATA) return;
     const rows = DATA.alarms || [];
     const counts = { permit_alarm: 0, at_risk: 0, blocked: 0 };
     rows.forEach(a => { if (counts[a.alarm_type] != null) counts[a.alarm_type]++; });
-    document.getElementById('alarmSummary').innerHTML =
-      card('warn', '🚨 Permit alarms', counts.permit_alarm) +
+    document.getElementById('alarmSummary').innerHTML = toolSnapshot('Alarm Snapshot',
+      card('warn', 'Permit alarms', counts.permit_alarm) +
       card('soon', 'At risk', counts.at_risk) +
-      card('warn', 'Blocked', counts.blocked);
+      card('warn', 'Blocked', counts.blocked)
+    );
     const order = { permit_alarm: 0, at_risk: 1, blocked: 2 };
     const sorted = rows.slice().sort((a,b) =>
       (order[a.alarm_type] ?? 9) - (order[b.alarm_type] ?? 9) ||
@@ -1167,7 +1725,8 @@
       '<td style="color:var(--text-dim);">' + esc(a.detail || '') + '</td>' +
       '<td style="white-space:nowrap;">' + esc(a.due_date || '—') + (a.due_date ? ' · ' + countdownText(daysUntil(a.due_date)) : '') + '</td>' +
       '<td style="color:var(--text-dim);font-size:0.8rem;">' + esc(a.recipient || '') + '</td></tr>'
-    ).join('') : '<tr><td colspan="5" style="color:var(--text-dim);">✅ All clear — no permit alarms, nothing at risk, nothing blocked.</td></tr>';
+    ).join('') : '<tr><td colspan="5" class="table-empty table-empty-success"><div class="clear-state"><i data-lucide="shield-check" aria-hidden="true"></i><div><strong>All clear</strong><span>No permit alarms, at-risk jobs, or blocked jobs.</span></div></div></td></tr>';
+    if (window.lucide) lucide.createIcons();
   }
   async function refreshAlarms() {
     const r = await sb.from('dsp_alarms').select('*');
@@ -1181,19 +1740,29 @@
   function renderCrew() {
     if (!DATA) return;
     const staff = DATA.staff.slice().sort((a,b) => (a.role+a.name).localeCompare(b.role+b.name));
+    const activeStaff = staff.filter(s => s.active !== false);
+    const drivers = activeStaff.filter(s => s.role === 'driver');
+    const workers = activeStaff.filter(s => s.role === 'worker');
+    const activeLorries = DATA.lorries.filter(l => l.active !== false);
+    document.getElementById('crewSummary').innerHTML = toolSnapshot('Crew & Fleet Snapshot',
+      card('info', 'Available staff', activeStaff.length) +
+      card('info', 'Drivers', drivers.length) +
+      card('ok', 'Workers', workers.length) +
+      card('info', 'Lorries', activeLorries.length)
+    );
     document.getElementById('staffBody').innerHTML = staff.length ? staff.map(s =>
       '<tr><td>' + esc(s.name) + '</td><td><span class="pill ' + (s.role === 'driver' ? 'driver' : 'worker') + '">' +
         (s.role === 'driver' ? 'Driver/SV' : 'Worker') + '</span></td><td>' + esc(s.phone || '—') + '</td>' +
       '<td>' + (s.active === false ? '<span class="pill off">inactive</span>' : 'active') + '</td>' +
       '<td style="text-align:right;"><button class="btn btn-ghost btn-sm" onclick="openStaffModal(\'' + s.id + '\')">Edit</button></td></tr>'
-    ).join('') : '<tr><td colspan="5" style="color:var(--text-dim);">No staff yet.</td></tr>';
+    ).join('') : '<tr><td colspan="5" class="table-empty"><strong>No staff added</strong><span>Add staff to make them available for dispatch.</span></td></tr>';
 
     const lorries = DATA.lorries.slice();
     document.getElementById('lorryBody').innerHTML = lorries.length ? lorries.map(l =>
       '<tr><td>' + esc(l.plate) + '</td><td>' + esc(l.label || '—') + '</td>' +
       '<td>' + (l.active === false ? '<span class="pill off">inactive</span>' : 'active') + '</td>' +
       '<td style="text-align:right;"><button class="btn btn-ghost btn-sm" onclick="openLorryModal(\'' + l.id + '\')">Edit</button></td></tr>'
-    ).join('') : '<tr><td colspan="4" style="color:var(--text-dim);">No lorries yet.</td></tr>';
+    ).join('') : '<tr><td colspan="4" class="table-empty"><strong>No lorries added</strong><span>Add a lorry to make it available for dispatch.</span></td></tr>';
   }
   function fillDatalists() {
     document.getElementById('driversList').innerHTML = DATA.staff.filter(s => s.role === 'driver' && s.active !== false)
@@ -1305,11 +1874,24 @@
   function renderActivity() {
     if (!DATA) return;
     const rows = DATA.audit || [];
+    const dayAgo = Date.now() - 86400000;
+    const textOf = r => ((r.action || '') + ' ' + (r.details || '')).toLowerCase();
+    const last24 = rows.filter(r => {
+      const t = Date.parse(r.at || '');
+      return !Number.isNaN(t) && t >= dayAgo;
+    }).length;
+    document.getElementById('activitySummary').innerHTML = toolSnapshot('Activity Snapshot',
+      card('info', 'Last 24 hours', last24) +
+      card('ok', 'Readiness changes', rows.filter(r => /job|readiness|gate/.test(textOf(r))).length) +
+      card('info', 'Dispatch changes', rows.filter(r => /dispatch|assign|team/.test(textOf(r))).length) +
+      card('soon', 'Crew changes', rows.filter(r => /staff|lorry|crew|driver|worker/.test(textOf(r))).length) +
+      card('info', 'Settings changes', rows.filter(r => /config|setting/.test(textOf(r))).length)
+    );
     document.getElementById('auditBody').innerHTML = rows.length ? rows.map(r =>
       '<tr><td style="white-space:nowrap;color:var(--text-dim);font-size:0.8rem;">' + esc(String(r.at||'').replace('T',' ').slice(0,16)) + '</td>' +
       '<td>' + esc(r.user_email || '') + '</td><td>' + esc(r.action || '') + '</td>' +
       '<td style="color:var(--text-dim);">' + esc(r.details || '') + '</td></tr>'
-    ).join('') : '<tr><td colspan="4" style="color:var(--text-dim);">No activity yet.</td></tr>';
+    ).join('') : '<tr><td colspan="4" class="table-empty"><strong>No activity yet</strong><span>Readiness, dispatch, crew, and settings updates will appear here.</span></td></tr>';
   }
 
   /* ---------- EXPORT EXCEL (SheetJS) ---------- */

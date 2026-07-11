@@ -6,6 +6,10 @@
 <title>HG — Scaffold &amp; Green Tag · Supabase</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <style>
   :root {
     --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335; --border:#2a3245;
@@ -136,9 +140,81 @@
   .gate input { text-align:left; margin-bottom:4px; }
   .msg { font-size:0.86rem; margin-top:10px; min-height:20px; opacity:0; transition:opacity 0.2s; }
   .msg.show { opacity:1; } .msg.ok { color:var(--green); } .msg.err { color:#f87171; }
+
+  /* HG Hub light tool shell */
+  :root { --bg:#fff; --surface:#fff; --surface-2:#f8f7f4; --border:#e4ded6; --text:#171717; --text-dim:#817970; --text-dimmer:#9b938a; --accent:#143d4a; --accent-hover:#0e303b; --accent-soft:#eef6f3; --green:#15945d; --green-soft:#edf8f3; --red:#d84d4f; --red-soft:#fff1ee; --blue:#2f7fa5; --blue-soft:#eef7fb; --radius:8px; }
+  body { font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; color:var(--text); line-height:1.5; }
+  #app { padding:26px 28px 0; }
+  .topbar { align-items:center; padding:0 0 20px; margin:0 0 18px; border-bottom:1px solid var(--border); }
+  body.embedded .topbar { display:none; }
+  .brand-block { gap:9px; } .brand-logo { width:24px; height:24px; padding:0; background:transparent; border-radius:0; color:var(--accent); }
+  .brand-logo svg { width:20px; height:20px; stroke-width:2; } .brand-name { display:flex; align-items:center; gap:10px; color:var(--text); font-size:1.05rem; font-weight:800; letter-spacing:-.02em; }
+  .brand-sub { color:var(--text-dim); font-size:.78rem; margin-top:3px; } .tool-live { display:inline-flex; align-items:center; height:21px; padding:0 9px; border-radius:999px; background:var(--green-soft); color:var(--green); font-size:.64rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .user-pill { background:#fff; border-color:var(--border); border-radius:999px; padding:8px 12px; color:var(--text-dim); font-size:.78rem; } .user-pill b { color:var(--accent); } .user-pill > span { display:none; } .user-pill button { color:#a66b00; }
+  nav { gap:26px; padding:0; margin:0 0 24px; flex-wrap:nowrap; overflow-x:auto; border-bottom:1px solid var(--border); }
+  nav button { flex:0 0 auto; padding:0 0 12px; border:0; border-bottom:3px solid transparent; border-radius:0; background:transparent; color:#716b65; font-size:.78rem; font-weight:800; }
+  nav button:hover { background:transparent; border-color:transparent; color:var(--accent); } nav button.active { background:transparent; color:var(--accent); border-color:var(--accent); }
+  main { max-width:none; padding:0 0 72px; }
+  .section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin:0 0 14px; } .section-title { color:var(--text); font-size:1.22rem; font-weight:800; letter-spacing:-.025em; } .section-meta,.sub,.hint { color:#716b65; font-size:.86rem; }
+  .section-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .card { background:#fff; border-color:var(--border); border-radius:var(--radius); padding:18px; margin-bottom:12px; box-shadow:none; }
+  h2 { color:var(--text); font-size:.98rem; font-weight:800; margin-bottom:4px; letter-spacing:-.02em; } h3 { color:var(--accent); font-size:.78rem; font-weight:800; margin:18px 0 9px; text-transform:uppercase; letter-spacing:.04em; }
+  label { color:#716b65; font-size:.72rem; font-weight:800; margin:10px 0 5px; } input,select,textarea { background:#fff; border-color:#ded8cf; color:var(--text); border-radius:8px; padding:10px 12px; font-size:.88rem; } select { appearance:none; -webkit-appearance:none; padding-right:42px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23143d4a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 16px center; background-size:14px; } input:focus,select:focus,textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  .hub-select { position:relative; width:100%; }
+  .hub-select-native { position:absolute; width:1px !important; height:1px; opacity:0; pointer-events:none; }
+  button.hub-select-trigger { position:relative; display:flex; align-items:center; width:100%; min-height:42px; padding:10px 42px 10px 12px; background:#fff; border:1px solid #ded8cf; border-radius:8px; color:var(--text); font:inherit; font-size:.88rem; font-weight:500; text-align:left; cursor:pointer; }
+  button.hub-select-trigger:hover { border-color:#cfc8bd; }
+  button.hub-select-trigger:focus-visible,.hub-select.open .hub-select-trigger { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  button.hub-select-trigger::after { content:""; position:absolute; right:16px; top:50%; width:7px; height:7px; border-right:1.7px solid var(--accent); border-bottom:1.7px solid var(--accent); transform:translateY(-68%) rotate(45deg); }
+  button.hub-select-trigger:disabled { opacity:.6; cursor:default; }
+  .hub-select-menu { position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:140; display:none; max-height:260px; overflow-y:auto; padding:5px; background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:0 12px 30px rgba(23,23,23,.12); }
+  .hub-select.open .hub-select-menu { display:block; }
+  .hub-select.open-up .hub-select-menu { top:auto; bottom:calc(100% + 4px); }
+  button.hub-select-option { display:block; width:100%; min-height:40px; padding:9px 10px; border:0; border-radius:6px; background:transparent; color:var(--text); font:inherit; font-size:.86rem; line-height:1.35; text-align:left; cursor:pointer; }
+  button.hub-select-option:hover,button.hub-select-option:focus-visible,button.hub-select-option.selected { outline:none; background:var(--surface-2); color:var(--accent); }
+  button.hub-select-option:disabled { color:var(--text-dim); cursor:default; }
+  .toolbar .hub-select { width:auto; min-width:160px; flex:0 1 220px; }
+  .btn,button.primary,.ghost,.okbtn,.danger { border-radius:8px; padding:9px 12px; font-size:.82rem; font-weight:700; } .btn,button.primary { background:var(--accent); color:#fff; } .btn[style*="color"],button.primary[style*="color"] { color:#fff !important; } .btn:hover,button.primary:hover { background:var(--accent-hover); } .ghost { background:#fff; color:var(--accent); border-color:var(--border); } .ghost:hover { background:var(--surface-2); border-color:#cfc8bd; } .okbtn { background:var(--green-soft); color:var(--green); border-color:transparent; } .danger { background:#fff; color:var(--red); border-color:#f1c8c5; }
+  .btn.sm,.ghost.sm,.okbtn.sm,.danger.sm { padding:7px 10px; font-size:.78rem; }
+  .toolbar { gap:10px; margin-bottom:14px; } .toolbar input,.toolbar select { width:auto; } .toolbar select { min-width:160px; }
+  table { font-size:.82rem; } th { background:var(--surface-2); color:#716b65; font-size:.66rem; font-weight:800; padding:10px 12px; border-bottom-color:var(--border); } td { padding:11px 12px; border-bottom-color:var(--border); } tr[onclick]:hover td { background:var(--surface-2); }
+  .tag { background:var(--surface-2); border-color:transparent; color:#716b65; border-radius:999px; padding:3px 8px; } .tag.svc { color:var(--accent); border-color:transparent; background:var(--accent-soft); }
+  .pill { font-size:.64rem; padding:4px 8px; } .p-Active,.p-Green,.p-Valid,.p-Paid { background:var(--green-soft); color:var(--green); } .p-Extension,.p-Partial,.p-Open,.p-Hold,.p-Completed { background:var(--blue-soft); color:var(--blue); } .p-OnHold,.p-Expiring,.p-Unpaid { background:#fff7e7; color:#a66b00; } .p-Cancelled,.p-Void,.p-Red,.p-Expired,.p-Overdue { background:var(--red-soft); color:var(--red); }
+  .tool-snapshot { padding:18px; } .tool-snapshot-title { color:var(--text); font-size:.9rem; font-weight:800; margin-bottom:14px; } .snapshot-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); } .snapshot-row-3 { grid-template-columns:repeat(3,minmax(0,1fr)); } .snapshot-row-5 { grid-template-columns:repeat(5,minmax(0,1fr)); }
+  .stat { min-height:74px; background:transparent; border:0; border-right:1px solid var(--border); border-radius:0; padding:6px 16px; flex:auto; cursor:pointer; color:inherit; font:inherit; text-align:left; } .stat:hover { border-color:var(--border); } button.stat:hover .l,button.stat:focus-visible .l { color:var(--accent); } button.stat:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; } .stat:nth-child(4n) { border-right:0; } .snapshot-row-5 .stat:nth-child(4n) { border-right:1px solid var(--border); } .snapshot-row-5 .stat:nth-child(5n) { border-right:0; } .stat .n { color:var(--accent); font-size:1.52rem; font-weight:800; } .stat .n.bad { color:var(--red); } .stat .n.ok { color:var(--green); } .stat .n.blue { color:var(--blue); } .stat .l { color:#716b65; font-size:.66rem; font-weight:800; margin-top:2px; }
+  .work-unit-head { margin:-2px 0 12px; padding-bottom:14px; border-bottom:1px solid var(--border); } .work-unit-head h2 { margin:0 0 3px; } .work-unit-head .sub { margin:0; }
+  .register-card { padding:0; overflow-x:auto; }
+  .register-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:16px 18px; border-bottom:1px solid var(--border); }
+  .register-head h2 { margin:0 0 3px; } .register-head .sub { margin:0; }
+  .onsite-card { padding:0; overflow:hidden; }
+  .onsite-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:16px 18px; border-bottom:1px solid var(--border); }
+  .onsite-title b { display:block; color:var(--text); font-size:.9rem; } .onsite-title span { display:block; margin-top:3px; color:var(--text-dim); font-size:.78rem; }
+  .onsite-actions { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+  .onsite-meta { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); padding:12px 18px; border-bottom:1px solid var(--border); }
+  .onsite-meta > div { padding:0 14px; color:var(--text-dim); font-size:.78rem; border-right:1px solid var(--border); } .onsite-meta > div:first-child { padding-left:0; } .onsite-meta > div:last-child { padding-right:0; border-right:0; } .onsite-meta b { display:block; margin-top:2px; color:var(--text); font-size:.84rem; }
+  .report-select-row { display:flex; align-items:flex-end; gap:10px; margin-bottom:14px; } .report-select-row > div { flex:0 1 360px; } .report-select-row label { margin-top:0; }
+  .report-result-card { padding:0; overflow-x:auto; } .report-result-card table { min-width:680px; }
+  .audit-table { width:100%; min-width:680px; table-layout:fixed; } .audit-table th:nth-child(1) { width:28%; } .audit-table th:nth-child(2) { width:18%; } .audit-table th:nth-child(3) { width:24%; } .audit-table th:nth-child(4) { width:30%; }
+  .audit-action { color:var(--accent); font-weight:800; } .audit-action.created { color:var(--green); } .audit-action.deleted { color:var(--red); }
+  .alert-icon { width:18px; height:18px; flex:0 0 18px; color:var(--accent); stroke-width:2; } .alarm-type { display:inline-flex; align-items:center; gap:7px; } .alarm-type svg { width:16px; height:16px; color:var(--accent); stroke-width:2; }
+  .alert { width:100%; background:#fff; border:0; border-bottom:1px solid var(--border); border-radius:0; padding:13px 0; margin:0; color:var(--text); font:inherit; text-align:left; } .alert:last-child { border-bottom:0; } .alert:hover,.alert:focus-visible { background:var(--surface-2); outline:none; } .alert.expiring { border-color:var(--border); } .alert.expired { background:#fff; border-color:var(--border); } .alert .ico { font-size:1rem; }
+  .empty { border:1px dashed #ded8cf; border-radius:8px; padding:30px 20px; color:#817970; font-size:.88rem; } .empty.empty-clear { display:flex; align-items:center; justify-content:center; gap:12px; min-height:88px; border:0; padding:12px 0; text-align:left; } .empty-clear svg { width:24px; height:24px; flex:0 0 auto; color:var(--green); stroke-width:2; } .empty-clear strong { display:block; color:var(--text); font-size:.9rem; margin-bottom:2px; } .empty-clear span { display:block; }
+  .card .empty,td .empty { border:0; }
+  .table-empty-state { min-height:128px; display:flex; align-items:center; justify-content:center; text-align:center; } .table-empty-state strong { display:block; color:var(--text); font-size:.9rem; margin-bottom:3px; } .table-empty-state span { display:block; } .empty-actions { display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  .snapshot-row .stat:nth-child(n+5) { border-top:1px solid var(--border); padding-top:14px; } .snapshot-row-5 .stat:nth-child(n+5) { border-top:0; padding-top:6px; } .sec { border-top-color:var(--border); }
+  dialog#modal { background:#fff; border-color:var(--border); border-radius:12px; color:var(--text); box-shadow:0 12px 30px rgba(23,23,23,.12); } dialog#modal::backdrop { background:rgba(23,23,23,.38); } .modal-h,.modal-f { border-color:var(--border); } .modal-h .x { color:var(--text-dim); }
+  #toast { background:#fff; border-color:var(--border); border-radius:8px; color:var(--accent); box-shadow:0 12px 30px rgba(23,23,23,.12); } #toast.ok { border-color:#b9e4d0; color:var(--green); } #toast.bad { border-color:#efaaa7; color:var(--red); }
+  .gate .card { background:#fff; } .gate .brand-logo { width:28px; height:28px; margin:0 auto 16px; color:var(--accent); } .gbtn { border:1px solid var(--border); border-radius:8px; }
+  #v-jobs > .card,#v-invoices > .card,#v-personnel > .card,#v-greentag > .card,#v-onsite > .card,#v-audit > .card { overflow-x:auto; }
+  @media (max-width:900px) { .snapshot-row { grid-template-columns:repeat(2,minmax(0,1fr)); } .stat:nth-child(2n),.snapshot-row-5 .stat:nth-child(2n) { border-right:0; } .snapshot-row-5 .stat:nth-child(odd) { border-right:1px solid var(--border); } .stat:nth-child(n+3),.snapshot-row-5 .stat:nth-child(n+3) { border-top:1px solid var(--border); padding-top:14px; } .snapshot-row-5 .stat:last-child { grid-column:1/-1; border-right:0; } }
+  @media (max-width:680px) { #app { padding:18px 16px 0; } .topbar { align-items:flex-start; gap:12px; } .brand-sub { display:none; } nav { gap:20px; margin-bottom:18px; } main { padding-bottom:56px; } .section-head,.register-head,.onsite-card-head { align-items:flex-start; flex-direction:column; } .section-actions,.onsite-actions { width:100%; } .section-actions button,.onsite-actions button { flex:1; } .toolbar { align-items:stretch; } .toolbar input,.toolbar select,.toolbar .hub-select { width:100%; } .report-select-row { align-items:stretch; flex-direction:column; } .report-select-row > div { width:100%; flex:auto; } .snapshot-row { grid-template-columns:repeat(2,minmax(0,1fr)); } .stat { padding:6px 12px; } .onsite-meta { grid-template-columns:1fr; gap:9px; } .onsite-meta > div,.onsite-meta > div:first-child { padding:0; border-right:0; } .row { gap:10px; } .hub-select-menu { max-height:min(260px,45vh); } button.hub-select-option { min-height:44px; } }
 </style>
 </head>
 <body>
+
+<script>
+  if (window.self !== window.top) document.body.classList.add('embedded');
+</script>
 
 <!-- ══════════ GATE 0 · SUPABASE CONFIG ══════════ -->
 <div class="gate" id="gateConfig" style="display:none;">
@@ -185,10 +261,10 @@
 <div id="app" style="display:none;">
   <header class="topbar">
     <div class="brand-block">
-      <div class="brand-logo">HG</div>
+      <div class="brand-logo" aria-hidden="true"><i data-lucide="badge-check"></i></div>
       <div>
-        <div class="brand-name">Scaffold &amp; Green Tag</div>
-        <div class="brand-sub">Supabase edition · Rental · Install · Green Tag Endorsement</div>
+        <div class="brand-name">Scaffold &amp; Green Tag <span class="tool-live">Live</span></div>
+        <div class="brand-sub">Manage scaffold jobs, inspections, material returns, and green-tag action.</div>
       </div>
     </div>
     <div class="user-pill">
@@ -232,8 +308,8 @@ var BUCKET = 'scaffold';
 // ═══════════════════════════ STATE (mirror of GAS bootstrap DB) ═══════════════════════════
 var DB = null, CUR = 'dash';
 var TABS = [
-  ['dash','📊 Dashboard'],['jobs','🏗 Jobs'],['onsite','📦 Onsite'],['greentag','🟢 Green Tag'],
-  ['invoices','🧾 Invoices'],['personnel','🪪 Personnel'],['reports','📈 Reports'],['audit','🕓 Audit']
+  ['dash','Overview'],['jobs','Jobs'],['onsite','Onsite'],['greentag','Green Tag'],
+  ['invoices','Invoices'],['personnel','Personnel'],['reports','Reports'],['audit','Audit']
 ];
 var SERVICE_LABEL = {Aluminium:'Aluminium mobile', Customized:'Customized system', GreenTag:'Green tag only'};
 var SCOPE_LABEL = {Full:'Full (rental+install+green tag)', RentalOnly:'Rental only (client installs)', EndorseOnly:'Endorse only'};
@@ -269,6 +345,40 @@ function toast(html, bad){ var t=el('toast'); t.innerHTML=html; t.className=bad?
   clearTimeout(t._t); if(html.indexOf('spin')<0) t._t=setTimeout(function(){t.style.display='none';},2600); }
 function fail(e){ toast((e&&e.message?e.message:String(e)), true); }
 function showMsg(id,t,ok){ var m=el(id); m.textContent=t; m.className='msg show '+(ok?'ok':'err'); setTimeout(function(){m.classList.remove('show');},4500); }
+function closeHubSelects(except){
+  document.querySelectorAll('.hub-select.open').forEach(function(wrap){ if(wrap!==except){ wrap.classList.remove('open','open-up'); var trigger=wrap.querySelector('.hub-select-trigger'); if(trigger) trigger.setAttribute('aria-expanded','false'); } });
+}
+function syncHubSelects(root){ (root||document).querySelectorAll('select[data-hub-select]').forEach(function(select){ if(select._hubSelectSync) select._hubSelectSync(); }); }
+function initHubSelects(root){
+  var scope=root||document, selects=[];
+  if(scope.nodeType===1 && scope.matches('select:not([data-hub-select])')) selects.push(scope);
+  if(scope.querySelectorAll) selects=selects.concat(Array.prototype.slice.call(scope.querySelectorAll('select:not([data-hub-select])')));
+  selects.forEach(function(select){
+    var wrap=document.createElement('div'); wrap.className='hub-select'; select.parentNode.insertBefore(wrap,select); wrap.appendChild(select);
+    select.dataset.hubSelect='true'; select.classList.add('hub-select-native'); select.tabIndex=-1; select.setAttribute('aria-hidden','true');
+    var trigger=document.createElement('button'); trigger.type='button'; trigger.className='hub-select-trigger'; trigger.setAttribute('aria-haspopup','listbox'); trigger.setAttribute('aria-expanded','false');
+    var label=wrap.parentElement&&wrap.parentElement.querySelector('label'); if(label) trigger.setAttribute('aria-label',label.textContent.trim());
+    var menu=document.createElement('div'); menu.className='hub-select-menu'; menu.setAttribute('role','listbox'); wrap.appendChild(trigger); wrap.appendChild(menu);
+    function sync(){
+      var selected=select.options[select.selectedIndex]; trigger.textContent=selected?selected.textContent:'Select'; trigger.disabled=select.disabled; menu.innerHTML='';
+      Array.prototype.forEach.call(select.options,function(option){
+        var item=document.createElement('button'); item.type='button'; item.className='hub-select-option'+(option.selected?' selected':''); item.textContent=option.textContent; item.disabled=option.disabled; item.setAttribute('role','option'); item.setAttribute('aria-selected',option.selected?'true':'false');
+        item.addEventListener('click',function(event){ event.stopPropagation(); select.value=option.value; select.dispatchEvent(new Event('change',{bubbles:true})); closeHubSelects(); }); menu.appendChild(item);
+      });
+    }
+    select._hubSelectSync=sync; select.addEventListener('change',sync); new MutationObserver(sync).observe(select,{childList:true,subtree:true,attributes:true});
+    trigger.addEventListener('click',function(event){
+      event.stopPropagation(); var open=!wrap.classList.contains('open'); closeHubSelects(wrap); sync();
+      if(open){ var rect=trigger.getBoundingClientRect(), estimated=Math.min(260,menu.children.length*44+10); wrap.classList.toggle('open-up',window.innerHeight-rect.bottom-16<estimated&&rect.top>window.innerHeight-rect.bottom); }
+      else wrap.classList.remove('open-up');
+      wrap.classList.toggle('open',open); trigger.setAttribute('aria-expanded',open?'true':'false');
+    }); sync();
+  });
+}
+function startHubSelects(){ initHubSelects(document); new MutationObserver(function(mutations){ mutations.forEach(function(m){ m.addedNodes.forEach(function(node){ if(node.nodeType===1) initHubSelects(node); }); }); }).observe(document.body,{childList:true,subtree:true}); }
+document.addEventListener('DOMContentLoaded',startHubSelects);
+document.addEventListener('pointerdown',function(e){ if(!e.target.closest('.hub-select')) closeHubSelects(); },true);
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeHubSelects(); });
 function photoStrip(str){ if(!str) return ''; var parts=String(str).split(',').map(function(u){return u.trim();}).filter(Boolean);
   if(!parts.length) return '';
   return '<div class="photos">'+parts.map(function(u){ var url=signedUrlOf(u); return '<a href="'+esc(url)+'" target="_blank"><img src="'+esc(url)+'"></a>'; }).join('')+'</div>'; }
@@ -566,57 +676,57 @@ function renderDash(){
     ['greenTagDue','Green tag due','bad',function(){show('greentag');}],
     ['itemsDeployed','Items deployed (onsite)','blue',function(){show('onsite');}],
     ['collectionDue','Collection due','bad',function(){show('onsite');}],
-    ['outstanding','Outstanding','bad',function(){show('invoices');},true],
-    ['collectedThisMonth','Collected this month','ok',null,true],
     ['certExpiring','Certs expiring','bad',function(){show('personnel');}]
   ];
-  var html='<h2>Dashboard</h2><div class="row" style="margin-bottom:16px">';
+  var html='<div class="section-head"><div><div class="section-title">Scaffold operations overview</div><div class="section-meta">Review green-tag action, onsite material, collections, and commercial exposure.</div></div></div>';
+  html+='<div class="card tool-snapshot"><div class="tool-snapshot-title">Scaffold Snapshot</div><div class="snapshot-row snapshot-row-5">';
   cards.forEach(function(c,i){
     var val=c[4]?rm(s[c[0]]):s[c[0]];
-    html+='<div class="stat" onclick="(window._dc'+i+'||function(){})()"><div class="n '+(c[2]||'')+'">'+val+'</div><div class="l">'+c[1]+'</div></div>';
+    html+='<button type="button" class="stat" aria-label="Open '+esc(c[1])+'" onclick="(window._dc'+i+'||function(){})()"><div class="n '+(c[2]||'')+'">'+val+'</div><div class="l">'+c[1]+'</div></button>';
     window['_dc'+i]=c[3];
   });
-  html+='</div>';
-  html+='<div class="card"><h3>Action list — '+a.length+'</h3>';
-  if(!a.length) html+='<div class="empty">All clear. No green tags due, no overdue invoices, no cert expiries. 👍</div>';
+  html+='</div></div>';
+  html+='<div class="card"><div class="work-unit-head"><h2>Needs attention</h2><div class="sub">Green tags, collections, invoices, and certificates requiring operational follow-up.</div></div>';
+  if(!a.length) html+='<div class="empty empty-clear"><i data-lucide="shield-check" aria-hidden="true"></i><div><strong>All clear</strong><span>No green tags, collections, invoices, or certificates need action.</span></div></div>';
   else html+=a.map(function(al){
-    var ico={greentag:'🟢',collection:'🚚',job:'🏗',material:'📦',invoice:'🧾',cert:'🪪'}[al.kind]||'•';
-    return '<div class="alert '+al.level+'" onclick="App.alertJump(\''+al.kind+'\',\''+al.id+'\')"><span class="ico">'+ico+'</span>'+
-      '<div style="flex:1"><strong>'+esc(al.who)+'</strong></div><div>'+esc(al.msg)+'</div></div>';
+    var ico={greentag:'badge-check',collection:'truck',job:'briefcase',material:'package',invoice:'receipt',cert:'badge-check'}[al.kind]||'circle-alert';
+    return '<button type="button" class="alert '+al.level+'" onclick="App.alertJump(\''+al.kind+'\',\''+al.id+'\')"><i data-lucide="'+ico+'" class="alert-icon" aria-hidden="true"></i>'+
+      '<span style="flex:1"><strong>'+esc(al.who)+'</strong></span><span>'+esc(al.msg)+'</span></button>';
   }).join('');
   html+='</div>';
-  html+='<div class="row"><div class="stat" style="cursor:default"><div class="n blue">'+rm(s.billedThisMonth)+'</div><div class="l">Billed this month</div></div>'+
-    '<div class="stat" style="cursor:default"><div class="n">'+s.quotes+'</div><div class="l">Open quotes</div></div>'+
-    '<div class="stat" style="cursor:default"><div class="n">'+(s.onHold||0)+'</div><div class="l">On-hold</div></div>'+
+  html+='<div class="card tool-snapshot"><div class="tool-snapshot-title">Commercial Snapshot</div><div class="snapshot-row snapshot-row-5"><div class="stat" style="cursor:default"><div class="n blue">'+rm(s.billedThisMonth)+'</div><div class="l">Billed this month</div></div>'+
+    '<div class="stat" style="cursor:default"><div class="n bad">'+rm(s.outstanding)+'</div><div class="l">Outstanding</div></div>'+
+    '<div class="stat" style="cursor:default"><div class="n ok">'+rm(s.collectedThisMonth)+'</div><div class="l">Collected this month</div></div>'+
     '<div class="stat" style="cursor:default"><div class="n bad">'+s.overdueCount+'</div><div class="l">Overdue invoices · '+rm(s.overdueAmt)+'</div></div>'+
-    '<div class="stat" style="cursor:default"><div class="n">'+s.totalJobs+'</div><div class="l">Total jobs (all time)</div></div></div>';
+    '<div class="stat" style="cursor:default"><div class="n">'+s.quotes+'</div><div class="l">Open quotes</div></div></div></div>';
   // scf_alarms view — the same list the daily reminder email would send
-  html+='<div class="card" id="alarmsCard"><h3>Daily reminder digest <span class="muted" style="font-size:12px">(scf_alarms — sent daily by the alarms Edge Function)</span></h3>'+
+  html+='<div class="card" id="alarmsCard"><div class="work-unit-head"><h2>Daily reminder digest</h2><div class="sub">Items included in the scheduled scaffold reminder email.</div></div>'+
     '<div id="alarmsBody" class="loading"><span class="spin"></span> Loading…</div></div>';
   el('v-dash').innerHTML=html;
+  if(window.lucide) window.lucide.createIcons();
   loadAlarms();
 }
 async function loadAlarms(){
   var r = await sb.from('scf_alarms').select('*').order('due_date');
   if(r.error){ el('alarmsBody').innerHTML='<div class="empty">'+esc(r.error.message)+'</div>'; return; }
-  if(!r.data.length){ el('alarmsBody').innerHTML='<div class="empty">No reminders due. Nothing would be emailed today.</div>'; return; }
-  var ico={greentag:'🟢',collection:'🚚',invoice:'🧾',cert:'🪪'};
+  if(!r.data.length){ el('alarmsBody').innerHTML='<div class="empty empty-clear"><i data-lucide="shield-check" aria-hidden="true"></i><div><strong>All clear</strong><span>No scaffold reminders need action right now.</span></div></div>'; if(window.lucide) window.lucide.createIcons(); return; }
+  var ico={greentag:'badge-check',collection:'truck',invoice:'receipt',cert:'badge-check'};
   el('alarmsBody').innerHTML='<table><thead><tr><th>Type</th><th>Ref</th><th>Detail</th><th>Due</th><th>Recipient</th></tr></thead><tbody>'+
-    r.data.map(function(al){ return '<tr><td>'+(ico[al.alarm_type]||'•')+' '+esc(al.alarm_type)+'</td><td><b>'+esc(al.ref)+'</b></td>'+
+    r.data.map(function(al){ return '<tr><td><span class="alarm-type"><i data-lucide="'+(ico[al.alarm_type]||'circle-alert')+'" aria-hidden="true"></i>'+esc(al.alarm_type)+'</span></td><td><b>'+esc(al.ref)+'</b></td>'+
       '<td class="muted">'+esc(al.detail)+'</td><td>'+esc(dateOnly(al.due_date))+'</td><td class="muted">'+esc(al.recipient||'—')+'</td></tr>'; }).join('')+'</tbody></table>';
+  if(window.lucide) window.lucide.createIcons();
 }
 
 // ═══════════════════════════ JOBS ═══════════════════════════
 function renderJobs(){
   var q=(window._jq||'').toLowerCase(), fs=window._jfs||'', fst=window._jfst||'';
   var rows=DB.engagements.slice().sort(function(a,b){return (b.createdAt||'').localeCompare(a.createdAt||'');});
-  var html='<h2>Jobs <button class="btn sm" style="float:right;color:#0a0e1a" onclick="App.openJob()">+ New Job</button></h2>';
+  var html='<div class="section-head"><div><div class="section-title">Jobs</div><div class="section-meta">Manage scaffold jobs, green-tag coverage, deployed material, and commercial status.</div></div><div class="section-actions"><button class="ghost sm" onclick="exportJobsExcel()">Export Excel</button><button class="btn sm" onclick="App.openJob()">+ New job</button></div></div>';
   html+='<div class="toolbar"><input placeholder="Search client / job / site…" value="'+esc(window._jq||'')+'" oninput="window._jq=this.value;renderJobs()" style="min-width:220px">'+
     '<select onchange="window._jfs=this.value;renderJobs()"><option value="">All services</option>'+
       Object.keys(SERVICE_LABEL).map(function(k){return opt(k,SERVICE_LABEL[k],fs);}).join('')+'</select>'+
     '<select onchange="window._jfst=this.value;renderJobs()"><option value="">All status</option>'+
-      STATUS_LIST.map(function(k){return opt(k[0],k[1],fst);}).join('')+'</select>'+
-    '<button class="ghost sm" onclick="exportJobsExcel()">⬇ Export Excel</button></div>';
+      STATUS_LIST.map(function(k){return opt(k[0],k[1],fst);}).join('')+'</select></div>';
   var list=rows.filter(function(e){
     if(fs && e.serviceType!==fs) return false;
     if(fst && e.status!==fst) return false;
@@ -624,7 +734,11 @@ function renderJobs(){
     return true;
   });
   html+='<div class="card" style="padding:0"><table><thead><tr><th>Job</th><th>Client / Site</th><th>Service</th><th>Period</th><th>Green tag</th><th>Material</th><th class="right">Charges</th><th>Status</th></tr></thead><tbody>';
-  if(!list.length) html+='<tr><td colspan="8"><div class="empty">No jobs. Click <b>+ New Job</b>.</div></td></tr>';
+  if(!list.length){
+    var filtered=!!(q||fs||fst);
+    html+='<tr><td colspan="8"><div class="empty table-empty-state"><div><strong>'+(filtered?'No jobs match these filters':'No scaffold jobs added')+'</strong><span>'+(filtered?'Adjust the search or clear the filters to view other jobs.':'Add the first scaffold job to begin tracking material, inspections, and charges.')+'</span><div class="empty-actions">'+
+      (filtered?'<button class="ghost sm" onclick="clearJobFilters()">Clear filters</button>':'<button class="btn sm" onclick="App.openJob()">+ New job</button>')+'</div></div></div></td></tr>';
+  }
   list.forEach(function(e){
     var g=e.greenTagDue, gtxt='—';
     if(g&&g.applies){ gtxt = g.days<0 ? '<span class="short">overdue '+(-g.days)+'d</span>' : (g.never?'<span class="short">first due</span>':'in '+g.days+'d'); }
@@ -641,6 +755,9 @@ function renderJobs(){
   html+='</tbody></table></div>';
   el('v-jobs').innerHTML=html;
 }
+function clearJobFilters(){
+  window._jq=''; window._jfs=''; window._jfst=''; renderJobs();
+}
 
 // ═══════════════════════════ ONSITE ═══════════════════════════
 function renderOnsite(){
@@ -648,26 +765,23 @@ function renderOnsite(){
   var jobs=DB.engagements.filter(function(e){return ACTIVE_STATUSES.indexOf(e.status)>=0&&e.materialOut>0;})
     .sort(function(a,b){ var x=(a.collectionDue&&a.collectionDue.days); var y=(b.collectionDue&&b.collectionDue.days); if(x==null)x=99999; if(y==null)y=99999; return x-y; });
   var totalItems=jobs.reduce(function(s,e){return s+e.materialOut;},0);
-  var html='<h2>Materials Onsite — rental &amp; collection</h2>'+
-    '<div class="hint" style="margin-bottom:12px">Scaffold material deployed to clients under rental. The <b>return date</b> on each job drives the collection reminder. Collect within '+dueSoon+' days = flagged.</div>';
-  html+='<div class="row" style="margin-bottom:14px">'+
+  var html='<div class="section-head"><div><div class="section-title">Materials onsite</div><div class="section-meta">Track deployed scaffold, return dates, and collection action across active jobs.</div></div></div>';
+  html+='<div class="card tool-snapshot"><div class="tool-snapshot-title">Onsite Material Snapshot</div><div class="snapshot-row snapshot-row-3">'+
     '<div class="stat" style="cursor:default"><div class="n blue">'+totalItems+'</div><div class="l">Total items deployed</div></div>'+
     '<div class="stat" style="cursor:default"><div class="n">'+jobs.length+'</div><div class="l">Jobs with material onsite</div></div>'+
-    '<div class="stat" style="cursor:default"><div class="n bad">'+DB.stats.collectionDue+'</div><div class="l">Collection due / overdue</div></div></div>';
-  if(!jobs.length){ el('v-onsite').innerHTML=html+'<div class="card"><div class="empty">No scaffold material deployed onsite right now. Kit out a job from Jobs → open → Kit out.</div></div>'; return; }
+    '<div class="stat" style="cursor:default"><div class="n bad">'+DB.stats.collectionDue+'</div><div class="l">Collection due / overdue</div></div></div></div>';
+  if(!jobs.length){ el('v-onsite').innerHTML=html+'<div class="card"><div class="empty table-empty-state"><div><strong>No scaffold material onsite</strong><span>Open a job and use Kit out to record material deployed to site.</span><div class="empty-actions"><button class="ghost sm" onclick="show(\'jobs\')">Open jobs</button></div></div></div></div>'; return; }
   jobs.forEach(function(e){
     var c=e.collectionDue||{};
     var dtxt = (c.noDate||c.days==null) ? '<span class="pill p-Quote">no return date set</span>'
       : (c.days<0?'<span class="short">collect OVERDUE '+(-c.days)+'d</span>':(c.days===0?'<span class="short">collect TODAY</span>':(c.days<=dueSoon?'<span class="short">collect in '+c.days+'d</span>':'collect in '+c.days+'d')));
-    html+='<div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">'+
-      '<b style="font-size:15px">'+esc(e.jobNo)+' · '+esc(e.clientCompany)+'</b>'+(e.siteName?'<span class="tag">'+esc(e.siteName)+'</span>':'')+
-      '<span style="margin-left:auto"></span>'+
-      '<button class="btn sm" style="color:#0a0e1a" onclick="App.openJobDetail(\''+e.id+'\')">Open job</button>'+
+    html+='<div class="card onsite-card"><div class="onsite-card-head"><div class="onsite-title"><b>'+esc(e.jobNo)+' · '+esc(e.clientCompany)+'</b><span>'+(e.siteName?esc(e.siteName):'No site name')+'</span></div><div class="onsite-actions">'+
+      '<button class="btn sm" onclick="App.openJobDetail(\''+e.id+'\')">Open job</button>'+
       '<button class="ghost sm" onclick="App.openSignoff(\''+e.id+'\',\'return\')">Collection sign-off</button>'+
-      '<button class="okbtn sm" onclick="App.returnAll(\''+e.id+'\')">✓ Collected all</button></div>'+
-      '<div class="row" style="margin-bottom:8px"><div>Rented out: <b>'+esc(e.startDate||'—')+'</b></div>'+
-      '<div>Return by: <b>'+esc(e.expectedEndDate||'—')+'</b> &nbsp;'+dtxt+'</div>'+
-      '<div>Deployed: <b>'+e.materialOut+'</b> item(s)</div></div>';
+      '<button class="okbtn sm" onclick="App.returnAll(\''+e.id+'\')">Collected all</button></div></div>'+
+      '<div class="onsite-meta"><div>Rented out<b>'+esc(e.startDate||'—')+'</b></div>'+
+      '<div>Return by<b>'+esc(e.expectedEndDate||'—')+' '+dtxt+'</b></div>'+
+      '<div>Deployed<b>'+e.materialOut+' item(s)</b></div></div>';
     html+='<table><thead><tr><th>Code</th><th>Item / spec</th><th class="right">Out</th><th class="right">Back</th><th class="right">To collect</th></tr></thead><tbody>';
     DB.materials.filter(function(m){return m.engagementId===e.id&&m.qtyOut>0;}).forEach(function(m){ var sh=Math.max(0,m.qtyOut-m.qtyReturned);
       html+='<tr'+(sh>0?'':' style="opacity:.5"')+'><td>'+(m.code?'<span class="tag">'+esc(m.code)+'</span>':'—')+'</td>'+
@@ -684,9 +798,9 @@ function renderOnsite(){
 function renderGreenTag(){
   var active=DB.engagements.filter(function(e){return e.greenTagDue&&e.greenTagDue.applies;})
     .sort(function(a,b){return (a.greenTagDue.days)-(b.greenTagDue.days);});
-  var html='<h2>Green Tag — weekly endorsement</h2>';
-  html+='<div class="card"><h3>Scaffold onsite — inspection status</h3>';
-  if(!active.length) html+='<div class="empty">No active scaffold needing green tag right now.</div>';
+  var html='<div class="section-head"><div><div class="section-title">Green Tag</div><div class="section-meta">Review weekly endorsement status and maintain the inspection record.</div></div></div>';
+  html+='<div class="card register-card"><div class="register-head"><div><h2>Inspection status</h2><div class="sub">Active scaffold requiring a current green-tag endorsement.</div></div></div>';
+  if(!active.length) html+='<div class="empty empty-clear"><i data-lucide="shield-check" aria-hidden="true"></i><div><strong>All clear</strong><span>No active scaffold needs green-tag action right now.</span></div></div>';
   else { html+='<table><thead><tr><th>Job</th><th>Client / Site</th><th>Last inspection</th><th>Result</th><th>Next due</th><th></th></tr></thead><tbody>';
     active.forEach(function(e){
       var g=e.greenTagDue;
@@ -694,13 +808,13 @@ function renderGreenTag(){
       html+='<tr><td><b>'+esc(e.jobNo)+'</b></td><td>'+esc(e.clientCompany)+(e.siteName?' · '+esc(e.siteName):'')+'</td>'+
         '<td>'+esc(e.lastInspection||'—')+'</td><td>'+(e.lastResult?pill(e.lastResult):'—')+'</td>'+
         '<td>'+esc(g.due||'—')+' '+dtxt+'</td>'+
-        '<td class="right"><button class="btn sm" style="color:#0a0e1a" onclick="App.openInspection(\''+e.id+'\')">+ Inspect</button></td></tr>';
+        '<td class="right"><button class="btn sm" onclick="App.openInspection(\''+e.id+'\')">+ Inspect</button></td></tr>';
     });
     html+='</tbody></table>'; }
   html+='</div>';
   var ins=DB.inspections.slice().sort(function(a,b){return (b.inspectDate||'').localeCompare(a.inspectDate||'');}).slice(0,60);
-  html+='<div class="card"><div class="toolbar" style="justify-content:space-between;margin-bottom:6px"><h3 style="margin:0">Inspection history</h3><button class="ghost sm" onclick="exportInspectionsExcel()">⬇ Export Excel</button></div>';
-  if(!ins.length) html+='<div class="empty">No inspections logged yet.</div>';
+  html+='<div class="card register-card"><div class="register-head"><div><h2>Inspection history</h2><div class="sub">Most recent scaffold inspections and endorsement results.</div></div><button class="ghost sm" onclick="exportInspectionsExcel()">Export Excel</button></div>';
+  if(!ins.length) html+='<div class="empty table-empty-state"><div><strong>No inspections logged</strong><span>Completed green-tag inspections will appear here.</span></div></div>';
   else { html+='<table><thead><tr><th>Date</th><th>Job</th><th>Inspector</th><th>Result</th><th>Tag #</th><th>Findings</th><th></th></tr></thead><tbody>';
     ins.forEach(function(i){ var e=byId(DB.engagements,i.engagementId)||{};
       html+='<tr><td>'+esc(i.inspectDate)+'</td><td><b>'+esc(e.jobNo||'?')+'</b><br><span class="muted">'+esc(e.clientCompany||'')+'</span></td>'+
@@ -711,17 +825,21 @@ function renderGreenTag(){
     html+='</tbody></table>'; }
   html+='</div>';
   el('v-greentag').innerHTML=html;
+  if(window.lucide) window.lucide.createIcons();
 }
 
 // ═══════════════════════════ INVOICES ═══════════════════════════
 function renderInvoices(){
   var q=(window._iq||'').toLowerCase();
   var invs=DB.invoices.slice().sort(function(a,b){return (b.invDate||'').localeCompare(a.invDate||'');});
-  var html='<h2>Invoices &amp; Payments <button class="btn sm" style="float:right;color:#0a0e1a" onclick="App.openInvoice()">+ New Invoice</button></h2>';
-  html+='<div class="toolbar"><input placeholder="Search invoice / client…" value="'+esc(window._iq||'')+'" oninput="window._iq=this.value;renderInvoices()" style="min-width:220px"><button class="ghost sm" onclick="exportInvoicesExcel()">⬇ Export Excel</button></div>';
-  html+='<div class="card" style="padding:0"><table><thead><tr><th>Invoice</th><th>Client</th><th>Date / Due</th><th class="right">Total</th><th class="right">Paid</th><th class="right">Balance</th><th>Status</th></tr></thead><tbody>';
+  var html='<div class="section-head"><div><div class="section-title">Invoices &amp; payments</div><div class="section-meta">Track billed value, collections, outstanding balances, and payment status.</div></div><div class="section-actions"><button class="ghost sm" onclick="exportInvoicesExcel()">Export Excel</button><button class="btn sm" onclick="App.openInvoice()">+ New invoice</button></div></div>';
+  html+='<div class="toolbar"><input placeholder="Search invoice / client…" value="'+esc(window._iq||'')+'" oninput="window._iq=this.value;renderInvoices()" style="min-width:220px"></div>';
+  html+='<div class="card register-card"><table><thead><tr><th>Invoice</th><th>Client</th><th>Date / Due</th><th class="right">Total</th><th class="right">Paid</th><th class="right">Balance</th><th>Status</th></tr></thead><tbody>';
   var list=invs.filter(function(i){ if(!q) return true; return (i.invNo+' '+i.clientCompany).toLowerCase().indexOf(q)>=0; });
-  if(!list.length) html+='<tr><td colspan="7"><div class="empty">No invoices yet.</div></td></tr>';
+  if(!list.length){
+    html+='<tr><td colspan="7"><div class="empty table-empty-state"><div><strong>'+(q?'No invoices match this search':'No invoices added')+'</strong><span>'+(q?'Clear the search to view other invoice records.':'Create the first invoice to begin tracking scaffold billing and payments.')+'</span>'+
+      (q?'<div class="empty-actions"><button class="ghost sm" onclick="clearInvoiceFilters()">Clear search</button></div>':'')+'</div></div></td></tr>';
+  }
   list.forEach(function(i){
     var st=i.overdue?'Overdue':i.payStatus;
     html+='<tr style="cursor:pointer" onclick="App.openInvoiceDetail(\''+i.id+'\')"><td><b>'+esc(i.invNo)+'</b></td><td>'+esc(i.clientCompany)+'</td>'+
@@ -732,15 +850,14 @@ function renderInvoices(){
   html+='</tbody></table></div>';
   el('v-invoices').innerHTML=html;
 }
+function clearInvoiceFilters(){ window._iq=''; renderInvoices(); }
 
 // ═══════════════════════════ PERSONNEL ═══════════════════════════
 function renderPersonnel(){
   var ppl=DB.personnel.slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
-  var html='<h2>Personnel &amp; Certifications <button class="btn sm" style="float:right;color:#0a0e1a" onclick="App.openPerson()">+ Add Person</button></h2>';
-  html+='<div class="hint" style="margin-bottom:10px">WAH · Scaffold Erector · Scaffold Inspector · OSH Coordinator. The system warns before any cert expires.</div>';
-  html+='<div class="toolbar"><button class="ghost sm" onclick="exportPersonnelExcel()">⬇ Export Excel</button></div>';
-  html+='<div class="card" style="padding:0"><table><thead><tr><th>Name / Role</th><th>Cert</th><th>Cert #</th><th>Issued</th><th>Expiry</th><th>Status</th><th></th></tr></thead><tbody>';
-  if(!ppl.length) html+='<tr><td colspan="7"><div class="empty">No personnel yet. Add your certified staff.</div></td></tr>';
+  var html='<div class="section-head"><div><div class="section-title">Personnel &amp; certifications</div><div class="section-meta">Manage WAH, scaffold, inspection, and OSH certification coverage.</div></div><div class="section-actions"><button class="ghost sm" onclick="exportPersonnelExcel()">Export Excel</button><button class="btn sm" onclick="App.openPerson()">+ Add person</button></div></div>';
+  html+='<div class="card register-card"><table><thead><tr><th>Name / Role</th><th>Certification</th><th>Certificate #</th><th>Issued</th><th>Expiry</th><th>Status</th><th></th></tr></thead><tbody>';
+  if(!ppl.length) html+='<tr><td colspan="7"><div class="empty table-empty-state"><div><strong>No personnel added</strong><span>Add certified staff to monitor competency and expiry status.</span></div></div></td></tr>';
   ppl.forEach(function(p){
     html+='<tr><td><b>'+esc(p.name)+'</b>'+(p.role?'<br><span class="muted">'+esc(p.role)+'</span>':'')+'</td>'+
       '<td>'+esc(CERT_LABEL[p.certType]||p.certType)+'</td><td>'+esc(p.certNo||'—')+'</td>'+
@@ -753,14 +870,23 @@ function renderPersonnel(){
 }
 
 // ═══════════════════════════ AUDIT (shared audit_log) ═══════════════════════════
+function scaffoldAuditMeta(action){
+  var clean=String(action||'Activity').replace(/^SCF\s+/i,'').trim();
+  var parts=clean.split(/\s+/), code=(parts.shift()||'').toUpperCase(), rawSubject=parts.join(' ')||'activity';
+  var subjects={Engagement:'job',Job:'job',Material:'material',Inspection:'inspection',Invoice:'invoice',Payment:'payment',Personnel:'personnel',Person:'person',Settings:'settings',Charge:'charge'};
+  var subject=subjects[rawSubject]||rawSubject.toLowerCase();
+  var verbs={CREATE:'Added',ADD:'Added',UPDATE:'Updated',EDIT:'Updated',DELETE:'Removed',REMOVE:'Removed'};
+  return { label:(verbs[code]||code.charAt(0)+code.slice(1).toLowerCase())+' '+subject, cls:(code==='CREATE'||code==='ADD'?'created':(code==='DELETE'||code==='REMOVE'?'deleted':'updated')) };
+}
 async function renderAudit(){
-  el('v-audit').innerHTML='<h2>Audit Log</h2><div class="card"><div class="empty"><span class="spin"></span> Loading…</div></div>';
+  var heading='<div class="section-head"><div><div class="section-title">Audit log</div><div class="section-meta">Review the latest scaffold changes, who made them, and when.</div></div></div>';
+  el('v-audit').innerHTML=heading+'<div class="card"><div class="empty"><span class="spin"></span> Loading…</div></div>';
   var r = await sb.from('audit_log').select('*').order('at',{ascending:false}).limit(50);
-  if(r.error){ el('v-audit').innerHTML='<h2>Audit Log</h2><div class="card"><div class="empty">'+esc(r.error.message)+'</div></div>'; return; }
+  if(r.error){ el('v-audit').innerHTML=heading+'<div class="card"><div class="empty table-empty-state"><div><strong>Audit log unavailable</strong><span>'+esc(r.error.message)+'</span></div></div></div>'; return; }
   var rows=r.data;
-  var html='<h2>Audit Log <span class="muted" style="font-size:13px">last '+rows.length+' actions</span></h2><div class="card" style="padding:0"><table><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>';
-  if(!rows.length) html+='<tr><td colspan="4"><div class="empty">No activity yet.</div></td></tr>';
-  rows.forEach(function(a){ html+='<tr><td class="muted">'+esc(new Date(a.at).toLocaleString('en-MY'))+'</td><td>'+esc(String(a.user_email||'').split('@')[0])+'</td><td><span class="tag">'+esc(a.action)+'</span></td><td class="muted">'+esc(a.details)+'</td></tr>'; });
+  var html=heading+'<div class="card register-card"><div class="register-head"><div><h2>Recent activity</h2><div class="sub">Showing '+rows.length+' most recent action'+(rows.length===1?'':'s')+' (up to 50).</div></div></div><table class="audit-table"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>';
+  if(!rows.length) html+='<tr><td colspan="4"><div class="empty table-empty-state"><div><strong>No activity yet</strong><span>Scaffold changes will appear here as the team uses the tool.</span></div></div></td></tr>';
+  rows.forEach(function(a){ var meta=scaffoldAuditMeta(a.action); html+='<tr><td class="muted">'+esc(new Date(a.at).toLocaleString('en-MY'))+'</td><td>'+esc(String(a.user_email||'').split('@')[0])+'</td><td><span class="audit-action '+meta.cls+'">'+esc(meta.label)+'</span></td><td class="muted">'+esc(a.details||'No additional detail.')+'</td></tr>'; });
   html+='</tbody></table></div>';
   el('v-audit').innerHTML=html;
 }
@@ -770,13 +896,12 @@ var REPORTS={ revenue:'Revenue by service (this month)', jobs:'Active jobs regis
   material:'Material out — not yet returned', outstanding:'Outstanding & aging', certs:'Certification expiry' };
 function renderReports(){
   var sel=window._rep||'revenue';
-  var html='<h2>Reports</h2><div class="toolbar"><select onchange="window._rep=this.value;renderReports()">'+
-    Object.keys(REPORTS).map(function(k){return opt(k,REPORTS[k],sel);}).join('')+'</select>'+
-    '<button class="ghost sm" onclick="App.printReport()">🖨 Print / PDF</button>'+
-    '<button class="ghost sm" onclick="App.csvReport()">⬇ CSV</button></div>';
-  html+='<div class="card" id="repBody"></div>';
+  var result=buildReport(sel);
+  var html='<div class="section-head"><div><div class="section-title">Reports</div><div class="section-meta">Review, print, or export scaffold operational and commercial registers.</div></div><div class="section-actions"><button class="ghost sm" onclick="App.printReport()">Print / PDF</button><button class="ghost sm" onclick="App.csvReport()">Export CSV</button></div></div>';
+  html+='<div class="report-select-row"><div><label>Report type</label><select onchange="window._rep=this.value;renderReports()">'+
+    Object.keys(REPORTS).map(function(k){return opt(k,REPORTS[k],sel);}).join('')+'</select></div></div>';
+  html+='<div class="card report-result-card" id="repBody">'+result.html+'</div>';
   el('v-reports').innerHTML=html;
-  el('repBody').innerHTML=buildReport(sel).html;
 }
 function buildReport(kind){
   var today=DB.today, ym=today.slice(0,7), head=[], rows=[], title=REPORTS[kind], summary='';
@@ -823,8 +948,8 @@ function buildReport(kind){
     });
     summary=rows.length+' certification record(s)';
   }
-  var html='<div class="hint" style="margin-bottom:8px">'+esc(summary)+'</div><table><thead><tr>'+head.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead><tbody>';
-  if(!rows.length) html+='<tr><td colspan="'+head.length+'"><div class="empty">Nothing to show.</div></td></tr>';
+  var html='<div class="register-head"><div><h2>'+esc(title)+'</h2><div class="sub">'+esc(summary)+'</div></div></div><table><thead><tr>'+head.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead><tbody>';
+  if(!rows.length) html+='<tr><td colspan="'+head.length+'"><div class="empty table-empty-state"><div><strong>No report data</strong><span>There are no records available for this report yet.</span></div></div></td></tr>';
   rows.forEach(function(r){ html+='<tr>'+r.map(function(c,i){return '<td'+(i>=head.length-1&&kind==='revenue'?' class="right"':'')+'>'+esc(c)+'</td>';}).join('')+'</tr>'; });
   html+='</tbody></table>';
   return {html:html, head:head, rows:rows, title:title, summary:summary};
@@ -867,10 +992,11 @@ function exportPersonnelExcel(){
 // ═══════════════════════════ APP — modals + write actions ═══════════════════════════
 var App={
   _files:{},
-  closeModal:function(){ var m=el('modal'); if(m.open) m.close(); App._files={}; },
+  closeModal:function(){ closeHubSelects(); var m=el('modal'); if(m.open) m.close(); App._files={}; },
   openModal:function(title, body, foot){
     el('modalTitle').innerHTML=title; el('modalBody').innerHTML=body; el('modalFoot').innerHTML=foot||'';
     el('modal').showModal();
+    initHubSelects(el('modal')); syncHubSelects(el('modal'));
   },
   drop:function(ev,h){ ev.preventDefault(); ev.currentTarget.classList.remove('over'); App._readFiles(ev.dataTransfer.files,h); },
   pick:function(ev,h){ App._readFiles(ev.target.files,h); },
@@ -1447,6 +1573,7 @@ function printHead(c,label,ref,date){
     '<div style="text-align:right"><h1 style="color:#b8860b">'+esc(label)+'</h1><div class="muted">'+esc(ref)+'<br>'+esc(date||'')+'</div></div></div>';
 }
 
+if(window.lucide) window.lucide.createIcons();
 start();
 </script>
 </body>
