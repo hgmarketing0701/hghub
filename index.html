@@ -1422,6 +1422,7 @@
     grid-template-columns: minmax(0, 1.25fr) minmax(330px, 0.75fr);
     gap: 20px;
     margin-top: 20px;
+    align-items: start;
   }
   .op-card {
     background: #ffffff;
@@ -2127,15 +2128,18 @@
   }
   .activity-row {
     display: grid;
-    grid-template-columns: 54px 40px minmax(0, 1fr) minmax(130px, 0.34fr) 90px;
+    grid-template-columns: 54px 40px minmax(0, 1fr) 90px;
     align-items: center;
     gap: 12px;
     min-height: 72px;
-    padding: 12px 14px;
+    padding: 14px 0;
+    border: 0;
+    border-bottom: 1px solid #ebe7e1;
+    border-radius: 0;
+    background: #ffffff;
   }
-  .activity-row:first-child {
-    background: #f7fbf9;
-    border-color: #dceee7;
+  .activity-row:last-child {
+    border-bottom: 0;
   }
   .activity-time {
     color: #667982;
@@ -2156,15 +2160,14 @@
     font-size: 12px;
     font-weight: 750;
   }
-  .activity-row:first-child .activity-avatar {
-    background: #143d4a;
-    color: #ffffff;
-  }
   .activity-tool {
     color: #0f6c92;
-    font-size: 13px;
-    line-height: 17px;
+    font-size: inherit;
+    line-height: inherit;
     font-weight: 750;
+  }
+  .activity-detail {
+    color: #8b837b;
   }
   .activity-status {
     justify-self: end;
@@ -2178,9 +2181,10 @@
     font-weight: 750;
     text-align: center;
   }
-  .activity-status.updated { background: #e9f8f1; color: #0d7c54; }
-  .activity-status.cleared { background: #fff4d7; color: #9b6a00; }
-  .activity-status.added { background: #fff0ef; color: #c64a44; }
+  .activity-status.updated { background: #eef7fb; color: #0f6c92; }
+  .activity-status.cleared,.activity-status.added { background: #e9f8f1; color: #0d7c54; }
+  .activity-status.removed { background: #fff0ef; color: #c64a44; }
+  #actList,#activityFullList { padding: 0 16px 6px; gap: 0; }
   .tools-head {
     margin: 14px 0 14px;
     align-items: center;
@@ -2274,7 +2278,6 @@
     }
     .activity-snapshot-row .mini-stat + .mini-stat { border-left: 0; }
     .activity-row { grid-template-columns: 54px 40px minmax(0, 1fr) 88px; }
-    .activity-tool { display: none; }
   }
 	  @media (max-width: 860px) {
 		    .content {
@@ -2719,7 +2722,7 @@
               <div class="ops-flow" id="operationsFlow"></div>
             </section>
 
-            <section class="op-card">
+            <section class="op-card activity-home-card">
               <div class="op-card-head">
                 <div>
                   <h2>Recent activity</h2>
@@ -4094,12 +4097,40 @@
 	    if (/inventory|storage|stock/.test(text)) return "Inventory";
 	    return "Operations";
 	  }
+	  function activityActionMeta(r) {
+	    const raw = String((r && r.action) || "Activity update").trim();
+	    const words = raw.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[._-]+/g, " ").replace(/\s+/g, " ").trim().split(" ");
+	    const ignored = new Set(["wkr", "scf", "dsp", "inv", "str", "audit"]);
+	    const verbMap = {
+	      create:["Added","added"], add:["Added","added"], upload:["Uploaded","added"],
+	      delete:["Removed","removed"], remove:["Removed","removed"],
+	      update:["Updated","updated"], edit:["Updated","updated"],
+	      resolve:["Cleared","cleared"], clear:["Cleared","cleared"],
+	      complete:["Completed","cleared"], generate:["Generated","updated"], export:["Exported","updated"]
+	    };
+	    let verb = null;
+	    const subjects = [];
+	    words.forEach(word => {
+	      const key = word.toLowerCase();
+	      if (ignored.has(key)) return;
+	      if (!verb && verbMap[key]) verb = verbMap[key];
+	      else subjects.push(word);
+	    });
+	    if (!verb) verb = ["Updated","updated"];
+	    const subjectMap = {
+	      worker:"worker", workers:"workers", document:"document", docs:"document", permit:"permit",
+	      user:"member", staff:"staff member", material:"material", supplier:"supplier", quotation:"quotation",
+	      tool:"tool", purchase:"purchase", stockout:"delivery note", stock:"stock record", payment:"payment",
+	      stockcount:"stock count", assignment:"assignment", repair:"repair", job:"job", settings:"settings",
+	      inspection:"inspection", invoice:"invoice", person:"person", engagement:"job"
+	    };
+	    const subjectRaw = subjects.join(" ").trim();
+	    const subjectKey = subjectRaw.replace(/\s+/g, "").toLowerCase();
+	    const subject = subjectMap[subjectKey] || subjectRaw.toLowerCase() || "activity";
+	    return { label: verb[0] + " " + subject, status: verb };
+	  }
 	  function activityStatusMeta(r) {
-	    const text = activityText(r).toLowerCase();
-	    if (/resolve|resolved|clear|cleared|complete|completed/.test(text)) return ["Cleared", "cleared"];
-	    if (/add|added|upload|uploaded|create|created/.test(text)) return ["Added", "added"];
-	    if (/draft/.test(text)) return ["Draft", "draft"];
-	    return ["Updated", "updated"];
+	    return activityActionMeta(r).status;
 	  }
 	  function activityMatches(r, filter) {
 	    const text = activityText(r).toLowerCase();
@@ -4171,22 +4202,24 @@
 	    if (!parts.length) return "HG";
 	    return (parts[0][0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
 	  }
+	  function activityActor(email) {
+	    return String(email || "System").split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+	  }
 	  function activityTime(ts) {
 	    try { return new Date(ts).toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", hour12: false }); }
 	    catch (e) { return "--:--"; }
 	  }
 	  function activityHTML(r) {
-	    const actor = (r.user_email || "System").split("@")[0].replace(/[._]/g, " ");
-	    const action = readable(r.action || "Activity update");
-	    const detail = [actor, detailsText(r.details)].filter(Boolean).join(" · ");
+	    const actor = activityActor(r.user_email);
+	    const meta = activityActionMeta(r);
+	    const detail = detailsText(r.details);
 	    const tool = activityToolLabel(r);
-	    const status = activityStatusMeta(r);
+	    const status = meta.status;
 	    return '<div class="op-list-item activity-row">' +
 	      '<span class="activity-time">' + esc(activityTime(r.at)) + '</span>' +
 	      '<span class="activity-avatar">' + esc(activityInitials(r.user_email)) + '</span>' +
-	      '<span class="op-list-main"><span class="op-list-title">' + esc(action) + '</span>' +
-	      '<span class="op-list-sub">' + esc(detail.slice(0, 140)) + '</span></span>' +
-	      '<span class="activity-tool">' + esc(tool) + '</span>' +
+	      '<span class="op-list-main"><span class="op-list-title">' + esc(meta.label) + '</span>' +
+	      '<span class="op-list-sub"><span class="activity-tool">' + esc(tool) + '</span><span class="activity-detail"> · ' + esc(actor) + (detail ? ' · ' + esc(detail.slice(0, 100)) : '') + '</span></span></span>' +
 	      '<span class="activity-status ' + esc(status[1]) + '">' + esc(status[0]) + '</span></div>';
 	  }
 	  function renderActivity(rows) {
