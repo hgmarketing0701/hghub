@@ -187,7 +187,17 @@ The current HG light theme uses these canonical values:
 - Primary operational accent: `#143d4a`
 - Primary hover: `#0e303b`
 
-Dark mode is not part of the current HG Hub redesign contract. It may remain a future tenant capability, but it must not influence current light-tool styling.
+The companion dark theme preserves the same hierarchy rather than reviving the old high-contrast dashboard aesthetic:
+
+- app background: `#101417`
+- primary surface: `#171c20`
+- muted surface: `#1d2328`
+- border: `#30383e`
+- strong text: `#f1f3f2`
+- muted text: `#adb6b8`
+- operational accent: `#4b83a1`
+
+Theme preference is a shell-level choice. Use the operating-system preference on first load, then persist the user's explicit light or dark choice. Semantic status meanings must remain unchanged between themes.
 
 ### Brand Tokens
 
@@ -455,7 +465,7 @@ The shell has:
 
 ### Sidebar
 
-The base sidebar styling is locked. Future changes may add or remove role tools, but must not restyle the sidebar foundation.
+The base sidebar styling is locked. Future changes may add or remove role tools, but must not restyle the sidebar foundation. A compact light/dark theme control may sit with the sidebar utilities above system status.
 
 - expanded width: `248px`
 - collapsed width: `72px`
