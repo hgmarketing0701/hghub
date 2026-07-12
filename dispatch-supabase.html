@@ -4,6 +4,38 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>HG — Daily Job Readiness &amp; Dispatch (Supabase)</title>
+<script>
+  (function () {
+    const key = 'hg_hub_theme';
+    const media = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+    function preference() {
+      try {
+        const saved = localStorage.getItem(key);
+        if (saved === 'light' || saved === 'dark' || saved === 'system') return saved;
+      } catch (e) {}
+      return 'system';
+    }
+    function resolved(value) {
+      return value === 'light' || value === 'dark' ? value : (media && media.matches ? 'dark' : 'light');
+    }
+    function apply(value) {
+      const theme = resolved(value);
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    }
+    apply(preference());
+    window.addEventListener('message', function (event) {
+      if (!event.data || event.data.type !== 'hg-theme-change') return;
+      if (event.data.theme === 'light' || event.data.theme === 'dark') apply(event.data.theme);
+    });
+    window.addEventListener('storage', function (event) { if (event.key === key) apply(preference()); });
+    if (media) {
+      const syncSystem = function () { if (preference() === 'system') apply('system'); };
+      if (media.addEventListener) media.addEventListener('change', syncSystem);
+      else if (media.addListener) media.addListener(syncSystem);
+    }
+  })();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -652,6 +684,72 @@
     font-size: 0.95rem; cursor: pointer; font-family: inherit; }
   .msg { font-size: 0.86rem; margin-top: 10px; min-height: 20px; opacity: 0; transition: opacity 0.2s; }
   .msg.show { opacity: 1; } .msg.ok { color: var(--green); } .msg.err { color: #f87171; }
+
+  /* HG operational dark theme: quiet surfaces, readable hierarchy, restrained accents. */
+  html[data-theme="dark"] {
+    --bg:#111516;
+    --surface:#181d1f;
+    --surface-2:#202628;
+    --border:#343b3d;
+    --text:#f1f4f3;
+    --text-dim:#a5aeaa;
+    --accent:#73aeba;
+    --accent-hover:#85bdc7;
+    --accent-soft:#20363a;
+    --green:#55bd8b;
+    --green-soft:#182c24;
+    --red:#f07578;
+    --red-soft:#352124;
+    --amber:#d8a84b;
+    --amber-soft:#30291c;
+    --blue:#69aeca;
+    --blue-soft:#1b2c34;
+    --grey:#a0a8a4;
+    --shadow:0 18px 48px rgba(0,0,0,.34);
+  }
+  html[data-theme="dark"] body { background:var(--bg); }
+  html[data-theme="dark"] .tab { color:#a1aaa6; }
+  html[data-theme="dark"] .tab:hover,
+  html[data-theme="dark"] .tab.active { color:#b8dce2; }
+  html[data-theme="dark"] .panel-sub,
+  html[data-theme="dark"] .summary-card .lbl,
+  html[data-theme="dark"] .readiness-snapshot .summary-card .lbl,
+  html[data-theme="dark"] .tool-snapshot .summary-card .lbl,
+  html[data-theme="dark"] table.grid th { color:#a5aeaa; }
+  html[data-theme="dark"] .alarm-banner .row { color:#d8ddda; border-top-color:#633438; }
+  html[data-theme="dark"] .alarm-banner { border-color:#67373a; }
+  html[data-theme="dark"] input,
+  html[data-theme="dark"] textarea,
+  html[data-theme="dark"] select,
+  html[data-theme="dark"] button.hub-select-trigger,
+  html[data-theme="dark"] .hub-select-menu { background-color:var(--surface); border-color:var(--border); color:var(--text); }
+  html[data-theme="dark"] select {
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2373aeba' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  }
+  html[data-theme="dark"] input[type="date"] { color-scheme:dark; }
+  html[data-theme="dark"] button.hub-select-trigger:hover { border-color:#515b5e; }
+  html[data-theme="dark"] button.hub-select-trigger:focus-visible,
+  html[data-theme="dark"] .hub-select.open .hub-select-trigger,
+  html[data-theme="dark"] input:focus,
+  html[data-theme="dark"] textarea:focus,
+  html[data-theme="dark"] select:focus { box-shadow:0 0 0 3px rgba(115,174,186,.16); }
+  html[data-theme="dark"] button.hub-select-option:hover,
+  html[data-theme="dark"] button.hub-select-option:focus-visible,
+  html[data-theme="dark"] button.hub-select-option.selected { background:var(--accent-soft); color:#c8e4e8; }
+  html[data-theme="dark"] .btn-primary { background:#2f6d78; color:#fff; }
+  html[data-theme="dark"] .btn-primary:hover { background:#397d88; }
+  html[data-theme="dark"] .btn-ghost { color:#c5dde1; }
+  html[data-theme="dark"] .btn-ghost:hover { border-color:#5a6669; background:var(--surface-2); }
+  html[data-theme="dark"] .job-card:hover,
+  html[data-theme="dark"] table.grid tr:hover td { background:#202628; border-color:#465053; }
+  html[data-theme="dark"] .gate-chip { background:#202628; }
+  html[data-theme="dark"] .gate-chip.ok { border-color:#315f4b; }
+  html[data-theme="dark"] .gate-chip.bad,
+  html[data-theme="dark"] .permit-alarm { border-color:#67373a; }
+  html[data-theme="dark"] .modal { background:rgba(0,0,0,.64); }
+  html[data-theme="dark"] .gbtn { background:#f1f4f3; color:#171a1b; }
+  html[data-theme="dark"] #toast { background:#2f6d78; border-color:#2f6d78; }
+  html[data-theme="dark"] #toast.err { background:#a94449; border-color:#a94449; }
 </style>
 </head>
 <body>
