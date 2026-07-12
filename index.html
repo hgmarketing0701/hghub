@@ -2534,6 +2534,10 @@
     width: calc(100% - 32px);
     margin: 0 auto 10px;
   }
+  .sb-nav > .sb-theme-picker {
+    width: 100%;
+    margin: 6px 0 0;
+  }
   .sb-theme-toggle {
     width: 100%;
     min-height: 42px;
@@ -2842,6 +2846,10 @@
     .sb-theme-picker {
       width: calc(100% - 44px);
       margin: 0 auto 10px;
+    }
+    .sb-nav > .sb-theme-picker {
+      width: 100%;
+      margin: 6px 0 0;
     }
     .sb-theme-toggle {
       width: 100%;
@@ -3774,6 +3782,8 @@
         : ' onclick="' + item.action + '"';
 	      return '<button class="' + cls + '" title="' + esc(item.label) + '"' + attrs + '><span class="ic">' + ico(item.icon) + '</span><span class="sb-label">' + esc(item.label) + '</span></button>';
     }).join("");
+    const themePicker = document.querySelector(".sb-theme-picker");
+    if (themePicker) document.getElementById("sbNav").appendChild(themePicker);
     paintIcons();
   }
 
