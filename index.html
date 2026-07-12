@@ -2963,7 +2963,7 @@
 	  <!-- ═══════════ SIDEBAR (02 Operations / Site) ═══════════ -->
 		  <aside id="sidebar">
 			    <div class="sb-brand" onclick="goHome()">
-			      <img class="sb-wordmark" src="hg-logo.png" alt="HG" />
+			      <img class="sb-wordmark" src="hg-logo.png" data-light-src="hg-logo.png" data-dark-src="hg-logo-light.png" alt="HG" />
 			      <div class="sb-identity">
 		        <div class="sb-pname" id="sbPname">Black Lee</div>
 		        <div class="sb-prole" id="sbProle">Operations / Site</div>
@@ -3678,6 +3678,8 @@
 	    const selected = preference === "light" || preference === "dark" ? preference : "system";
 	    const next = resolvedTheme(selected);
 	    document.documentElement.dataset.theme = "ops-" + next;
+	    const wordmark = document.querySelector(".sb-wordmark");
+	    if (wordmark) wordmark.src = next === "dark" ? wordmark.dataset.darkSrc : wordmark.dataset.lightSrc;
 	    if (persist) {
 	      try { localStorage.setItem("hg_hub_theme", selected); } catch (e) {}
 	    }
