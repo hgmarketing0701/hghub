@@ -667,6 +667,18 @@
     .tab { padding: 12px 0; }
     .tool-snapshot-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .tool-snapshot .summary-card:nth-child(n+3) { border-top: 1px solid var(--border); }
+    .tool-snapshot-row.snapshot-count-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .tool-snapshot-row.snapshot-count-3 .summary-card:nth-child(n) { border-top: 0; }
+    .tool-snapshot-row.snapshot-count-3 .summary-card:nth-child(2)::after { display: block; }
+    .tool-snapshot-row.snapshot-count-3 .summary-card .lbl { white-space: normal; }
+    .tool-snapshot-row.snapshot-count-5 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .tool-snapshot-row.snapshot-count-5 .summary-card { grid-column: span 2; }
+    .tool-snapshot-row.snapshot-count-5 .summary-card:nth-child(4),
+    .tool-snapshot-row.snapshot-count-5 .summary-card:nth-child(5) { grid-column: span 3; border-top: 1px solid var(--border); }
+    .tool-snapshot-row.snapshot-count-5 .summary-card:nth-child(3) { border-top: 0; }
+    .tool-snapshot-row.snapshot-count-5 .summary-card:nth-child(2)::after,
+    .tool-snapshot-row.snapshot-count-5 .summary-card:nth-child(4)::after { display: block; }
+    .tool-snapshot-row.snapshot-count-5 .summary-card:nth-child(3)::after { display: none; }
   }
 
   /* login + config gates (pattern: quotation-supabase.html) */
@@ -1463,7 +1475,8 @@
 
   function card(kind, lbl, val) { return '<div class="summary-card ' + kind + '"><div class="lbl">' + lbl + '</div><div class="val">' + val + '</div></div>'; }
   function toolSnapshot(title, cards) {
-    return '<div class="tool-snapshot-title">' + esc(title) + '</div><div class="tool-snapshot-row">' + cards + '</div>';
+    const count = (cards.match(/summary-card/g) || []).length;
+    return '<div class="tool-snapshot-title">' + esc(title) + '</div><div class="tool-snapshot-row snapshot-count-' + count + '">' + cards + '</div>';
   }
 
   function clearReadinessFilters() {

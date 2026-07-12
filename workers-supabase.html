@@ -170,6 +170,10 @@
   .section-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .card { background:var(--surface); border-color:var(--border); border-radius:var(--radius); padding:18px; margin-bottom:12px; box-shadow:none; }
   .settings-work-unit { padding:2px 0 22px; margin-bottom:18px; border-bottom:1px solid var(--border); }
+  .settings-form { margin-top:14px; text-align:left; }
+  .settings-form-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; align-items:end; }
+  .settings-form-grid label { margin-top:0; }
+  .settings-actions { display:flex; justify-content:flex-end; margin-top:14px; }
   .report-builder { padding:0; overflow:hidden; }
   .report-builder-head,.report-group { padding:18px; }
   .report-group { border-top:1px solid var(--border); }
@@ -245,7 +249,7 @@
   .gate .card { background:var(--surface); } .gate .brand-logo { width:28px; height:28px; margin:0 auto 16px; color:var(--accent); } .gbtn { border:1px solid var(--border); border-radius:8px; }
   #alarmsList,#workersList,#permitsList,#insuranceList,#formsList,#divisionsList,#reportHistoryList,#auditList,#auList { overflow-x:auto; }
   @media (max-width:900px) { .stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .stat:nth-child(2n) { border-right:0; } .stat:nth-child(4n) { border-right:0; } .stat:nth-child(n+3) { border-top:1px solid var(--border); padding-top:14px; } .stat:nth-child(3),.stat:nth-child(4) { padding-top:14px; } .report-doc-grid,.report-division-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-  @media (max-width:680px) { #app { padding:18px 16px 0; } .topbar { align-items:flex-start; gap:12px; } .brand-sub { display:none; } nav { gap:20px; margin-bottom:18px; } main { padding-bottom:56px; } .section-head,.toolbar { align-items:flex-start; flex-direction:column; } .section-actions { width:100%; } .section-actions button { flex:1; } .toolbar > div:last-child { width:100%; } .toolbar > div:last-child button { flex:1; } .filters { width:100%; } .filters > div { width:100%; min-width:0; } .filter-row { align-items:stretch; } .filter-row > div:first-child,.filter-row > div:not(:first-child) { flex:1 1 100%; } .report-group-head,.report-empty { align-items:flex-start; flex-direction:column; } .report-doc-grid,.report-division-grid { grid-template-columns:1fr; } .report-actions { flex-direction:column; } .report-actions button { width:100%; } .stat { padding:6px 12px; } .access-add { grid-template-columns:1fr; } .access-add .primary { width:100%; } .access-member { grid-template-columns:minmax(0,1fr) auto; gap:10px; padding:12px 0; } .access-member .danger { grid-column:2; grid-row:1; } .access-role { grid-column:1; grid-row:2; } .expiry-row { grid-template-columns:1fr; gap:5px; padding:14px 0; } .expiry-due { justify-content:flex-start; } button.division-row { grid-template-columns:1fr auto; gap:8px; padding:14px 0; } .division-count { grid-column:1; grid-row:2; } button.division-row .badge { grid-column:2; grid-row:1; } .worker-detail-head,.detail-section-head { flex-direction:column; } .worker-meta { grid-template-columns:1fr; gap:10px; } .worker-meta span,.worker-meta span:first-child { padding:0; border-right:0; } .detail-actions { width:100%; } .detail-actions button { flex:1; } }
+  @media (max-width:680px) { #app { padding:18px 16px 0; } .topbar { align-items:flex-start; gap:12px; } .brand-sub { display:none; } nav { gap:20px; margin-bottom:18px; } main { padding-bottom:56px; } .section-head,.toolbar { align-items:flex-start; flex-direction:column; } .section-actions { width:100%; } .section-actions button { flex:1; } .toolbar > div:last-child { width:100%; } .toolbar > div:last-child button { flex:1; } .filters { width:100%; } .filters > div { width:100%; min-width:0; } .filter-row { align-items:stretch; } .filter-row > div:first-child,.filter-row > div:not(:first-child) { flex:1 1 100%; } .report-group-head,.report-empty { align-items:flex-start; flex-direction:column; } .report-doc-grid,.report-division-grid { grid-template-columns:1fr; } .report-actions { flex-direction:column; } .report-actions button { width:100%; } .stat { padding:6px 12px; } .settings-form-grid { grid-template-columns:1fr; gap:10px; } .settings-actions button { width:100%; } .access-add { grid-template-columns:1fr; } .access-add .primary { width:100%; } .access-member { grid-template-columns:minmax(0,1fr) auto; gap:10px; padding:12px 0; } .access-member .danger { grid-column:2; grid-row:1; } .access-role { grid-column:1; grid-row:2; } .expiry-row { grid-template-columns:1fr; gap:5px; padding:14px 0; } .expiry-due { justify-content:flex-start; } button.division-row { grid-template-columns:1fr auto; gap:8px; padding:14px 0; } .division-count { grid-column:1; grid-row:2; } button.division-row .badge { grid-column:2; grid-row:1; } .worker-detail-head,.detail-section-head { flex-direction:column; } .worker-meta { grid-template-columns:1fr; gap:10px; } .worker-meta span,.worker-meta span:first-child { padding:0; border-right:0; } .detail-actions { width:100%; } .detail-actions button { flex:1; } }
   @media (max-width:680px) { .hub-select-menu { max-height:min(260px,45vh); } button.hub-select-option { min-height:44px; } }
 
   /* HG Hub dark tool shell */
@@ -1553,10 +1557,12 @@ var SETTING_KEYS=[
   ['COMPANY_EMAIL','Reminder recipient email (daily-alarms)']
 ];
 function loadSettings(){
-  el('setForm').innerHTML=SETTING_KEYS.map(function(k){
-    return '<label>'+k[1]+'</label><input id="set_'+k[0]+'" value="'+esc(DATA.settings[k[0]]||'')+'">';
-  }).join('')+'<div id="setMsg" class="msg"></div>'+
-    '<div class="row" style="margin-top:14px; justify-content:flex-end;"><div style="flex:0 0 auto;"><button class="primary" onclick="saveSettings()">Save settings</button></div></div>';
+  var form=el('setForm');
+  form.className='settings-form';
+  form.innerHTML='<div class="settings-form-grid">'+SETTING_KEYS.map(function(k){
+    return '<div><label>'+k[1]+'</label><input id="set_'+k[0]+'" value="'+esc(DATA.settings[k[0]]||'')+'"></div>';
+  }).join('')+'</div><div id="setMsg" class="msg"></div>'+
+    '<div class="settings-actions"><button class="primary" onclick="saveSettings()">Save settings</button></div>';
   loadAudit();
   if(IS_ADMIN) loadAllowed();
 }
