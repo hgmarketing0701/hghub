@@ -1132,12 +1132,14 @@
 	  .sb-pname { color: #171717; font-size: 15px; line-height: 21px; font-weight: 750; letter-spacing: 0; }
 	  .sb-prole { color: #8b837b; font-size: 12.5px; line-height: 18px; font-weight: 500; }
 	  .sb-nav {
+	    flex: 0 1 auto;
 	    width: calc(100% - 32px);
 	    margin: 0 auto;
 	    padding: 6px 0 12px;
 	    overflow-y: auto;
 	    transition: width 0.2s ease, padding 0.2s ease;
 	  }
+	  .sb-status { margin-top: auto; }
 	  .sb-role-link, .sb-role-create {
 	    width: 100%;
 	    min-height: 44px;
@@ -2551,10 +2553,6 @@
     width: calc(100% - 32px);
     margin: 0 auto 10px;
   }
-  .sb-nav > .sb-theme-picker {
-    width: 100%;
-    margin: 6px 0 0;
-  }
   .sb-theme-toggle {
     width: 100%;
     min-height: 42px;
@@ -2694,7 +2692,7 @@
     box-shadow: none;
   }
   html[data-theme="ops-dark"] .sb-theme-chevron { color: var(--text-dim2); }
-  html[data-theme="ops-dark"] .sb-theme-menu { background: var(--surface-2); border-color: var(--border); box-shadow: var(--shadow); }
+  html[data-theme="ops-dark"] .sb-theme-menu { background: var(--surface-3); border-color: var(--border-strong); box-shadow: var(--shadow); }
   html[data-theme="ops-dark"] .sb-theme-choice { color: var(--text-dim); }
   html[data-theme="ops-dark"] .sb-theme-choice:hover,
   html[data-theme="ops-dark"] .sb-theme-choice:focus { background: var(--surface-3); color: var(--text); }
@@ -2751,6 +2749,24 @@
     border-color: var(--border);
     color: var(--text);
   }
+  html[data-theme="ops-dark"] .modal,
+  html[data-theme="ops-dark"] .cmdk-box,
+  html[data-theme="ops-dark"] .ai-drawer {
+    background: var(--surface-3);
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+  html[data-theme="ops-dark"] .ai-dhead,
+  html[data-theme="ops-dark"] .ai-input { border-color: var(--border); }
+  html[data-theme="ops-dark"] .ai-dtitle b { color: var(--text); }
+  html[data-theme="ops-dark"] .ai-dtitle span,
+  html[data-theme="ops-dark"] .ai-msg.think { color: var(--text-dim); }
+  html[data-theme="ops-dark"] .ai-msgs::-webkit-scrollbar-thumb { background: var(--border-strong); }
+  html[data-theme="ops-dark"] .ai-msg.bot { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+  html[data-theme="ops-dark"] .ai-msg.me { background: #332f52; color: #ded9ff; }
+  html[data-theme="ops-dark"] .ai-input input { background: var(--surface); border-color: var(--border-strong); color: var(--text); }
+  html[data-theme="ops-dark"] .ai-input input::placeholder { color: var(--text-dim2); }
+  html[data-theme="ops-dark"] .ai-send { background: #426f88; color: #fff; }
   html[data-theme="ops-dark"] .op-card-head,
   html[data-theme="ops-dark"] .flow-step,
   html[data-theme="ops-dark"] .activity-row,
@@ -2816,6 +2832,21 @@
     border-color: var(--border);
     color: #dce6e8;
   }
+  html[data-theme="ops-dark"] .flow-index,
+  html[data-theme="ops-dark"] .tile-icon { background: var(--blue-soft); border-color: var(--border); color: var(--blue); }
+  html[data-theme="ops-dark"] .flow-step button { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+  html[data-theme="ops-dark"] .count-pill,
+  html[data-theme="ops-dark"] .soft-pill { background: var(--amber-soft); border-color: #66532d; color: #efc66e; }
+  html[data-theme="ops-dark"] .activity-tool { color: var(--blue); }
+  html[data-theme="ops-dark"] .activity-status,
+  html[data-theme="ops-dark"] .activity-status.updated { background: var(--blue-soft); color: var(--blue); }
+  html[data-theme="ops-dark"] .activity-status.cleared,
+  html[data-theme="ops-dark"] .activity-status.added { background: var(--green-soft); color: var(--green); }
+  html[data-theme="ops-dark"] .activity-status.removed { background: var(--red-soft); color: var(--red); }
+  html[data-theme="ops-dark"] .badge-live { background: var(--green-soft); color: var(--green); border-color: #315f4b; }
+  html[data-theme="ops-dark"] .badge-cloud { background: var(--amber-soft); color: #efc66e; border-color: #66532d; }
+  html[data-theme="ops-dark"] .badge-reference { background: var(--surface-2); color: var(--text-dim); border-color: var(--border); }
+  html[data-theme="ops-dark"] .badge-prototype { background: var(--purple-soft); color: #c7bfff; border-color: #514b79; }
   html[data-theme="ops-dark"] .op-tool-card:hover,
   html[data-theme="ops-dark"] .detail-tool-card:hover,
   html[data-theme="ops-dark"] .support-tool-card:hover,
@@ -2842,10 +2873,18 @@
   html[data-theme="ops-dark"] .activity-inline-filters button.active,
   html[data-theme="ops-dark"] .route-list button.active,
   html[data-theme="ops-dark"] .activity-filter-actions .mini-btn.active {
-    background: #4b83a1;
-    border-color: #4b83a1;
+    background: #426f88;
+    border-color: #426f88;
     color: #ffffff;
   }
+  html[data-theme="ops-dark"] .btn-primary:hover,
+  html[data-theme="ops-dark"] .tool-tab.on:hover { background: #385f75; border-color: #385f75; }
+  html[data-theme="ops-dark"] :where(button, a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid #9bcbd8;
+    outline-offset: 2px;
+  }
+  html[data-theme="ops-dark"] .sb-theme-choice:focus-visible { outline: 2px solid #9bcbd8; outline-offset: -2px; }
+  html[data-theme="ops-dark"] .focus-ring { box-shadow: 0 0 0 3px rgba(120,184,205,.38); }
   html[data-theme="ops-dark"] .mobile-tabbar {
     background: rgba(21,29,31,0.97);
     border-color: var(--border);
@@ -2863,10 +2902,6 @@
     .sb-theme-picker {
       width: calc(100% - 44px);
       margin: 0 auto 10px;
-    }
-    .sb-nav > .sb-theme-picker {
-      width: 100%;
-      margin: 6px 0 0;
     }
     .sb-theme-toggle {
       width: 100%;
@@ -3801,8 +3836,6 @@
         : ' onclick="' + item.action + '"';
 	      return '<button class="' + cls + '" title="' + esc(item.label) + '"' + attrs + '><span class="ic">' + ico(item.icon) + '</span><span class="sb-label">' + esc(item.label) + '</span></button>';
     }).join("");
-    const themePicker = document.querySelector(".sb-theme-picker");
-    if (themePicker) document.getElementById("sbNav").appendChild(themePicker);
     paintIcons();
   }
 
