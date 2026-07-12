@@ -339,6 +339,19 @@ Use this page structure across HG Hub operational tools.
 - do not repeat the same tool title or description immediately below the tool header
 - use the shared parent-shell search, help, settings, Ask HG, reload, and open-in-new-tab actions instead of recreating them inside every tool
 
+Canonical Operations / Site icon identities:
+
+| Tool | Lucide icon |
+| --- | --- |
+| Daily Readiness & Dispatch | `truck` |
+| Daily Site Tracking | `map-pin` |
+| Job Completion Report | `clipboard-check` |
+| Workers Documentation & Permits | `user-check` |
+| Scaffold & Green Tag System | `badge-check` |
+| Inventory, Tools & Purchasing | `package` |
+
+These mappings are product identity, not decoration. Reuse them in the role sidebar, tool topbar, direct header, catalog/search result, and mobile context. Do not substitute a similar icon or recreate the Lucide geometry manually.
+
 ### Page Header
 
 - border-free title and one-line operational description

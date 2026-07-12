@@ -36,6 +36,7 @@
     }
   })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -327,6 +328,7 @@
   .container { max-width:none; padding:26px 28px 88px; }
   .tool-page-header { display:flex; align-items:center; justify-content:space-between; min-height:46px; padding:0 0 20px; margin-bottom:22px; border-bottom:1px solid var(--border); }
   .tool-page-title { display:flex; align-items:center; gap:10px; color:var(--text); font-size:1.05rem; font-weight:800; letter-spacing:-.02em; }
+  .tool-page-title svg { width:20px; height:20px; flex:0 0 20px; stroke-width:2; }
   body.embedded .tool-page-header { display:none; }
   .topbar { align-items:center; padding-bottom:20px; margin-bottom:22px; gap:16px; }
   .brand { color:var(--text); font-size:1.1rem; font-weight:800; }
@@ -448,7 +450,7 @@
 <div class="container">
 
   <div class="tool-page-header">
-    <div class="tool-page-title">Daily Site Tracking <span class="tool-live">Live</span></div>
+    <div class="tool-page-title"><i data-lucide="map-pin" aria-hidden="true"></i>Daily Site Tracking <span class="tool-live">Live</span></div>
   </div>
 
   <div class="board-head">
@@ -903,6 +905,7 @@ Get design confirmation from client"></textarea>
   });
 
   render();
+  if (window.lucide) lucide.createIcons();
 </script>
 
 </body>

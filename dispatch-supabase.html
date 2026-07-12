@@ -38,6 +38,7 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -815,14 +816,7 @@
 
   <div class="topbar">
     <div class="brand-block">
-      <div class="brand-logo" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none">
-          <path d="M10 17h4V5H2v12h3" />
-          <path d="M14 17h1.5m4 0H22v-5l-3-4h-5" />
-          <circle cx="7.5" cy="17.5" r="2.5" />
-          <circle cx="17.5" cy="17.5" r="2.5" />
-        </svg>
-      </div>
+      <div class="brand-logo" aria-hidden="true"><i data-lucide="truck"></i></div>
       <div>
         <div class="brand-name">Daily Readiness &amp; Dispatch <span class="tool-live">Live</span></div>
         <div class="brand-sub">Eason checks the gates · Calvin loads the teams · everyone sees the same board</div>
@@ -2044,6 +2038,7 @@
   // close modal on backdrop click
   document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
 
+  if (window.lucide) lucide.createIcons();
   start();
 </script>
 </body>
