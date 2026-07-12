@@ -181,9 +181,9 @@
   button.sm { padding:7px 10px; font-size:.78rem; }
   .tool-snapshot { padding:18px; } .tool-snapshot-title { color:var(--text); font-size:.9rem; font-weight:800; margin-bottom:14px; }
   .stat-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; }
-  .stat { min-height:74px; background:transparent; border:0; border-right:1px solid var(--border); border-radius:0; padding:6px 16px; }
+  .stat { min-height:74px; display:grid; grid-template-rows:18px 36px; align-content:start; gap:2px; background:transparent; border:0; border-right:1px solid var(--border); border-radius:0; padding:6px 16px; }
   .stat:nth-child(4n) { border-right:0; } .stat:nth-child(n+5) { border-top:1px solid var(--border); padding-top:14px; }
-  .stat .n { color:var(--accent); font-size:1.52rem; font-weight:800; } .stat .l { color:#716b65; font-size:.66rem; font-weight:800; margin-top:2px; }
+  .stat .n { order:2; color:var(--accent); font-size:1.52rem; line-height:36px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; } .stat .l { order:1; min-height:18px; color:#716b65; font-size:.66rem; line-height:18px; font-weight:800; white-space:nowrap; }
   .stat.red .n { color:var(--red); } .stat.amber .n,.stat.yellow .n { color:var(--amber); } .stat.green .n { color:var(--green); }
   .toolbar { gap:14px; margin-bottom:14px; } .filters { gap:10px; } .filters > div { min-width:180px; }
   .filter-row { align-items:flex-end; margin-bottom:12px; } .filter-row > div:first-child { flex:1 1 320px; } .filter-row > div:not(:first-child) { flex:0 1 220px; } .filter-row-compact { max-width:320px; }
@@ -910,10 +910,10 @@ function renderDashboard(){
     ['green', activeWorkers, 'Active workers'],
     ['', DATA.documents.length, 'Documents'],
     ['red', expired, 'Expired docs'],
-    ['amber', soon, 'Expiring < 30d'],
-    ['yellow', warn, 'Expiring < 90d'],
+    ['amber', soon, 'Due < 30d'],
+    ['yellow', warn, 'Due < 90d'],
     ['', activePermits, 'Active permits'],
-    ['', DATA.insurancePolicies.length, 'Insurance policies']
+    ['', DATA.insurancePolicies.length, 'Insurance']
   ].map(function(x){ return '<div class="stat '+x[0]+'"><div class="n">'+x[1]+'</div><div class="l">'+x[2]+'</div></div>'; }).join('');
 }
 function renderAlarms(){

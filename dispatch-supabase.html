@@ -561,10 +561,14 @@
     font-weight: 800;
     letter-spacing: 0.08em;
     margin-bottom: 8px;
+    min-height: 18px;
+    white-space: nowrap;
   }
   .readiness-snapshot .summary-card .val {
     font-size: 2rem;
     line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
   .readiness-empty .empty-actions {
     display: flex;
@@ -609,10 +613,14 @@
     font-weight: 800;
     letter-spacing: 0.08em;
     margin-bottom: 8px;
+    min-height: 18px;
+    white-space: nowrap;
   }
   .tool-snapshot .summary-card .val {
     font-size: 2rem;
     line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
   @media (max-width: 860px) {
     .readiness-snapshot-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1540,10 +1548,10 @@
     const nums = Object.keys(teamNos).sort((a,b) => Number(a) - Number(b));
 
     document.getElementById('dispSummary').innerHTML = toolSnapshot('Dispatch Snapshot',
-      card('info', 'Assigned tonight', assigned.length) +
-      card('ok', 'Ready in pool', pool.length) +
-      card('warn', 'Scheduled but not ready', notReady.length) +
-      card('info', 'Teams set', nums.length)
+      card('info', 'Assigned jobs', assigned.length) +
+      card('ok', 'Ready pool', pool.length) +
+      card('warn', 'Not ready', notReady.length) +
+      card('info', 'Teams', nums.length)
     );
 
     document.getElementById('dispNotReady').innerHTML = notReady.length ? (
@@ -1881,11 +1889,11 @@
       return !Number.isNaN(t) && t >= dayAgo;
     }).length;
     document.getElementById('activitySummary').innerHTML = toolSnapshot('Activity Snapshot',
-      card('info', 'Last 24 hours', last24) +
-      card('ok', 'Readiness changes', rows.filter(r => /job|readiness|gate/.test(textOf(r))).length) +
-      card('info', 'Dispatch changes', rows.filter(r => /dispatch|assign|team/.test(textOf(r))).length) +
-      card('soon', 'Crew changes', rows.filter(r => /staff|lorry|crew|driver|worker/.test(textOf(r))).length) +
-      card('info', 'Settings changes', rows.filter(r => /config|setting/.test(textOf(r))).length)
+      card('info', '24h activity', last24) +
+      card('ok', 'Readiness', rows.filter(r => /job|readiness|gate/.test(textOf(r))).length) +
+      card('info', 'Dispatch', rows.filter(r => /dispatch|assign|team/.test(textOf(r))).length) +
+      card('soon', 'Crew', rows.filter(r => /staff|lorry|crew|driver|worker/.test(textOf(r))).length) +
+      card('info', 'Settings', rows.filter(r => /config|setting/.test(textOf(r))).length)
     );
     document.getElementById('auditBody').innerHTML = rows.length ? rows.map(r =>
       '<tr><td style="white-space:nowrap;color:var(--text-dim);font-size:0.8rem;">' + esc(String(r.at||'').replace('T',' ').slice(0,16)) + '</td>' +

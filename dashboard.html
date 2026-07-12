@@ -314,11 +314,11 @@
   .tool-snapshot-title { padding:16px 18px 10px; color:var(--text); font-size:.98rem; font-weight:800; }
   .tool-snapshot-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); padding:0 0 10px; }
   .meta { display:contents; }
-  .meta-item { position:relative; padding:10px 18px 8px; min-width:0; }
+  .meta-item { position:relative; display:grid; grid-template-rows:18px 36px; align-content:start; gap:2px; padding:10px 18px 8px; min-width:0; }
   .meta-item:not(:last-child)::after { content:""; position:absolute; top:7px; right:0; bottom:10px; width:1px; background:var(--border); }
-  .meta-item .num { color:var(--accent); font-size:1.55rem; font-weight:800; }
+  .meta-item .num { order:2; color:var(--accent); font-size:1.55rem; line-height:36px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; }
   .meta-item:nth-child(2) .num { color:var(--red); } .meta-item:nth-child(3) .num { color:var(--blue); } .meta-item:nth-child(4) .num { color:var(--grey); }
-  .meta-item .lbl { color:#817b75; font-size:.66rem; font-weight:800; letter-spacing:.07em; margin-top:4px; }
+  .meta-item .lbl { order:1; min-height:18px; color:#817b75; font-size:.66rem; line-height:18px; font-weight:800; letter-spacing:.07em; white-space:nowrap; }
   .board-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
   .board-head h1 { color:var(--text); font-size:1.42rem; font-weight:800; letter-spacing:-.03em; }
   .board-head p { color:#716b65; font-size:.92rem; margin-top:3px; }

@@ -181,7 +181,7 @@
   .tag { background:var(--surface-2); border-color:transparent; color:#716b65; border-radius:999px; padding:3px 8px; } .tag.svc { color:var(--accent); border-color:transparent; background:var(--accent-soft); }
   .pill { font-size:.64rem; padding:4px 8px; } .p-Active,.p-Green,.p-Valid,.p-Paid { background:var(--green-soft); color:var(--green); } .p-Extension,.p-Partial,.p-Open,.p-Hold,.p-Completed { background:var(--blue-soft); color:var(--blue); } .p-OnHold,.p-Expiring,.p-Unpaid { background:#fff7e7; color:#a66b00; } .p-Cancelled,.p-Void,.p-Red,.p-Expired,.p-Overdue { background:var(--red-soft); color:var(--red); }
   .tool-snapshot { padding:18px; } .tool-snapshot-title { color:var(--text); font-size:.9rem; font-weight:800; margin-bottom:14px; } .snapshot-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); } .snapshot-row-3 { grid-template-columns:repeat(3,minmax(0,1fr)); } .snapshot-row-5 { grid-template-columns:repeat(5,minmax(0,1fr)); }
-  .stat { min-height:74px; background:transparent; border:0; border-right:1px solid var(--border); border-radius:0; padding:6px 16px; flex:auto; cursor:pointer; color:inherit; font:inherit; text-align:left; } .stat:hover { border-color:var(--border); } button.stat:hover .l,button.stat:focus-visible .l { color:var(--accent); } button.stat:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; } .stat:nth-child(4n) { border-right:0; } .snapshot-row-5 .stat:nth-child(4n) { border-right:1px solid var(--border); } .snapshot-row-5 .stat:nth-child(5n) { border-right:0; } .stat .n { color:var(--accent); font-size:1.52rem; font-weight:800; } .stat .n.bad { color:var(--red); } .stat .n.ok { color:var(--green); } .stat .n.blue { color:var(--blue); } .stat .l { color:#716b65; font-size:.66rem; font-weight:800; margin-top:2px; }
+  .stat { min-height:82px; display:grid; grid-template-rows:18px 36px 16px; align-content:start; gap:2px; background:transparent; border:0; border-right:1px solid var(--border); border-radius:0; padding:6px 16px; flex:auto; cursor:pointer; color:inherit; font:inherit; text-align:left; } .stat:hover { border-color:var(--border); } button.stat:hover .l,button.stat:focus-visible .l { color:var(--accent); } button.stat:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; } .stat:nth-child(4n) { border-right:0; } .snapshot-row-5 .stat:nth-child(4n) { border-right:1px solid var(--border); } .snapshot-row-5 .stat:nth-child(5n) { border-right:0; } .stat .n { order:2; color:var(--accent); font-size:1.52rem; line-height:36px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; } .stat .n.bad { color:var(--red); } .stat .n.ok { color:var(--green); } .stat .n.blue { color:var(--blue); } .stat .l { order:1; min-height:18px; color:#716b65; font-size:.66rem; line-height:18px; font-weight:800; white-space:nowrap; } .stat .meta { order:3; color:#817970; font-size:.7rem; line-height:16px; white-space:nowrap; }
   .work-unit-head { margin:-2px 0 12px; padding-bottom:14px; border-bottom:1px solid var(--border); } .work-unit-head h2 { margin:0 0 3px; } .work-unit-head .sub { margin:0; }
   .register-card { padding:0; overflow-x:auto; }
   .register-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:16px 18px; border-bottom:1px solid var(--border); }
@@ -673,8 +673,8 @@ function renderDash(){
   var s=DB.stats, a=DB.alerts;
   var cards=[
     ['activeJobs','Active jobs','',function(){show('jobs');}],
-    ['greenTagDue','Green tag due','bad',function(){show('greentag');}],
-    ['itemsDeployed','Items deployed (onsite)','blue',function(){show('onsite');}],
+    ['greenTagDue','Tags due','bad',function(){show('greentag');}],
+    ['itemsDeployed','Deployed items','blue',function(){show('onsite');}],
     ['collectionDue','Collection due','bad',function(){show('onsite');}],
     ['certExpiring','Certs expiring','bad',function(){show('personnel');}]
   ];
@@ -694,10 +694,10 @@ function renderDash(){
       '<span style="flex:1"><strong>'+esc(al.who)+'</strong></span><span>'+esc(al.msg)+'</span></button>';
   }).join('');
   html+='</div>';
-  html+='<div class="card tool-snapshot"><div class="tool-snapshot-title">Commercial Snapshot</div><div class="snapshot-row snapshot-row-5"><div class="stat" style="cursor:default"><div class="n blue">'+rm(s.billedThisMonth)+'</div><div class="l">Billed this month</div></div>'+
+  html+='<div class="card tool-snapshot"><div class="tool-snapshot-title">Commercial Snapshot</div><div class="snapshot-row snapshot-row-5"><div class="stat" style="cursor:default"><div class="n blue">'+rm(s.billedThisMonth)+'</div><div class="l">Billed MTD</div></div>'+
     '<div class="stat" style="cursor:default"><div class="n bad">'+rm(s.outstanding)+'</div><div class="l">Outstanding</div></div>'+
-    '<div class="stat" style="cursor:default"><div class="n ok">'+rm(s.collectedThisMonth)+'</div><div class="l">Collected this month</div></div>'+
-    '<div class="stat" style="cursor:default"><div class="n bad">'+s.overdueCount+'</div><div class="l">Overdue invoices · '+rm(s.overdueAmt)+'</div></div>'+
+    '<div class="stat" style="cursor:default"><div class="n ok">'+rm(s.collectedThisMonth)+'</div><div class="l">Collected MTD</div></div>'+
+    '<div class="stat" style="cursor:default"><div class="n bad">'+s.overdueCount+'</div><div class="l">Overdue invoices</div><div class="meta">'+rm(s.overdueAmt)+' due</div></div>'+
     '<div class="stat" style="cursor:default"><div class="n">'+s.quotes+'</div><div class="l">Open quotes</div></div></div></div>';
   // scf_alarms view — the same list the daily reminder email would send
   html+='<div class="card" id="alarmsCard"><div class="work-unit-head"><h2>Daily reminder digest</h2><div class="sub">Items included in the scheduled scaffold reminder email.</div></div>'+
@@ -767,9 +767,9 @@ function renderOnsite(){
   var totalItems=jobs.reduce(function(s,e){return s+e.materialOut;},0);
   var html='<div class="section-head"><div><div class="section-title">Materials onsite</div><div class="section-meta">Track deployed scaffold, return dates, and collection action across active jobs.</div></div></div>';
   html+='<div class="card tool-snapshot"><div class="tool-snapshot-title">Onsite Material Snapshot</div><div class="snapshot-row snapshot-row-3">'+
-    '<div class="stat" style="cursor:default"><div class="n blue">'+totalItems+'</div><div class="l">Total items deployed</div></div>'+
-    '<div class="stat" style="cursor:default"><div class="n">'+jobs.length+'</div><div class="l">Jobs with material onsite</div></div>'+
-    '<div class="stat" style="cursor:default"><div class="n bad">'+DB.stats.collectionDue+'</div><div class="l">Collection due / overdue</div></div></div></div>';
+    '<div class="stat" style="cursor:default"><div class="n blue">'+totalItems+'</div><div class="l">Deployed items</div></div>'+
+    '<div class="stat" style="cursor:default"><div class="n">'+jobs.length+'</div><div class="l">Onsite jobs</div></div>'+
+    '<div class="stat" style="cursor:default"><div class="n bad">'+DB.stats.collectionDue+'</div><div class="l">Collections due</div></div></div></div>';
   if(!jobs.length){ el('v-onsite').innerHTML=html+'<div class="card"><div class="empty table-empty-state"><div><strong>No scaffold material onsite</strong><span>Open a job and use Kit out to record material deployed to site.</span><div class="empty-actions"><button class="ghost sm" onclick="show(\'jobs\')">Open jobs</button></div></div></div></div>'; return; }
   jobs.forEach(function(e){
     var c=e.collectionDue||{};

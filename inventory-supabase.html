@@ -168,7 +168,7 @@
   .tool-snapshot { padding:18px; } .tool-snapshot-title { color:var(--text); font-size:.9rem; font-weight:800; margin-bottom:14px; }
   .cards.snapshot-row { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:0; margin:0; }
   .cards.snapshot-row .stat { min-height:74px; margin:0; padding:6px 16px; border:0; border-right:1px solid var(--border); border-radius:0; background:transparent; }
-  .cards.snapshot-row .stat:last-child { border-right:0; } .stat .k { color:#716b65; font-size:.66rem; font-weight:800; } .stat .v { color:var(--accent); font-size:1.42rem; font-weight:800; } .stat .v.red { color:var(--red); } .stat .v.green { color:var(--green); }
+  .cards.snapshot-row .stat:last-child { border-right:0; } .stat .k { min-height:18px; color:#716b65; font-size:.66rem; line-height:18px; font-weight:800; white-space:nowrap; } .stat .v { color:var(--accent); font-size:1.42rem; line-height:36px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; } .stat .v.red { color:var(--red); } .stat .v.green { color:var(--green); }
   .register-card { padding:0; overflow-x:auto; } .register-card table.grid { min-width:880px; }
   #tabHost > .card:not(.tool-snapshot):not(.register-card):not(.admin-card) { padding:0; border:0; border-radius:0; background:transparent; }
   #tabHost > .card:not(.tool-snapshot):not(.register-card):not(.admin-card) > .row:first-child { align-items:flex-end !important; justify-content:space-between !important; gap:16px; margin-bottom:14px; }
@@ -749,9 +749,9 @@ function renderDashboard(){
   var totalValue=0, lowCount=0;
   state.materials.forEach(function(m){ var s=stockOnHand(m.id); totalValue+=s.onHand*latestRate(m.id); if(s.onHand<=Number(m.lowStockThreshold||0)) lowCount++; });
   el('dashCards').innerHTML =
-    stat('Materials', state.materials.length) + stat('Tools/Equipment', state.tools.length) +
-    stat('Inventory value', fmtRM(totalValue), 'accent') + stat('Low stock', lowCount, lowCount?'red':'green') +
-    stat('Supplier outstanding', fmtRM(suppliersOutstandingTotal()), 'red') + stat('Self-claim outstanding', fmtRM(selfClaimsOutstandingTotal()), 'red');
+    stat('Materials', state.materials.length) + stat('Tools', state.tools.length) +
+    stat('Stock value', fmtRM(totalValue), 'accent') + stat('Low stock', lowCount, lowCount?'red':'green') +
+    stat('Supplier due', fmtRM(suppliersOutstandingTotal()), 'red') + stat('Claims due', fmtRM(selfClaimsOutstandingTotal()), 'red');
   var q=(el('dashSearch').value||'').trim().toLowerCase(), cat=el('dashCat').value;
   var rows=state.materials.filter(function(m){ if(q&&String(m.name||'').toLowerCase().indexOf(q)===-1) return false; if(cat&&(m.category||'')!==cat) return false; return true; });
   var tb=el('dashTable');
@@ -1200,9 +1200,9 @@ TAB_RENDER.payments = function(){
 TAB_AFTER.payments = function(){ renderPayments(); };
 function payeeLabel(p){ return p.payeeType==='self' ? ('Self-claim · '+SELF_CLAIM_NAME) : supName(p.payeeId); }
 function renderPayments(){
-  el('payCards').innerHTML = stat('Supplier outstanding', fmtRM(suppliersOutstandingTotal()), 'red') +
-    stat('Self-claim outstanding', fmtRM(selfClaimsOutstandingTotal()), 'red') +
-    stat('Payments recorded', state.payments.length);
+  el('payCards').innerHTML = stat('Supplier due', fmtRM(suppliersOutstandingTotal()), 'red') +
+    stat('Claims due', fmtRM(selfClaimsOutstandingTotal()), 'red') +
+    stat('Payments', state.payments.length);
   var tb=el('payTable');
   if(!state.payments.length){ tb.innerHTML=tableEmpty(8,'No payments recorded','Supplier and self-claim payments will appear here after they are recorded.',''); }
   else tb.innerHTML=state.payments.map(function(p){ return '<tr><td>'+esc(p.paymentDate)+'</td><td><b>'+esc(payeeLabel(p))+'</b>'+(p.payeeType==='self'?' <span class="pill-tag blue">SELF</span>':'')+'</td>'+

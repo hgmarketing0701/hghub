@@ -2070,6 +2070,10 @@
     border-radius: 0;
     background: transparent;
   }
+  .activity-snapshot-row .mini-stat > span { min-height: 17px; white-space: nowrap; }
+  .activity-snapshot-row .mini-stat-metric { display: grid; grid-template-rows: 32px 17px; align-content: start; gap: 2px; }
+  .activity-snapshot-row .mini-stat-metric b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .activity-snapshot-row .mini-stat-metric em { margin-left: 0; white-space: nowrap; }
   .activity-snapshot-row .mini-stat + .mini-stat {
     border-left: 1px solid #e4ded6;
   }
@@ -3175,11 +3179,11 @@
           <section class="op-card activity-snapshot-card">
             <h2>Activity snapshot</h2>
             <div class="activity-snapshot-row" id="activitySnapshot">
-              <div class="mini-stat"><span>Last 24 hours</span><b data-skel>—</b><em>updates</em></div>
-              <div class="mini-stat soft"><span>Operations</span><b data-skel>—</b><em>site changes</em></div>
-              <div class="mini-stat warn"><span>Dispatch</span><b data-skel>—</b><em>updates</em></div>
-              <div class="mini-stat"><span>Documents</span><b data-skel>—</b><em>files changed</em></div>
-              <div class="mini-stat"><span>Team</span><b data-skel>—</b><em>active users</em></div>
+              <div class="mini-stat"><span>24h Activity</span><div class="mini-stat-metric"><b data-skel>—</b><em>updates</em></div></div>
+              <div class="mini-stat soft"><span>Operations</span><div class="mini-stat-metric"><b data-skel>—</b><em>site changes</em></div></div>
+              <div class="mini-stat warn"><span>Dispatch</span><div class="mini-stat-metric"><b data-skel>—</b><em>updates</em></div></div>
+              <div class="mini-stat"><span>Documents</span><div class="mini-stat-metric"><b data-skel>—</b><em>files changed</em></div></div>
+              <div class="mini-stat"><span>Team</span><div class="mini-stat-metric"><b data-skel>—</b><em>active users</em></div></div>
             </div>
           </section>
           <div class="activity-layout">
@@ -4615,14 +4619,14 @@
 	    const counts = activityCounts(rows);
 	    const last24 = DASHBOARD_STATE.activityToday || 0;
 	    const stats = [
-	      ["Last 24 hours", last24, "updates", ""],
+	      ["24h Activity", last24, "updates", ""],
 	      ["Operations", counts.operations, "site changes", "soft"],
 	      ["Dispatch", counts.dispatch, "updates", "warn"],
 	      ["Documents", counts.documents, "files changed", ""],
 	      ["Team", counts.team, "active users", ""]
 	    ];
 	    el.innerHTML = stats.map(s => '<div class="mini-stat ' + esc(s[3]) + '"><span>' + esc(s[0]) +
-	      '</span><b>' + esc(s[1]) + '</b><em>' + esc(s[2]) + '</em></div>').join("");
+	      '</span><div class="mini-stat-metric"><b>' + esc(s[1]) + '</b><em>' + esc(s[2]) + '</em></div></div>').join("");
 	  }
 	  function renderActivityFilters(rows) {
 	    const counts = activityCounts(rows);
