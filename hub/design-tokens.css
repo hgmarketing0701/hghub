@@ -91,23 +91,23 @@
 
 /* Dark operational companion theme. Mirrors the light theme's hierarchy and semantics. */
 [data-theme="ops-dark"] {
-  --color-bg: #101417;
-  --color-surface: #171c20;
-  --color-surface-muted: #1d2328;
-  --color-surface-raised: #252c31;
-  --color-border: #30383e;
-  --color-border-strong: #465158;
+  --color-bg: #1b2527;
+  --color-surface: #202b2d;
+  --color-surface-muted: #253133;
+  --color-surface-raised: #2b383a;
+  --color-border: #394749;
+  --color-border-strong: #526164;
 
-  --color-text: #f1f3f2;
-  --color-text-muted: #adb6b8;
-  --color-text-faint: #879195;
-  --color-text-inverse: #101417;
+  --color-text: #f3f6f4;
+  --color-text-muted: #b3bebb;
+  --color-text-faint: #8f9b98;
+  --color-text-inverse: #1b2527;
 
   --brand-primary: #78b8cd;
-  --brand-primary-hover: #94c9da;
+  --brand-primary-hover: #96c8d7;
   --brand-accent: #4b83a1;
   --brand-accent-hover: #5e96b3;
-  --brand-soft: #18343d;
+  --brand-soft: #203b43;
   --brand-contrast: #ffffff;
 
   --status-success: #48c78e;
@@ -134,6 +134,15 @@
   --brand-accent-hover: #0e303b;
   --brand-soft: #eef6f3;
   --ask-hg-accent: #7067d9;
+}
+
+[data-theme="ops-dark"][data-tenant="hg"] {
+  --brand-primary: #78b8cd;
+  --brand-primary-hover: #96c8d7;
+  --brand-accent: #4b83a1;
+  --brand-accent-hover: #5e96b3;
+  --brand-soft: #203b43;
+  --brand-contrast: #ffffff;
 }
 
 /* Component aliases */

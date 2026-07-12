@@ -187,15 +187,18 @@ The current HG light theme uses these canonical values:
 - Primary operational accent: `#143d4a`
 - Primary hover: `#0e303b`
 
-The companion dark theme preserves the same hierarchy rather than reviving the old high-contrast dashboard aesthetic:
+The companion dark theme preserves the same hierarchy rather than reviving the old high-contrast dashboard aesthetic. Use Jobber's dark operational layering as the reference: a green-charcoal canvas, a darker navigation rail, slightly lighter work surfaces, quiet borders, and restrained accents.
 
-- app background: `#101417`
-- primary surface: `#171c20`
-- muted surface: `#1d2328`
-- border: `#30383e`
-- strong text: `#f1f3f2`
-- muted text: `#adb6b8`
+- app background: `#1b2527`
+- primary surface: `#202b2d`
+- muted surface: `#253133`
+- raised surface: `#2b383a`
+- border: `#394749`
+- strong text: `#f3f6f4`
+- muted text: `#b3bebb`
 - operational accent: `#4b83a1`
+
+Avoid pure black canvases, white card islands, glowing borders, and saturated accent fills across large areas. Semantic red, amber, green, and blue retain their meanings but use softened backgrounds in dark mode.
 
 Theme preference is a shell-level choice. Offer `Light`, `Dark`, and `System`; use `System` on first load and persist the user's explicit choice. Semantic status meanings must remain unchanged between themes.
 
