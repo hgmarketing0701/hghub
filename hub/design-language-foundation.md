@@ -1,6 +1,6 @@
 # HG Hub Design Language Foundation
 
-Status: Implemented tool rules v0.2
+Status: Implemented tool rules v0.3
 Date: 2026-07-11
 Scope: HG Hub UI/UX improvement, with future white-label readiness
 
@@ -325,6 +325,17 @@ Use this page structure across HG Hub operational tools.
 - direct and embedded views retain the same information architecture, content, tabs, spacing, data, and functionality
 - do not repeat the same tool title or description immediately below the tool header
 - use the shared parent-shell search, help, settings, Ask HG, reload, and open-in-new-tab actions instead of recreating them inside every tool
+
+### Tool Subtitle Preservation
+
+- before redesigning a tool, check the established `main` design for a subtitle or operational tagline beneath its title
+- preserve a distinctive operational subtitle as product content; do not silently remove it during visual cleanup
+- rewrite implementation-led copy such as edition names only when needed, while retaining the operational meaning
+- omit a subtitle that merely repeats the tool title or contains obsolete technical information
+- embedded tools show the subtitle once in the parent shell; direct views show it once in the tool header
+- use one centralized subtitle source so embedded titles stay consistent across roles and navigation routes
+- use `13px` medium-weight muted text with a `17px` line height on desktop
+- keep subtitles to one line with ellipsis when space is limited; hide them on compact mobile topbars rather than squeezing the title and actions
 
 ### Page Header
 

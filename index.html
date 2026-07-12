@@ -949,7 +949,7 @@
   .tb-sub { font-size: 0.8rem; color: var(--text-dim); margin-top: 1px; }
   .tb-title { font-family: var(--font-display); font-weight: 600; font-size: 1rem; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; }
   .tb-title-main { display: flex; align-items: center; gap: 9px; min-width: 0; white-space: nowrap; }
-  .tb-tool-sub { color: #8b837b; font-family: var(--font-ui); font-size: 11px; font-weight: 500; letter-spacing: 0; line-height: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tb-tool-sub { color: #8b837b; font-family: var(--font-ui); font-size: 13px; font-weight: 500; letter-spacing: 0; line-height: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tb-title svg { width: 18px; height: 18px; color: var(--accent); }
   .tb-actions { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
   .tb-search { display: flex; align-items: center; gap: 9px; width: 300px; max-width: 34vw; padding: 9px 13px; cursor: pointer;
@@ -3111,6 +3111,17 @@
     "Workers Documentation & Permits": { short: "Worker Documents", initials: "WR", sub: "Permits and access docs" }
   };
 
+  const TOOL_SUBTITLES = {
+    "Operations Command Center": "Black Lee · Contractor Support · 14-module AI system",
+    "Daily Site Tracking": "Capture progress, blockers, and tomorrow’s plan in one shared daily board.",
+    "Daily Readiness & Dispatch": "Eason checks the gates · Calvin loads the teams · Everyone sees the same board",
+    "Job Completion Report": "Capture completion evidence, job details, and a Drive-ready handover.",
+    "Team Command Center": "Scaffold · Rorobin · Storage · Hoarding · Lorry · Mover",
+    "Inventory, Tools & Purchasing": "Manage stock, tools, suppliers, purchasing, assignments, and payments.",
+    "Scaffold & Green Tag System": "Manage scaffold jobs, inspections, material returns, and green-tag action.",
+    "Workers Documentation & Permits": "Manage worker access, work permits, insurance, and expiry action."
+  };
+
   const OPERATION_FLOW = [
     ["01", "Readiness & Dispatch", "Daily Readiness & Dispatch", "Confirm job readiness, dispatch gates, and night-team movement."],
     ["02", "Site Tracking", "Daily Site Tracking", "Record site progress and daily operational updates."],
@@ -3215,9 +3226,7 @@
       if (localPreview || fr.getAttribute("src") !== t.file) fr.setAttribute("src", nextSrc);
       const tt = document.getElementById("tbTitle");
       const toolTitle = window.innerWidth <= 860 ? ((TOOL_LABELS[t.name] || {}).short || t.name) : t.name;
-      const toolSubtitle = t.name === "Daily Readiness & Dispatch"
-        ? "Eason checks the gates · Calvin loads the teams · Everyone sees the same board"
-        : "";
+      const toolSubtitle = TOOL_SUBTITLES[t.name] || "";
       tt.innerHTML = '<span class="tb-title-main">' + ico(t.icon) + " " + esc(toolTitle) + ' <span class="badge badge-' + t.type + '">' + STATUS_LABEL[t.type] + "</span></span>" +
         (toolSubtitle ? '<span class="tb-tool-sub">' + esc(toolSubtitle) + "</span>" : "");
       tt.style.display = "flex";
