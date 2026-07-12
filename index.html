@@ -1776,13 +1776,14 @@
   .snapshot-label {
     display: flex;
     align-items: flex-start;
-    min-height: 36px;
+    min-height: 18px;
     max-width: calc(100% - 28px);
     color: #8b837b;
     font-size: 13px;
     line-height: 18px;
     font-weight: 750;
     text-transform: uppercase;
+    white-space: nowrap;
   }
   .snapshot-value {
     display: grid;
@@ -2444,6 +2445,7 @@
       min-height: 30px;
       font-size: 11px;
       line-height: 15px;
+      white-space: normal;
     }
     .snapshot-value,
     .readiness-metrics span {
@@ -3034,13 +3036,13 @@
 	          <section class="op-card snapshot-card" id="operationsSnapshot">
 	            <div class="snapshot-title">Operations Snapshot</div>
 	            <div class="snapshot-grid">
-	              <button type="button" class="snapshot-segment" onclick="focusOpenBlockers()">
-	                <span class="snapshot-label">Needs Attention</span>
+	              <button type="button" class="snapshot-segment" onclick="focusOpenBlockers()" aria-label="Review items needing attention">
+	                <span class="snapshot-label">Attention</span>
 	                <span class="snapshot-value"><b id="snapNeeds" data-skel>—</b><em id="snapNeedsNote">clear now</em></span>
 	                <i data-lucide="chevron-right"></i>
 	              </button>
-	              <button type="button" class="snapshot-segment snapshot-dispatch" onclick="openToolByName('Daily Readiness & Dispatch')">
-	                <span class="snapshot-label">Dispatch Readiness</span>
+	              <button type="button" class="snapshot-segment snapshot-dispatch" onclick="openToolByName('Daily Readiness & Dispatch')" aria-label="Open dispatch readiness">
+	                <span class="snapshot-label">Readiness</span>
 	                <span class="readiness-metrics">
 	                  <span><b id="snapReady" data-skel>—</b><em>Ready</em></span>
 	                  <span><b id="snapRisk" data-skel>—</b><em>At risk</em></span>
@@ -3048,18 +3050,18 @@
 	                </span>
 	                <i data-lucide="chevron-right"></i>
 	              </button>
-	              <button type="button" class="snapshot-segment" onclick="openToolByName('Team Command Center')">
+	              <button type="button" class="snapshot-segment" onclick="openToolByName('Team Command Center')" aria-label="Open team actions">
 	                <span class="snapshot-label">Team Actions</span>
 	                <span class="snapshot-value"><b id="snapTeam" data-skel>—</b><em id="snapTeamNote">review</em></span>
 	                <i data-lucide="chevron-right"></i>
 	              </button>
-	              <button type="button" class="snapshot-segment" onclick="openToolByName('Workers Documentation & Permits')">
+	              <button type="button" class="snapshot-segment" onclick="openToolByName('Workers Documentation & Permits')" aria-label="Open worker access">
 	                <span class="snapshot-label">Worker Access</span>
 	                <span class="snapshot-value"><b id="snapWorker" data-skel>—</b><em id="snapWorkerNote">permit due</em></span>
 	                <i data-lucide="chevron-right"></i>
 	              </button>
 	              <div class="snapshot-segment">
-	                <span class="snapshot-label">Open Quotations</span>
+	                <span class="snapshot-label">Open Quotes</span>
 	                <span class="snapshot-value"><b id="snapQuotes" data-skel>—</b><em>draft / sent</em></span>
 	              </div>
 	              <div class="snapshot-segment">
