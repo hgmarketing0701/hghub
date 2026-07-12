@@ -352,6 +352,11 @@ Use this page structure across HG Hub operational tools.
 - semantic colour only on values that communicate status
 - omit the snapshot when it does not help the workflow
 - leave enough bottom padding beneath internal metric dividers so the dividers never sit against the card edge
+- use one shared KPI anatomy within a snapshot: label zone, primary value line, then status or context line
+- reserve the same two-line label height for every segment so all primary values begin on one horizontal level
+- keep primary numbers and compact currency values on one line with tabular numerals
+- align compound metrics, such as Ready / At risk / Blocked, to the same value and context rows as single metrics
+- do not mix inline and stacked status treatments within the same snapshot card
 
 ### Filters
 

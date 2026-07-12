@@ -1740,7 +1740,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: flex-start;
-    gap: 14px;
+    gap: 10px;
     padding: 12px 24px 0;
     border: 0;
     background: transparent;
@@ -1774,7 +1774,9 @@
     stroke-width: 3;
   }
   .snapshot-label {
-    display: block;
+    display: flex;
+    align-items: flex-start;
+    min-height: 36px;
     max-width: calc(100% - 28px);
     color: #8b837b;
     font-size: 13px;
@@ -1783,9 +1785,10 @@
     text-transform: uppercase;
   }
   .snapshot-value {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
+    display: grid;
+    grid-template-rows: 36px 18px;
+    align-content: start;
+    gap: 2px;
     min-width: 0;
   }
   .snapshot-value b,
@@ -1795,6 +1798,7 @@
     line-height: 36px;
     font-weight: 750;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
   .snapshot-value em,
   .readiness-metrics em {
@@ -1802,15 +1806,17 @@
     font-style: normal;
     font-size: 14px;
     line-height: 18px;
+    white-space: nowrap;
   }
   .readiness-metrics {
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 26px;
   }
   .readiness-metrics span {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: 36px 18px;
+    align-content: start;
     gap: 2px;
   }
   .readiness-metrics span:nth-child(1) b,
@@ -2435,8 +2441,13 @@
       height: 16px;
     }
     .snapshot-label {
+      min-height: 30px;
       font-size: 11px;
       line-height: 15px;
+    }
+    .snapshot-value,
+    .readiness-metrics span {
+      grid-template-rows: 30px 16px;
     }
     .snapshot-value b,
     .readiness-metrics b {
