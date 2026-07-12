@@ -197,7 +197,7 @@ The companion dark theme preserves the same hierarchy rather than reviving the o
 - muted text: `#adb6b8`
 - operational accent: `#4b83a1`
 
-Theme preference is a shell-level choice. Use the operating-system preference on first load, then persist the user's explicit light or dark choice. Semantic status meanings must remain unchanged between themes.
+Theme preference is a shell-level choice. Offer `Light`, `Dark`, and `System`; use `System` on first load and persist the user's explicit choice. Semantic status meanings must remain unchanged between themes.
 
 ### Brand Tokens
 
@@ -465,7 +465,7 @@ The shell has:
 
 ### Sidebar
 
-The base sidebar styling is locked. Future changes may add or remove role tools, but must not restyle the sidebar foundation. A compact light/dark theme control may sit with the sidebar utilities above system status.
+The base sidebar styling is locked. Future changes may add or remove role tools, but must not restyle the sidebar foundation. A compact appearance selector may sit with the sidebar utilities above system status and offer `Light`, `Dark`, and `System`.
 
 - expanded width: `248px`
 - collapsed width: `72px`
@@ -753,7 +753,7 @@ For the current redesign, HG should use:
 - text: near-black `#171717`
 - border: warm neutral `#e4ded6`
 
-The current HG Hub is a clean light operational product. Dark mode remains a future tenant capability and is not a styling reference for the current redesign.
+The current HG Hub remains light by default, with a companion dark operational theme that preserves the same hierarchy, semantics, and component structure.
 
 ## Implementation Order
 

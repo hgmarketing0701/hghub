@@ -2529,10 +2529,14 @@
   }
 
   /* ═══════════ DARK THEME PREVIEW FOUNDATION ═══════════ */
-  .sb-theme-toggle {
+  .sb-theme-picker {
+    position: relative;
     width: calc(100% - 32px);
-    min-height: 42px;
     margin: 0 auto 10px;
+  }
+  .sb-theme-toggle {
+    width: 100%;
+    min-height: 42px;
     padding: 8px 10px;
     display: flex;
     align-items: center;
@@ -2563,35 +2567,59 @@
     font-weight: 750;
     white-space: nowrap;
   }
-  .sb-theme-switch {
-    width: 34px;
-    height: 20px;
-    flex: 0 0 34px;
-    padding: 2px;
-    border-radius: 999px;
-    background: #d8d3cc;
-    transition: background 0.18s ease;
-  }
-  .sb-theme-knob {
-    display: block;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
+  .sb-theme-chevron { width: 16px; height: 16px; flex: 0 0 16px; color: #817970; }
+  .sb-theme-chevron svg { width: 16px; height: 16px; transition: transform .16s ease; }
+  .sb-theme-toggle[aria-expanded="true"] .sb-theme-chevron svg { transform: rotate(180deg); }
+  .sb-theme-menu {
+    position: absolute;
+    z-index: 40;
+    left: 0;
+    right: 0;
+    bottom: calc(100% + 6px);
+    display: none;
+    padding: 4px;
+    border: 1px solid #e4ded6;
+    border-radius: 8px;
     background: #ffffff;
-    box-shadow: 0 1px 3px rgba(23,23,23,0.22);
-    transition: transform 0.18s ease;
+    box-shadow: 0 12px 30px rgba(23,23,23,.12);
   }
-  .sb-theme-toggle[aria-pressed="true"] .sb-theme-switch { background: #4b83a1; }
-  .sb-theme-toggle[aria-pressed="true"] .sb-theme-knob { transform: translateX(14px); }
+  .sb-theme-menu.open { display: block; }
+  .sb-theme-choice {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #413d39;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 650;
+    text-align: left;
+    cursor: pointer;
+  }
+  .sb-theme-choice:hover,
+  .sb-theme-choice:focus { outline: none; background: #f8f7f4; color: #143d4a; }
+  .sb-theme-choice[aria-checked="true"] { background: #eef6f3; color: #143d4a; }
+  .sb-theme-choice svg { width: 16px; height: 16px; flex: 0 0 16px; }
+  .sb-theme-choice-label { flex: 1; }
+  .sb-theme-check { width: 16px; flex: 0 0 16px; }
+  .shell.collapsed .sb-theme-picker {
+    width: 42px;
+    margin: 0 auto 10px;
+  }
   .shell.collapsed .sb-theme-toggle {
     width: 42px;
     min-height: 42px;
-    margin: 0 auto 10px;
     padding: 0;
     justify-content: center;
   }
   .shell.collapsed .sb-theme-label,
-  .shell.collapsed .sb-theme-switch { display: none; }
+  .shell.collapsed .sb-theme-chevron { display: none; }
+  .shell.collapsed .sb-theme-menu { left: calc(100% + 8px); right: auto; bottom: 0; width: 168px; }
 
   html[data-theme="ops-dark"] {
     color-scheme: dark;
@@ -2644,8 +2672,12 @@
     color: #f4f8f8;
     box-shadow: none;
   }
-  html[data-theme="ops-dark"] .sb-theme-switch { background: #344047; }
-  html[data-theme="ops-dark"] .sb-theme-knob { background: #f5f7f7; }
+  html[data-theme="ops-dark"] .sb-theme-chevron { color: var(--text-dim2); }
+  html[data-theme="ops-dark"] .sb-theme-menu { background: #1d2328; border-color: var(--border); box-shadow: var(--shadow); }
+  html[data-theme="ops-dark"] .sb-theme-choice { color: var(--text-dim); }
+  html[data-theme="ops-dark"] .sb-theme-choice:hover,
+  html[data-theme="ops-dark"] .sb-theme-choice:focus { background: #252c31; color: #f1f3f2; }
+  html[data-theme="ops-dark"] .sb-theme-choice[aria-checked="true"] { background: #20363c; color: #f1f3f2; }
   html[data-theme="ops-dark"] .topbar {
     background: var(--bg);
     color: var(--text);
@@ -2806,16 +2838,20 @@
   html[data-theme="ops-dark"] #toolFrame { background: var(--bg); }
 
   @media (max-width: 860px) {
-    .shell.collapsed .sb-theme-toggle,
-    .sb-theme-toggle {
+    .shell.collapsed .sb-theme-picker,
+    .sb-theme-picker {
       width: calc(100% - 44px);
-      min-height: 48px;
       margin: 0 auto 10px;
+    }
+    .sb-theme-toggle {
+      width: 100%;
+      min-height: 48px;
       padding: 12px;
       justify-content: flex-start;
     }
     .shell.collapsed .sb-theme-label,
-    .shell.collapsed .sb-theme-switch { display: block; }
+    .shell.collapsed .sb-theme-chevron { display: block; }
+    .shell.collapsed .sb-theme-menu { left: 0; right: 0; bottom: calc(100% + 6px); width: auto; }
     html[data-theme="ops-dark"] aside,
     html[data-theme="ops-dark"] .shell.collapsed aside { background: #14191c; box-shadow: 0 18px 44px rgba(0,0,0,0.36); }
   }
@@ -2910,11 +2946,18 @@
 		    </div>
 	    <input id="sbSearch" type="text" style="display:none" autocomplete="off" />
 	    <div class="sb-nav" id="sbNav"></div>
-	    <button class="sb-theme-toggle" id="themeToggle" type="button" onclick="toggleTheme(event)" aria-pressed="false" title="Switch to dark theme">
-	      <span class="sb-theme-icon"><i data-lucide="moon"></i></span>
-	      <span class="sb-theme-label">Dark theme</span>
-	      <span class="sb-theme-switch" aria-hidden="true"><span class="sb-theme-knob"></span></span>
-	    </button>
+    <div class="sb-theme-picker">
+      <button class="sb-theme-toggle" id="themeToggle" type="button" onclick="toggleThemeMenu(event)" aria-haspopup="menu" aria-expanded="false" title="Choose appearance">
+        <span class="sb-theme-icon"><i data-lucide="monitor"></i></span>
+        <span class="sb-theme-label">System theme</span>
+        <span class="sb-theme-chevron" aria-hidden="true"><i data-lucide="chevron-down"></i></span>
+      </button>
+      <div class="sb-theme-menu" id="themeMenu" role="menu" aria-label="Appearance">
+        <button class="sb-theme-choice" type="button" role="menuitemradio" data-theme-choice="light" onclick="selectTheme('light', event)"><i data-lucide="sun"></i><span class="sb-theme-choice-label">Light</span><span class="sb-theme-check"></span></button>
+        <button class="sb-theme-choice" type="button" role="menuitemradio" data-theme-choice="dark" onclick="selectTheme('dark', event)"><i data-lucide="moon"></i><span class="sb-theme-choice-label">Dark</span><span class="sb-theme-check"></span></button>
+        <button class="sb-theme-choice" type="button" role="menuitemradio" data-theme-choice="system" onclick="selectTheme('system', event)"><i data-lucide="monitor"></i><span class="sb-theme-choice-label">System</span><span class="sb-theme-check"></span></button>
+      </div>
+    </div>
 		    <div class="sb-status">
 	      <span class="sb-status-icon"><i data-lucide="badge-check"></i></span>
 	      <div class="sb-status-copy">
@@ -3592,34 +3635,76 @@
 	  function currentThemeName() {
 	    return document.documentElement.dataset.theme === "ops-dark" ? "dark" : "light";
 	  }
+	  function themePreference() {
+	    let saved = "";
+	    try { saved = localStorage.getItem("hg_hub_theme") || ""; } catch (e) {}
+	    return saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
+	  }
+	  function resolvedTheme(preference) {
+	    if (preference === "light" || preference === "dark") return preference;
+	    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+	  }
 	  function notifyToolTheme(theme) {
 	    const frame = document.getElementById("toolFrame");
 	    if (!frame || !frame.contentWindow) return;
 	    try { frame.contentWindow.postMessage({ type: "hg-theme-change", theme }, location.origin); } catch (e) {}
 	  }
-	  function applyTheme(theme, persist) {
-	    const next = theme === "dark" ? "dark" : "light";
+	  function applyTheme(preference, persist) {
+	    const selected = preference === "light" || preference === "dark" ? preference : "system";
+	    const next = resolvedTheme(selected);
 	    document.documentElement.dataset.theme = "ops-" + next;
 	    if (persist) {
-	      try { localStorage.setItem("hg_hub_theme", next); } catch (e) {}
+	      try { localStorage.setItem("hg_hub_theme", selected); } catch (e) {}
 	    }
 	    const button = document.getElementById("themeToggle");
 	    if (button) {
-	      const dark = next === "dark";
-	      button.setAttribute("aria-pressed", dark ? "true" : "false");
-	      button.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
-	      button.title = dark ? "Switch to light theme" : "Switch to dark theme";
-	      button.innerHTML = '<span class="sb-theme-icon">' + ico(dark ? "sun" : "moon") + '</span>' +
-	        '<span class="sb-theme-label">' + (dark ? "Light theme" : "Dark theme") + '</span>' +
-	        '<span class="sb-theme-switch" aria-hidden="true"><span class="sb-theme-knob"></span></span>';
+	      const icon = selected === "dark" ? "moon" : selected === "light" ? "sun" : "monitor";
+	      const label = selected.charAt(0).toUpperCase() + selected.slice(1) + " theme";
+	      button.setAttribute("aria-label", "Appearance: " + label);
+	      button.title = "Choose appearance";
+	      button.innerHTML = '<span class="sb-theme-icon">' + ico(icon) + '</span>' +
+	        '<span class="sb-theme-label">' + label + '</span>' +
+	        '<span class="sb-theme-chevron" aria-hidden="true">' + ico("chevron-down") + '</span>';
 	      paintIcons();
 	    }
+	    document.querySelectorAll("[data-theme-choice]").forEach(choice => {
+	      const active = choice.dataset.themeChoice === selected;
+	      choice.setAttribute("aria-checked", active ? "true" : "false");
+	      const check = choice.querySelector(".sb-theme-check");
+	      if (check) check.innerHTML = active ? ico("check") : "";
+	    });
+	    paintIcons();
 	    notifyToolTheme(next);
 	  }
-	  function toggleTheme(e) {
-	    if (e) e.stopPropagation();
-	    applyTheme(currentThemeName() === "dark" ? "light" : "dark", true);
+	  function closeThemeMenu() {
+	    const button = document.getElementById("themeToggle");
+	    const menu = document.getElementById("themeMenu");
+	    if (button) button.setAttribute("aria-expanded", "false");
+	    if (menu) menu.classList.remove("open");
 	  }
+	  function toggleThemeMenu(e) {
+	    if (e) e.stopPropagation();
+	    const button = document.getElementById("themeToggle");
+	    const menu = document.getElementById("themeMenu");
+	    if (!button || !menu) return;
+	    const open = !menu.classList.contains("open");
+	    closeThemeMenu();
+	    if (open) {
+	      menu.classList.add("open");
+	      button.setAttribute("aria-expanded", "true");
+	      const active = menu.querySelector('[aria-checked="true"]');
+	      if (active) active.focus();
+	    }
+	  }
+	  function selectTheme(preference, e) {
+	    if (e) e.stopPropagation();
+	    applyTheme(preference, true);
+	    closeThemeMenu();
+	    const button = document.getElementById("themeToggle");
+	    if (button) button.focus();
+	  }
+	  document.addEventListener("click", closeThemeMenu);
+	  document.addEventListener("keydown", event => { if (event.key === "Escape") closeThemeMenu(); });
 	  function applySidebarCollapse(collapsed) {
 	    const shell = document.getElementById("shell");
 	    if (!shell) return;
@@ -3659,9 +3744,7 @@
 	  if (window.matchMedia) {
 	    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
 	    const syncSystemTheme = event => {
-	      let saved = "";
-	      try { saved = localStorage.getItem("hg_hub_theme") || ""; } catch (e) {}
-	      if (!saved) applyTheme(event.matches ? "dark" : "light", false);
+	      if (themePreference() === "system") applyTheme("system", false);
 	    };
 	    if (systemTheme.addEventListener) systemTheme.addEventListener("change", syncSystemTheme);
 	    else if (systemTheme.addListener) systemTheme.addListener(syncSystemTheme);
@@ -3956,7 +4039,7 @@
 	  function enterApp() {
 	    ["gateConfig", "gateLogin", "gateDenied"].forEach(g => document.getElementById(g).classList.remove("show"));
 	    document.getElementById("shell").style.display = "flex";
-	    applyTheme(currentThemeName(), false);
+	    applyTheme(themePreference(), false);
 	    try { applySidebarCollapse(localStorage.getItem("hg_sidebar_collapsed") === "1"); } catch (e) {}
 	    if (!RENDERED) {
       RENDERED = true;
