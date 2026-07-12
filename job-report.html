@@ -4,6 +4,38 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>HG Services — Job Completion Report</title>
+<script>
+  (function () {
+    const key = 'hg_hub_theme';
+    const media = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+    function preference() {
+      try {
+        const saved = localStorage.getItem(key);
+        if (saved === 'light' || saved === 'dark' || saved === 'system') return saved;
+      } catch (e) {}
+      return 'system';
+    }
+    function resolved(value) {
+      return value === 'light' || value === 'dark' ? value : (media && media.matches ? 'dark' : 'light');
+    }
+    function apply(value) {
+      const theme = resolved(value);
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    }
+    apply(preference());
+    window.addEventListener('message', function (event) {
+      if (!event.data || event.data.type !== 'hg-theme-change') return;
+      if (event.data.theme === 'light' || event.data.theme === 'dark') apply(event.data.theme);
+    });
+    window.addEventListener('storage', function (event) { if (event.key === key) apply(preference()); });
+    if (media) {
+      const syncSystem = function () { if (preference() === 'system') apply('system'); };
+      if (media.addEventListener) media.addEventListener('change', syncSystem);
+      else if (media.addListener) media.addListener(syncSystem);
+    }
+  })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -716,6 +748,88 @@
   .modal-bg { background:rgba(23,23,23,.38); backdrop-filter:blur(4px); } .modal { background:var(--surface); border-color:var(--border); border-radius:12px; box-shadow:var(--shadow); } .modal-head,.modal-foot { border-color:var(--border); } .modal-title { color:var(--text); } .x-btn { color:var(--text-dim); } .lm-items { background:var(--surface-2); border-color:var(--border); } .lm-item { background:var(--surface); border-color:var(--border); color:var(--text); }
   @media (max-width:1050px) { .project-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media (max-width:680px) { .container.app { padding:18px 16px 56px; } .topbar { align-items:flex-start; margin-bottom:18px; } .meta-pills { width:100%; } .completion-steps { gap:16px; margin-bottom:18px; } .project-grid,.form-grid.cols-2 { grid-template-columns:1fr; } .section-title { font-size:1.1rem; } .plist-dropdown,.hub-select-menu { max-height:min(260px,45vh); } .plist-item,button.hub-select-option { min-height:44px; display:flex; align-items:center; } }
+
+  /* HG operational dark theme. The generated report remains a white paper surface. */
+  html[data-theme="dark"] {
+    --bg:#1b2527;
+    --surface:#202b2d;
+    --surface-2:#253133;
+    --surface-raised:#2b383a;
+    --border:#394749;
+    --border-strong:#526164;
+    --text:#f3f6f4;
+    --text-dim:#b3bebb;
+    --text-dimmer:#8f9b98;
+    --accent:#78b8cd;
+    --accent-hover:#96c8d7;
+    --accent-soft:#203b43;
+    --green:#55bd8b;
+    --green-soft:#182c24;
+    --red:#f07578;
+    --red-soft:#352124;
+    --blue:#69aeca;
+    --blue-soft:#1b2c34;
+    --shadow:0 18px 48px rgba(0,0,0,.34);
+  }
+  html[data-theme="dark"] body { background:var(--bg); }
+  html[data-theme="dark"] .brand-sub,
+  html[data-theme="dark"] .section-meta,
+  html[data-theme="dark"] .field label,
+  html[data-theme="dark"] .completion-steps a { color:var(--text-dim); }
+  html[data-theme="dark"] .pill,
+  html[data-theme="dark"] .card,
+  html[data-theme="dark"] .dropzone,
+  html[data-theme="dark"] .photo-card,
+  html[data-theme="dark"] .stage-select,
+  html[data-theme="dark"] .caption-input,
+  html[data-theme="dark"] .field input[type="text"],
+  html[data-theme="dark"] .field input[type="date"],
+  html[data-theme="dark"] .field input[type="url"],
+  html[data-theme="dark"] .field select,
+  html[data-theme="dark"] .field textarea,
+  html[data-theme="dark"] .lm-picker select,
+  html[data-theme="dark"] .lm-add input,
+  html[data-theme="dark"] .scope-add-row input,
+  html[data-theme="dark"] .plist,
+  html[data-theme="dark"] button.hub-select-trigger,
+  html[data-theme="dark"] .hub-select-menu,
+  html[data-theme="dark"] .modal { background:var(--surface); border-color:var(--border); color:var(--text); }
+  html[data-theme="dark"] .field input[type="date"] { color-scheme:dark; }
+  html[data-theme="dark"] .field input:focus,
+  html[data-theme="dark"] .field select:focus,
+  html[data-theme="dark"] .field textarea:focus,
+  html[data-theme="dark"] .caption-input:focus,
+  html[data-theme="dark"] .lm-picker select:focus,
+  html[data-theme="dark"] .lm-add input:focus,
+  html[data-theme="dark"] .plist.open,
+  html[data-theme="dark"] button.hub-select-trigger:focus-visible,
+  html[data-theme="dark"] .hub-select.open .hub-select-trigger { box-shadow:0 0 0 3px rgba(115,174,186,.16); }
+  html[data-theme="dark"] .plist:hover,
+  html[data-theme="dark"] button.hub-select-trigger:hover { border-color:var(--border-strong); }
+  html[data-theme="dark"] .plist-dropdown,
+  html[data-theme="dark"] .lm-items { background:var(--surface-2); border-color:var(--border); }
+  html[data-theme="dark"] .plist-chip,
+  html[data-theme="dark"] .scope-chip.checked { background:var(--accent-soft); color:#b8dce2; }
+  html[data-theme="dark"] .plist-item:hover,
+  html[data-theme="dark"] button.hub-select-option:hover,
+  html[data-theme="dark"] button.hub-select-option:focus-visible,
+  html[data-theme="dark"] button.hub-select-option.selected { background:var(--accent-soft); color:#c8e4e8; }
+  html[data-theme="dark"] .btn { background:var(--surface); color:#c5dde1; }
+  html[data-theme="dark"] .btn:hover { background:var(--surface-2); border-color:var(--border-strong); }
+  html[data-theme="dark"] .btn-primary { background:#2f6d78; border-color:#2f6d78; color:#fff; }
+  html[data-theme="dark"] .btn-primary:hover { background:#397d88; border-color:#397d88; color:#fff; }
+  html[data-theme="dark"] .btn-danger { border-color:#67373a; color:var(--red); }
+  html[data-theme="dark"] .photo-canvas-wrap { background:var(--surface-raised); }
+  html[data-theme="dark"] .completion-steps { background:rgba(27,37,39,.94); }
+  html[data-theme="dark"] .completion-steps a:hover,
+  html[data-theme="dark"] .completion-steps a:focus,
+  html[data-theme="dark"] .completion-steps a.is-active { color:#b8dce2; }
+  html[data-theme="dark"] .preview-empty { background:var(--surface); }
+  html[data-theme="dark"] .modal-bg { background:rgba(0,0,0,.64); }
+  html[data-theme="dark"] .preview-wrap,
+  html[data-theme="dark"] #printRoot .preview-wrap { background:#fff; color:#111; color-scheme:light; border-color:#4a5153; }
+  html[data-theme="dark"] .preview-wrap .hg-doc,
+  html[data-theme="dark"] #printRoot .hg-doc { color:#111; }
 </style>
 </head>
 <body>

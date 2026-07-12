@@ -4,6 +4,17 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>HG Group — Master Dashboard</title>
+<script>
+  (function () {
+    const key = "hg_hub_theme";
+    let saved = "";
+    try { saved = localStorage.getItem(key) || ""; } catch (e) {}
+    const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.dataset.theme = saved === "dark" || saved === "light"
+      ? "ops-" + saved
+      : (prefersDark ? "ops-dark" : "ops-light");
+  })();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1121,12 +1132,14 @@
 	  .sb-pname { color: #171717; font-size: 15px; line-height: 21px; font-weight: 750; letter-spacing: 0; }
 	  .sb-prole { color: #8b837b; font-size: 12.5px; line-height: 18px; font-weight: 500; }
 	  .sb-nav {
+	    flex: 0 1 auto;
 	    width: calc(100% - 32px);
 	    margin: 0 auto;
 	    padding: 6px 0 12px;
 	    overflow-y: auto;
 	    transition: width 0.2s ease, padding 0.2s ease;
 	  }
+	  .sb-status { margin-top: auto; }
 	  .sb-role-link, .sb-role-create {
 	    width: 100%;
 	    min-height: 44px;
@@ -1729,7 +1742,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: flex-start;
-    gap: 14px;
+    gap: 10px;
     padding: 12px 24px 0;
     border: 0;
     background: transparent;
@@ -1763,18 +1776,22 @@
     stroke-width: 3;
   }
   .snapshot-label {
-    display: block;
+    display: flex;
+    align-items: flex-start;
+    min-height: 18px;
     max-width: calc(100% - 28px);
     color: #8b837b;
     font-size: 13px;
     line-height: 18px;
     font-weight: 750;
     text-transform: uppercase;
+    white-space: nowrap;
   }
   .snapshot-value {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
+    display: grid;
+    grid-template-rows: 36px 18px;
+    align-content: start;
+    gap: 2px;
     min-width: 0;
   }
   .snapshot-value b,
@@ -1784,6 +1801,7 @@
     line-height: 36px;
     font-weight: 750;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
   .snapshot-value em,
   .readiness-metrics em {
@@ -1791,15 +1809,17 @@
     font-style: normal;
     font-size: 14px;
     line-height: 18px;
+    white-space: nowrap;
   }
   .readiness-metrics {
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 26px;
   }
   .readiness-metrics span {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: 36px 18px;
+    align-content: start;
     gap: 2px;
   }
   .readiness-metrics span:nth-child(1) b,
@@ -2052,6 +2072,10 @@
     border-radius: 0;
     background: transparent;
   }
+  .activity-snapshot-row .mini-stat > span { min-height: 17px; white-space: nowrap; }
+  .activity-snapshot-row .mini-stat-metric { display: grid; grid-template-rows: 32px 17px; align-content: start; gap: 2px; }
+  .activity-snapshot-row .mini-stat-metric b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .activity-snapshot-row .mini-stat-metric em { margin-left: 0; white-space: nowrap; }
   .activity-snapshot-row .mini-stat + .mini-stat {
     border-left: 1px solid #e4ded6;
   }
@@ -2424,8 +2448,14 @@
       height: 16px;
     }
     .snapshot-label {
+      min-height: 30px;
       font-size: 11px;
       line-height: 15px;
+      white-space: normal;
+    }
+    .snapshot-value,
+    .readiness-metrics span {
+      grid-template-rows: 30px 16px;
     }
     .snapshot-value b,
     .readiness-metrics b {
@@ -2516,6 +2546,375 @@
   @media (min-width: 861px) {
     .mobile-tabbar { display: none; }
   }
+
+  /* ═══════════ DARK THEME PREVIEW FOUNDATION ═══════════ */
+  .sb-theme-picker {
+    position: relative;
+    width: calc(100% - 32px);
+    margin: 0 auto 10px;
+  }
+  .sb-theme-toggle {
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: #173b48;
+    font: inherit;
+    cursor: pointer;
+  }
+  .sb-theme-toggle:hover { background: rgba(255,255,255,0.52); }
+  .sb-theme-icon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sb-theme-icon svg { width: 18px; height: 18px; }
+  .sb-theme-label {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 750;
+    white-space: nowrap;
+  }
+  .sb-theme-chevron { width: 16px; height: 16px; flex: 0 0 16px; color: #817970; }
+  .sb-theme-chevron svg { width: 16px; height: 16px; transition: transform .16s ease; }
+  .sb-theme-toggle[aria-expanded="true"] .sb-theme-chevron svg { transform: rotate(180deg); }
+  .sb-theme-menu {
+    position: absolute;
+    z-index: 40;
+    left: 0;
+    right: 0;
+    bottom: calc(100% + 6px);
+    display: none;
+    padding: 4px;
+    border: 1px solid #e4ded6;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 12px 30px rgba(23,23,23,.12);
+  }
+  .sb-theme-menu.open { display: block; }
+  .sb-theme-choice {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #413d39;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 650;
+    text-align: left;
+    cursor: pointer;
+  }
+  .sb-theme-choice:hover,
+  .sb-theme-choice:focus { outline: none; background: #f8f7f4; color: #143d4a; }
+  .sb-theme-choice[aria-checked="true"] { background: #eef6f3; color: #143d4a; }
+  .sb-theme-choice svg { width: 16px; height: 16px; flex: 0 0 16px; }
+  .sb-theme-choice-label { flex: 1; }
+  .sb-theme-check { width: 16px; flex: 0 0 16px; }
+  .shell.collapsed .sb-theme-picker {
+    width: 42px;
+    margin: 0 auto 10px;
+  }
+  .shell.collapsed .sb-theme-toggle {
+    width: 42px;
+    min-height: 42px;
+    padding: 0;
+    justify-content: center;
+  }
+  .shell.collapsed .sb-theme-label,
+  .shell.collapsed .sb-theme-chevron { display: none; }
+  .shell.collapsed .sb-theme-menu { left: calc(100% + 8px); right: auto; bottom: 0; width: 168px; }
+
+  html[data-theme="ops-dark"] {
+    color-scheme: dark;
+    --bg: #1b2527;
+    --surface: #202b2d;
+    --surface-solid: #202b2d;
+    --surface-2: #253133;
+    --surface-3: #2b383a;
+    --border: #394749;
+    --border-strong: #526164;
+    --text: #f3f6f4;
+    --text-dim: #b3bebb;
+    --text-dim2: #8f9b98;
+    --accent: #78b8cd;
+    --accent-hover: #96c8d7;
+    --accent-soft: #203b43;
+    --green: #48c78e;
+    --green-soft: #17372b;
+    --blue: #75bfe1;
+    --blue-soft: #17313d;
+    --red: #ff7b7f;
+    --red-soft: #3b2225;
+    --purple: #a89cff;
+    --purple-soft: #292642;
+    --shadow: 0 14px 34px rgba(0,0,0,0.28);
+  }
+  html[data-theme="ops-dark"] body,
+  html[data-theme="ops-dark"] .shell,
+  html[data-theme="ops-dark"] .content,
+  html[data-theme="ops-dark"] #homeView { background: var(--bg); color: var(--text); }
+  html[data-theme="ops-dark"] aside {
+    background: #151d1f;
+    border-right-color: var(--border);
+  }
+  html[data-theme="ops-dark"] .sb-pname,
+  html[data-theme="ops-dark"] .sb-role-link,
+  html[data-theme="ops-dark"] .sb-role-create,
+  html[data-theme="ops-dark"] .sb-status,
+  html[data-theme="ops-dark"] .sb-collapse-toggle,
+  html[data-theme="ops-dark"] .sb-theme-toggle { color: #dce6e8; }
+  html[data-theme="ops-dark"] .sb-prole,
+  html[data-theme="ops-dark"] .sb-status-sub { color: var(--text-dim2); }
+  html[data-theme="ops-dark"] .sb-role-divider { background: var(--border); }
+  html[data-theme="ops-dark"] .sb-role-link:hover,
+  html[data-theme="ops-dark"] .sb-role-create:hover,
+  html[data-theme="ops-dark"] .sb-theme-toggle:hover { background: var(--surface-2); }
+  html[data-theme="ops-dark"] .sb-role-link.active {
+    background: var(--surface-2);
+    border-color: var(--border);
+    color: #f4f8f8;
+    box-shadow: none;
+  }
+  html[data-theme="ops-dark"] .sb-theme-chevron { color: var(--text-dim2); }
+  html[data-theme="ops-dark"] .sb-theme-menu { background: var(--surface-3); border-color: var(--border-strong); box-shadow: var(--shadow); }
+  html[data-theme="ops-dark"] .sb-theme-choice { color: var(--text-dim); }
+  html[data-theme="ops-dark"] .sb-theme-choice:hover,
+  html[data-theme="ops-dark"] .sb-theme-choice:focus { background: var(--surface-3); color: var(--text); }
+  html[data-theme="ops-dark"] .sb-theme-choice[aria-checked="true"] { background: var(--accent-soft); color: var(--text); }
+  html[data-theme="ops-dark"] .topbar {
+    background: var(--bg);
+    color: var(--text);
+  }
+  html[data-theme="ops-dark"] .tb-title,
+  html[data-theme="ops-dark"] .tb-icon,
+  html[data-theme="ops-dark"] .tb-btn { color: #dce6e8; }
+  html[data-theme="ops-dark"] .tb-search {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text-dim);
+    box-shadow: none;
+  }
+  html[data-theme="ops-dark"] .tb-search kbd {
+    background: var(--surface-3);
+    border-color: var(--border-strong);
+    color: #dce6e8;
+  }
+  html[data-theme="ops-dark"] .tb-icon,
+  html[data-theme="ops-dark"] .tb-btn {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+  html[data-theme="ops-dark"] .tb-icon:hover,
+  html[data-theme="ops-dark"] .tb-btn:hover { border-color: var(--border-strong); color: #ffffff; }
+  html[data-theme="ops-dark"] #tbAi,
+  html[data-theme="ops-dark"] #tbAi:hover,
+  html[data-theme="ops-dark"] #tbAi[aria-expanded="true"] {
+    color: #b2a6ff;
+    background: var(--surface);
+    border-color: #49436c;
+  }
+  html[data-theme="ops-dark"] .op-hero,
+  html[data-theme="ops-dark"] .op-hero::before { background: var(--bg); }
+  html[data-theme="ops-dark"] .op-date,
+  html[data-theme="ops-dark"] .screen-kicker,
+  html[data-theme="ops-dark"] .op-hero h1,
+  html[data-theme="ops-dark"] .screen-head h1,
+  html[data-theme="ops-dark"] .tools-title { color: #e7eeee; }
+  html[data-theme="ops-dark"] .op-hero p,
+  html[data-theme="ops-dark"] .screen-head p { color: var(--text-dim); }
+  html[data-theme="ops-dark"] .op-card,
+  html[data-theme="ops-dark"] .snapshot-card,
+  html[data-theme="ops-dark"] .todo-card,
+  html[data-theme="ops-dark"] section.cat,
+  html[data-theme="ops-dark"] .mini-stat,
+  html[data-theme="ops-dark"] .modal,
+  html[data-theme="ops-dark"] .cmdk-box {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+  }
+  html[data-theme="ops-dark"] .modal,
+  html[data-theme="ops-dark"] .cmdk-box,
+  html[data-theme="ops-dark"] .ai-drawer {
+    background: var(--surface-3);
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+  html[data-theme="ops-dark"] .ai-dhead,
+  html[data-theme="ops-dark"] .ai-input { border-color: var(--border); }
+  html[data-theme="ops-dark"] .ai-dtitle b { color: var(--text); }
+  html[data-theme="ops-dark"] .ai-dtitle span,
+  html[data-theme="ops-dark"] .ai-msg.think { color: var(--text-dim); }
+  html[data-theme="ops-dark"] .ai-msgs::-webkit-scrollbar-thumb { background: var(--border-strong); }
+  html[data-theme="ops-dark"] .ai-msg.bot { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+  html[data-theme="ops-dark"] .ai-msg.me { background: #332f52; color: #ded9ff; }
+  html[data-theme="ops-dark"] .ai-input input { background: var(--surface); border-color: var(--border-strong); color: var(--text); }
+  html[data-theme="ops-dark"] .ai-input input::placeholder { color: var(--text-dim2); }
+  html[data-theme="ops-dark"] .ai-send { background: #426f88; color: #fff; }
+  html[data-theme="ops-dark"] .op-card-head,
+  html[data-theme="ops-dark"] .flow-step,
+  html[data-theme="ops-dark"] .activity-row,
+  html[data-theme="ops-dark"] .activity-inline-filters,
+  html[data-theme="ops-dark"] .cmdk-input { border-color: var(--border); }
+  html[data-theme="ops-dark"] .op-card h2,
+  html[data-theme="ops-dark"] .snapshot-title,
+  html[data-theme="ops-dark"] .snapshot-value b,
+  html[data-theme="ops-dark"] .readiness-metrics b,
+  html[data-theme="ops-dark"] .todo-title,
+  html[data-theme="ops-dark"] .todo-clear b,
+  html[data-theme="ops-dark"] .attention-clear b,
+  html[data-theme="ops-dark"] .team-signal-copy b,
+  html[data-theme="ops-dark"] .flow-copy b,
+  html[data-theme="ops-dark"] .op-list-title,
+  html[data-theme="ops-dark"] .op-tool-card h3,
+  html[data-theme="ops-dark"] .detail-tool-card h3,
+  html[data-theme="ops-dark"] .support-tool-card h3,
+  html[data-theme="ops-dark"] .catalog-chip b,
+  html[data-theme="ops-dark"] .activity-snapshot-card h2,
+  html[data-theme="ops-dark"] .mini-stat b,
+  html[data-theme="ops-dark"] .cat-title,
+  html[data-theme="ops-dark"] .tile-name,
+  html[data-theme="ops-dark"] .cmdk-input input,
+  html[data-theme="ops-dark"] .cmdk-item .ck-title { color: var(--text); }
+  html[data-theme="ops-dark"] .op-card p,
+  html[data-theme="ops-dark"] .snapshot-label,
+  html[data-theme="ops-dark"] .snapshot-value em,
+  html[data-theme="ops-dark"] .readiness-metrics em,
+  html[data-theme="ops-dark"] .todo-source,
+  html[data-theme="ops-dark"] .todo-clear span,
+  html[data-theme="ops-dark"] .attention-clear span,
+  html[data-theme="ops-dark"] .team-signal-copy span,
+  html[data-theme="ops-dark"] .flow-copy span,
+  html[data-theme="ops-dark"] .op-list-sub,
+  html[data-theme="ops-dark"] .op-list-time,
+  html[data-theme="ops-dark"] .op-tool-card p,
+  html[data-theme="ops-dark"] .detail-tool-card p,
+  html[data-theme="ops-dark"] .support-tool-card p,
+  html[data-theme="ops-dark"] .catalog-chip span,
+  html[data-theme="ops-dark"] .activity-detail,
+  html[data-theme="ops-dark"] .tile-desc,
+  html[data-theme="ops-dark"] .cat-count,
+  html[data-theme="ops-dark"] .mini-stat span,
+  html[data-theme="ops-dark"] .mini-stat em { color: var(--text-dim); }
+  html[data-theme="ops-dark"] .op-tool-card,
+  html[data-theme="ops-dark"] .detail-tool-card,
+  html[data-theme="ops-dark"] .support-tool-card,
+  html[data-theme="ops-dark"] .catalog-chip,
+  html[data-theme="ops-dark"] .op-list-item,
+  html[data-theme="ops-dark"] .todo-item,
+  html[data-theme="ops-dark"] .team-signal,
+  html[data-theme="ops-dark"] .team-source-list div,
+  html[data-theme="ops-dark"] .route-list button,
+  html[data-theme="ops-dark"] .source-list div,
+  html[data-theme="ops-dark"] .mapping-row,
+  html[data-theme="ops-dark"] .tile,
+  html[data-theme="ops-dark"] .activity-inline-filters button,
+  html[data-theme="ops-dark"] .tool-tab,
+  html[data-theme="ops-dark"] .btn-ghost,
+  html[data-theme="ops-dark"] .mini-btn {
+    background: var(--surface-2);
+    border-color: var(--border);
+    color: #dce6e8;
+  }
+  html[data-theme="ops-dark"] .flow-index,
+  html[data-theme="ops-dark"] .tile-icon { background: var(--blue-soft); border-color: var(--border); color: var(--blue); }
+  html[data-theme="ops-dark"] .flow-step button { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+  html[data-theme="ops-dark"] .count-pill,
+  html[data-theme="ops-dark"] .soft-pill { background: var(--amber-soft); border-color: #66532d; color: #efc66e; }
+  html[data-theme="ops-dark"] .activity-tool { color: var(--blue); }
+  html[data-theme="ops-dark"] .activity-status,
+  html[data-theme="ops-dark"] .activity-status.updated { background: var(--blue-soft); color: var(--blue); }
+  html[data-theme="ops-dark"] .activity-status.cleared,
+  html[data-theme="ops-dark"] .activity-status.added { background: var(--green-soft); color: var(--green); }
+  html[data-theme="ops-dark"] .activity-status.removed { background: var(--red-soft); color: var(--red); }
+  html[data-theme="ops-dark"] .badge-live { background: var(--green-soft); color: var(--green); border-color: #315f4b; }
+  html[data-theme="ops-dark"] .badge-cloud { background: var(--amber-soft); color: #efc66e; border-color: #66532d; }
+  html[data-theme="ops-dark"] .badge-reference { background: var(--surface-2); color: var(--text-dim); border-color: var(--border); }
+  html[data-theme="ops-dark"] .badge-prototype { background: var(--purple-soft); color: #c7bfff; border-color: #514b79; }
+  html[data-theme="ops-dark"] .op-tool-card:hover,
+  html[data-theme="ops-dark"] .detail-tool-card:hover,
+  html[data-theme="ops-dark"] .support-tool-card:hover,
+  html[data-theme="ops-dark"] .catalog-chip:hover,
+  html[data-theme="ops-dark"] .op-list-item:hover,
+  html[data-theme="ops-dark"] .todo-item:hover,
+  html[data-theme="ops-dark"] .tile:hover { background: var(--surface-3); border-color: var(--border-strong); }
+  html[data-theme="ops-dark"] .snapshot-segment + .snapshot-segment::before { background: var(--border); }
+  html[data-theme="ops-dark"] .activity-snapshot-row .mini-stat + .mini-stat { border-color: var(--border); }
+  html[data-theme="ops-dark"] .snapshot-segment > svg,
+  html[data-theme="ops-dark"] .todo-open,
+  html[data-theme="ops-dark"] .team-source-list div,
+  html[data-theme="ops-dark"] .route-list button,
+  html[data-theme="ops-dark"] .source-list div,
+  html[data-theme="ops-dark"] .mapping-row { color: #9fc8d5; }
+  html[data-theme="ops-dark"] .activity-row { background: var(--surface); }
+  html[data-theme="ops-dark"] .activity-avatar { background: var(--surface-3); color: #dce6e8; }
+  html[data-theme="ops-dark"] .activity-time { color: var(--text-dim); }
+  html[data-theme="ops-dark"] .mini-stat.cloud,
+  html[data-theme="ops-dark"] .mini-stat.warn { background: #30291b; }
+  html[data-theme="ops-dark"] .mini-stat.soft { background: #20342e; }
+  html[data-theme="ops-dark"] .btn-primary,
+  html[data-theme="ops-dark"] .tool-tab.on,
+  html[data-theme="ops-dark"] .activity-inline-filters button.active,
+  html[data-theme="ops-dark"] .route-list button.active,
+  html[data-theme="ops-dark"] .activity-filter-actions .mini-btn.active {
+    background: #426f88;
+    border-color: #426f88;
+    color: #ffffff;
+  }
+  html[data-theme="ops-dark"] .btn-primary:hover,
+  html[data-theme="ops-dark"] .tool-tab.on:hover { background: #385f75; border-color: #385f75; }
+  html[data-theme="ops-dark"] :where(button, a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid #9bcbd8;
+    outline-offset: 2px;
+  }
+  html[data-theme="ops-dark"] .sb-theme-choice:focus-visible { outline: 2px solid #9bcbd8; outline-offset: -2px; }
+  html[data-theme="ops-dark"] .focus-ring { box-shadow: 0 0 0 3px rgba(120,184,205,.38); }
+  html[data-theme="ops-dark"] .mobile-tabbar {
+    background: rgba(21,29,31,0.97);
+    border-color: var(--border);
+  }
+  html[data-theme="ops-dark"] .mobile-tabbar button { color: var(--text-dim); }
+  html[data-theme="ops-dark"] .mobile-tabbar button.active { background: var(--accent-soft); color: #e7eeee; }
+  html[data-theme="ops-dark"] .cmdk { background: rgba(0,0,0,0.48); }
+  html[data-theme="ops-dark"] .cmdk-item { color: var(--text-dim); }
+  html[data-theme="ops-dark"] .cmdk-item.sel { background: var(--surface-3); color: var(--text); }
+  html[data-theme="ops-dark"] #toolView { background: var(--bg); }
+  html[data-theme="ops-dark"] #toolFrame { background: var(--bg); }
+
+  @media (max-width: 860px) {
+    .shell.collapsed .sb-theme-picker,
+    .sb-theme-picker {
+      width: calc(100% - 44px);
+      margin: 0 auto 10px;
+    }
+    .sb-theme-toggle {
+      width: 100%;
+      min-height: 48px;
+      padding: 12px;
+      justify-content: flex-start;
+    }
+    .shell.collapsed .sb-theme-label,
+    .shell.collapsed .sb-theme-chevron { display: block; }
+    .shell.collapsed .sb-theme-menu { left: 0; right: 0; bottom: calc(100% + 6px); width: auto; }
+    html[data-theme="ops-dark"] aside,
+    html[data-theme="ops-dark"] .shell.collapsed aside { background: #151d1f; box-shadow: 0 18px 44px rgba(0,0,0,0.36); }
+  }
 </style>
 </head>
 <body>
@@ -2599,7 +2998,7 @@
 	  <!-- ═══════════ SIDEBAR (02 Operations / Site) ═══════════ -->
 		  <aside id="sidebar">
 			    <div class="sb-brand" onclick="goHome()">
-			      <img class="sb-wordmark" src="hg-logo.png" alt="HG" />
+			      <img class="sb-wordmark" src="hg-logo.png" data-light-src="hg-logo.png" data-dark-src="hg-logo-light.png" alt="HG" />
 			      <div class="sb-identity">
 		        <div class="sb-pname" id="sbPname">Black Lee</div>
 		        <div class="sb-prole" id="sbProle">Operations / Site</div>
@@ -2607,6 +3006,18 @@
 		    </div>
 	    <input id="sbSearch" type="text" style="display:none" autocomplete="off" />
 	    <div class="sb-nav" id="sbNav"></div>
+    <div class="sb-theme-picker">
+      <button class="sb-theme-toggle" id="themeToggle" type="button" onclick="toggleThemeMenu(event)" aria-haspopup="menu" aria-expanded="false" title="Choose appearance">
+        <span class="sb-theme-icon"><i data-lucide="monitor"></i></span>
+        <span class="sb-theme-label">System theme</span>
+        <span class="sb-theme-chevron" aria-hidden="true"><i data-lucide="chevron-down"></i></span>
+      </button>
+      <div class="sb-theme-menu" id="themeMenu" role="menu" aria-label="Appearance">
+        <button class="sb-theme-choice" type="button" role="menuitemradio" data-theme-choice="light" onclick="selectTheme('light', event)"><i data-lucide="sun"></i><span class="sb-theme-choice-label">Light</span><span class="sb-theme-check"></span></button>
+        <button class="sb-theme-choice" type="button" role="menuitemradio" data-theme-choice="dark" onclick="selectTheme('dark', event)"><i data-lucide="moon"></i><span class="sb-theme-choice-label">Dark</span><span class="sb-theme-check"></span></button>
+        <button class="sb-theme-choice" type="button" role="menuitemradio" data-theme-choice="system" onclick="selectTheme('system', event)"><i data-lucide="monitor"></i><span class="sb-theme-choice-label">System</span><span class="sb-theme-check"></span></button>
+      </div>
+    </div>
 		    <div class="sb-status">
 	      <span class="sb-status-icon"><i data-lucide="badge-check"></i></span>
 	      <div class="sb-status-copy">
@@ -2664,13 +3075,13 @@
 	          <section class="op-card snapshot-card" id="operationsSnapshot">
 	            <div class="snapshot-title">Operations Snapshot</div>
 	            <div class="snapshot-grid">
-	              <button type="button" class="snapshot-segment" onclick="focusOpenBlockers()">
-	                <span class="snapshot-label">Needs Attention</span>
+	              <button type="button" class="snapshot-segment" onclick="focusOpenBlockers()" aria-label="Review items needing attention">
+	                <span class="snapshot-label">Attention</span>
 	                <span class="snapshot-value"><b id="snapNeeds" data-skel>—</b><em id="snapNeedsNote">clear now</em></span>
 	                <i data-lucide="chevron-right"></i>
 	              </button>
-	              <button type="button" class="snapshot-segment snapshot-dispatch" onclick="openToolByName('Daily Readiness & Dispatch')">
-	                <span class="snapshot-label">Dispatch Readiness</span>
+	              <button type="button" class="snapshot-segment snapshot-dispatch" onclick="openToolByName('Daily Readiness & Dispatch')" aria-label="Open dispatch readiness">
+	                <span class="snapshot-label">Readiness</span>
 	                <span class="readiness-metrics">
 	                  <span><b id="snapReady" data-skel>—</b><em>Ready</em></span>
 	                  <span><b id="snapRisk" data-skel>—</b><em>At risk</em></span>
@@ -2678,18 +3089,18 @@
 	                </span>
 	                <i data-lucide="chevron-right"></i>
 	              </button>
-	              <button type="button" class="snapshot-segment" onclick="openToolByName('Team Command Center')">
+	              <button type="button" class="snapshot-segment" onclick="openToolByName('Team Command Center')" aria-label="Open team actions">
 	                <span class="snapshot-label">Team Actions</span>
 	                <span class="snapshot-value"><b id="snapTeam" data-skel>—</b><em id="snapTeamNote">review</em></span>
 	                <i data-lucide="chevron-right"></i>
 	              </button>
-	              <button type="button" class="snapshot-segment" onclick="openToolByName('Workers Documentation & Permits')">
+	              <button type="button" class="snapshot-segment" onclick="openToolByName('Workers Documentation & Permits')" aria-label="Open worker access">
 	                <span class="snapshot-label">Worker Access</span>
 	                <span class="snapshot-value"><b id="snapWorker" data-skel>—</b><em id="snapWorkerNote">permit due</em></span>
 	                <i data-lucide="chevron-right"></i>
 	              </button>
 	              <div class="snapshot-segment">
-	                <span class="snapshot-label">Open Quotations</span>
+	                <span class="snapshot-label">Open Quotes</span>
 	                <span class="snapshot-value"><b id="snapQuotes" data-skel>—</b><em>draft / sent</em></span>
 	              </div>
 	              <div class="snapshot-segment">
@@ -2803,11 +3214,11 @@
           <section class="op-card activity-snapshot-card">
             <h2>Activity snapshot</h2>
             <div class="activity-snapshot-row" id="activitySnapshot">
-              <div class="mini-stat"><span>Last 24 hours</span><b data-skel>—</b><em>updates</em></div>
-              <div class="mini-stat soft"><span>Operations</span><b data-skel>—</b><em>site changes</em></div>
-              <div class="mini-stat warn"><span>Dispatch</span><b data-skel>—</b><em>updates</em></div>
-              <div class="mini-stat"><span>Documents</span><b data-skel>—</b><em>files changed</em></div>
-              <div class="mini-stat"><span>Team</span><b data-skel>—</b><em>active users</em></div>
+              <div class="mini-stat"><span>24h Activity</span><div class="mini-stat-metric"><b data-skel>—</b><em>updates</em></div></div>
+              <div class="mini-stat soft"><span>Operations</span><div class="mini-stat-metric"><b data-skel>—</b><em>site changes</em></div></div>
+              <div class="mini-stat warn"><span>Dispatch</span><div class="mini-stat-metric"><b data-skel>—</b><em>updates</em></div></div>
+              <div class="mini-stat"><span>Documents</span><div class="mini-stat-metric"><b data-skel>—</b><em>files changed</em></div></div>
+              <div class="mini-stat"><span>Team</span><div class="mini-stat-metric"><b data-skel>—</b><em>active users</em></div></div>
             </div>
           </section>
           <div class="activity-layout">
@@ -2974,7 +3385,7 @@
       { icon:"layout-dashboard", name:"Operations Command Center", type:"live",
         desc:"The 18-module ops entrance — quotation builder, playbooks, site & cloud-app launchers.",
         file:"operations.html", dark:true },
-      { icon:"activity", name:"Daily Site Tracking", type:"live",
+      { icon:"map-pin", name:"Daily Site Tracking", type:"live",
         desc:"Replaces the manual Google Sheet. Add sites, update progress, generate a WhatsApp-ready daily report.",
         file:"dashboard.html", dark:false },
       { icon:"truck", name:"Daily Readiness & Dispatch", type:"live",
@@ -2983,7 +3394,7 @@
       { icon:"calendar-clock", name:"Daily Job Arrangement", type:"cloud",
         desc:"Night-team job arrangement board (Netlify — opens for anyone, no Google login needed).",
         cloud:{ key:"bl_arrangement_url" } },
-      { icon:"camera", name:"Job Completion Report", type:"live",
+      { icon:"clipboard-check", name:"Job Completion Report", type:"live",
         desc:"Upload tilted site photos → auto-straighten → fill job details → push PDF + photos to Drive + log to Sheet.",
         file:"job-report.html", dark:false, cloud:{ key:"bl_jcr_url" } },
       { icon:"users", name:"Team Command Center", type:"live",
@@ -3013,7 +3424,7 @@
       { icon:"truck", name:"Lorry Fleet Management", type:"live",
         desc:"Supabase edition — own-vehicle fuel, toll, maintenance and repair history with photo / PDF storage.",
         file:"lorry-supabase.html", dark:true, cloud:{ key:"bl_lorry_url" } },
-      { icon:"construction", name:"Scaffold & Green Tag System", type:"live",
+      { icon:"badge-check", name:"Scaffold & Green Tag System", type:"live",
         desc:"Supabase edition — rental / install / inspection, green-tag tracking, onsite inventory, collection reminders, invoicing.",
         file:"scaffold-supabase.html", dark:false, cloud:{ key:"bl_scaffold_url" } },
       { icon:"warehouse", name:"Temporary Storage Rental", type:"live",
@@ -3024,7 +3435,7 @@
         file:"transport-supabase.html", dark:true, cloud:{ key:"bl_transport_url" } },
     ]},
     { name: "HR & Workers", icon: "contact", color: "#ec4899", tools: [
-      { icon:"contact", name:"Workers Documentation & Permits", type:"live",
+      { icon:"user-check", name:"Workers Documentation & Permits", type:"live",
         desc:"Supabase edition — worker master list, document & work-permit management with expiry alerts, insurance tracking.",
         file:"workers-supabase.html", dark:false, cloud:{ key:"bl_workers_docs_url" } },
     ]},
@@ -3290,6 +3701,81 @@
 	    });
 	  }
 	  function scrollAttention() { focusOpenBlockers(); }
+	  function currentThemeName() {
+	    return document.documentElement.dataset.theme === "ops-dark" ? "dark" : "light";
+	  }
+	  function themePreference() {
+	    let saved = "";
+	    try { saved = localStorage.getItem("hg_hub_theme") || ""; } catch (e) {}
+	    return saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
+	  }
+	  function resolvedTheme(preference) {
+	    if (preference === "light" || preference === "dark") return preference;
+	    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+	  }
+	  function notifyToolTheme(theme) {
+	    const frame = document.getElementById("toolFrame");
+	    if (!frame || !frame.contentWindow) return;
+	    try { frame.contentWindow.postMessage({ type: "hg-theme-change", theme }, location.origin); } catch (e) {}
+	  }
+	  function applyTheme(preference, persist) {
+	    const selected = preference === "light" || preference === "dark" ? preference : "system";
+	    const next = resolvedTheme(selected);
+	    document.documentElement.dataset.theme = "ops-" + next;
+	    const wordmark = document.querySelector(".sb-wordmark");
+	    if (wordmark) wordmark.src = next === "dark" ? wordmark.dataset.darkSrc : wordmark.dataset.lightSrc;
+	    if (persist) {
+	      try { localStorage.setItem("hg_hub_theme", selected); } catch (e) {}
+	    }
+	    const button = document.getElementById("themeToggle");
+	    if (button) {
+	      const icon = selected === "dark" ? "moon" : selected === "light" ? "sun" : "monitor";
+	      const label = selected.charAt(0).toUpperCase() + selected.slice(1) + " theme";
+	      button.setAttribute("aria-label", "Appearance: " + label);
+	      button.title = "Choose appearance";
+	      button.innerHTML = '<span class="sb-theme-icon">' + ico(icon) + '</span>' +
+	        '<span class="sb-theme-label">' + label + '</span>' +
+	        '<span class="sb-theme-chevron" aria-hidden="true">' + ico("chevron-down") + '</span>';
+	      paintIcons();
+	    }
+	    document.querySelectorAll("[data-theme-choice]").forEach(choice => {
+	      const active = choice.dataset.themeChoice === selected;
+	      choice.setAttribute("aria-checked", active ? "true" : "false");
+	      const check = choice.querySelector(".sb-theme-check");
+	      if (check) check.innerHTML = active ? ico("check") : "";
+	    });
+	    paintIcons();
+	    notifyToolTheme(next);
+	  }
+	  function closeThemeMenu() {
+	    const button = document.getElementById("themeToggle");
+	    const menu = document.getElementById("themeMenu");
+	    if (button) button.setAttribute("aria-expanded", "false");
+	    if (menu) menu.classList.remove("open");
+	  }
+	  function toggleThemeMenu(e) {
+	    if (e) e.stopPropagation();
+	    const button = document.getElementById("themeToggle");
+	    const menu = document.getElementById("themeMenu");
+	    if (!button || !menu) return;
+	    const open = !menu.classList.contains("open");
+	    closeThemeMenu();
+	    if (open) {
+	      menu.classList.add("open");
+	      button.setAttribute("aria-expanded", "true");
+	      const active = menu.querySelector('[aria-checked="true"]');
+	      if (active) active.focus();
+	    }
+	  }
+	  function selectTheme(preference, e) {
+	    if (e) e.stopPropagation();
+	    applyTheme(preference, true);
+	    closeThemeMenu();
+	    const button = document.getElementById("themeToggle");
+	    if (button) button.focus();
+	  }
+	  document.addEventListener("click", closeThemeMenu);
+	  document.addEventListener("keydown", event => { if (event.key === "Escape") closeThemeMenu(); });
 	  function applySidebarCollapse(collapsed) {
 	    const shell = document.getElementById("shell");
 	    if (!shell) return;
@@ -3314,7 +3800,7 @@
 		    applySidebarCollapse(collapsed);
 	    try { localStorage.setItem("hg_sidebar_collapsed", collapsed ? "1" : "0"); } catch (err) {}
 	  }
-		  function reloadTool() {
+	  function reloadTool() {
     if (!CURRENT) return;
     const t = CATS[CURRENT.ci].tools[CURRENT.ti];
     document.getElementById("toolFrame").setAttribute("src", t.file + (t.file.indexOf("?")<0 ? "?r=" : "&r=") + Date.now());
@@ -3323,6 +3809,17 @@
     if (!CURRENT) return;
     window.open(CATS[CURRENT.ci].tools[CURRENT.ti].file, "_blank");
   }
+
+	  const toolFrame = document.getElementById("toolFrame");
+	  if (toolFrame) toolFrame.addEventListener("load", () => notifyToolTheme(currentThemeName()));
+	  if (window.matchMedia) {
+	    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+	    const syncSystemTheme = event => {
+	      if (themePreference() === "system") applyTheme("system", false);
+	    };
+	    if (systemTheme.addEventListener) systemTheme.addEventListener("change", syncSystemTheme);
+	    else if (systemTheme.addListener) systemTheme.addListener(syncSystemTheme);
+	  }
 
   /* ── Render sidebar directory ── */
   function ico(name, cls) { return '<i data-lucide="' + name + '"' + (cls ? ' class="' + cls + '"' : "") + '></i>'; }
@@ -3613,6 +4110,7 @@
 	  function enterApp() {
 	    ["gateConfig", "gateLogin", "gateDenied"].forEach(g => document.getElementById(g).classList.remove("show"));
 	    document.getElementById("shell").style.display = "flex";
+	    applyTheme(themePreference(), false);
 	    try { applySidebarCollapse(localStorage.getItem("hg_sidebar_collapsed") === "1"); } catch (e) {}
 	    if (!RENDERED) {
       RENDERED = true;
@@ -4165,14 +4663,14 @@
 	    const counts = activityCounts(rows);
 	    const last24 = DASHBOARD_STATE.activityToday || 0;
 	    const stats = [
-	      ["Last 24 hours", last24, "updates", ""],
+	      ["24h Activity", last24, "updates", ""],
 	      ["Operations", counts.operations, "site changes", "soft"],
 	      ["Dispatch", counts.dispatch, "updates", "warn"],
 	      ["Documents", counts.documents, "files changed", ""],
 	      ["Team", counts.team, "active users", ""]
 	    ];
 	    el.innerHTML = stats.map(s => '<div class="mini-stat ' + esc(s[3]) + '"><span>' + esc(s[0]) +
-	      '</span><b>' + esc(s[1]) + '</b><em>' + esc(s[2]) + '</em></div>').join("");
+	      '</span><div class="mini-stat-metric"><b>' + esc(s[1]) + '</b><em>' + esc(s[2]) + '</em></div></div>').join("");
 	  }
 	  function renderActivityFilters(rows) {
 	    const counts = activityCounts(rows);

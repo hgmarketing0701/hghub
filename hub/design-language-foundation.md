@@ -187,7 +187,20 @@ The current HG light theme uses these canonical values:
 - Primary operational accent: `#143d4a`
 - Primary hover: `#0e303b`
 
-Dark mode is not part of the current HG Hub redesign contract. It may remain a future tenant capability, but it must not influence current light-tool styling.
+The companion dark theme preserves the same hierarchy rather than reviving the old high-contrast dashboard aesthetic. Use Jobber's dark operational layering as the reference: a green-charcoal canvas, a darker navigation rail, slightly lighter work surfaces, quiet borders, and restrained accents.
+
+- app background: `#1b2527`
+- primary surface: `#202b2d`
+- muted surface: `#253133`
+- raised surface: `#2b383a`
+- border: `#394749`
+- strong text: `#f3f6f4`
+- muted text: `#b3bebb`
+- operational accent: `#4b83a1`
+
+Avoid pure black canvases, white card islands, glowing borders, and saturated accent fills across large areas. Semantic red, amber, green, and blue retain their meanings but use softened backgrounds in dark mode.
+
+Theme preference is a shell-level choice. Offer `Light`, `Dark`, and `System`; use `System` on first load and persist the user's explicit choice. Semantic status meanings must remain unchanged between themes.
 
 ### Brand Tokens
 
@@ -337,6 +350,21 @@ Use this page structure across HG Hub operational tools.
 - use `13px` medium-weight muted text with a `17px` line height on desktop
 - keep subtitles to one line with ellipsis when space is limited; hide them on compact mobile topbars rather than squeezing the title and actions
 
+### Canonical Tool Icons
+
+Canonical Operations / Site icon identities:
+
+| Tool | Lucide icon |
+| --- | --- |
+| Daily Readiness & Dispatch | `truck` |
+| Daily Site Tracking | `map-pin` |
+| Job Completion Report | `clipboard-check` |
+| Workers Documentation & Permits | `user-check` |
+| Scaffold & Green Tag System | `badge-check` |
+| Inventory, Tools & Purchasing | `package` |
+
+These mappings are product identity, not decoration. Reuse them in the role sidebar, tool topbar, direct header, catalog/search result, and mobile context. Do not substitute a similar icon or recreate the Lucide geometry manually.
+
 ### Page Header
 
 - border-free title and one-line operational description
@@ -353,6 +381,17 @@ Use this page structure across HG Hub operational tools.
 - semantic colour only on values that communicate status
 - omit the snapshot when it does not help the workflow
 - leave enough bottom padding beneath internal metric dividers so the dividers never sit against the card edge
+
+#### KPI Cell Contract
+
+- use the same three-part anatomy throughout a snapshot: label, primary value, then optional status or context
+- place the label above the value; do not alternate between label-first and value-first cells in different tools
+- use concise noun-based labels of one or two words and keep them to one line on desktop
+- reserve the same label height for every segment so all primary values begin on one horizontal level; allow controlled two-line wrapping only on narrow screens
+- keep primary numbers and compact currency values on one line with tabular numerals
+- align compound metrics, such as Ready / At risk / Blocked, to the same value and context rows as single metrics
+- place supporting amounts or status text on the context row instead of combining them with the label
+- do not mix inline and stacked status treatments within the same snapshot card
 
 ### Filters
 
@@ -466,7 +505,7 @@ The shell has:
 
 ### Sidebar
 
-The base sidebar styling is locked. Future changes may add or remove role tools, but must not restyle the sidebar foundation.
+The base sidebar styling is locked. Future changes may add or remove role tools, but must not restyle the sidebar foundation. A compact appearance selector may sit with the sidebar utilities above system status and offer `Light`, `Dark`, and `System`.
 
 - expanded width: `248px`
 - collapsed width: `72px`
@@ -754,7 +793,7 @@ For the current redesign, HG should use:
 - text: near-black `#171717`
 - border: warm neutral `#e4ded6`
 
-The current HG Hub is a clean light operational product. Dark mode remains a future tenant capability and is not a styling reference for the current redesign.
+The current HG Hub remains light by default, with a companion dark operational theme that preserves the same hierarchy, semantics, and component structure.
 
 ## Implementation Order
 

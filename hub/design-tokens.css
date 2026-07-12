@@ -89,40 +89,40 @@
   --content-max-width: 1440px;
 }
 
-/* Optional future tenant theme. Not part of the current HG redesign contract. */
+/* Dark operational companion theme. Mirrors the light theme's hierarchy and semantics. */
 [data-theme="ops-dark"] {
-  --color-bg: #0b1020;
-  --color-surface: #121827;
-  --color-surface-muted: #1a2233;
-  --color-surface-raised: #1f2937;
-  --color-border: #2f394a;
-  --color-border-strong: #465367;
+  --color-bg: #1b2527;
+  --color-surface: #202b2d;
+  --color-surface-muted: #253133;
+  --color-surface-raised: #2b383a;
+  --color-border: #394749;
+  --color-border-strong: #526164;
 
-  --color-text: #f8fafc;
-  --color-text-muted: #a5afbf;
-  --color-text-faint: #737f91;
-  --color-text-inverse: #111827;
+  --color-text: #f3f6f4;
+  --color-text-muted: #b3bebb;
+  --color-text-faint: #8f9b98;
+  --color-text-inverse: #1b2527;
 
-  --brand-primary: #f8fafc;
-  --brand-primary-hover: #e5e7eb;
-  --brand-accent: #f59e0b;
-  --brand-accent-hover: #d97706;
-  --brand-soft: rgba(245, 158, 11, 0.14);
-  --brand-contrast: #111827;
+  --brand-primary: #78b8cd;
+  --brand-primary-hover: #96c8d7;
+  --brand-accent: #4b83a1;
+  --brand-accent-hover: #5e96b3;
+  --brand-soft: #203b43;
+  --brand-contrast: #ffffff;
 
-  --status-success: #22c55e;
-  --status-success-soft: rgba(34, 197, 94, 0.14);
-  --status-warning: #f59e0b;
-  --status-warning-soft: rgba(245, 158, 11, 0.14);
-  --status-danger: #f87171;
-  --status-danger-soft: rgba(248, 113, 113, 0.14);
-  --status-info: #60a5fa;
-  --status-info-soft: rgba(96, 165, 250, 0.14);
-  --status-neutral: #9ca3af;
-  --status-neutral-soft: rgba(156, 163, 175, 0.14);
+  --status-success: #48c78e;
+  --status-success-soft: #17372b;
+  --status-warning: #e8b04f;
+  --status-warning-soft: #30291b;
+  --status-danger: #ff7b7f;
+  --status-danger-soft: #3b2225;
+  --status-info: #75bfe1;
+  --status-info-soft: #17313d;
+  --status-neutral: #aab3b6;
+  --status-neutral-soft: #242b30;
 
-  --shadow-popover: 0 14px 40px rgba(0, 0, 0, 0.42);
-  --shadow-modal: 0 24px 72px rgba(0, 0, 0, 0.55);
+  --shadow-popover: 0 14px 40px rgba(0, 0, 0, 0.38);
+  --shadow-modal: 0 24px 72px rgba(0, 0, 0, 0.5);
 }
 
 [data-tenant="hg"] {
@@ -134,6 +134,15 @@
   --brand-accent-hover: #0e303b;
   --brand-soft: #eef6f3;
   --ask-hg-accent: #7067d9;
+}
+
+[data-theme="ops-dark"][data-tenant="hg"] {
+  --brand-primary: #78b8cd;
+  --brand-primary-hover: #96c8d7;
+  --brand-accent: #4b83a1;
+  --brand-accent-hover: #5e96b3;
+  --brand-soft: #203b43;
+  --brand-contrast: #ffffff;
 }
 
 /* Component aliases */
