@@ -4,6 +4,30 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>HG Services — HIRARC & Method Statement (Hoarding, Ombak KLCC)</title>
+<script>
+  (function(){
+    function preference(){
+      var saved='';
+      try { saved=localStorage.getItem('hg_hub_theme')||''; } catch(e) {}
+      return saved==='light'||saved==='dark'||saved==='system' ? saved : 'system';
+    }
+    function resolved(value){
+      if(value==='light'||value==='dark') return value;
+      return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    function apply(value){ document.documentElement.dataset.theme='ops-'+resolved(value); }
+    apply(preference());
+    window.addEventListener('message',function(event){
+      if(event.origin!==location.origin||!event.data||event.data.type!=='hg-theme-change') return;
+      if(event.data.theme==='light'||event.data.theme==='dark') apply(event.data.theme);
+    });
+    window.addEventListener('storage',function(event){ if(event.key==='hg_hub_theme') apply(preference()); });
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <style>
   :root {
     --bg: #0a0e1a; --surface: #141926; --border: #2a3245;
@@ -102,22 +126,80 @@
     .hg-table.tight tr { page-break-inside: avoid; break-inside: avoid; }
     h1, h2 { page-break-after: avoid; }
   }
+
+  /* HG Hub reference-document shell */
+  :root {
+    --bg:#ffffff; --surface:#ffffff; --surface-2:#f8f7f4; --surface-raised:#ffffff;
+    --border:#e4ded6; --border-strong:#cfc8bd; --text:#171717; --text-dim:#817970;
+    --accent:#143d4a; --accent-hover:#0e303b; --accent-soft:#eef6f3;
+    --green:#15945d; --green-soft:#edf8f3; --radius:8px;
+  }
+  html { color-scheme:light; }
+  body { background:var(--bg); color:var(--text); font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; }
+  .container { max-width:1320px; padding:24px 28px 56px; }
+  .tool-header { padding:0 0 20px; margin:0 0 24px; border-bottom:1px solid var(--border); }
+  .tool-identity { display:flex; align-items:center; gap:10px; color:var(--accent); }
+  .tool-identity svg { width:20px; height:20px; stroke-width:2; }
+  .brand-name { color:var(--accent); font-size:1.05rem; font-weight:800; letter-spacing:-.02em; }
+  .brand-sub { color:var(--text-dim); font-size:13px; line-height:17px; margin:4px 0 0 30px; }
+  .reference-badge { display:inline-flex; align-items:center; height:22px; margin-left:2px; padding:0 9px; border-radius:999px; background:var(--surface-2); color:var(--text-dim); font-size:10px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; }
+  body.embedded .tool-header { display:none; }
+  .document-toolbar { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin:0 0 16px; }
+  .document-toolbar h1 { color:var(--text); font-size:24px; line-height:1.2; letter-spacing:-.03em; }
+  .document-toolbar p { margin:5px 0 0; color:var(--text-dim); font-size:14px; }
+  .actions { flex:0 0 auto; gap:8px; }
+  .btn { min-height:42px; padding:9px 14px; border-radius:8px; background:var(--surface); border-color:var(--border); color:var(--accent); font-size:13px; font-weight:700; box-shadow:none; }
+  .btn:hover { background:var(--surface-2); border-color:var(--border-strong); }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn.primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); }
+  .btn svg { width:16px; height:16px; }
+  .hint { display:flex; align-items:flex-start; gap:9px; margin:0 0 16px; padding:12px 14px; border:0; border-left:3px solid var(--accent); border-radius:0 8px 8px 0; background:var(--surface-2); color:var(--text-dim); font-size:13px; }
+  .hint svg { width:17px; height:17px; flex:0 0 17px; margin-top:1px; color:var(--accent); }
+  .preview-wrap { background:#fff; border-color:var(--border); border-radius:8px; box-shadow:none; overflow:auto; }
+
+  html[data-theme="ops-dark"] {
+    color-scheme:dark; --bg:#1b2527; --surface:#202b2d; --surface-2:#253133; --surface-raised:#2b383a;
+    --border:#394749; --border-strong:#506063; --text:#f3f6f4; --text-dim:#b3bebb;
+    --accent:#78b8cd; --accent-hover:#91c7d7; --accent-soft:#263b40;
+  }
+  html[data-theme="ops-dark"] .reference-badge { background:var(--surface-2); color:var(--text-dim); }
+  html[data-theme="ops-dark"] .btn { background:var(--surface); border-color:var(--border); color:#dce8ea; }
+  html[data-theme="ops-dark"] .btn:hover { background:var(--surface-raised); border-color:var(--border-strong); }
+  html[data-theme="ops-dark"] .btn.primary { background:#315e6b; border-color:#315e6b; color:#f7faf9; }
+  html[data-theme="ops-dark"] .hint { background:var(--surface-2); }
+
+  @media (max-width:700px) {
+    .container { padding:18px 16px 44px; }
+    .document-toolbar { align-items:stretch; flex-direction:column; gap:14px; }
+    .document-toolbar h1 { font-size:22px; }
+    .actions { display:grid; grid-template-columns:1fr 1fr; width:100%; }
+    .btn { justify-content:center; min-width:0; }
+    .hg-doc { min-width:1000px; }
+  }
+  @media print {
+    .tool-header,.document-toolbar,.hint { display:none!important; }
+    html,body { background:#fff!important; color-scheme:light; }
+  }
 </style>
 </head>
 <body>
 <div class="container">
 
-  <div class="topbar">
+  <header class="tool-header">
+    <div class="tool-identity"><i data-lucide="triangle-alert"></i><div class="brand-name">HIRARC &amp; Method Statement</div><span class="reference-badge">Reference</span></div>
+    <div class="brand-sub">Hoarding installation, modification and dismantling · Ombak KLCC Mall</div>
+  </header>
+  <section class="document-toolbar">
     <div>
-      <div class="brand-name">HG Services — HIRARC &amp; Method Statement</div>
-      <div class="brand-sub">Hoarding Works · Ombak KLCC Mall (pre-opening)</div>
+      <h1>Submission preview</h1>
+      <p>Review the risk controls and safe-work sequence before printing the controlled copy.</p>
     </div>
     <div class="actions">
-      <a class="btn ghost" href="hse-policy.html">← HSE Policy</a>
-      <button class="btn" onclick="window.print()">🖨 Print / Save as PDF</button>
+      <a class="btn" href="hse-policy.html"><i data-lucide="shield"></i>Open HSE Policy</a>
+      <button class="btn primary" onclick="window.print()"><i data-lucide="printer"></i>Print / Save PDF</button>
     </div>
-  </div>
-  <div class="hint">Prints to <strong>A4 landscape</strong> (the HIRARC table is wide). Click <strong>Print / Save as PDF</strong> → choose <strong>Save as PDF</strong>. Sign at the bottom before submitting.</div>
+  </section>
+  <div class="hint"><i data-lucide="info"></i><span>A4 landscape output keeps the HIRARC register readable. Sign the authorisation section before submission.</span></div>
 
   <div class="preview-wrap">
     <div class="hg-doc">
@@ -296,5 +378,9 @@
     </div>
   </div>
 </div>
+<script>
+  if(window.self!==window.top) document.body.classList.add('embedded');
+  if(window.lucide) lucide.createIcons({attrs:{'aria-hidden':'true'}});
+</script>
 </body>
 </html>

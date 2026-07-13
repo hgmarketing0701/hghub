@@ -3950,6 +3950,20 @@
       ],
       catalogTools: ["Transport / Mover / Rorobin", "Daily Readiness & Dispatch", "Lorry Fleet Management", "Scaffold & Green Tag System", "Temporary Storage Rental", "Job Completion Report"],
       alarmSources: ["Transport", "Dispatch", "Fleet", "Scaffold", "Storage"]
+    },
+    hr: {
+      label: "HR & Workers",
+      homeScreen: "role-home",
+      navTools: [
+        ["Workers & Permits", "user-check", "Workers Documentation & Permits"],
+        ["Receipt Claims", "receipt", "Receipt Claims"],
+        ["Expenses", "credit-card", "Expenses Receipt System"],
+        ["Team Command", "users", "Team Command Center"],
+        ["HSE Policy", "shield", "HSE Policy"],
+        ["HIRARC / Method Statement", "triangle-alert", "HIRARC & Method Statement"]
+      ],
+      catalogTools: ["Workers Documentation & Permits", "Receipt Claims", "Expenses Receipt System", "Team Command Center", "HSE Policy", "HIRARC & Method Statement"],
+      alarmSources: ["Workers"]
     }
   };
 
@@ -3989,6 +4003,8 @@
     "Daily Readiness & Dispatch": "Eason checks the gates · Calvin loads the teams · Everyone sees the same board",
     "Job Completion Report": "Capture completion evidence, job details, and a Drive-ready handover.",
     "Team Command Center": "Scaffold · Rorobin · Storage · Hoarding · Lorry · Mover",
+    "HSE Policy": "Hoarding works safety policy · Ombak KLCC Mall",
+    "HIRARC & Method Statement": "Hoarding installation, modification and dismantling · Ombak KLCC Mall",
     "Inventory, Tools & Purchasing": "Manage stock, tools, suppliers, purchasing, assignments, and payments.",
     "Scaffold & Green Tag System": "Manage scaffold jobs, inspections, material returns, and green-tag action.",
     "Workers Documentation & Permits": "Manage worker access, work permits, insurance, and expiry action."
@@ -4193,6 +4209,25 @@
         ["Rental returns & collections", "Rorobin, storage, scaffold, inspection, and tipping action", "Temporary Storage Rental", "returns_collections"],
         ["Fleet compliance & maintenance", "Compliance, service, licence, GDL, and summons action", "Lorry Fleet Management", "fleet"]
       ]
+    },
+    hr: {
+      title: "HR & Workers", intro: "Keep workers documented, permitted, insured, and ready for assignment.",
+      snapshotTitle: "People & Compliance Snapshot", attentionTitle: "Needs attention", attentionCopy: "Document, permit, and insurance expiry action routed to the owning tool",
+      workflowTitle: "People & Compliance workflow", workflowCopy: "Source-backed workforce, document, insurance, form, and compliance-pack context",
+      activityTitle: "Recent compliance activity", activityCopy: "Supported permit, insurance, settings, division, and report updates",
+      primary: ["Add worker", "Workers Documentation & Permits"], secondary: ["Add permit", "Workers Documentation & Permits"], rpc: "hub_hr_home_v1",
+      metrics: [
+        ["needs_attention", "Needs attention", "expiry action"], ["active_workers", "Active workers", "worker register"],
+        ["documents_expired", "Documents expired", "active-worker documents"], ["documents_expiring", "Documents expiring", "configured soon window"],
+        ["active_permits", "Active permits", "source status active"], ["insurance_actions", "Insurance actions", "expired / due soon"]
+      ],
+      workflow: [
+        ["Workforce register", "Active, inactive, and resigned workers with division context", "Workers Documentation & Permits", ["workforce.active_workers", "workforce.inactive_workers", "workforce.resigned_workers"]],
+        ["Documents & permits", "Documents on file, active permits, and open expiry action", "Workers Documentation & Permits", ["documents_permits.documents_on_file", "documents_permits.active_permits"]],
+        ["Insurance & forms", "Active insurance policies, insurance action, and permit forms", "Workers Documentation & Permits", ["insurance_forms.active_insurance", "insurance_forms.permit_forms"]],
+        ["Compliance packs", "Reports generated this month and the latest supported run", "Workers Documentation & Permits", ["reports.generated_mtd"]],
+        ["Shared shortcuts", "My claims, expenses, team coordination, HSE, and HIRARC remain separate owning tools", "Team Command Center"]
+      ]
     }
   };
   const ROLE_HOME_MOCK_DATA = {
@@ -4240,6 +4275,37 @@
         { at: "2026-07-13T08:21:00+08:00", actor: "eason@hggroup.com.my", action_label: "Updated dispatch assignment", detail: "JOB-260713-04 · Team and lorry confirmed", tool: "Daily Readiness & Dispatch" },
         { at: "2026-07-13T07:48:00+08:00", actor: "calvin@hggroup.com.my", action_label: "Started transport run", detail: "TRIP-260713-02 · Pavilion pickup", tool: "Transport / Mover / Rorobin" }
       ]
+    },
+    hr: {
+      version: "hr-home-v1", as_of: "2026-07-13", timezone: "Asia/Kuala_Lumpur", thresholds: { soon_days: 30, warning_days: 90 },
+      snapshot: {
+        needs_attention: { value: 6, count: 6, unit: "count", status: "critical", basis: "Document, permit, and insurance expiry action" },
+        active_workers: { value: 42, count: 42, unit: "count", status: "clear", basis: "Worker register · source status active" },
+        documents_expired: { value: 2, count: 2, unit: "count", status: "critical", basis: "Active-worker documents · expired" },
+        documents_expiring: { value: 2, count: 2, unit: "count", status: "warning", basis: "Active-worker documents · next 30 days" },
+        active_permits: { value: 8, count: 8, unit: "count", status: "warning", basis: "Work permits · source status active" },
+        insurance_actions: { value: 1, count: 1, unit: "count", status: "warning", basis: "Active insurance policies · expired or next 30 days" }
+      },
+      attention: { total: 6, critical: 2, warning: 3, watch: 1, items: [
+        { severity: "critical", title: "Alamin-2 passport has expired", detail: "Passport · document #A3178402 · 5 days overdue", due_date: "2026-07-08", source_label: "Worker documents", tool: "Workers Documentation & Permits", action_label: "Open worker" },
+        { severity: "critical", title: "Pavilion night-work permit has expired", detail: "Permit WP-2026-041 · Pavilion Kuala Lumpur · 2 days overdue", due_date: "2026-07-11", source_label: "Work permits", tool: "Workers Documentation & Permits", action_label: "Open permit" },
+        { severity: "warning", title: "Bijoy work visa expires soon", detail: "Working visa · expires in 9 days", due_date: "2026-07-22", source_label: "Worker documents", tool: "Workers Documentation & Permits", action_label: "Open worker" },
+        { severity: "warning", title: "Mid Valley work permit expires soon", detail: "Permit WP-2026-052 · expires in 18 days", due_date: "2026-07-31", source_label: "Work permits", tool: "Workers Documentation & Permits", action_label: "Open permit" },
+        { severity: "warning", title: "AIG worker cover expires soon", detail: "Policy AIG-WC-2026-03 · expires in 26 days", due_date: "2026-08-08", source_label: "Insurance", tool: "Workers Documentation & Permits", action_label: "Open insurance" },
+        { severity: "watch", title: "Akash competency certificate enters warning window", detail: "Competency certificate · expires in 63 days", due_date: "2026-09-14", source_label: "Worker documents", tool: "Workers Documentation & Permits", action_label: "Open worker" }
+      ] },
+      workflow: {
+        workforce: { active_workers: { count: 42 }, inactive_workers: { count: 3 }, resigned_workers: { count: 6 }, active_divisions: { count: 4 } },
+        documents_permits: { documents_on_file: { count: 118 }, active_permits: { count: 8 }, open_expiry_actions: { count: 5 } },
+        insurance_forms: { active_insurance: { count: 3 }, insurance_actions: { count: 1 }, permit_forms: { count: 14 } },
+        reports: { generated_mtd: { count: 3 }, latest_generated_at: "2026-07-12T16:40:00+08:00" }
+      },
+      activity: [
+        { at: "2026-07-13T11:18:00+08:00", actor: "marketing@hggroup.com.my", action_code: "wkr.permit.update", action_label: "Work permit updated", detail: "WP-2026-052 · Mid Valley Megamall", tool: "Workers Documentation & Permits" },
+        { at: "2026-07-12T16:40:00+08:00", actor: "calvin@hggroup.com.my", action_code: "wkr.report.generate", action_label: "Compliance report generated", detail: "Full pack · Pavilion Kuala Lumpur · 14 workers", tool: "Workers Documentation & Permits" },
+        { at: "2026-07-12T10:05:00+08:00", actor: "marketing@hggroup.com.my", action_code: "wkr.insurance.update", action_label: "Insurance policy updated", detail: "AIG · AIG-WC-2026-03", tool: "Workers Documentation & Permits" }
+      ],
+      data_quality: [{ source: "audit_log", code: "incomplete_activity_coverage", message: "Direct worker, document, form, and delete activity is not fully audited." }], unavailable: []
     }
   };
 
@@ -4566,8 +4632,8 @@
     const assigned = USER_PROFILE && Array.isArray(USER_PROFILE.home_roles) ? USER_PROFILE.home_roles : [];
     assigned.forEach(mode => { if (ROLE_MODES[mode]) modes.push(mode); });
     if (DEFAULT_HOME_MODE === "executive") modes.unshift("executive");
-    if (["sales", "inventory", "transport"].includes(DEFAULT_HOME_MODE)) modes.push(DEFAULT_HOME_MODE);
-    if (USER_PROFILE && USER_PROFILE.is_admin) modes.push("executive", "sales", "inventory", "transport");
+    if (["sales", "inventory", "transport", "hr"].includes(DEFAULT_HOME_MODE)) modes.push(DEFAULT_HOME_MODE);
+    if (USER_PROFILE && USER_PROFILE.is_admin) modes.push("executive", "sales", "inventory", "transport", "hr");
     const financeRole = USER_PROFILE && USER_PROFILE.finance_role;
     if (["Admin", "Manager"].includes(financeRole)) modes.push("finance");
     return Array.from(new Set(modes));
@@ -4603,7 +4669,8 @@
       ["finance", "wallet", "Finance / Invoicing", "Cash, margin and payment queues"],
       ["sales", "calculator", "Sales / Quotation", "Pricing and quotation handoff"],
       ["inventory", "package", "Inventory / Purchasing", "Stock, tools and supplier action"],
-      ["transport", "boxes", "Transport / Rental", "Movement, rental and fleet action"]
+      ["transport", "boxes", "Transport / Rental", "Movement, rental and fleet action"],
+      ["hr", "user-check", "HR & Workers", "People, documents and compliance action"]
     ].filter(item => allowed.includes(item[0]));
     menu.innerHTML = options.map(item =>
       '<button class="sb-role-choice' + (ACTIVE_HOME_MODE === item[0] ? ' active' : '') + '" type="button" role="menuitemradio" aria-checked="' + (ACTIVE_HOME_MODE === item[0]) + '" onclick="switchHomeView(\'' + item[0] + '\')">' +
@@ -4983,6 +5050,12 @@
         '<button data-tool-link="Transport / Mover / Rorobin" onclick="openToolByName(\'Transport / Mover / Rorobin\')">' + ico("boxes") + '<span>Jobs</span></button>' +
         '<button onclick="focusRoleHomeAttention()">' + ico("circle-alert") + '<span>Alerts</span></button>' +
         '<button data-screen-link="activity" onclick="showHubScreen(\'activity\')">' + ico("bar-chart-3") + '<span>Activity</span></button>';
+    } else if (ACTIVE_HOME_MODE === "hr") {
+      nav.innerHTML =
+        '<button data-screen-link="role-home" onclick="goHome()">' + ico("home") + '<span>Home</span></button>' +
+        '<button data-tool-link="Workers Documentation & Permits" onclick="openToolByName(\'Workers Documentation & Permits\')">' + ico("user-check") + '<span>Workers</span></button>' +
+        '<button data-tool-link="Receipt Claims" onclick="openToolByName(\'Receipt Claims\')">' + ico("receipt") + '<span>Claims</span></button>' +
+        '<button onclick="focusRoleHomeAttention()">' + ico("circle-alert") + '<span>Alerts</span></button>';
     } else {
       nav.innerHTML =
         '<button data-screen-link="home" onclick="goHome()">' + ico("home") + '<span>Home</span></button>' +
@@ -5727,12 +5800,15 @@
       paintIcons(); return;
     }
     if (!items.length) {
+      const heading = ACTIVE_HOME_MODE === "hr" ? "No compliance action needed" : "All clear";
       const copy = ACTIVE_HOME_MODE === "inventory"
         ? "No stock, tool, supplier-price, count, or collection action needs attention right now."
         : ACTIVE_HOME_MODE === "transport"
           ? "No movement, rental, collection, fleet, or photo action needs attention right now."
-          : "No quotation, measurement, or visual handoff action needs attention right now.";
-      list.innerHTML = '<div class="empty-state"><i data-lucide="shield-check"></i><div><b>All clear</b><span>' + esc(copy) + '</span></div></div>';
+          : ACTIVE_HOME_MODE === "hr"
+            ? "No document, permit, or insurance expiry action is due within the configured windows."
+            : "No quotation, measurement, or visual handoff action needs attention right now.";
+      list.innerHTML = '<div class="empty-state"><i data-lucide="shield-check"></i><div><b>' + esc(heading) + '</b><span>' + esc(copy) + '</span></div></div>';
       paintIcons(); return;
     }
     const indexed = items.map((item, index) => ({ item, index }));
@@ -5770,10 +5846,14 @@
     if (!config || !host) return;
     const lanes = (data && data.lanes) || {};
     const workflow = (data && data.workflow) || {};
+    const countAtPath = path => {
+      const value = String(path || "").split(".").reduce((current, key) => current && current[key], workflow);
+      return value && value.count != null ? Number(value.count) : null;
+    };
     host.innerHTML = config.workflow.map((row, index) => {
       let laneCount = row[3] && typeof row[3] === "string" && Array.isArray(lanes[row[3]]) ? lanes[row[3]].length : null;
       if (Array.isArray(row[3])) {
-        const counts = row[3].map(key => workflow[key] && workflow[key].count).filter(value => value != null).map(Number);
+        const counts = row[3].map(countAtPath).filter(value => value != null);
         laneCount = counts.length === row[3].length ? counts.reduce((sum, value) => sum + value, 0) : null;
       }
       const description = laneCount == null ? row[1] : laneCount + " source-labelled item" + (laneCount === 1 ? "" : "s") + " · " + row[1];
@@ -5841,6 +5921,8 @@
         ? { p_as_of: null, p_attention_limit: 20, p_draft_review_days: 7 }
         : mode === "inventory"
           ? { p_as_of: null, p_attention_limit: 20, p_activity_limit: 12 }
+          : mode === "hr"
+            ? { p_as_of: null, p_attention_limit: 30, p_activity_limit: 12 }
           : { p_as_of: null, p_attention_limit: 20 };
       const result = await SB.rpc(config.rpc, params);
       if (ACTIVE_HOME_MODE !== mode) return;
@@ -6234,7 +6316,7 @@
     try {
       const roleResult = await SB.rpc("hub_my_home_roles");
       if (!roleResult.error && Array.isArray(roleResult.data)) {
-        USER_PROFILE.home_roles = roleResult.data.filter(mode => ["executive", "sales", "inventory", "transport"].includes(mode));
+        USER_PROFILE.home_roles = roleResult.data.filter(mode => ["executive", "sales", "inventory", "transport", "hr"].includes(mode));
       } else if (roleResult.error) {
         console.warn("[hub] Role Home assignments are not installed yet:", roleResult.error.message);
       }
@@ -6243,7 +6325,7 @@
     HOME_MODE_AVAILABLE = false;
     try {
       const modeResult = await SB.rpc("hub_my_home_mode");
-      if (!modeResult.error && ["operations", "executive", "finance", "sales", "inventory", "transport"].includes(modeResult.data)) {
+      if (!modeResult.error && ["operations", "executive", "finance", "sales", "inventory", "transport", "hr"].includes(modeResult.data)) {
         DEFAULT_HOME_MODE = modeResult.data;
         HOME_MODE_AVAILABLE = true;
       } else if (modeResult.error) {
