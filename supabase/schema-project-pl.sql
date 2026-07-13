@@ -33,6 +33,7 @@ create table if not exists pl_user_roles (
 -- Bootstrap admins (same idea as BOOTSTRAP_ADMINS in Code.gs)
 insert into pl_user_roles (email, role, notes) values
   ('lee@hggroup.com.my',       'Admin', 'bootstrap admin'),
+  ('marketing@hggroup.com.my', 'Admin', 'bootstrap admin · Finance UI/UX administration'),
   ('znerationmedia@gmail.com', 'Admin', 'bootstrap admin')
 on conflict (email) do nothing;
 

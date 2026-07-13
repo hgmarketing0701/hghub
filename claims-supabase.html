@@ -3,9 +3,39 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HG Receipt Claims — Supabase</title>
+<title>Receipt Claims · HG Hub</title>
+<script>
+  (function(){
+    function preference(){
+      var saved='';
+      try { saved=localStorage.getItem('hg_hub_theme')||''; } catch(e) {}
+      return saved==='light'||saved==='dark'||saved==='system' ? saved : 'system';
+    }
+    function resolved(value){
+      if(value==='light'||value==='dark') return value;
+      return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    function apply(value){ document.documentElement.dataset.theme='ops-'+resolved(value); }
+    window.HGToolTheme={apply:apply,preference:preference};
+    apply(preference());
+    window.addEventListener('message',function(event){
+      if(event.origin!==location.origin||!event.data||event.data.type!=='hg-theme-change') return;
+      if(event.data.theme==='light'||event.data.theme==='dark') apply(event.data.theme);
+    });
+    window.addEventListener('storage',function(event){ if(event.key==='hg_hub_theme') apply(preference()); });
+    if(window.matchMedia){
+      var media=window.matchMedia('(prefers-color-scheme: dark)');
+      var sync=function(){ if(preference()==='system') apply('system'); };
+      if(media.addEventListener) media.addEventListener('change',sync); else if(media.addListener) media.addListener(sync);
+    }
+  })();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <style>
   :root {
     --bg: #0a0e1a;
@@ -343,9 +373,202 @@
           font-size: 0.95rem; cursor: pointer; font-family: inherit; }
   .msg { font-size: 0.86rem; margin-top: 10px; min-height: 20px; opacity: 0; transition: opacity 0.2s; }
   .msg.show { opacity: 1; } .msg.ok { color: var(--green); } .msg.err { color: #f87171; }
+
+  /* HG Hub finance tool treatment */
+  :root {
+    --bg:#fff; --surface:#fff; --surface-2:#f8f7f4; --surface-raised:#fff;
+    --border:#e4ded6; --border-strong:#cfc8bd; --text:#171717; --text-dim:#817970; --text-dimmer:#9b938a;
+    --accent:#143d4a; --accent-hover:#0e303b; --accent-soft:#eef6f3;
+    --green:#15945d; --green-soft:#edf8f3; --red:#d84d4f; --red-soft:#fff1ee;
+    --blue:#2f7fa5; --blue-soft:#eef7fb; --amber:#a66b00; --amber-soft:#fff7e5;
+    --radius:8px; --shadow:0 18px 50px rgba(23,23,23,.16);
+  }
+  body { font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
+  .container { max-width:none; padding:26px 28px 72px; }
+  .topbar { align-items:center; flex-wrap:nowrap; gap:14px; margin:0 0 26px; padding:0 0 20px; border-bottom:1px solid var(--border); }
+  body.embedded .topbar { display:none; }
+  .topbar .brand-block { min-width:0; gap:9px; }
+  .topbar .brand-logo { width:24px; height:24px; flex:0 0 auto; padding:0; border-radius:0; background:transparent; color:var(--accent); }
+  .topbar .brand-logo svg { width:20px; height:20px; stroke-width:2; }
+  .brand-name { display:flex; align-items:center; gap:10px; color:var(--accent); font-size:1.05rem; font-weight:800; letter-spacing:-.02em; }
+  .brand-sub { max-width:620px; overflow:hidden; color:var(--text-dim); font-size:13px; line-height:17px; text-overflow:ellipsis; white-space:nowrap; }
+  .tool-live { display:inline-flex; align-items:center; height:21px; padding:0 9px; border-radius:999px; background:var(--green-soft); color:var(--green); font-size:.64rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .user-pill { flex:0 0 auto; border-color:var(--border); background:#fff; color:var(--text-dim); padding:8px 12px; font-size:.78rem; }
+  .user-pill button { color:var(--amber); }
+  .panel { margin-bottom:28px; padding:0; border:0; border-radius:0; background:transparent; }
+  .panel h2 { margin-bottom:4px; color:var(--text); font-size:1.22rem; font-weight:800; letter-spacing:-.025em; }
+  .panel h3 { color:var(--accent); }
+  .hint { color:#716b65; font-size:.86rem; }
+  .upload-zone { margin-top:14px; padding:30px 20px; border:1px dashed #cfc8bd; border-radius:var(--radius); background:#fff; }
+  .upload-zone:hover { border-color:var(--accent); background:var(--accent-soft); }
+  .upload-zone .big-emoji { display:flex; align-items:center; justify-content:center; margin-bottom:8px; color:var(--accent); }
+  .upload-zone .big-emoji svg { width:24px; height:24px; stroke-width:1.9; }
+  .toolbar { gap:8px; margin:0 0 14px; }
+  .toolbar .count { min-height:38px; display:inline-flex; align-items:center; padding:7px 12px; border:0; background:var(--surface-2); color:var(--text-dim); }
+  .btn { min-height:40px; justify-content:center; padding:9px 12px; border-radius:8px; background:var(--accent); color:#fff; font-size:.82rem; font-weight:700; }
+  .btn:hover:not(:disabled) { background:var(--accent-hover); }
+  .btn.secondary { border:1px solid var(--border); background:#fff; color:var(--accent); }
+  .btn.secondary:hover:not(:disabled) { border-color:var(--border-strong); background:var(--surface-2); }
+  .btn.link { min-height:32px; padding:5px 8px; background:transparent; color:var(--accent); }
+  .btn.small { min-height:36px; padding:7px 11px; font-size:.78rem; }
+  .btn.big { min-height:44px; padding:11px 16px; font-size:.88rem; }
+  .btn svg { width:16px; height:16px; }
+  .card { margin-bottom:12px; padding:18px; border-color:var(--border); border-radius:var(--radius); background:#fff; box-shadow:none; }
+  .card.status-extracting { border-color:#9bc7d8; }
+  .card.status-done { border-color:#a8d8c2; }
+  .card.status-error { border-color:#e4a4a6; }
+  .card-head { padding-bottom:12px; margin-bottom:14px; }
+  .badge { font-size:.66rem; }
+  .badge.draft { background:var(--surface-2); }
+  .badge.extracted { background:var(--green-soft); color:var(--green); }
+  .form-grid { gap:12px; }
+  .form-field label { margin-bottom:5px; color:#716b65; font-size:.72rem; font-weight:800; }
+  .form-field input, .form-field select, .form-field textarea,
+  table.lines input, table.lines select, .gate input { min-height:42px; border-color:#ded8cf; border-radius:8px; background:#fff; color:var(--text); padding:10px 12px; font-size:.88rem; }
+  .form-field input:focus, .form-field select:focus, .form-field textarea:focus,
+  table.lines input:focus, table.lines select:focus, .gate input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  select { appearance:none; -webkit-appearance:none; padding-right:42px !important; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23143d4a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 16px center; background-size:14px; }
+  .hub-select { position:relative; width:100%; }
+  .hub-select-native { position:absolute; width:1px !important; height:1px; opacity:0; pointer-events:none; }
+  button.hub-select-trigger { position:relative; display:flex; align-items:center; width:100%; min-height:42px; padding:10px 42px 10px 12px; border:1px solid #ded8cf; border-radius:8px; background:#fff; color:var(--text); font:inherit; font-size:.88rem; font-weight:500; text-align:left; cursor:pointer; }
+  button.hub-select-trigger:hover { border-color:var(--border-strong); }
+  button.hub-select-trigger:focus-visible,.hub-select.open .hub-select-trigger { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  button.hub-select-trigger::after { content:""; position:absolute; right:16px; top:50%; width:7px; height:7px; border-right:1.7px solid var(--accent); border-bottom:1.7px solid var(--accent); transform:translateY(-68%) rotate(45deg); }
+  button.hub-select-trigger:disabled { opacity:.6; cursor:default; }
+  .hub-select-menu { position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:140; display:none; max-height:260px; overflow-y:auto; padding:5px; border:1px solid var(--border); border-radius:8px; background:#fff; box-shadow:0 12px 30px rgba(23,23,23,.12); }
+  .hub-select.open .hub-select-menu { display:block; }
+  .hub-select.open-up .hub-select-menu { top:auto; bottom:calc(100% + 4px); }
+  button.hub-select-option { display:block; width:100%; min-height:40px; padding:9px 10px; border:0; border-radius:6px; background:transparent; color:var(--text); font:inherit; font-size:.86rem; line-height:1.35; text-align:left; cursor:pointer; }
+  button.hub-select-option:hover,button.hub-select-option:focus-visible,button.hub-select-option.selected { outline:none; background:var(--surface-2); color:var(--accent); }
+  table.lines { min-width:780px; }
+  table.lines th { padding:8px 7px; background:var(--surface-2); color:#716b65; }
+  table.lines td { padding:7px; }
+  .totals .row.grand { border-top:1px solid var(--border); color:var(--accent); }
+  .success-links a, .success-links button.linky { border-color:var(--border); background:#fff; color:var(--accent); }
+  .success-links a:hover, .success-links button.linky:hover { background:var(--surface-2); }
+  .submit-bar { bottom:12px; margin:22px 0 26px; padding:14px 16px; border-color:var(--border); border-radius:var(--radius); background:rgba(255,255,255,.96); box-shadow:0 10px 28px rgba(23,23,23,.12); backdrop-filter:blur(10px); }
+  .submit-bar .summary b,.submit-bar .grand { color:var(--accent); }
+  .summary-banner { border-color:#b8d9cd; border-radius:var(--radius); background:var(--green-soft); }
+  .history-section { padding-top:24px; border-top:1px solid var(--border); }
+  .history-section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:14px; }
+  .history-toolbar { margin-bottom:12px; padding:0; border:0; }
+  .history-register { overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:#fff; }
+  .history-table { min-width:820px; }
+  .history-table th { padding:10px 12px; background:var(--surface-2); color:#716b65; }
+  .history-table td { padding:11px 12px; }
+  .history-table tbody tr:last-child td { border-bottom:0; }
+  .history-table a { color:var(--accent); font-weight:700; }
+  .history-register .empty { position:sticky; left:0; width:100%; padding:26px 20px; border-top:1px solid var(--border); }
+  .history-register .empty strong { display:block; margin-bottom:3px; color:var(--text); font-size:.9rem; }
+  .summaries-list { margin-top:18px; padding:18px; border:1px solid var(--border); border-radius:var(--radius); background:#fff; }
+  .summaries-list h3 { margin-top:0; color:var(--text); }
+  .modal { background:#fff; }
+  .modal h2 { color:var(--text); }
+  .modal .links a, .modal .links button.linky { border-color:var(--border); background:var(--surface-2); color:var(--accent); }
+  .gate .gcard { border-color:var(--border); background:#fff; box-shadow:none; }
+  .gate .brand-logo { color:#0a0e1a; }
+  .loading-overlay { background:rgba(247,246,242,.86); backdrop-filter:blur(4px); }
+  .toast { background:var(--green); color:#fff; }
+
+  @media (max-width:800px) {
+    .container { padding:18px 16px 64px; }
+    .topbar { align-items:flex-start; }
+    .brand-sub { display:none; }
+    .user-pill { display:none; }
+    .panel { margin-bottom:24px; }
+    .panel h2 { font-size:1.12rem; }
+    .upload-zone { padding:24px 16px; }
+    .toolbar { align-items:stretch; }
+    .toolbar .count { width:100%; justify-content:center; }
+    .toolbar .btn { flex:1 1 calc(50% - 4px); min-height:44px; }
+    .form-grid { grid-template-columns:1fr; }
+    .card { padding:16px; }
+    .card-head { align-items:flex-start; }
+    .thumb { width:72px; height:72px; }
+    .footer-row { align-items:stretch; flex-direction:column; }
+    .totals { width:100%; min-width:0; }
+    .card-actions .btn { flex:1; min-height:44px; }
+    .submit-bar { align-items:stretch; }
+    .submit-bar .summary { width:100%; text-align:center; }
+    .submit-bar .btn { width:100%; }
+    .history-section-head { align-items:flex-start; flex-direction:column; }
+    .history-toolbar { align-items:stretch; }
+    .history-toolbar .btn { flex:1; min-height:44px; }
+    .history-toolbar .selcount { width:100%; text-align:center; }
+    .history-toolbar > div[style] { display:none; }
+    .hub-select-menu { max-height:min(260px,45vh); }
+    button.hub-select-option { min-height:44px; }
+    .modal { padding:22px; }
+  }
+
+  html[data-theme="ops-dark"] {
+    color-scheme:dark;
+    --bg:#1b2325; --surface:#222c2e; --surface-2:#283436; --surface-raised:#303d3f;
+    --border:#394749; --border-strong:#526366; --text:#f2f5f4; --text-dim:#aebbbc; --text-dimmer:#879697;
+    --accent:#78b8cd; --accent-hover:#8fc5d6; --accent-soft:rgba(120,184,205,.12);
+    --green:#64c997; --green-soft:rgba(100,201,151,.12); --red:#f08a8a; --red-soft:rgba(240,138,138,.12);
+    --blue:#78b8cd; --blue-soft:rgba(120,184,205,.12); --amber:#e2b764; --amber-soft:rgba(226,183,100,.12);
+  }
+  html[data-theme="ops-dark"] body,
+  html[data-theme="ops-dark"] .container { background:var(--bg); color:var(--text); }
+  html[data-theme="ops-dark"] .topbar,
+  html[data-theme="ops-dark"] .card-head,
+  html[data-theme="ops-dark"] .card-actions,
+  html[data-theme="ops-dark"] .history-section,
+  html[data-theme="ops-dark"] .history-table th,
+  html[data-theme="ops-dark"] .history-table td,
+  html[data-theme="ops-dark"] .summary-row { border-color:var(--border); }
+  html[data-theme="ops-dark"] .card,
+  html[data-theme="ops-dark"] .upload-zone,
+  html[data-theme="ops-dark"] .history-register,
+  html[data-theme="ops-dark"] .summaries-list,
+  html[data-theme="ops-dark"] .modal,
+  html[data-theme="ops-dark"] .gate .gcard { border-color:var(--border); background:var(--surface); }
+  html[data-theme="ops-dark"] .panel h2,
+  html[data-theme="ops-dark"] .card-title,
+  html[data-theme="ops-dark"] .history-register .empty strong,
+  html[data-theme="ops-dark"] .summaries-list h3,
+  html[data-theme="ops-dark"] .modal h2 { color:var(--text); }
+  html[data-theme="ops-dark"] .brand-sub,
+  html[data-theme="ops-dark"] .hint,
+  html[data-theme="ops-dark"] .form-field label,
+  html[data-theme="ops-dark"] .history-table th { color:var(--text-dim); }
+  html[data-theme="ops-dark"] .user-pill,
+  html[data-theme="ops-dark"] .form-field input,
+  html[data-theme="ops-dark"] .form-field select,
+  html[data-theme="ops-dark"] .form-field textarea,
+  html[data-theme="ops-dark"] table.lines input,
+  html[data-theme="ops-dark"] table.lines select,
+  html[data-theme="ops-dark"] .gate input,
+  html[data-theme="ops-dark"] button.hub-select-trigger,
+  html[data-theme="ops-dark"] .hub-select-menu { border-color:var(--border-strong); background:var(--surface); color:var(--text); }
+  html[data-theme="ops-dark"] input::placeholder,
+  html[data-theme="ops-dark"] textarea::placeholder { color:var(--text-dimmer); opacity:1; }
+  html[data-theme="ops-dark"] .btn { background:#315e6b; color:#f7faf9; }
+  html[data-theme="ops-dark"] .btn:hover:not(:disabled) { background:#3a6d7b; }
+  html[data-theme="ops-dark"] .btn.secondary { border-color:var(--border); background:transparent; color:#c7d7da; }
+  html[data-theme="ops-dark"] .btn.secondary:hover:not(:disabled) { border-color:var(--border-strong); background:var(--surface-2); }
+  html[data-theme="ops-dark"] .btn.link { background:transparent; color:var(--accent); }
+  html[data-theme="ops-dark"] .history-table th,
+  html[data-theme="ops-dark"] table.lines th { background:var(--surface-2); }
+  html[data-theme="ops-dark"] .success-links a,
+  html[data-theme="ops-dark"] .success-links button.linky,
+  html[data-theme="ops-dark"] .modal .links a,
+  html[data-theme="ops-dark"] .modal .links button.linky { border-color:var(--border); background:var(--surface-2); color:#c6e0e7; }
+  html[data-theme="ops-dark"] .submit-bar { border-color:var(--border); background:rgba(34,44,46,.96); box-shadow:0 12px 30px rgba(0,0,0,.32); }
+  html[data-theme="ops-dark"] .loading-overlay { background:rgba(17,23,24,.82); }
+  html[data-theme="ops-dark"] button.hub-select-trigger:focus-visible,
+  html[data-theme="ops-dark"] .hub-select.open .hub-select-trigger { border-color:var(--accent); box-shadow:0 0 0 3px rgba(120,184,205,.14); }
+  html[data-theme="ops-dark"] button.hub-select-option:hover,
+  html[data-theme="ops-dark"] button.hub-select-option:focus-visible,
+  html[data-theme="ops-dark"] button.hub-select-option.selected { background:var(--accent-soft); color:#c6e0e7; }
 </style>
 </head>
 <body>
+
+<script>
+  if (window.self !== window.top) document.body.classList.add('embedded');
+</script>
 
 <!-- ══════════ GATE 0 · SUPABASE CONFIG (shown once if keys not set) ══════════ -->
 <div class="gate" id="gateConfig" style="display:none;">
@@ -380,7 +603,7 @@
 <!-- ══════════ GATE 2 · NOT ON ALLOWLIST ══════════ -->
 <div class="gate" id="gateDenied" style="display:none;">
   <div class="gcard">
-    <div class="brand-logo">🔒</div>
+    <div class="brand-logo"><i data-lucide="lock-keyhole" aria-hidden="true"></i></div>
     <h2>Not authorised</h2>
     <div class="hint" style="margin-top:6px;"><span id="deniedEmail"></span> is not on the access list.<br>
       Ask your admin to add you under the Quotation tool's <b>Settings → Team access</b>.</div>
@@ -393,35 +616,35 @@
 
   <div class="topbar">
     <div class="brand-block">
-      <div class="brand-logo">HG</div>
+      <div class="brand-logo"><i data-lucide="receipt" aria-hidden="true"></i></div>
       <div>
-        <div class="brand-name">Receipt Claims</div>
-        <div class="brand-sub">Snap → Extract → Submit · batch supported · Supabase edition</div>
+        <div class="brand-name">Receipt Claims <span class="tool-live">Live</span></div>
+        <div class="brand-sub">Submit and review receipt-backed staff claims.</div>
       </div>
     </div>
     <div class="user-pill"><span id="userPill">…</span><button onclick="signOut()">Sign out</button></div>
   </div>
 
   <!-- Upload zone -->
-  <div class="panel">
+  <section class="panel upload-section">
     <h2>1 · Upload receipts</h2>
     <div class="hint">Each photo you upload becomes its own claim. Long receipt that needs 2 photos? Use the dashed “+” inside a card to add more photos to <i>that</i> receipt.</div>
 
     <label class="upload-zone" id="dropZone">
-      <div class="big-emoji">📷</div>
+      <div class="big-emoji"><i data-lucide="camera" aria-hidden="true"></i></div>
       <div><b>Tap to take photos</b> · select multiple to batch</div>
       <div class="hint" style="margin-top:6px;margin-bottom:0;">English / Chinese / Malay receipts all OK</div>
       <input id="fileInput" type="file" accept="image/*" capture="environment" multiple />
     </label>
 
     <div id="extractWarn" class="warn" style="margin-top:10px;display:none;"></div>
-  </div>
+  </section>
 
   <!-- Cards area -->
   <div id="cardsWrap" style="display:none;">
     <div class="toolbar">
       <div class="count"><b id="cardCount">0</b> receipt(s) ready</div>
-      <button class="btn" id="extractAllBtn">⚡ Extract all</button>
+      <button class="btn" id="extractAllBtn"><i data-lucide="sparkles" aria-hidden="true"></i>Extract all</button>
       <button class="btn secondary" id="addManualBtn">+ Add manual claim</button>
       <button class="btn secondary" id="clearAllBtn">Clear all</button>
     </div>
@@ -433,47 +656,49 @@
         <b id="readyCount">0</b> ready to submit ·
         <span class="grand" id="grandTotal">RM 0.00</span>
       </div>
-      <button class="btn big" id="submitAllBtn">Submit all &amp; save receipts</button>
+      <button class="btn big" id="submitAllBtn"><i data-lucide="send" aria-hidden="true"></i>Submit all &amp; save receipts</button>
     </div>
 
     <!-- Post-submit summary banner -->
     <div class="summary-banner" id="postBanner" style="display:none;">
       <div class="msg show" id="postBannerMsg" style="opacity:1;">…</div>
       <div class="links">
-        <button class="btn" id="genBatchSummaryBtn">📑 Generate summary PDF</button>
+        <button class="btn" id="genBatchSummaryBtn"><i data-lucide="file-text" aria-hidden="true"></i>Generate summary PDF</button>
       </div>
     </div>
   </div>
 
   <!-- My claims history -->
-  <div class="panel">
-    <h2>My recent claims</h2>
+  <section class="panel history-section">
+    <div class="history-section-head"><div><h2>My recent claims</h2><div class="hint" style="margin-bottom:0;">Review submitted claims and generate claim summaries.</div></div></div>
 
     <div class="history-toolbar">
       <button class="btn small secondary" id="histSelectAll">Select all</button>
       <button class="btn small secondary" id="histSelectNone">Clear</button>
       <span class="selcount"><b id="histSelCount">0</b> selected</span>
       <div style="flex:1;"></div>
-      <button class="btn small secondary" id="exportExcelBtn">⬇ Export Excel</button>
-      <button class="btn small" id="genSelectedSummaryBtn" disabled>📑 Generate summary of selected</button>
+      <button class="btn small secondary" id="exportExcelBtn"><i data-lucide="download" aria-hidden="true"></i>Export Excel</button>
+      <button class="btn small" id="genSelectedSummaryBtn" disabled><i data-lucide="file-text" aria-hidden="true"></i>Generate selected summary</button>
     </div>
 
-    <table class="history-table" id="historyTable">
-      <thead><tr>
-        <th class="col-pick"></th>
-        <th>Claim No.</th><th>Date</th><th>Vendor</th>
-        <th class="r">Total</th><th>Category</th><th>Links</th>
-      </tr></thead>
-      <tbody id="historyBody"></tbody>
-    </table>
-    <div class="empty" id="historyEmpty" style="display:none;">No claims yet — submit your first one above.</div>
+    <div class="history-register">
+      <table class="history-table" id="historyTable">
+        <thead><tr>
+          <th class="col-pick"></th>
+          <th>Claim No.</th><th>Date</th><th>Vendor</th>
+          <th class="r">Total</th><th>Category</th><th>Links</th>
+        </tr></thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+      <div class="empty" id="historyEmpty" style="display:none;"><strong>No claims submitted</strong><span>Upload a receipt above to create your first claim.</span></div>
+    </div>
 
     <!-- Recent summaries -->
     <div class="summaries-list" id="summariesList" style="display:none;">
       <h3>Recent summary PDFs</h3>
       <div id="summariesBody"></div>
     </div>
-  </div>
+  </section>
 
 </div>
 
@@ -682,6 +907,100 @@ function handleErr(err) {
   var msg = (err && err.message) ? err.message : String(err);
   showToast(msg, true);
 }
+function refreshIcons() {
+  if (window.lucide) window.lucide.createIcons();
+}
+function closeHubSelects(except) {
+  document.querySelectorAll('.hub-select.open').forEach(function(wrap) {
+    if (wrap !== except) {
+      wrap.classList.remove('open', 'open-up');
+      var trigger = wrap.querySelector('.hub-select-trigger');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+function initHubSelects(root) {
+  var scope = root || document;
+  var selects = [];
+  if (scope.nodeType === 1 && scope.matches('select:not([data-hub-select])')) selects.push(scope);
+  if (scope.querySelectorAll) selects = selects.concat(Array.prototype.slice.call(scope.querySelectorAll('select:not([data-hub-select])')));
+  selects.forEach(function(select) {
+    var wrap = document.createElement('div');
+    wrap.className = 'hub-select';
+    select.parentNode.insertBefore(wrap, select);
+    wrap.appendChild(select);
+    select.dataset.hubSelect = 'true';
+    select.classList.add('hub-select-native');
+    select.tabIndex = -1;
+    select.setAttribute('aria-hidden', 'true');
+
+    var trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'hub-select-trigger';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+    var label = wrap.parentElement && wrap.parentElement.querySelector('label');
+    if (label) trigger.setAttribute('aria-label', label.textContent.trim());
+
+    var menu = document.createElement('div');
+    menu.className = 'hub-select-menu';
+    menu.setAttribute('role', 'listbox');
+    wrap.appendChild(trigger);
+    wrap.appendChild(menu);
+
+    function sync() {
+      var selected = select.options[select.selectedIndex];
+      trigger.textContent = selected ? selected.textContent : 'Select';
+      trigger.disabled = select.disabled;
+      menu.innerHTML = '';
+      Array.prototype.forEach.call(select.options, function(option) {
+        var item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'hub-select-option' + (option.selected ? ' selected' : '');
+        item.textContent = option.textContent;
+        item.disabled = option.disabled;
+        item.setAttribute('role', 'option');
+        item.setAttribute('aria-selected', option.selected ? 'true' : 'false');
+        item.addEventListener('click', function(event) {
+          event.stopPropagation();
+          select.value = option.value;
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+          closeHubSelects();
+        });
+        menu.appendChild(item);
+      });
+    }
+    select._hubSelectSync = sync;
+    select.addEventListener('change', sync);
+    new MutationObserver(sync).observe(select, { childList: true, subtree: true, attributes: true });
+    trigger.addEventListener('click', function(event) {
+      event.stopPropagation();
+      var open = !wrap.classList.contains('open');
+      closeHubSelects(wrap);
+      sync();
+      if (open) {
+        var rect = trigger.getBoundingClientRect();
+        var estimated = Math.min(260, menu.children.length * 44 + 10);
+        wrap.classList.toggle('open-up', window.innerHeight - rect.bottom - 16 < estimated && rect.top > window.innerHeight - rect.bottom);
+      } else {
+        wrap.classList.remove('open-up');
+      }
+      wrap.classList.toggle('open', open);
+      trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    sync();
+  });
+}
+function startHubSelects() {
+  initHubSelects(document);
+  new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      mutation.addedNodes.forEach(function(node) {
+        if (node.nodeType === 1) initHubSelects(node);
+      });
+    });
+  }).observe(document.body, { childList: true, subtree: true });
+}
 
 /* ===================== UTILS ===================== */
 function fmtRM(n) {
@@ -750,6 +1069,8 @@ function cardTotal(c) {
 
 /* ===================== INIT ===================== */
 window.addEventListener('DOMContentLoaded', function() {
+  startHubSelects();
+  refreshIcons();
   document.getElementById('fileInput').addEventListener('change', onUploadAsNewClaims);
   document.getElementById('extractAllBtn').addEventListener('click', onExtractAll);
   document.getElementById('addManualBtn').addEventListener('click', onAddManual);
@@ -772,6 +1093,8 @@ window.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('click', function(e){
     if (e.target.classList && e.target.classList.contains('modal-back')) e.target.classList.remove('show');
   });
+  document.addEventListener('pointerdown', function(e){ if (!e.target.closest('.hub-select')) closeHubSelects(); }, true);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeHubSelects(); });
   start();
 });
 
@@ -1827,7 +2150,7 @@ function renderSummaries() {
       + '<span>· ' + escapeHtml(s.currency || 'RM') + ' ' + (Number(s.grandTotal)||0).toFixed(2) + '</span>'
       + (s.title ? '<span style="color:var(--text-dim);">· ' + escapeHtml(s.title) + '</span>' : '')
       + '<div class="spacer"></div>'
-      + '<a data-sprint="' + i + '">🖨️ Print / PDF</a>'
+      + '<a data-sprint="' + i + '">Print / PDF</a>'
     + '</div>';
   }).join('');
   body.querySelectorAll('a[data-sprint]').forEach(function(a) {

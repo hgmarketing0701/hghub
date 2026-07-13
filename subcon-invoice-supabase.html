@@ -3,9 +3,39 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Subcon Invoice Generator — Supabase</title>
+<title>Subcon Invoices · HG Hub</title>
+<script>
+  (function(){
+    function preference(){
+      var saved='';
+      try { saved=localStorage.getItem('hg_hub_theme')||''; } catch(e) {}
+      return saved==='light'||saved==='dark'||saved==='system' ? saved : 'system';
+    }
+    function resolved(value){
+      if(value==='light'||value==='dark') return value;
+      return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    function apply(value){ document.documentElement.dataset.theme='ops-'+resolved(value); }
+    window.HGToolTheme={apply:apply,preference:preference};
+    apply(preference());
+    window.addEventListener('message',function(event){
+      if(event.origin!==location.origin||!event.data||event.data.type!=='hg-theme-change') return;
+      if(event.data.theme==='light'||event.data.theme==='dark') apply(event.data.theme);
+    });
+    window.addEventListener('storage',function(event){ if(event.key==='hg_hub_theme') apply(preference()); });
+    if(window.matchMedia){
+      var media=window.matchMedia('(prefers-color-scheme: dark)');
+      var sync=function(){ if(preference()==='system') apply('system'); };
+      if(media.addEventListener) media.addEventListener('change',sync); else if(media.addListener) media.addListener(sync);
+    }
+  })();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <style>
   :root {
     --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335;
@@ -176,9 +206,147 @@
     font-size:0.95rem;cursor:pointer;font-family:inherit;}
   .msg{font-size:0.86rem;margin-top:10px;min-height:20px;opacity:0;transition:opacity 0.2s;}
   .msg.show{opacity:1;} .msg.ok{color:var(--green);} .msg.err{color:#f87171;}
+
+  /* HG Hub finance tool shell */
+  :root{
+    --bg:#fff;--surface:#fff;--surface-2:#f8f7f4;--surface-raised:#fff;
+    --border:#e4ded6;--border-strong:#cfc8bd;--text:#171717;--text-dim:#817970;--text-dimmer:#9c958e;
+    --accent:#143d4a;--accent-hover:#0e303b;--accent-soft:#eef6f3;
+    --green:#15945d;--green-soft:#edf8f3;--blue:#2f7fa5;--blue-soft:#eef7fb;
+    --red:#d84d4f;--red-soft:#fff1ee;--grey:#817970;--grey-soft:#f3f1ee;
+    --radius:8px;--shadow:0 12px 30px rgba(23,23,23,.12);
+  }
+  body{font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
+  #app{background:var(--bg);min-height:100vh;}
+  .container{max-width:none;margin:0;padding:26px 28px 72px;}
+  .topbar{align-items:center;gap:14px;padding:0 0 20px;margin:0 0 24px;border-bottom:1px solid var(--border);}
+  body.embedded .topbar{display:none;}
+  .brand-block{gap:9px;min-width:0;}
+  .brand-logo{width:24px;height:24px;padding:0;background:transparent;border-radius:0;color:var(--accent);font-size:0;}
+  .brand-logo svg{width:20px;height:20px;stroke-width:2;}
+  .brand-name{display:flex;align-items:center;gap:10px;color:var(--accent);font-size:1.05rem;font-weight:800;line-height:1.2;letter-spacing:-.02em;}
+  .brand-sub{margin-top:3px;color:var(--text-dim);font-size:13px;}
+  .tool-live{display:inline-flex;align-items:center;height:21px;padding:0 9px;border-radius:999px;background:var(--green-soft);color:var(--green);font-size:.64rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
+  .user-pill{background:#fff;border-color:var(--border);border-radius:999px;padding:8px 12px;color:var(--text-dim);font-size:.78rem;}
+  .user-pill b{color:var(--accent);}.user-pill button{color:#a66b00;}
+
+  .layout{grid-template-columns:minmax(0,1.06fr) minmax(420px,.94fr);gap:28px;align-items:start;}
+  .panel{background:transparent;border:0;border-radius:0;padding:0;margin-bottom:28px;}
+  .panel-title{margin-bottom:4px;color:var(--text);font-size:1.22rem;font-weight:800;letter-spacing:-.025em;}
+  .panel-hint{max-width:760px;margin-bottom:20px;color:#716b65;font-size:.86rem;}
+  .group-label{margin:24px 0 14px;padding-bottom:9px;border-bottom:1px solid var(--border);color:var(--accent);font-size:.72rem;font-weight:800;letter-spacing:.05em;}
+  .group-label:first-of-type{margin-top:0;}
+  label.fld{margin-bottom:14px;}
+  label.fld>span{margin-bottom:6px;color:#716b65;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;}
+  input[type=text],input[type=number],input[type=date],textarea,select{min-height:42px;background:#fff;border:1px solid #ded8cf;color:var(--text);padding:10px 12px;border-radius:8px;font-size:.88rem;font-family:inherit;}
+  textarea{min-height:72px;}
+  select{appearance:none;-webkit-appearance:none;padding-right:42px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23143d4a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:14px;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(20,61,74,.08);}
+  input::placeholder,textarea::placeholder{color:#9c958e;opacity:1;}
+  .row2,.row3{gap:12px;}
+  .seg{display:flex;width:max-content;max-width:100%;padding:3px;gap:3px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;}
+  .seg button{min-height:36px;padding:7px 16px;border-radius:6px;color:#716b65;font-size:.82rem;font-weight:700;}
+  .seg button.on{background:var(--accent);color:#fff;}
+
+  .hub-select{position:relative;width:100%;}
+  .hub-select-native{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
+  button.hub-select-trigger{position:relative;display:flex;align-items:center;width:100%;min-height:42px;padding:10px 42px 10px 12px;background:#fff;border:1px solid #ded8cf;border-radius:8px;color:var(--text);font:inherit;font-size:.88rem;font-weight:500;text-align:left;cursor:pointer;}
+  button.hub-select-trigger:hover{border-color:#cfc8bd;}
+  button.hub-select-trigger:focus-visible,.hub-select.open .hub-select-trigger{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(20,61,74,.08);}
+  button.hub-select-trigger::after{content:"";position:absolute;right:16px;top:50%;width:7px;height:7px;border-right:1.7px solid var(--accent);border-bottom:1.7px solid var(--accent);transform:translateY(-68%) rotate(45deg);}
+  button.hub-select-trigger:disabled{opacity:.6;cursor:default;}
+  .hub-select-menu{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:120;display:none;max-height:260px;overflow-y:auto;padding:5px;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);}
+  .hub-select.open .hub-select-menu{display:block;}.hub-select.open-up .hub-select-menu{top:auto;bottom:calc(100% + 4px);}
+  button.hub-select-option{display:block;width:100%;min-height:40px;padding:9px 10px;border:0;border-radius:6px;background:transparent;color:var(--text);font:inherit;font-size:.86rem;line-height:1.35;text-align:left;cursor:pointer;}
+  button.hub-select-option:hover,button.hub-select-option:focus-visible,button.hub-select-option.selected{outline:none;background:var(--surface-2);color:var(--accent);}
+  button.hub-select-option:disabled{color:var(--text-dim);cursor:default;}
+
+  .logo-drop{min-height:76px;display:flex;align-items:center;justify-content:center;border:1px dashed #cfc8bd;border-radius:8px;padding:16px;background:#fff;color:#817970;}
+  .logo-drop svg{width:17px;height:17px;margin-right:8px;stroke-width:2;}
+  .logo-drop:hover{background:var(--surface-2);border-color:var(--accent);color:var(--accent);}
+  .logo-prev{padding:10px 0 0;}
+  .items-table-wrap{margin-top:6px;overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:#fff;}
+  table.items{min-width:620px;margin:0;}
+  table.items th{padding:10px;color:#716b65;background:var(--surface-2);border-bottom:1px solid var(--border);font-size:.68rem;letter-spacing:.05em;}
+  table.items td{padding:7px 6px;border-bottom:1px solid var(--border);}
+  table.items tbody tr:last-child td{border-bottom:0;}
+  table.items input{min-height:38px;padding:8px 9px;background:#fff;}
+  .lineamt{padding-top:10px;color:var(--text);font-size:.84rem;}
+  .x-btn{width:32px;height:38px;background:#fff;border:1px solid var(--border);border-radius:8px;color:var(--text-dim);}
+  .x-btn:hover{background:var(--red-soft);border-color:#f1c8c5;color:var(--red);}
+
+  .btn{min-height:40px;border-radius:8px;padding:9px 12px;font-size:.82rem;font-weight:700;}
+  .btn svg{width:15px;height:15px;stroke-width:2;}
+  .btn-primary{background:var(--accent);color:#fff;}.btn-primary:hover{background:var(--accent-hover);}
+  .btn-ghost{background:#fff;color:var(--accent);border:1px solid var(--border);}.btn-ghost:hover{background:var(--surface-2);border-color:#cfc8bd;color:var(--accent);}
+  .btn-row{gap:8px;margin-top:20px;}
+  .toggle-row{margin-top:6px;padding:12px 14px;background:#fff;border:1px solid var(--border);border-radius:8px;}
+  .switch input:checked + .slider{background:var(--accent);}
+  .result-box{margin-top:16px;background:var(--green-soft);border:1px solid #bce2cf;border-radius:8px;}.result-box a,.result-box button.link{color:var(--green);}
+  .result-box strong{display:block;color:var(--text);font-size:.86rem;}.result-box span{color:var(--text-dim);font-size:.8rem;}.result-box button.link{display:inline-flex;align-items:center;gap:6px;margin-top:8px;}.result-box button.link svg{width:15px;height:15px;}
+
+  .preview-wrap{position:sticky;top:18px;min-width:0;}
+  .preview-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .preview-heading strong{font-size:1.22rem;letter-spacing:-.025em;}.preview-heading span{color:#716b65;font-size:.8rem;}
+  #invoiceDoc{border:1px solid var(--border);border-radius:8px;padding:34px 36px;box-shadow:0 12px 30px rgba(23,23,23,.08);}
+
+  .records-panel{margin-top:12px;}
+  .summary-head{align-items:flex-end;margin-bottom:14px;}
+  .summary-head .panel-hint{margin-bottom:0;}
+  .summary-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .invoice-snapshot{margin:0 0 14px;padding:18px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);}
+  .invoice-snapshot-title{margin-bottom:14px;color:var(--text);font-size:.9rem;font-weight:800;}
+  .stat-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:0;padding:0;background:transparent;border:0;border-radius:0;}
+  .stat-card{display:grid;grid-template-rows:18px 36px;align-content:start;min-width:0;margin:0;padding:4px 18px;background:transparent;border:0;border-right:1px solid var(--border);border-radius:0;}
+  .stat-card:last-child{border-right:0;}
+  .stat-card .l{min-height:18px;color:#716b65;font-size:.66rem;line-height:18px;font-weight:800;letter-spacing:.04em;white-space:nowrap;}
+  .stat-card .v{margin:0;color:var(--accent);font-size:1.42rem;line-height:36px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .records-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:#fff;}
+  table.rec{min-width:980px;}
+  table.rec th{padding:11px 12px;background:var(--surface-2);border-bottom:1px solid var(--border);color:#716b65;font-size:.68rem;letter-spacing:.05em;}
+  table.rec td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:.84rem;}
+  table.rec tbody tr:last-child td{border-bottom:0;}table.rec tr:hover td{background:#fbfaf8;}
+  .rec-empty{display:flex;align-items:center;justify-content:center;gap:12px;min-height:118px;padding:24px;color:var(--text-dim);text-align:left;}
+  .rec-empty svg{width:22px;height:22px;color:var(--accent);flex:0 0 auto;}.rec-empty strong{display:block;color:var(--text);font-size:.88rem;}.rec-empty span{display:block;margin-top:2px;font-size:.8rem;}
+  .pill-tag{background:var(--blue-soft);color:var(--blue);padding:3px 9px;font-size:.7rem;font-weight:700;}.pill-ind{background:var(--green-soft);color:var(--green);}
+  .mini-btn{margin-right:4px;padding:6px 9px;background:#fff;border:1px solid var(--border);border-radius:7px;color:var(--accent);font-size:.74rem;}.mini-btn:hover{background:var(--surface-2);border-color:#cfc8bd;color:var(--accent);}.mini-btn.del{color:var(--red);}.mini-btn.del:hover{background:var(--red-soft);border-color:#f1c8c5;}
+  .toast{background:var(--surface-raised);border:1px solid var(--border);color:var(--accent);border-radius:8px;box-shadow:var(--shadow);}.toast.error{background:var(--red-soft);border-color:#f1c8c5;color:var(--red);}
+  .overlay{background:rgba(23,23,23,.4);backdrop-filter:blur(4px);}.overlay .box{background:#fff;border-color:var(--border);border-radius:8px;box-shadow:var(--shadow);}.spin{border-color:var(--border);border-top-color:var(--accent);}
+  .gate .card{background:#fff;border-color:var(--border);border-radius:var(--radius);box-shadow:none;}.gate h2{color:var(--text);}.gate .brand-logo{font-size:1.4rem;background:var(--accent);border-radius:12px;color:#fff;}.gbtn{border:1px solid var(--border);}.msg.err{color:var(--red);}
+
+  @media(max-width:1100px){.layout{grid-template-columns:1fr;}.preview-wrap{position:static;}.preview-heading{margin-top:8px;}#invoiceDoc{max-width:760px;margin:0 auto;}}
+  @media(max-width:680px){
+    .container{padding:18px 16px 56px;}.topbar{align-items:flex-start;gap:12px;margin-bottom:20px;}.brand-sub{display:none;}.user-pill{display:none;}
+    .panel-title,.preview-heading strong{font-size:1.08rem;}.panel-hint{font-size:.82rem;}.row2,.row3{grid-template-columns:1fr;gap:0;}
+    .group-label{margin-top:22px;}.logo-drop{min-height:70px;}.btn-row{display:grid;grid-template-columns:1fr;}.btn-row .btn{justify-content:center;width:100%;}
+    .summary-head{align-items:flex-start;flex-direction:column;}.summary-actions{width:100%;}.summary-actions .btn{flex:1;justify-content:center;}
+    .stat-row{grid-template-columns:1fr;}.stat-card{border-right:0;border-bottom:1px solid var(--border);padding:8px 16px;}.stat-card:last-child{border-bottom:0;}
+    #invoiceDoc{padding:24px 20px;font-size:12px;overflow:hidden;}#invoiceDoc .ih{gap:10px;}#invoiceDoc .ititle h1{font-size:22px;}#invoiceDoc .tt{width:100%;}
+    .hub-select-menu{max-height:min(260px,45vh);}button.hub-select-option{min-height:44px;}
+    .rec-empty{min-height:108px;}.toast{bottom:82px;max-width:calc(100vw - 32px);width:max-content;}
+  }
+
+  /* HG operational dark theme */
+  html[data-theme="ops-dark"]{color-scheme:dark;--bg:#1b2527;--surface:#202b2d;--surface-2:#253133;--surface-raised:#2b383a;--border:#394749;--border-strong:#526164;--text:#f3f6f4;--text-dim:#b3bebb;--text-dimmer:#8f9b98;--accent:#78b8cd;--accent-hover:#96c8d7;--accent-soft:#203b43;--green:#55c88f;--green-soft:#173328;--red:#f07878;--red-soft:#3a2021;--blue:#70b7da;--blue-soft:#1d303b;--grey:#aeb9b7;--grey-soft:#2a3537;--shadow:0 18px 48px rgba(0,0,0,.34);}
+  html[data-theme="ops-dark"] body,html[data-theme="ops-dark"] #app{background:var(--bg);color:var(--text);}
+  html[data-theme="ops-dark"] .topbar,html[data-theme="ops-dark"] .group-label,html[data-theme="ops-dark"] .stat-card,html[data-theme="ops-dark"] table.items th,html[data-theme="ops-dark"] table.items td,html[data-theme="ops-dark"] table.rec th,html[data-theme="ops-dark"] table.rec td{border-color:var(--border);}
+  html[data-theme="ops-dark"] .user-pill,html[data-theme="ops-dark"] input[type=text],html[data-theme="ops-dark"] input[type=number],html[data-theme="ops-dark"] input[type=date],html[data-theme="ops-dark"] textarea,html[data-theme="ops-dark"] select,html[data-theme="ops-dark"] button.hub-select-trigger,html[data-theme="ops-dark"] .hub-select-menu,html[data-theme="ops-dark"] .logo-drop,html[data-theme="ops-dark"] .items-table-wrap,html[data-theme="ops-dark"] table.items input,html[data-theme="ops-dark"] .toggle-row,html[data-theme="ops-dark"] .btn-ghost,html[data-theme="ops-dark"] .x-btn,html[data-theme="ops-dark"] .invoice-snapshot,html[data-theme="ops-dark"] .records-table-wrap,html[data-theme="ops-dark"] .mini-btn,html[data-theme="ops-dark"] .overlay .box,html[data-theme="ops-dark"] .gate .card{background:var(--surface);border-color:var(--border);color:var(--text);}
+  html[data-theme="ops-dark"] select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2378b8cd' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");}html[data-theme="ops-dark"] input[type=date]{color-scheme:dark;}
+  html[data-theme="ops-dark"] input::placeholder,html[data-theme="ops-dark"] textarea::placeholder{color:var(--text-dimmer);}
+  html[data-theme="ops-dark"] .brand-sub,html[data-theme="ops-dark"] .panel-hint,html[data-theme="ops-dark"] label.fld>span,html[data-theme="ops-dark"] .preview-heading span,html[data-theme="ops-dark"] .stat-card .l,html[data-theme="ops-dark"] table.items th,html[data-theme="ops-dark"] table.rec th{color:var(--text-dim);}
+  html[data-theme="ops-dark"] table.items th,html[data-theme="ops-dark"] table.rec th{background:var(--surface-2);}html[data-theme="ops-dark"] table.rec tr:hover td{background:var(--surface-2);}
+  html[data-theme="ops-dark"] button.hub-select-option:hover,html[data-theme="ops-dark"] button.hub-select-option:focus-visible,html[data-theme="ops-dark"] button.hub-select-option.selected{background:var(--accent-soft);color:#c6e0e7;}
+  html[data-theme="ops-dark"] .btn-primary{background:#315e6b;color:#f7faf9;}html[data-theme="ops-dark"] .btn-primary:hover{background:#3a6d7b;}html[data-theme="ops-dark"] .btn-ghost:hover,html[data-theme="ops-dark"] .mini-btn:hover{background:var(--surface-2);border-color:var(--border-strong);}
+  html[data-theme="ops-dark"] .x-btn:hover,html[data-theme="ops-dark"] .mini-btn.del:hover{background:var(--red-soft);border-color:#694044;}html[data-theme="ops-dark"] .logo-drop:hover{background:var(--surface-2);}
+  html[data-theme="ops-dark"] .toast{background:var(--surface-raised);border-color:var(--border);color:#d8e7e8;}html[data-theme="ops-dark"] .toast.error{background:var(--red-soft);border-color:#694044;color:#f08a8a;}html[data-theme="ops-dark"] .overlay{background:rgba(5,8,10,.68);}
+  html[data-theme="ops-dark"] #invoiceDoc{border-color:var(--border);box-shadow:0 18px 48px rgba(0,0,0,.28);}
 </style>
 </head>
 <body>
+
+<script>
+  if (window.self !== window.top) document.body.classList.add('embedded');
+</script>
 
 <!-- ══════════ GATE 0 · SUPABASE CONFIG (shown once if keys not set) ══════════ -->
 <div class="gate" id="gateConfig" style="display:none;">
@@ -213,7 +381,7 @@
 <!-- ══════════ GATE 2 · NOT ON ALLOWLIST ══════════ -->
 <div class="gate" id="gateDenied" style="display:none;">
   <div class="card">
-    <div class="brand-logo">🔒</div>
+    <div class="brand-logo"><i data-lucide="lock-keyhole" aria-hidden="true"></i></div>
     <h2>Not authorised</h2>
     <div class="sub" style="margin-top:6px;"><span id="deniedEmail"></span> is not on the access list.<br>
       Ask your admin to add you under <b>Settings → Team access</b> in any HG tool.</div>
@@ -227,10 +395,10 @@
 
   <div class="topbar">
     <div class="brand-block">
-      <div class="brand-logo">🧾</div>
+      <div class="brand-logo"><i data-lucide="file-text" aria-hidden="true"></i></div>
       <div>
-        <div class="brand-name">Subcon Invoice Generator</div>
-        <div class="brand-sub">For individual workers / subcons who don't issue their own invoice · Supabase edition</div>
+        <div class="brand-name">Subcon Invoices <span class="tool-live">Live</span></div>
+        <div class="brand-sub">Generate consistent subcontractor invoices and PDFs.</div>
       </div>
     </div>
     <div class="user-pill"><b id="userPill">…</b><button onclick="signOut()">Sign out</button></div>
@@ -240,9 +408,9 @@
 
     <!-- ============ FORM ============ -->
     <div>
-      <div class="panel">
-        <div class="panel-title">✏️ Invoice details</div>
-        <div class="panel-hint">Fill in the subcon (who you're paying) and the line items. Preview updates live on the right. <b>Generate</b> saves the record and opens the printable PDF.</div>
+      <div class="panel invoice-builder">
+        <div class="panel-title">Create subcontractor invoice</div>
+        <div class="panel-hint">Enter the payee and line items. The preview updates as you work; saving creates the record and printable PDF.</div>
 
         <div class="group-label">Who is claiming (issuer)</div>
 
@@ -290,7 +458,7 @@
         <label class="fld">
           <span>Logo (optional — company only, or leave blank)</span>
           <div class="logo-drop" id="logoDrop" onclick="document.getElementById('logoFile').click()">
-            📎 Click to upload logo (PNG / JPG)
+            <i data-lucide="paperclip" aria-hidden="true"></i> Upload logo (PNG / JPG)
           </div>
           <input type="file" id="logoFile" accept="image/*" style="display:none" onchange="onLogo(event)" />
           <div class="logo-prev" id="logoPrev" style="display:none;">
@@ -326,18 +494,20 @@
         </div>
 
         <div class="group-label">Line items</div>
-        <table class="items">
-          <thead>
-            <tr>
-              <th style="width:48%">Description</th>
-              <th style="width:14%">Qty</th>
-              <th style="width:20%">Unit price (RM)</th>
-              <th style="width:14%" class="ta-right">Amount</th>
-              <th style="width:4%"></th>
-            </tr>
-          </thead>
-          <tbody id="itemsBody"></tbody>
-        </table>
+        <div class="items-table-wrap">
+          <table class="items">
+            <thead>
+              <tr>
+                <th style="width:48%">Description</th>
+                <th style="width:14%">Qty</th>
+                <th style="width:20%">Unit price (RM)</th>
+                <th style="width:14%" class="ta-right">Amount</th>
+                <th style="width:4%"></th>
+              </tr>
+            </thead>
+            <tbody id="itemsBody"></tbody>
+          </table>
+        </div>
         <button type="button" class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="addItem()">+ Add line</button>
 
         <div class="group-label">Tax & payment</div>
@@ -363,8 +533,8 @@
         </label>
 
         <div class="btn-row">
-          <button class="btn btn-primary" id="genBtn" onclick="generate()">🖨 Generate PDF &amp; Save</button>
-          <button class="btn btn-ghost" onclick="resetForm()">↺ New blank</button>
+          <button class="btn btn-primary" id="genBtn" onclick="generate()"><i data-lucide="file-down" aria-hidden="true"></i> Generate PDF &amp; Save</button>
+          <button class="btn btn-ghost" onclick="resetForm()"><i data-lucide="rotate-ccw" aria-hidden="true"></i> New blank</button>
         </div>
 
         <div class="result-box" id="resultBox"></div>
@@ -373,25 +543,29 @@
 
     <!-- ============ PREVIEW ============ -->
     <div class="preview-wrap">
+      <div class="preview-heading"><strong>Invoice preview</strong><span>Updates as you enter details</span></div>
       <div id="invoiceDoc"></div>
     </div>
 
   </div>
 
   <!-- ============ SUMMARY TABLE ============ -->
-  <div class="panel" style="margin-top:8px;">
+  <div class="panel records-panel">
     <div class="summary-head">
       <div>
-        <div class="panel-title">📒 Invoice records</div>
-        <div class="panel-hint">Shared across staff. Every saved invoice is here — reprint its PDF any time.</div>
+        <div class="panel-title">Invoice records</div>
+        <div class="panel-hint">Review, reopen, export, or reprint saved invoices.</div>
       </div>
-      <div>
-        <button class="btn btn-ghost btn-sm" onclick="exportExcel()">⬇ Export Excel</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportCsv()">⬇ Export CSV</button>
+      <div class="summary-actions">
+        <button class="btn btn-ghost btn-sm" onclick="exportExcel()"><i data-lucide="file-spreadsheet" aria-hidden="true"></i> Export Excel</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportCsv()"><i data-lucide="download" aria-hidden="true"></i> Export CSV</button>
       </div>
     </div>
-    <div class="stat-row" id="statRow"></div>
-    <div style="overflow-x:auto;">
+    <div class="invoice-snapshot">
+      <div class="invoice-snapshot-title">Invoice Snapshot</div>
+      <div class="stat-row" id="statRow"></div>
+    </div>
+    <div class="records-table-wrap">
       <table class="rec">
         <thead>
           <tr>
@@ -451,6 +625,57 @@ function hideLoad(){$('overlay').classList.remove('show');}
 function showMsg(id,t,ok){var m=$(id);m.textContent=t;m.className='msg show '+(ok?'ok':'err');setTimeout(function(){m.classList.remove('show');},4500);}
 function slug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60)||'subcon';}
 function dstr(v){return String(v==null?'':v).slice(0,10);}
+function paintIcons(){ if(window.lucide) window.lucide.createIcons(); }
+
+// Shared HG Hub dropdown treatment. Native selects remain the source of truth
+// for existing values, change handlers, and Supabase payloads.
+function closeHubSelects(except){
+  document.querySelectorAll('.hub-select.open').forEach(function(wrap){
+    if(wrap!==except){
+      wrap.classList.remove('open','open-up');
+      var trigger=wrap.querySelector('.hub-select-trigger');
+      if(trigger) trigger.setAttribute('aria-expanded','false');
+    }
+  });
+}
+function syncHubSelects(root){
+  (root||document).querySelectorAll('select[data-hub-select]').forEach(function(select){
+    if(select._hubSelectSync) select._hubSelectSync();
+  });
+}
+function initHubSelects(root){
+  var scope=root||document,selects=[];
+  if(scope.nodeType===1&&scope.matches('select:not([data-hub-select])')) selects.push(scope);
+  if(scope.querySelectorAll) selects=selects.concat(Array.prototype.slice.call(scope.querySelectorAll('select:not([data-hub-select])')));
+  selects.forEach(function(select){
+    var wrap=document.createElement('div');wrap.className='hub-select';select.parentNode.insertBefore(wrap,select);wrap.appendChild(select);
+    select.dataset.hubSelect='true';select.classList.add('hub-select-native');select.tabIndex=-1;select.setAttribute('aria-hidden','true');
+    var trigger=document.createElement('button');trigger.type='button';trigger.className='hub-select-trigger';trigger.setAttribute('aria-haspopup','listbox');trigger.setAttribute('aria-expanded','false');
+    var label=wrap.parentElement&&wrap.parentElement.querySelector('span');if(label) trigger.setAttribute('aria-label',label.textContent.trim());
+    var menu=document.createElement('div');menu.className='hub-select-menu';menu.setAttribute('role','listbox');wrap.appendChild(trigger);wrap.appendChild(menu);
+    function sync(){
+      var selected=select.options[select.selectedIndex];trigger.textContent=selected?selected.textContent:'Select';trigger.disabled=select.disabled;menu.innerHTML='';
+      Array.prototype.forEach.call(select.options,function(option){
+        var item=document.createElement('button');item.type='button';item.className='hub-select-option'+(option.selected?' selected':'');item.textContent=option.textContent;item.disabled=option.disabled;item.setAttribute('role','option');item.setAttribute('aria-selected',option.selected?'true':'false');
+        item.addEventListener('click',function(event){event.stopPropagation();select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));sync();closeHubSelects();});menu.appendChild(item);
+      });
+    }
+    select._hubSelectSync=sync;select.addEventListener('change',sync);new MutationObserver(sync).observe(select,{childList:true,subtree:true,attributes:true});
+    trigger.addEventListener('click',function(event){
+      event.stopPropagation();var open=!wrap.classList.contains('open');closeHubSelects(wrap);sync();
+      if(open){var rect=trigger.getBoundingClientRect(),estimated=Math.min(260,menu.children.length*44+10);wrap.classList.toggle('open-up',window.innerHeight-rect.bottom-16<estimated&&rect.top>window.innerHeight-rect.bottom);}else wrap.classList.remove('open-up');
+      wrap.classList.toggle('open',open);trigger.setAttribute('aria-expanded',open?'true':'false');
+    });
+    sync();
+  });
+}
+function startHubSelects(){
+  initHubSelects(document);
+  new MutationObserver(function(mutations){mutations.forEach(function(m){m.addedNodes.forEach(function(node){if(node.nodeType===1)initHubSelects(node);});});}).observe(document.body,{childList:true,subtree:true});
+}
+document.addEventListener('DOMContentLoaded',function(){startHubSelects();paintIcons();});
+document.addEventListener('pointerdown',function(e){if(!e.target.closest('.hub-select'))closeHubSelects();},true);
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeHubSelects();});
 
 // ═══════════════════════════ BOOT / AUTH FLOW (per quotation-supabase.html) ═══════════════════════════
 function saveConfig(){
@@ -781,9 +1006,10 @@ async function generate(){
 
     hideLoad();$('genBtn').disabled=false;
     var box=$('resultBox');
-    box.innerHTML='✅ <b>'+esc(res.invNo)+'</b> saved · '+rm(res.total)+'<br>'+
-      '<button class="link" onclick="reprintLast()">📄 Open / print PDF</button>';
+    box.innerHTML='<strong>'+esc(res.invNo)+' saved</strong><span>'+rm(res.total)+'</span><br>'+
+      '<button class="link" onclick="reprintLast()"><i data-lucide="file-down" aria-hidden="true"></i> Open / print PDF</button>';
     box.classList.add('show');
+    paintIcons();
     toast('Invoice '+res.invNo+' saved');
     openPrintWindow(LAST_SAVED.inv, LAST_SAVED.lines, LAST_SAVED.logo);
     await reloadData(true);
@@ -802,6 +1028,7 @@ function refreshSavedList(){
   sel.innerHTML='<option value="">— New / type below —</option>'+
     list.map(function(s,i){return '<option value="'+i+'">'+esc(s.name)+'</option>';}).join('');
   $('savedWrap').style.display=list.length?'block':'none';
+  syncHubSelects(document);
 }
 function loadSaved(v){
   if(v==='')return;
@@ -816,7 +1043,7 @@ function loadSaved(v){
 function renderRecs(){
   var b=$('recBody');
   if(!invoices.length){
-    b.innerHTML='<tr><td colspan="9"><div class="rec-empty">No invoices saved yet. Fill the form and hit <b>Generate PDF &amp; Save</b>.</div></td></tr>';
+    b.innerHTML='<tr><td colspan="9"><div class="rec-empty"><i data-lucide="file-text" aria-hidden="true"></i><div><strong>No invoices saved</strong><span>Saved subcontractor invoices will appear here.</span></div></div></td></tr>';
   }else{
     b.innerHTML=invoices.map(function(r){
       return '<tr>'+
@@ -836,15 +1063,16 @@ function renderRecs(){
     }).join('');
   }
   renderStats();
+  paintIcons();
 }
 function renderStats(){
   var total=invoices.reduce(function(s,r){return s+num(r.total);},0);
   var mth=todayStr().slice(0,7);
   var mTotal=invoices.filter(function(r){return String(r.invDate||'').slice(0,7)===mth;}).reduce(function(s,r){return s+num(r.total);},0);
   $('statRow').innerHTML=
-    '<div class="stat-card"><div class="l">Invoices</div><div class="v">'+invoices.length+'</div></div>'+
-    '<div class="stat-card"><div class="l">This month</div><div class="v">'+rm(mTotal)+'</div></div>'+
-    '<div class="stat-card"><div class="l">All-time total</div><div class="v">'+rm(total)+'</div></div>';
+    '<div class="stat-card"><div class="l">Invoices generated</div><div class="v">'+invoices.length+'</div></div>'+
+    '<div class="stat-card"><div class="l">Billed this month</div><div class="v">'+rm(mTotal)+'</div></div>'+
+    '<div class="stat-card"><div class="l">Total billed</div><div class="v">'+rm(total)+'</div></div>';
 }
 
 /* ---------- full invoice fetch (was getInvoice) ---------- */
@@ -936,6 +1164,7 @@ function resetForm(keepCompany){
   clearLogo();
   items=[];addItem();
   $('savedSel').value='';
+  syncHubSelects(document);
   if(!keepCompany){/* company kept always */}
   nextInvNoHint();
   $('invDate').value=todayStr();

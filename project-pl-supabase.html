@@ -2869,7 +2869,7 @@ function signOut() { sb.auth.signOut().then(function () { location.reload(); });
 
 // ───────────────────────────── RBAC (mirrors ROLES / ROLE_PERMS in Code.gs;
 // server-side the same matrix is enforced by RLS policies + pl_role())
-const BOOTSTRAP_ADMINS = ['lee@hggroup.com.my', 'znerationmedia@gmail.com'];
+const BOOTSTRAP_ADMINS = ['lee@hggroup.com.my', 'marketing@hggroup.com.my', 'znerationmedia@gmail.com'];
 const APP_ROLES = ['Admin', 'Manager', 'Editor', 'Viewer'];
 const ROLE_PERMS = {
   Admin:   ['MANAGE_USERS', 'MANAGE_MASTER_LISTS', 'DELETE_PROJECT', 'EDIT_PROJECT',

@@ -2949,9 +2949,9 @@
   .exec-data-notice.show { display: flex; }
   .exec-data-notice svg { width: 16px; height: 16px; color: var(--amber); flex: 0 0 auto; margin-top: 1px; }
   .exec-data-notice button { margin-left: auto; border: 0; background: transparent; color: var(--accent); font: 700 11px/1.3 var(--font-ui); cursor: pointer; white-space: nowrap; }
-  .executive-screen .op-card-head { min-height: 72px; padding: 18px 20px 14px; align-items: flex-start; }
-  .executive-screen .op-card-head h2 { font-size: 20px; line-height: 26px; }
-  .executive-screen .op-card-head p { margin-top: 2px; font-size: 13px; line-height: 18px; }
+  .executive-screen .op-card-head, .finance-screen .op-card-head { min-height: 72px; padding: 18px 20px 14px; align-items: flex-start; }
+  .executive-screen .op-card-head h2, .finance-screen .op-card-head h2 { font-size: 20px; line-height: 26px; }
+  .executive-screen .op-card-head p, .finance-screen .op-card-head p { margin-top: 2px; font-size: 13px; line-height: 18px; }
   .exec-snapshot { margin-bottom: 18px; padding: 22px 24px 24px; }
   .exec-snapshot-title { font: 700 20px/1.3 var(--font-display); margin-bottom: 22px; }
   .exec-kpi-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
@@ -3024,12 +3024,26 @@
   .exec-activity-copy { min-width: 0; display: grid; gap: 2px; }
   .exec-activity-copy b { font-size: 12px; }
   .exec-activity-copy span { color: var(--text-dim); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .finance-attention-card, .finance-queues-card { margin-bottom: 18px; }
+  .finance-queue-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 0 20px 18px; }
+  .finance-queue-grid > .dash-load { grid-column: 1 / -1; }
+  .finance-queue { min-width: 0; padding: 14px 18px 4px; border-left: 1px solid var(--border); }
+  .finance-queue:first-child { padding-left: 0; border-left: 0; }
+  .finance-queue:last-child { padding-right: 0; }
+  .finance-queue h3 { margin-bottom: 10px; padding-bottom: 9px; border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .finance-queue-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: baseline; padding: 6px 0; }
+  .finance-queue-row span { min-width: 0; color: var(--text-dim); font-size: 12px; line-height: 17px; }
+  .finance-queue-row b { color: var(--text); font: 700 13px/1.25 var(--font-display); white-space: nowrap; }
+  .finance-queue-action { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; border: 0; background: transparent; color: var(--accent); font: 700 12px/1.3 var(--font-ui); cursor: pointer; }
+  .finance-queue-action svg { width: 13px; height: 13px; }
   html[data-theme="ops-dark"] .sb-role-menu { background: #17232a; border-color: #33434b; }
   html[data-theme="ops-dark"] .exec-context-banner { background: rgba(60, 141, 177, .12); }
   html[data-theme="ops-dark"] .exec-decisions-card.review-focus { border-color: #607176; box-shadow: 0 0 0 3px rgba(120, 184, 205, .2); }
   @media (max-width: 1180px) {
     .exec-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 22px; }
     .exec-kpi:nth-child(4) { border-left: 0; padding-left: 0; }
+    .finance-queue-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 18px; }
+    .finance-queue:nth-child(3) { padding-left: 0; border-left: 0; }
   }
   @media (max-width: 1000px) {
     .exec-decision { grid-template-columns: minmax(0, 1fr) auto; gap: 16px; padding: 14px 20px; }
@@ -3054,11 +3068,16 @@
     .exec-pulse-group h3 { padding-bottom: 0; border-bottom: 0; }
     .exec-activity-row { grid-template-columns: 48px minmax(0, 1fr); }
     .exec-activity-actor { grid-column: 2; }
+    .finance-queue-grid { grid-template-columns: 1fr; }
+    .finance-queue { padding: 15px 0; border-top: 1px solid var(--border); border-left: 0; }
+    .finance-queue:first-child { padding-top: 14px; border-top: 0; }
+    .finance-queue h3 { border-bottom: 0; padding-bottom: 0; }
   }
   @media (max-width: 520px) {
     .exec-snapshot { padding: 20px 18px 22px; }
-    .executive-screen .op-card-head { padding-left: 18px; padding-right: 18px; }
+    .executive-screen .op-card-head, .finance-screen .op-card-head { padding-left: 18px; padding-right: 18px; }
     .exec-pulse, .exec-activity-list { padding-left: 18px; padding-right: 18px; }
+    .finance-queue-grid { padding-left: 18px; padding-right: 18px; }
     .exec-decision-group-head, .exec-decision { padding-left: 18px; padding-right: 18px; }
     .exec-kpi-metric b { font-size: 27px; }
     .exec-decision-group { padding-top: 14px; }
@@ -3366,6 +3385,55 @@
           </section>
         </section>
 
+        <section class="hub-screen finance-screen" id="screenFinanceHome" data-screen="finance-home">
+          <header class="exec-hero">
+            <div class="exec-hero-copy">
+              <div class="exec-eyebrow" id="financeDate">Finance command view</div>
+              <h1 id="financeGreeting">Good afternoon, Finance</h1>
+              <p>Review cash position, project profitability, payment exceptions, and finance records from one working view.</p>
+            </div>
+            <div class="op-actions">
+              <button class="btn-ghost" id="financeManageAccess" type="button" hidden onclick="openToolByName('Project Revenue vs Expenses (P&L)')" title="Project P&amp;L → Setup / Master Lists → User Roles">Manage access</button>
+              <button class="btn-primary" type="button" onclick="openToolByName('Project Revenue vs Expenses (P&L)')">Open Project P&amp;L</button>
+            </div>
+          </header>
+
+          <div class="exec-data-notice" id="financeDataNotice"><i data-lucide="triangle-alert"></i><span id="financeDataNoticeText"></span><button type="button" onclick="loadFinanceHome()">Retry</button></div>
+
+          <section class="op-card exec-snapshot finance-snapshot" id="financeSnapshot">
+            <div class="exec-snapshot-title">Finance Snapshot</div>
+            <div class="exec-kpi-grid">
+              <button type="button" class="exec-kpi" onclick="openToolByName('Project Revenue vs Expenses (P&L)')"><span class="exec-kpi-label">Client outstanding</span><span class="exec-kpi-metric"><b id="financeClientOutstanding" data-skel>—</b><em id="financeClientNote">invoiced projects</em></span></button>
+              <button type="button" class="exec-kpi" onclick="openToolByName('Project Revenue vs Expenses (P&L)')"><span class="exec-kpi-label">Subcon outstanding</span><span class="exec-kpi-metric"><b id="financeSubconOutstanding" data-skel>—</b><em id="financeSubconNote">project balances</em></span></button>
+              <button type="button" class="exec-kpi" onclick="openToolByName('Project Revenue vs Expenses (P&L)')"><span class="exec-kpi-label">Supplier outstanding</span><span class="exec-kpi-metric"><b id="financeSupplierOutstanding" data-skel>—</b><em id="financeSupplierNote">project balances</em></span></button>
+              <button type="button" class="exec-kpi" onclick="openToolByName('Project Revenue vs Expenses (P&L)')"><span class="exec-kpi-label">Net project revenue</span><span class="exec-kpi-metric"><b id="financeRevenue" data-skel>—</b><em>portfolio · ex-SST</em></span></button>
+              <button type="button" class="exec-kpi" onclick="openToolByName('Project Revenue vs Expenses (P&L)')"><span class="exec-kpi-label">Project profit</span><span class="exec-kpi-metric"><b id="financeProfit" data-skel>—</b><em>portfolio</em></span></button>
+              <button type="button" class="exec-kpi" onclick="openToolByName('Project Revenue vs Expenses (P&L)')"><span class="exec-kpi-label">Average margin</span><span class="exec-kpi-metric"><b id="financeMargin" data-skel>—</b><em>weighted</em></span></button>
+            </div>
+          </section>
+
+          <section class="op-card exec-decisions-card finance-attention-card" id="financeAttentionCard" tabindex="-1" aria-labelledby="financeAttentionTitle">
+            <div class="op-card-head">
+              <div><h2 id="financeAttentionTitle">Needs attention</h2><p>Financial exceptions routed directly to the tool that owns the next action</p></div>
+              <span class="count-pill exec-decision-count" id="financeAttentionCount" data-state="unavailable" aria-live="polite">—</span>
+            </div>
+            <div class="exec-decision-list" id="financeAttentionList" aria-live="polite" aria-busy="true"><div class="dash-load"><span class="brief-spin"></span></div></div>
+          </section>
+
+          <section class="op-card finance-queues-card">
+            <div class="op-card-head"><div><h2>Finance work queues</h2><p>Receivables, payables, records, and invoice production</p></div></div>
+            <div class="finance-queue-grid" id="financeQueueGrid"><div class="dash-load"><span class="brief-spin"></span></div></div>
+          </section>
+
+          <section class="op-card">
+            <div class="op-card-head">
+              <div><h2>Finance activity</h2><p>Latest financial and billing changes, most recent first</p></div>
+              <button class="mini-btn" type="button" onclick="showHubScreen('activity')">View activity</button>
+            </div>
+            <div class="exec-activity-list" id="financeActivityList"><div class="dash-load"><span class="brief-spin"></span></div></div>
+          </section>
+        </section>
+
         <section class="hub-screen" id="screenTools" data-screen="tools">
           <header class="screen-head">
             <div>
@@ -3629,16 +3697,16 @@
     { name: "Finance & Invoicing", icon: "wallet", color: "#22c55e", tools: [
       { icon:"file-text", name:"Subcon Invoice Generator", type:"live",
         desc:"Supabase edition — raise invoices on behalf of subcons / workers, PDF output, record table.",
-        file:"subcon-invoice-supabase.html", dark:true, cloud:{ key:"bl_subcon_url" } },
+        file:"subcon-invoice-supabase.html", dark:false, cloud:{ key:"bl_subcon_url" } },
       { icon:"trending-up", name:"Project Revenue vs Expenses (P&L)", type:"live",
         desc:"Supabase edition — end-to-end project financials, materials, manpower, subcon/supplier payments, RBAC roles.",
         file:"project-pl-supabase.html", dark:false, cloud:{ key:"bl_projectpl_url" } },
       { icon:"receipt", name:"Receipt Claims", type:"live",
         desc:"Supabase edition — staff submit expense claims by photo; Gemini (Edge Function) reads the receipt; saved to Storage.",
-        file:"claims-supabase.html", dark:true, cloud:{ key:"bl_claims_url" } },
+        file:"claims-supabase.html", dark:false, cloud:{ key:"bl_claims_url" } },
       { icon:"credit-card", name:"Expenses Receipt System", type:"live",
         desc:"Supabase edition — AI reads receipts; staff tag Business/Personal; privacy-filtered per user (RLS), admin sees all.",
-        file:"expenses-supabase.html", dark:true, cloud:{ key:"bl_expenses_url" } },
+        file:"expenses-supabase.html", dark:false, cloud:{ key:"bl_expenses_url" } },
     ]},
     { name: "Transport & Rental Services", icon: "truck", color: "#a855f7", tools: [
       { icon:"truck", name:"Lorry Fleet Management", type:"live",
@@ -3751,12 +3819,38 @@
       ],
       catalogTools: null,
       alarmSources: ["Dispatch", "Workers", "Scaffold", "Storage", "Inventory", "Finance"]
+    },
+    finance: {
+      label: "Finance / Invoicing",
+      homeScreen: "finance-home",
+      navTools: [
+        ["Project P&L", "trending-up", "Project Revenue vs Expenses (P&L)"],
+        ["Receipt Claims", "receipt", "Receipt Claims"],
+        ["Expenses", "credit-card", "Expenses Receipt System"],
+        ["Subcon Invoices", "file-text", "Subcon Invoice Generator"]
+      ],
+      catalogTools: [
+        "Project Revenue vs Expenses (P&L)",
+        "Receipt Claims",
+        "Expenses Receipt System",
+        "Subcon Invoice Generator",
+        "Smart Quotation",
+        "Scaffold & Green Tag System",
+        "Temporary Storage Rental",
+        "Transport / Mover / Rorobin"
+      ],
+      alarmSources: ["Finance", "Scaffold", "Storage", "Transport"]
     }
   };
 
   const TOOL_LABELS = {
     "Smart Quotation": { short: "Smart Quotation", initials: "SQ", sub: "Build and issue quotations" },
     "Project Revenue vs Expenses (P&L)": { short: "Project P&L", initials: "PL", sub: "Revenue, costs and margin" },
+    "Receipt Claims": { short: "Receipt Claims", initials: "RC", sub: "Submitted staff claims" },
+    "Expenses Receipt System": { short: "Expenses", initials: "EX", sub: "Recorded business expenses" },
+    "Subcon Invoice Generator": { short: "Subcon Invoices", initials: "SI", sub: "Generate subcontractor invoices" },
+    "Temporary Storage Rental": { short: "Storage Rental", initials: "SR", sub: "Rental invoices and payments" },
+    "Transport / Mover / Rorobin": { short: "Transport Billing", initials: "TR", sub: "Transport invoices and payments" },
     "Operations Command Center": { short: "Operations Command", initials: "OC", sub: "Ops entrance and launchers" },
     "Daily Site Tracking": { short: "Daily Site Tracking", initials: "ST", sub: "Progress and daily report" },
     "Daily Readiness & Dispatch": { short: "Readiness & Dispatch", initials: "RD", sub: "Job gates and dispatch" },
@@ -3771,6 +3865,11 @@
   const TOOL_SUBTITLES = {
     "Smart Quotation": "Select the mall · Build the scope · Price and issue one clear quote",
     "Project Revenue vs Expenses (P&L)": "Track project revenue, costs, outstanding payments, profit, and margin.",
+    "Receipt Claims": "Submit and review receipt-backed staff claims.",
+    "Expenses Receipt System": "Snap receipts · AI reads them · Finance stays claim-ready",
+    "Subcon Invoice Generator": "Generate consistent subcontractor invoices and PDFs.",
+    "Temporary Storage Rental": "Track storage rentals, invoices, payments, and due dates.",
+    "Transport / Mover / Rorobin": "Track transport jobs, invoicing, payments, and overdue balances.",
     "Operations Command Center": "Black Lee · Contractor Support · 14-module AI system",
     "Daily Site Tracking": "Capture progress, blockers, and tomorrow’s plan in one shared daily board.",
     "Daily Readiness & Dispatch": "Eason checks the gates · Calvin loads the teams · Everyone sees the same board",
@@ -3814,6 +3913,7 @@
   let CURRENT_SCREEN = "home";
   let DASHBOARD_STATE = { attention: [], recent: [], activityToday: 0 };
   let EXECUTIVE_STATE = null;
+  let FINANCE_STATE = null;
   let USER_PROFILE = null;
   let DEFAULT_HOME_MODE = "operations";
   let ACTIVE_HOME_MODE = "operations";
@@ -3884,6 +3984,42 @@
       { at: "2026-07-12T18:32:00+08:00", actor: "marketing@hggroup.com.my", action_code: "quote.updated", action_label: "Updated quotation", detail: "Q-2026-069 · Mid Valley reinstatement", domain: "commercial", tool_id: "Smart Quotation" }
     ],
     data_quality: [],
+    unavailable: []
+  };
+  const FINANCE_MOCK_DATA = {
+    version: "finance-home-v1",
+    as_of: "2026-07-13",
+    timezone: "Asia/Kuala_Lumpur",
+    generated_at: "2026-07-13T14:30:00+08:00",
+    role: { home_mode: "finance", finance_role: "Admin", can_manage_users: true },
+    snapshot: {
+      client_outstanding: { value: 78400, count: 4, unit: "MYR" },
+      subcontractor_outstanding: { value: 36800, count: 5, unit: "MYR" },
+      supplier_outstanding: { value: 21450, count: 3, unit: "MYR" },
+      net_revenue: { value: 486900, unit: "MYR" },
+      project_profit: { value: 101860, unit: "MYR" },
+      average_margin: { value: 20.92, unit: "percent" }
+    },
+    attention: {
+      total: 4, critical: 2, warning: 2,
+      items: [
+        { severity: "critical", title: "PRJ-202607-018 is below cost", detail: "Current project profit is RM -18,500.00.", impact: "RM 19k", due_date: "2026-07-13", tool_id: "Project Revenue vs Expenses (P&L)", action_label: "Review Project P&L" },
+        { severity: "critical", title: "SCF-2026-041 · Apex Concepts", detail: "Invoice overdue 8 days · balance RM 12,400.00", impact: "Overdue", due_date: "2026-07-05", tool_id: "Scaffold & Green Tag System", action_label: "Open scaffold invoices" },
+        { severity: "warning", title: "PRJ-202607-021 has estimated costs to confirm", detail: "Three project scopes still use estimated cost.", impact: "RM 8k", due_date: null, tool_id: "Project Revenue vs Expenses (P&L)", action_label: "Review Project P&L" },
+        { severity: "warning", title: "STR-2026-007 · Northstar Apparel", detail: "Balance RM 3,200.00 · due in 3 days", impact: "Due soon", due_date: "2026-07-16", tool_id: "Temporary Storage Rental", action_label: "Open storage invoices" }
+      ]
+    },
+    queues: {
+      receivables: { project_count: 4, project_amount: 78400, overdue_count: 3, overdue_amount: 22100 },
+      payables: { subcontractor_count: 5, subcontractor_amount: 36800, supplier_count: 3, supplier_amount: 21450 },
+      claims_expenses: { claims_count: 9, claims_amount: 4860, expense_count: 17, expense_amount: 9240 },
+      invoice_production: { subcon_invoice_count: 6, subcon_invoice_amount: 18700, open_quote_count: 7, open_quote_amount: 68900 }
+    },
+    activity: [
+      { at: "2026-07-13T14:05:00+08:00", actor: "marketing@hggroup.com.my", action_code: "[P&L] UPDATE Project", detail: "PRJ-202607-018 · Updated subcontractor cost", tool_id: "Project Revenue vs Expenses (P&L)" },
+      { at: "2026-07-13T12:42:00+08:00", actor: "lee@hggroup.com.my", action_code: "invoice.create", detail: "SUB-2026-0041 · RM 4,800", tool_id: "Subcon Invoice Generator" },
+      { at: "2026-07-13T10:18:00+08:00", actor: "calvin@hggroup.com.my", action_code: "claim.create", detail: "CLM-2026-087 · RM 286.40", tool_id: "Receipt Claims" }
+    ],
     unavailable: []
   };
 
@@ -3991,6 +4127,9 @@
       if (ACTIVE_HOME_MODE === "executive") {
         showHubScreen("executive-home", resetTool);
         requestAnimationFrame(focusExecutiveDecisions);
+      } else if (ACTIVE_HOME_MODE === "finance") {
+        showHubScreen("finance-home", resetTool);
+        requestAnimationFrame(focusFinanceAttention);
       } else {
         showHubScreen("home", resetTool);
         requestAnimationFrame(focusOpenBlockers);
@@ -4037,7 +4176,23 @@
 	      card._reviewFocusTimer = setTimeout(() => card.classList.remove("review-focus"), 1300);
 	    });
 	  }
-	  function scrollAttention() { ACTIVE_HOME_MODE === "executive" ? focusExecutiveDecisions() : focusOpenBlockers(); }
+	  function focusFinanceAttention() {
+	    showHubScreen("finance-home");
+	    requestAnimationFrame(() => {
+	      const card = document.getElementById("financeAttentionCard");
+	      if (!card) return;
+	      card.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "center" });
+	      card.focus({ preventScroll: true });
+	      card.classList.add("review-focus");
+	      clearTimeout(card._reviewFocusTimer);
+	      card._reviewFocusTimer = setTimeout(() => card.classList.remove("review-focus"), 1300);
+	    });
+	  }
+	  function scrollAttention() {
+	    if (ACTIVE_HOME_MODE === "executive") focusExecutiveDecisions();
+	    else if (ACTIVE_HOME_MODE === "finance") focusFinanceAttention();
+	    else focusOpenBlockers();
+	  }
 	  function currentThemeName() {
 	    return document.documentElement.dataset.theme === "ops-dark" ? "dark" : "light";
 	  }
@@ -4183,7 +4338,11 @@
   }
 
   function allowedHomeModes() {
-    return DEFAULT_HOME_MODE === "executive" ? ["executive", "operations"] : ["operations"];
+    const modes = ["operations"];
+    if (DEFAULT_HOME_MODE === "executive") modes.unshift("executive");
+    const financeRole = USER_PROFILE && USER_PROFILE.finance_role;
+    if (["Admin", "Manager"].includes(financeRole)) modes.push("finance");
+    return Array.from(new Set(modes));
   }
   function homeModeStorageKey() {
     const email = USER_PROFILE && USER_PROFILE.email ? USER_PROFILE.email.toLowerCase() : "anonymous";
@@ -4212,7 +4371,8 @@
     toggle.setAttribute("aria-haspopup", canSwitch ? "menu" : "false");
     const options = [
       ["executive", "briefcase-business", "Executive", "Company command view"],
-      ["operations", "hard-hat", "Operations / Site", "Site delivery workspace"]
+      ["operations", "hard-hat", "Operations / Site", "Site delivery workspace"],
+      ["finance", "wallet", "Finance / Invoicing", "Cash, margin and payment queues"]
     ].filter(item => allowed.includes(item[0]));
     menu.innerHTML = options.map(item =>
       '<button class="sb-role-choice' + (ACTIVE_HOME_MODE === item[0] ? ' active' : '') + '" type="button" role="menuitemradio" aria-checked="' + (ACTIVE_HOME_MODE === item[0]) + '" onclick="switchHomeView(\'' + item[0] + '\')">' +
@@ -4242,7 +4402,7 @@
     closeRoleViewMenu();
     renderRoleView();
     goHome();
-    toast(mode === "executive" ? "Executive view" : "Viewing as Operations / Site");
+    toast(mode === "executive" ? "Executive view" : mode === "finance" ? "Finance / Invoicing view" : "Viewing as Operations / Site");
   }
 
   function markActive() {
@@ -4536,12 +4696,16 @@
     if (context) context.classList.toggle("show", DEFAULT_HOME_MODE === "executive" && ACTIVE_HOME_MODE === "operations");
     const activityTitle = document.getElementById("activityScreenTitle");
     const activityCopy = document.getElementById("activityScreenCopy");
-    if (activityTitle) activityTitle.textContent = ACTIVE_HOME_MODE === "executive" ? "Executive activity" : "Recent activity";
+    if (activityTitle) activityTitle.textContent = ACTIVE_HOME_MODE === "executive" ? "Executive activity" : ACTIVE_HOME_MODE === "finance" ? "Finance activity" : "Recent activity";
     if (activityCopy) activityCopy.textContent = ACTIVE_HOME_MODE === "executive"
       ? "Review the latest company changes across finance, operations, people, and assets."
-      : "Track operational updates from the audit log across site tracking, dispatch, reports, workers, scaffold, and catalog activity.";
+      : ACTIVE_HOME_MODE === "finance"
+        ? "Review the latest P&L, claims, expense, invoice, and billing updates."
+        : "Track operational updates from the audit log across site tracking, dispatch, reports, workers, scaffold, and catalog activity.";
     if (ACTIVE_HOME_MODE === "executive") {
       Promise.resolve().then(() => loadExecutiveHome().catch(err => console.error("[hub] executive home failed:", err)));
+    } else if (ACTIVE_HOME_MODE === "finance") {
+      Promise.resolve().then(() => loadFinanceHome().catch(err => console.error("[hub] finance home failed:", err)));
     } else {
       Promise.resolve().then(() => { try { loadBriefing(false); } catch (e) { console.error(e); } });
       Promise.resolve().then(() => { try { loadDashboard(); } catch (e) { console.error(e); } });
@@ -4558,6 +4722,12 @@
         '<button data-screen-link="executive-home" onclick="goHome()">' + ico("home") + '<span>Home</span></button>' +
         '<button onclick="focusExecutiveDecisions()">' + ico("circle-alert") + '<span>Decisions</span></button>' +
         '<button data-tool-link="Project Revenue vs Expenses (P&L)" onclick="openToolByName(\'Project Revenue vs Expenses (P&L)\')">' + ico("landmark") + '<span>Finance</span></button>' +
+        '<button data-screen-link="activity" onclick="showHubScreen(\'activity\')">' + ico("bar-chart-3") + '<span>Activity</span></button>';
+    } else if (ACTIVE_HOME_MODE === "finance") {
+      nav.innerHTML =
+        '<button data-screen-link="finance-home" onclick="goHome()">' + ico("home") + '<span>Home</span></button>' +
+        '<button data-tool-link="Project Revenue vs Expenses (P&L)" onclick="openToolByName(\'Project Revenue vs Expenses (P&L)\')">' + ico("trending-up") + '<span>P&amp;L</span></button>' +
+        '<button data-tool-link="Receipt Claims" onclick="openToolByName(\'Receipt Claims\')">' + ico("receipt") + '<span>Claims</span></button>' +
         '<button data-screen-link="activity" onclick="showHubScreen(\'activity\')">' + ico("bar-chart-3") + '<span>Activity</span></button>';
     } else {
       nav.innerHTML =
@@ -4581,7 +4751,10 @@
 	    setTxt("tbHello", part + ", " + first);
 	    setTxt("opGreeting", part + ", " + first);
 	    setTxt("execGreeting", part + ", " + first);
-	    setTxt("execDate", new Date().toLocaleDateString("en-MY", { timeZone: "Asia/Kuala_Lumpur", weekday: "long", day: "numeric", month: "long", year: "numeric" }));
+	    setTxt("financeGreeting", part + ", " + first);
+	    const roleDate = new Date().toLocaleDateString("en-MY", { timeZone: "Asia/Kuala_Lumpur", weekday: "long", day: "numeric", month: "long", year: "numeric" });
+	    setTxt("execDate", roleDate);
+	    setTxt("financeDate", roleDate);
 	    setTxt("sbPname", name);
 	    setTxt("sbProle", (ROLE_MODES[ACTIVE_HOME_MODE] || ROLE_MODES.operations).label);
 	    setTxt("sbAvatar", (first[0] || "H").toUpperCase() + (name.split(" ")[1] ? name.split(" ")[1][0].toUpperCase() : ""));
@@ -5054,6 +5227,174 @@
     paintIcons();
   }
 
+  function financeMetricValue(metric) {
+    if (!metric || metric.value == null) return "—";
+    if (metric.unit === "MYR") return formatMoneyCompact(metric.value);
+    if (metric.unit === "percent") return (Number(metric.value) || 0).toFixed(1) + "%";
+    return String(metric.value);
+  }
+  function renderFinanceSnapshot(data) {
+    const s = (data && data.snapshot) || {};
+    const metrics = [
+      ["financeClientOutstanding", s.client_outstanding, "financeClientNote", "invoiced project"],
+      ["financeSubconOutstanding", s.subcontractor_outstanding, "financeSubconNote", "project balance"],
+      ["financeSupplierOutstanding", s.supplier_outstanding, "financeSupplierNote", "project balance"],
+      ["financeRevenue", s.net_revenue],
+      ["financeProfit", s.project_profit],
+      ["financeMargin", s.average_margin]
+    ];
+    metrics.forEach(row => {
+      const value = document.getElementById(row[0]);
+      if (value) { value.textContent = financeMetricValue(row[1]); value.classList.remove("skel"); }
+      if (row[2]) {
+        const note = document.getElementById(row[2]);
+        const count = row[1] && Number(row[1].count || 0);
+        if (note) note.textContent = count + " " + row[3] + (count === 1 ? "" : "s");
+      }
+    });
+  }
+  function financeItemOpen(index) {
+    const item = FINANCE_STATE && FINANCE_STATE.attention && FINANCE_STATE.attention.items && FINANCE_STATE.attention.items[index];
+    if (item && item.tool_id) openToolByName(item.tool_id);
+  }
+  function renderFinanceAttention(data) {
+    const attention = (data && data.attention) || { total: 0, items: [] };
+    const items = Array.isArray(attention.items) ? attention.items : [];
+    const count = document.getElementById("financeAttentionCount");
+    const list = document.getElementById("financeAttentionList");
+    if (count) {
+      count.textContent = attention.total == null ? "—" : attention.total;
+      count.dataset.state = attention.total == null ? "unavailable" : (attention.total === 0 ? "clear" : "attention");
+    }
+    if (!list) return;
+    list.setAttribute("aria-busy", "false");
+    if (attention.total == null) {
+      list.innerHTML = '<div class="empty-state unavailable"><i data-lucide="triangle-alert"></i><div><b>Finance exceptions unavailable</b><span>Reconnect the Finance Home data source, then refresh this view.</span></div></div>';
+      paintIcons(); return;
+    }
+    if (!items.length) {
+      list.innerHTML = '<div class="empty-state"><i data-lucide="shield-check"></i><div><b>No finance action needed</b><span>Project margins, payment exceptions, and billing due dates are clear right now.</span></div></div>';
+      paintIcons(); return;
+    }
+    const indexed = items.map((item, index) => ({ item, index }));
+    list.innerHTML = ["critical", "warning", "watch"].map(severity => {
+      const group = indexed.filter(entry => {
+        const current = String(entry.item.severity || "watch").toLowerCase();
+        return severity === "watch" ? !["critical", "warning"].includes(current) : current === severity;
+      });
+      if (!group.length) return "";
+      const rows = group.map(entry => {
+        const item = entry.item;
+        const due = item.due_date ? new Date(item.due_date + "T00:00:00").toLocaleDateString("en-MY", { day: "numeric", month: "short" }) : "No due date";
+        const title = item.title || "Finance review required";
+        const detail = item.detail || "Open the owning tool to review.";
+        const impact = item.impact || (item.amount != null ? formatMoneyCompact(item.amount) : "Review");
+        const action = item.action_label || "Open owning tool";
+        return '<button type="button" class="exec-decision" onclick="financeItemOpen(' + entry.index + ')" aria-label="' + esc(title + '. ' + detail + '. ' + action) + '">' +
+          '<span class="exec-decision-summary"><span class="exec-decision-heading"><b class="exec-decision-title">' + esc(title) + '</b><span class="exec-decision-impact">' + esc(impact) + '</span></span><span class="exec-decision-detail">' + esc(detail) + '</span><span class="exec-decision-due">' + esc(item.due_date ? "Due " + due : "No due date") + '</span></span>' +
+          '<span class="exec-decision-action"><strong>' + esc(action) + '</strong><i data-lucide="chevron-right"></i></span></button>';
+      }).join("");
+      return '<section class="exec-decision-group ' + severity + '" aria-label="' + esc(readable(severity) + ' finance items') + '"><div class="exec-decision-group-head"><b>' + esc(readable(severity)) + '</b><span>' + group.length + '</span></div>' + rows + '</section>';
+    }).join("");
+    paintIcons();
+  }
+  function financeCountMoney(count, amount) {
+    const n = Number(count || 0);
+    return n + " · " + formatMoneyCompact(amount || 0);
+  }
+  function renderFinanceQueues(data) {
+    const host = document.getElementById("financeQueueGrid"); if (!host) return;
+    const q = (data && data.queues) || {};
+    const receivables = q.receivables || {}, payables = q.payables || {};
+    const records = q.claims_expenses || {}, production = q.invoice_production || {};
+    const queues = [
+      ["Receivables", [
+        ["Project balances", financeCountMoney(receivables.project_count, receivables.project_amount)],
+        ["Operational overdue", financeCountMoney(receivables.overdue_count, receivables.overdue_amount)]
+      ], "Project Revenue vs Expenses (P&L)", "Open receivables"],
+      ["Payables", [
+        ["Subcontractors", financeCountMoney(payables.subcontractor_count, payables.subcontractor_amount)],
+        ["Suppliers", financeCountMoney(payables.supplier_count, payables.supplier_amount)]
+      ], "Project Revenue vs Expenses (P&L)", "Open payables"],
+      ["Claims & expenses", [
+        ["Submitted claims", financeCountMoney(records.claims_count, records.claims_amount)],
+        ["Business expenses MTD", financeCountMoney(records.expense_count, records.expense_amount)]
+      ], "Receipt Claims", "Open claims"],
+      ["Invoice production", [
+        ["Subcon invoices MTD", financeCountMoney(production.subcon_invoice_count, production.subcon_invoice_amount)],
+        ["Open quotations", financeCountMoney(production.open_quote_count, production.open_quote_amount)]
+      ], "Subcon Invoice Generator", "Open invoices"]
+    ];
+    host.innerHTML = queues.map(queue => '<section class="finance-queue"><h3>' + esc(queue[0]) + '</h3>' + queue[1].map(row => '<div class="finance-queue-row"><span>' + esc(row[0]) + '</span><b>' + esc(row[1]) + '</b></div>').join("") + '<button class="finance-queue-action" type="button" onclick="openToolByName(\'' + queue[2].replace(/'/g, "\\'") + '\')">' + esc(queue[3]) + '<i data-lucide="arrow-right"></i></button></section>').join("");
+    paintIcons();
+  }
+  function renderFinanceActivity(data) {
+    const host = document.getElementById("financeActivityList"); if (!host) return;
+    const rows = data && Array.isArray(data.activity) ? data.activity.slice(0, 6) : [];
+    if (!rows.length) {
+      host.innerHTML = '<div class="empty-state"><i data-lucide="inbox"></i><div><b>No finance activity yet</b><span>P&amp;L, claim, expense, and invoice updates will appear here.</span></div></div>';
+      paintIcons(); return;
+    }
+    host.innerHTML = rows.map((row, index) => {
+      const at = row.at ? new Date(row.at).toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", hour12: false }) : "—";
+      const actor = String(row.actor || "System").split("@")[0].replace(/[._-]/g, " ");
+      const meta = activityActionMeta({ action: row.action_code || "", details: row.detail || "" });
+      const tag = row.tool_id ? "button" : "div";
+      const action = row.tool_id ? ' type="button" onclick="financeActivityOpen(' + index + ')"' : "";
+      return '<' + tag + ' class="exec-activity-row"' + action + '><span class="exec-activity-time">' + esc(at) + '</span><span class="exec-activity-copy"><b>' + esc(meta.label || readable(row.action_code)) + '</b><span>' + esc(row.detail || "Finance update") + '</span></span><span class="exec-activity-actor">' + esc(actor) + '</span></' + tag + '>';
+    }).join("");
+  }
+  function financeActivityOpen(index) {
+    const row = FINANCE_STATE && Array.isArray(FINANCE_STATE.activity) ? FINANCE_STATE.activity[index] : null;
+    if (row && row.tool_id) openToolByName(row.tool_id);
+  }
+  function renderFinanceNotice(data, fatalMessage) {
+    const notice = document.getElementById("financeDataNotice");
+    const text = document.getElementById("financeDataNoticeText");
+    if (!notice || !text) return;
+    const unavailable = data && Array.isArray(data.unavailable) ? data.unavailable : [];
+    const messages = fatalMessage ? [fatalMessage] : unavailable.map(item => readable(item && item.source) + " unavailable");
+    text.textContent = messages.join(" · ");
+    notice.classList.toggle("show", messages.length > 0);
+  }
+  function renderFinanceUnavailable(message) {
+    renderFinanceSnapshot({ snapshot: {} });
+    renderFinanceAttention({ attention: { total: null, items: [] } });
+    renderFinanceQueues({ queues: {} });
+    renderFinanceActivity({ activity: [] });
+    renderFinanceNotice(null, message);
+  }
+  async function loadFinanceHome() {
+    ["financeClientOutstanding", "financeSubconOutstanding", "financeSupplierOutstanding", "financeRevenue", "financeProfit", "financeMargin"].forEach(id => {
+      const el = document.getElementById(id); if (el) { el.textContent = "—"; el.classList.add("skel"); }
+    });
+    const count = document.getElementById("financeAttentionCount");
+    const list = document.getElementById("financeAttentionList");
+    if (count) { count.textContent = "—"; count.dataset.state = "unavailable"; }
+    if (list) { list.setAttribute("aria-busy", "true"); list.innerHTML = '<div class="dash-load"><span class="brief-spin"></span></div>'; }
+    if (LOCAL_MOCK_PREVIEW) {
+      FINANCE_STATE = FINANCE_MOCK_DATA;
+    } else {
+      const result = await SB.rpc("hub_finance_home_v1", { p_as_of: null, p_attention_limit: 20 });
+      if (result.error || !result.data) {
+        renderFinanceUnavailable(result.error && /function .* does not exist/i.test(result.error.message || "")
+          ? "Finance Home database setup is not installed yet. Run supabase/schema-finance-home.sql."
+          : "Finance data is unavailable: " + ((result.error && result.error.message) || "Unknown error"));
+        return;
+      }
+      FINANCE_STATE = result.data;
+    }
+    renderFinanceSnapshot(FINANCE_STATE);
+    renderFinanceAttention(FINANCE_STATE);
+    renderFinanceQueues(FINANCE_STATE);
+    renderFinanceActivity(FINANCE_STATE);
+    renderFinanceNotice(FINANCE_STATE, "");
+    const manageAccess = document.getElementById("financeManageAccess");
+    if (manageAccess) manageAccess.hidden = !(FINANCE_STATE.role && FINANCE_STATE.role.can_manage_users);
+    renderActivity((FINANCE_STATE.activity || []).map(row => ({ at: row.at, user_email: row.actor, action: row.action_code, details: row.detail })));
+    paintIcons();
+  }
+
   async function loadDashboard() {
     ["snapNeeds", "snapReady", "snapRisk", "snapBlocked", "snapTeam", "snapWorker", "snapQuotes", "snapValue"].forEach(id => { const e = document.getElementById(id); if (e) e.classList.add("skel"); });
     let openCount = 0, openValue = 0, attn = [], actToday = 0, recent = [], spark = new Array(14).fill(0), dispatchJobs = [];
@@ -5415,12 +5756,20 @@
     try { allowed = (await SB.from("allowed_users").select("email, full_name, is_admin").ilike("email", email).maybeSingle()).data; } catch (e) {}
     IS_ADMIN = !!(allowed && allowed.is_admin);
     if (!allowed) { document.getElementById("deniedEmail").textContent = email; showGate("gateDenied"); return; }
-    USER_PROFILE = { email: email, full_name: allowed.full_name || "", is_admin: IS_ADMIN };
+    USER_PROFILE = { email: email, full_name: allowed.full_name || "", is_admin: IS_ADMIN, finance_role: "Viewer" };
+    try {
+      const financeRoleResult = await SB.rpc("pl_my_role");
+      if (!financeRoleResult.error && ["Admin", "Manager", "Editor", "Viewer"].includes(financeRoleResult.data)) {
+        USER_PROFILE.finance_role = financeRoleResult.data;
+      } else if (financeRoleResult.error) {
+        console.warn("[hub] Project P&L role unavailable:", financeRoleResult.error.message);
+      }
+    } catch (e) { console.warn("[hub] Project P&L role unavailable:", e); }
     DEFAULT_HOME_MODE = "operations";
     HOME_MODE_AVAILABLE = false;
     try {
       const modeResult = await SB.rpc("hub_my_home_mode");
-      if (!modeResult.error && ["operations", "executive"].includes(modeResult.data)) {
+      if (!modeResult.error && ["operations", "executive", "finance"].includes(modeResult.data)) {
         DEFAULT_HOME_MODE = modeResult.data;
         HOME_MODE_AVAILABLE = true;
       } else if (modeResult.error) {
