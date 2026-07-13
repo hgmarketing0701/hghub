@@ -7,6 +7,9 @@ node_modules/
 # local machine-specific Claude settings
 .claude/settings.local.json
 
+# local Supabase CLI link metadata
+supabase/.temp/
+
 # OS junk
 Thumbs.db
 .DS_Store

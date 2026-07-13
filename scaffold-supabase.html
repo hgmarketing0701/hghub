@@ -209,9 +209,11 @@
   .tool-snapshot { padding:18px; } .tool-snapshot-title { color:var(--text); font-size:.9rem; font-weight:800; margin-bottom:14px; } .snapshot-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); } .snapshot-row-3 { grid-template-columns:repeat(3,minmax(0,1fr)); } .snapshot-row-5 { grid-template-columns:repeat(5,minmax(0,1fr)); }
   .stat { min-height:82px; display:grid; grid-template-rows:18px 36px 16px; align-content:start; gap:2px; background:transparent; border:0; border-right:1px solid var(--border); border-radius:0; padding:6px 16px; flex:auto; cursor:pointer; color:inherit; font:inherit; text-align:left; } .stat:hover { border-color:var(--border); } button.stat:hover .l,button.stat:focus-visible .l { color:var(--accent); } button.stat:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; } .stat:nth-child(4n) { border-right:0; } .snapshot-row-5 .stat:nth-child(4n) { border-right:1px solid var(--border); } .snapshot-row-5 .stat:nth-child(5n) { border-right:0; } .stat .n { order:2; color:var(--accent); font-size:1.52rem; line-height:36px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; } .stat .n.bad { color:var(--red); } .stat .n.ok { color:var(--green); } .stat .n.blue { color:var(--blue); } .stat .l { order:1; min-height:18px; color:#716b65; font-size:.66rem; line-height:18px; font-weight:800; white-space:nowrap; } .stat .meta { order:3; color:#817970; font-size:.7rem; line-height:16px; white-space:nowrap; }
   .work-unit-head { margin:-2px 0 12px; padding-bottom:14px; border-bottom:1px solid var(--border); } .work-unit-head h2 { margin:0 0 3px; } .work-unit-head .sub { margin:0; }
-  .register-card { padding:0; overflow-x:auto; }
+  .register-card { padding:0; overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); }
   .register-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:16px 18px; border-bottom:1px solid var(--border); }
   .register-head h2 { margin:0 0 3px; } .register-head .sub { margin:0; }
+  .register-section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin:18px 0 12px; }
+  .register-section-head h2 { margin:0 0 3px; } .register-section-head .sub { margin:0; }
   .onsite-card { padding:0; overflow:hidden; }
   .onsite-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:16px 18px; border-bottom:1px solid var(--border); }
   .onsite-title b { display:block; color:var(--text); font-size:.9rem; } .onsite-title span { display:block; margin-top:3px; color:var(--text-dim); font-size:.78rem; }
@@ -219,12 +221,13 @@
   .onsite-meta { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); padding:12px 18px; border-bottom:1px solid var(--border); }
   .onsite-meta > div { padding:0 14px; color:var(--text-dim); font-size:.78rem; border-right:1px solid var(--border); } .onsite-meta > div:first-child { padding-left:0; } .onsite-meta > div:last-child { padding-right:0; border-right:0; } .onsite-meta b { display:block; margin-top:2px; color:var(--text); font-size:.84rem; }
   .report-select-row { display:flex; align-items:flex-end; gap:10px; margin-bottom:14px; } .report-select-row > div { flex:0 1 360px; } .report-select-row label { margin-top:0; }
-  .report-result-card { padding:0; overflow-x:auto; } .report-result-card table { min-width:680px; }
+  .report-result-card { padding:0; overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); } .report-result-card table { min-width:680px; }
   .report-result-compact { overflow-x:hidden; }
   .report-result-compact table { width:100%; min-width:0; table-layout:fixed; }
   .report-result-compact th:first-child,.report-result-compact td:first-child { width:68%; }
   .report-result-compact th:last-child,.report-result-compact td:last-child { width:32%; text-align:right; }
   .audit-table { width:100%; min-width:680px; table-layout:fixed; } .audit-table th:nth-child(1) { width:28%; } .audit-table th:nth-child(2) { width:18%; } .audit-table th:nth-child(3) { width:24%; } .audit-table th:nth-child(4) { width:30%; }
+  .register-card tbody tr:last-child td,.report-result-card tbody tr:last-child td { border-bottom:0; }
   .audit-action { color:var(--accent); font-weight:800; } .audit-action.created { color:var(--green); } .audit-action.deleted { color:var(--red); }
   .alert-icon { width:18px; height:18px; flex:0 0 18px; color:var(--accent); stroke-width:2; } .alarm-type { display:inline-flex; align-items:center; gap:7px; } .alarm-type svg { width:16px; height:16px; color:var(--accent); stroke-width:2; }
   .alert { width:100%; background:#fff; border:0; border-bottom:1px solid var(--border); border-radius:0; padding:13px 0; margin:0; color:var(--text); font:inherit; text-align:left; } .alert:last-child { border-bottom:0; } .alert:hover,.alert:focus-visible { background:var(--surface-2); outline:none; } .alert.expiring { border-color:var(--border); } .alert.expired { background:#fff; border-color:var(--border); } .alert .ico { font-size:1rem; }
@@ -236,6 +239,7 @@
   #toast { background:#fff; border-color:var(--border); border-radius:8px; color:var(--accent); box-shadow:0 12px 30px rgba(23,23,23,.12); } #toast.ok { border-color:#b9e4d0; color:var(--green); } #toast.bad { border-color:#efaaa7; color:var(--red); }
   .gate .card { background:#fff; } .gate .brand-logo { width:28px; height:28px; margin:0 auto 16px; color:var(--accent); } .gbtn { border:1px solid var(--border); border-radius:8px; }
   #v-jobs > .card,#v-invoices > .card,#v-personnel > .card,#v-greentag > .card,#v-onsite > .card,#v-audit > .card { overflow-x:auto; }
+  #v-jobs > .card[style*="padding:0"] { border:1px solid var(--border); border-radius:var(--radius); }
   @media (max-width:900px) { .snapshot-row { grid-template-columns:repeat(2,minmax(0,1fr)); } .stat:nth-child(2n),.snapshot-row-5 .stat:nth-child(2n) { border-right:0; } .snapshot-row-5 .stat:nth-child(odd) { border-right:1px solid var(--border); } .stat:nth-child(n+3),.snapshot-row-5 .stat:nth-child(n+3) { border-top:1px solid var(--border); padding-top:14px; } .snapshot-row-5 .stat:last-child { grid-column:1/-1; border-right:0; } .snapshot-row-3 { grid-template-columns:repeat(3,minmax(0,1fr)); } .snapshot-row-3 .stat { grid-template-rows:36px 36px; padding:6px 10px; border-top:0; border-right:1px solid var(--border); } .snapshot-row-3 .stat:last-child { border-right:0; } .snapshot-row-3 .stat .l { min-height:36px; white-space:normal; } }
   @media (max-width:680px) { #app { padding:18px 16px 0; } .topbar { align-items:flex-start; gap:12px; } .brand-sub { display:none; } nav { gap:20px; margin-bottom:18px; } main { padding-bottom:56px; } .section-head,.register-head,.onsite-card-head { align-items:flex-start; flex-direction:column; } .section-actions,.onsite-actions { width:100%; } .section-actions button,.onsite-actions button { flex:1; } .toolbar { align-items:stretch; } .toolbar input,.toolbar select,.toolbar .hub-select { width:100%; } .report-select-row { align-items:stretch; flex-direction:column; } .report-select-row > div { width:100%; flex:auto; } .snapshot-row { grid-template-columns:repeat(2,minmax(0,1fr)); } .snapshot-row-3 { grid-template-columns:repeat(3,minmax(0,1fr)); } .snapshot-row-3 .stat { grid-template-rows:36px 36px; padding:6px 10px; border-top:0; } .snapshot-row-3 .stat:nth-child(2) { border-right:1px solid var(--border); } .snapshot-row-3 .stat .l { min-height:36px; white-space:normal; } .stat { padding:6px 12px; } .onsite-meta { grid-template-columns:1fr; gap:9px; } .onsite-meta > div,.onsite-meta > div:first-child { padding:0; border-right:0; } .row { gap:10px; } .hub-select-menu { max-height:min(260px,45vh); } button.hub-select-option { min-height:44px; } }
 
@@ -255,6 +259,7 @@
   html[data-theme="ops-dark"] nav,
   html[data-theme="ops-dark"] .work-unit-head,
   html[data-theme="ops-dark"] .register-head,
+  html[data-theme="ops-dark"] .register-section-head,
   html[data-theme="ops-dark"] .onsite-card-head,
   html[data-theme="ops-dark"] .onsite-meta,
   html[data-theme="ops-dark"] .sec,
@@ -922,7 +927,7 @@ function renderGreenTag(){
   var active=DB.engagements.filter(function(e){return e.greenTagDue&&e.greenTagDue.applies;})
     .sort(function(a,b){return (a.greenTagDue.days)-(b.greenTagDue.days);});
   var html='<div class="section-head"><div><div class="section-title">Green Tag</div><div class="section-meta">Review weekly endorsement status and maintain the inspection record.</div></div></div>';
-  html+='<div class="card register-card"><div class="register-head"><div><h2>Inspection status</h2><div class="sub">Active scaffold requiring a current green-tag endorsement.</div></div></div>';
+  html+='<div class="register-section-head"><div><h2>Inspection status</h2><div class="sub">Active scaffold requiring a current green-tag endorsement.</div></div></div><div class="card register-card">';
   if(!active.length) html+='<div class="empty empty-clear"><i data-lucide="shield-check" aria-hidden="true"></i><div><strong>All clear</strong><span>No active scaffold needs green-tag action right now.</span></div></div>';
   else { html+='<table><thead><tr><th>Job</th><th>Client / Site</th><th>Last inspection</th><th>Result</th><th>Next due</th><th></th></tr></thead><tbody>';
     active.forEach(function(e){
@@ -936,7 +941,7 @@ function renderGreenTag(){
     html+='</tbody></table>'; }
   html+='</div>';
   var ins=DB.inspections.slice().sort(function(a,b){return (b.inspectDate||'').localeCompare(a.inspectDate||'');}).slice(0,60);
-  html+='<div class="card register-card"><div class="register-head"><div><h2>Inspection history</h2><div class="sub">Most recent scaffold inspections and endorsement results.</div></div><button class="ghost sm" onclick="exportInspectionsExcel()">Export Excel</button></div>';
+  html+='<div class="register-section-head"><div><h2>Inspection history</h2><div class="sub">Most recent scaffold inspections and endorsement results.</div></div><button class="ghost sm" onclick="exportInspectionsExcel()">Export Excel</button></div><div class="card register-card">';
   if(!ins.length) html+='<div class="empty table-empty-state"><div><strong>No inspections logged</strong><span>Completed green-tag inspections will appear here.</span></div></div>';
   else { html+='<table><thead><tr><th>Date</th><th>Job</th><th>Inspector</th><th>Result</th><th>Tag #</th><th>Findings</th><th></th></tr></thead><tbody>';
     ins.forEach(function(i){ var e=byId(DB.engagements,i.engagementId)||{};
@@ -1007,7 +1012,7 @@ async function renderAudit(){
   var r = await sb.from('audit_log').select('*').order('at',{ascending:false}).limit(50);
   if(r.error){ el('v-audit').innerHTML=heading+'<div class="card"><div class="empty table-empty-state"><div><strong>Audit log unavailable</strong><span>'+esc(r.error.message)+'</span></div></div></div>'; return; }
   var rows=r.data;
-  var html=heading+'<div class="card register-card"><div class="register-head"><div><h2>Recent activity</h2><div class="sub">Showing '+rows.length+' most recent action'+(rows.length===1?'':'s')+' (up to 50).</div></div></div><table class="audit-table"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>';
+  var html=heading+'<div class="register-section-head"><div><h2>Recent activity</h2><div class="sub">Showing '+rows.length+' most recent action'+(rows.length===1?'':'s')+' (up to 50).</div></div></div><div class="card register-card"><table class="audit-table"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>';
   if(!rows.length) html+='<tr><td colspan="4"><div class="empty table-empty-state"><div><strong>No activity yet</strong><span>Scaffold changes will appear here as the team uses the tool.</span></div></div></td></tr>';
   rows.forEach(function(a){ var meta=scaffoldAuditMeta(a.action); html+='<tr><td class="muted">'+esc(new Date(a.at).toLocaleString('en-MY'))+'</td><td>'+esc(String(a.user_email||'').split('@')[0])+'</td><td><span class="audit-action '+meta.cls+'">'+esc(meta.label)+'</span></td><td class="muted">'+esc(a.details||'No additional detail.')+'</td></tr>'; });
   html+='</tbody></table></div>';
@@ -1023,6 +1028,7 @@ function renderReports(){
   var html='<div class="section-head"><div><div class="section-title">Reports</div><div class="section-meta">Review, print, or export scaffold operational and commercial registers.</div></div><div class="section-actions"><button class="ghost sm" onclick="App.printReport()">Print / PDF</button><button class="ghost sm" onclick="App.csvReport()">Export CSV</button></div></div>';
   html+='<div class="report-select-row"><div><label>Report type</label><select onchange="window._rep=this.value;renderReports()">'+
     Object.keys(REPORTS).map(function(k){return opt(k,REPORTS[k],sel);}).join('')+'</select></div></div>';
+  html+='<div class="register-section-head"><div><h2>'+esc(result.title)+'</h2><div class="sub">'+esc(result.summary)+'</div></div></div>';
   html+='<div class="card report-result-card'+(sel==='revenue'?' report-result-compact':'')+'" id="repBody">'+result.html+'</div>';
   el('v-reports').innerHTML=html;
 }
@@ -1071,7 +1077,7 @@ function buildReport(kind){
     });
     summary=rows.length+' certification record(s)';
   }
-  var html='<div class="register-head"><div><h2>'+esc(title)+'</h2><div class="sub">'+esc(summary)+'</div></div></div><table><thead><tr>'+head.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead><tbody>';
+  var html='<table><thead><tr>'+head.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead><tbody>';
   if(!rows.length) html+='<tr><td colspan="'+head.length+'"><div class="empty table-empty-state"><div><strong>No report data</strong><span>There are no records available for this report yet.</span></div></div></td></tr>';
   rows.forEach(function(r){ html+='<tr>'+r.map(function(c,i){return '<td'+(i>=head.length-1&&kind==='revenue'?' class="right"':'')+'>'+esc(c)+'</td>';}).join('')+'</tr>'; });
   html+='</tbody></table>';

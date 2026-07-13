@@ -308,7 +308,7 @@ Separate border-free sections with spacing or a single horizontal divider when t
 
 - KPI and operational snapshots
 - repeated job, site, photo, document, and selectable records
-- operational tables and registers
+- operational tables and registers, with the boundary attached directly to the table shell
 - upload and drop targets
 - report previews and generated-document surfaces
 - dropdown menus, popovers, dialogs, and drawers
@@ -431,7 +431,11 @@ These mappings are product identity, not decoration. Reuse them in the role side
 
 ### Operational Register
 
-- one bordered register containing the table
+- one subtle rounded border belongs directly to the table or register shell
+- place the header band and rows flush against that boundary with no surrounding card padding
+- keep the register title, supporting copy, filters, and actions outside the table boundary
+- never place the bordered table shell inside another bordered card
+- when a table is embedded inside one complete job, site, or document work unit, use the work-unit boundary and do not add a second table border
 - muted table header and divider rows
 - hover treatment for interactive rows
 - right-align numeric and financial columns

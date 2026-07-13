@@ -201,16 +201,17 @@
   .cards.snapshot-row { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:0; margin:0; }
   .cards.snapshot-row .stat { min-height:74px; margin:0; padding:6px 16px; border:0; border-right:1px solid var(--border); border-radius:0; background:transparent; }
   .cards.snapshot-row .stat:last-child { border-right:0; } .stat .k { min-height:18px; color:#716b65; font-size:.66rem; line-height:18px; font-weight:800; white-space:nowrap; } .stat .v { color:var(--accent); font-size:1.42rem; line-height:36px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; } .stat .v.red { color:var(--red); } .stat .v.green { color:var(--green); }
-  .register-card { padding:0; overflow-x:auto; } .register-card table.grid { min-width:880px; }
+  .register-card { padding:0; overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); } .register-card table.grid { min-width:880px; }
   #tabHost > .card:not(.tool-snapshot):not(.register-card):not(.admin-card) { padding:0; border:0; border-radius:0; background:transparent; }
   #tabHost > .card:not(.tool-snapshot):not(.register-card):not(.admin-card) > .row:first-child { align-items:flex-end !important; justify-content:space-between !important; gap:16px; margin-bottom:14px; }
   #tabHost > .card:not(.tool-snapshot):not(.register-card):not(.admin-card) > .row:first-child h2,
   #tabHost > .card:not(.tool-snapshot):not(.register-card):not(.admin-card) > h2 { color:var(--text); font-size:1.22rem; font-weight:800; letter-spacing:-.025em; }
-  #tabHost > .card:not(.tool-snapshot):not(.register-card):not(.admin-card) > .tablewrap { margin-top:14px !important; background:#fff; border:1px solid var(--border); border-radius:var(--radius); overflow-x:auto; }
+  #tabHost > .card:not(.tool-snapshot):not(.register-card):not(.admin-card) > .tablewrap { margin-top:14px !important; padding:0; background:#fff; border:1px solid var(--border); border-radius:var(--radius); overflow-x:auto; }
   #tabHost > .card:not(.tool-snapshot):not(.register-card):not(.admin-card) > .cards:not(.snapshot-row) { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0; margin:14px 0; padding:18px; background:#fff; border:1px solid var(--border); border-radius:var(--radius); }
   #tabHost > .card:not(.tool-snapshot):not(.register-card):not(.admin-card) > .cards:not(.snapshot-row) .stat { margin:0; padding:6px 16px; border:0; border-right:1px solid var(--border); border-radius:0; background:transparent; }
   #tabHost > .card:not(.tool-snapshot):not(.register-card):not(.admin-card) > .cards:not(.snapshot-row) .stat:last-child { border-right:0; }
   table.grid { font-size:.82rem; } table.grid th { background:var(--surface-2); color:#716b65; font-size:.66rem; font-weight:800; padding:10px 12px; } table.grid td { padding:11px 12px; } table.grid tr.click:hover td,table.grid tr:hover td { background:var(--surface-2); }
+  .register-card table.grid tbody tr:last-child td,.tablewrap table.grid tbody tr:last-child td { border-bottom:0; }
   .tag { background:var(--surface-2); border:0; color:#716b65; border-radius:999px; padding:3px 8px; } .pill-tag { padding:4px 8px; font-size:.64rem; }
   .pill-tag.green { background:var(--green-soft); color:var(--green); } .pill-tag.red { background:var(--red-soft); color:var(--red); } .pill-tag.blue { background:var(--blue-soft); color:var(--blue); } .pill-tag.amber { background:#fff7e7; color:#a66b00; }
   .low-row td { background:#fffaf8; }

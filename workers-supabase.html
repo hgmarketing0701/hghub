@@ -217,7 +217,7 @@
   .stat.red .n { color:var(--red); } .stat.amber .n,.stat.yellow .n { color:var(--amber); } .stat.green .n { color:var(--green); }
   .toolbar { gap:14px; margin-bottom:14px; } .filters { gap:10px; } .filters > div { min-width:180px; }
   .filter-row { align-items:flex-end; margin-bottom:12px; } .filter-row > div:first-child { flex:1 1 320px; } .filter-row > div:not(:first-child) { flex:0 1 220px; } .filter-row-compact { max-width:320px; }
-  .register-card { padding:0; overflow-x:auto; } .register-card table.grid { min-width:820px; } .register-card .empty,.list-card .empty { min-height:144px; border:0; display:flex; align-items:center; justify-content:center; } table.grid td.empty { border:0; border-radius:0; }
+  .register-card { padding:0; overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); } .register-card table.grid { min-width:820px; } .register-card .empty,.list-card .empty { min-height:144px; border:0; display:flex; align-items:center; justify-content:center; } table.grid td.empty { border:0; border-radius:0; }
   #tab-dashboard > .card:last-child .toolbar { margin-bottom:0; padding-bottom:14px; border-bottom:1px solid var(--border); }
   .empty { border:1px dashed #ded8cf; border-radius:8px; padding:36px 20px; color:#817970; font-size:.88rem; }
   .card .empty { border:0; }
@@ -225,6 +225,7 @@
   #alarmsList .empty.empty-clear { display:flex; align-items:center; justify-content:center; gap:12px; min-height:0; border:0; padding:10px 0; text-align:left; }
   .empty-clear svg { width:24px; height:24px; flex:0 0 auto; color:var(--green); stroke-width:2; } .empty-clear strong { margin-bottom:1px; }
   table.grid { font-size:.82rem; } table.grid th { background:var(--surface-2); color:#716b65; font-size:.66rem; font-weight:800; padding:10px 12px; border-bottom-color:var(--border); } table.grid td { padding:11px 12px; border-bottom-color:var(--border); } table.grid tr.click:hover td { background:var(--surface-2); }
+  .register-card table.grid tbody tr:last-child td { border-bottom:0; }
   .tag { background:var(--surface-2); border-color:transparent; color:#716b65; border-radius:999px; padding:3px 8px; }
   .badge { font-size:.64rem; padding:4px 8px; } .badge-green { background:var(--green-soft); color:var(--green); } .badge-amber,.badge-yellow { background:var(--amber-soft); color:var(--amber); } .badge-red { background:var(--red-soft); color:var(--red); } .badge-grey { background:var(--surface-2); color:#716b65; } .badge-blue { background:var(--blue-soft); color:var(--blue); }
   .chk { background:#fff; border-color:#ded8cf; border-radius:8px; } .chk.on { border-color:var(--accent); background:var(--accent-soft); }

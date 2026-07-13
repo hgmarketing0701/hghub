@@ -4,8 +4,44 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HG Smart Quotation — Supabase</title>
+<script>
+  (function () {
+    var key = 'hg_hub_theme';
+    var media = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+    function preference() {
+      try {
+        var saved = localStorage.getItem(key);
+        if (saved === 'light' || saved === 'dark' || saved === 'system') return saved;
+      } catch (e) {}
+      return 'system';
+    }
+    function resolved(value) {
+      return value === 'light' || value === 'dark' ? value : (media && media.matches ? 'dark' : 'light');
+    }
+    function apply(value) {
+      var theme = resolved(value);
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    }
+    apply(preference());
+    window.addEventListener('message', function (event) {
+      if (!event.data || event.data.type !== 'hg-theme-change') return;
+      if (event.data.theme === 'light' || event.data.theme === 'dark') apply(event.data.theme);
+    });
+    window.addEventListener('storage', function (event) { if (event.key === key) apply(preference()); });
+    if (media) {
+      var syncSystem = function () { if (preference() === 'system') apply('system'); };
+      if (media.addEventListener) media.addEventListener('change', syncSystem);
+      else if (media.addListener) media.addListener(syncSystem);
+    }
+  })();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <style>
   :root {
     --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335; --border:#2a3245;
@@ -128,9 +164,182 @@
           background:#fff; color:#1a1a1a; border:none; border-radius:10px; padding:13px; font-weight:700;
           font-size:0.95rem; cursor:pointer; font-family:inherit; }
   .gate input { text-align:left; margin-bottom:4px; }
+
+  /* HG Hub quotation tool shell */
+  :root {
+    --bg:#fff; --surface:#fff; --surface-2:#f8f7f4; --border:#e4ded6; --border-strong:#cfc8bd;
+    --text:#171717; --text-dim:#817970; --accent:#143d4a; --accent-hover:#0e303b; --accent-soft:#eef6f3;
+    --green:#15945d; --green-soft:#edf8f3; --red:#d84d4f; --red-soft:#fff1ee;
+    --blue:#2f7fa5; --blue-soft:#eef7fb; --warning:#a66b00; --warning-soft:#fff7e7;
+    --radius:8px; --shadow:0 12px 30px rgba(23,23,23,.12);
+  }
+  body { font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
+  #app { padding:26px 28px 0; }
+  .topbar { align-items:center; padding:0 0 20px; margin:0 0 18px; border-bottom:1px solid var(--border); }
+  body.embedded .topbar { display:none; }
+  .brand-block { gap:9px; }
+  .brand-logo { width:24px; height:24px; padding:0; background:transparent; border-radius:0; color:var(--accent); }
+  .brand-logo svg { width:20px; height:20px; stroke-width:2; }
+  .brand-name { display:flex; align-items:center; gap:10px; color:var(--text); font-size:1.05rem; font-weight:800; letter-spacing:-.02em; }
+  .brand-sub { color:var(--text-dim); font-size:13px; line-height:17px; margin-top:3px; }
+  .tool-live { display:inline-flex; align-items:center; height:21px; padding:0 9px; border-radius:999px; background:var(--green-soft); color:var(--green); font-size:.64rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .user-pill { background:var(--surface); border-color:var(--border); border-radius:999px; padding:8px 12px; color:var(--text-dim); font-size:.78rem; }
+  .user-pill b { color:var(--accent); }
+  .user-pill button { color:var(--warning); }
+  nav { gap:26px; padding:0; margin:0 0 24px; flex-wrap:nowrap; overflow-x:auto; border-bottom:1px solid var(--border); scrollbar-width:none; }
+  nav::-webkit-scrollbar { display:none; }
+  nav button { flex:0 0 auto; padding:0 0 12px; border:0; border-bottom:3px solid transparent; border-radius:0; background:transparent; color:#716b65; font-size:.78rem; font-weight:800; }
+  nav button:hover { color:var(--accent); }
+  nav button.active { background:transparent; color:var(--accent); border-color:var(--accent); }
+  main { max-width:none; padding:0 0 72px; }
+  h2 { color:var(--text); font-size:1.02rem; font-weight:800; letter-spacing:-.02em; margin-bottom:4px; }
+  .sub { color:#716b65; font-size:.86rem; }
+  label { color:#716b65; font-size:.72rem; font-weight:800; margin:10px 0 5px; }
+  input,select,textarea { min-height:42px; background:var(--surface); border-color:#ded8cf; color:var(--text); border-radius:8px; padding:10px 12px; font-size:.88rem; }
+  input:focus,select:focus,textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  .row { gap:12px; }
+  button.primary,button.ghost,button.danger { min-height:40px; border-radius:8px; padding:9px 12px; font-size:.82rem; font-weight:700; }
+  button.primary { background:var(--accent); color:#fff; }
+  button.primary:hover { background:var(--accent-hover); }
+  button.ghost { background:var(--surface); color:var(--accent); border-color:var(--border); }
+  button.ghost:hover { background:var(--surface-2); border-color:var(--border-strong); }
+  button.danger { background:var(--surface); color:var(--red); border-color:#f1c8c5; }
+  button.danger:hover { background:var(--red-soft); }
+  .addlink { color:var(--accent); font-size:.7rem; font-weight:800; }
+  .seg { gap:8px; }
+  .seg button { min-height:38px; padding:8px 14px; background:var(--surface); border-color:var(--border); color:#716b65; border-radius:8px; font-size:.8rem; }
+  .seg button.on { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+
+  /* Border-free sequential page layout; only the active quotation is a work unit. */
+  #tab-build > .card { padding:0 0 24px; margin:0 0 24px; border:0; border-bottom:1px solid var(--border); border-radius:0; background:transparent; }
+  #tab-build > .card:last-child { padding:20px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); }
+  #tab-build > .card > .sub { margin-bottom:12px; }
+  .scope { margin-bottom:12px; border-color:var(--border); border-radius:var(--radius); background:var(--surface); }
+  .scope .head { min-height:48px; padding:12px 16px; background:var(--surface-2); }
+  .scope .head .x,.rm { color:var(--text-dim); }
+  .lineitem { padding:14px 16px; border-top-color:var(--border); }
+  .optbar { padding:12px 16px; border-top:1px solid var(--border); }
+  .chip { background:var(--surface); border:1px solid var(--border); color:var(--accent); border-radius:8px; }
+  .chip:hover { background:var(--surface-2); border-color:var(--border-strong); }
+  .amt .v,.totals .grand .v { color:var(--accent); }
+  .totals { padding-top:16px; border-top:1px solid var(--border); }
+  .totals .ln { width:min(100%,320px); justify-content:space-between; }
+  .empty { color:var(--text-dim); padding:28px 20px; }
+  .empty strong { display:block; color:var(--text); font-size:.9rem; margin-bottom:3px; }
+  .empty span { display:block; }
+
+  /* Page sections stay border-free; each table owns one flush structural boundary. */
+  #tab-saved > .card,#tab-prices > .card,#tab-settings > .card { padding:0; border:0; border-radius:0; background:transparent; }
+  #savedList,#pbList,#auditList { margin-top:16px !important; overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); }
+  .table-scroll { overflow-x:auto; }
+  #savedList.loading,#pbList.loading,#auditList.loading { min-height:116px; display:flex; align-items:center; justify-content:center; }
+  #teamCard { padding-top:22px !important; border-top:1px solid var(--border) !important; }
+  #tab-settings > .card + .card { margin-top:24px; }
+  #auList { margin-top:14px !important; border-top:1px solid var(--border); }
+  .settings-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 16px; }
+  .settings-grid .settings-full { grid-column:1/-1; }
+  .access-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+  .access-count { color:var(--text-dim); font-size:.74rem; font-weight:800; white-space:nowrap; }
+  .access-add { display:grid; grid-template-columns:minmax(220px,1.3fr) minmax(180px,1fr) auto auto; gap:12px; align-items:end; margin-top:16px; }
+  .access-add label { margin-top:0; }
+  .access-add .switch { min-height:42px; margin:0; padding:0 4px; }
+  .access-add button { min-height:42px; }
+  .access-member { display:grid; grid-template-columns:minmax(0,1fr) 88px auto; gap:16px; align-items:center; min-height:68px; border-bottom:1px solid var(--border); }
+  .access-person b { display:block; font-size:.86rem; }
+  .access-person span { display:block; margin-top:2px; color:var(--text-dim); font-size:.78rem; }
+  .access-role { display:inline-flex; justify-content:center; width:max-content; min-width:62px; padding:4px 9px; border-radius:999px; background:var(--surface-2); color:#716b65; font-size:.65rem; font-weight:800; text-transform:uppercase; }
+  .access-role.admin { background:var(--accent-soft); color:var(--accent); }
+  .audit-action { color:var(--accent); font-weight:800; }
+  .audit-action.created { color:var(--green); }
+  .audit-action.deleted { color:var(--red); }
+  table.grid { min-width:760px; font-size:.82rem; }
+  table.grid th { padding:10px 12px; background:var(--surface-2); color:#716b65; font-size:.66rem; font-weight:800; }
+  table.grid td { padding:11px 12px; }
+  table.grid tr:last-child td { border-bottom:0; }
+  table.grid tr.click:hover td,table.grid tr:hover td { background:var(--surface-2); }
+  .tag { border:0; background:var(--surface-2); color:#716b65; border-radius:999px; }
+  .status-pill { display:inline-flex; align-items:center; padding:4px 8px; }
+  .st-Draft { background:var(--surface-2); color:#716b65; }
+  .st-Sent { background:var(--blue-soft); color:var(--blue); }
+  .st-Confirmed { background:var(--green-soft); color:var(--green); }
+  .st-Cancelled { background:var(--red-soft); color:var(--red); }
+  .loading { color:var(--text-dim); }
+  .spin { border-color:var(--accent); border-top-color:transparent; }
+
+  /* Shared HG Hub select: native select remains the source of truth. */
+  .hub-select { position:relative; width:100%; }
+  .hub-select-native { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+  button.hub-select-trigger { position:relative; display:flex; align-items:center; width:100%; min-height:42px; padding:10px 42px 10px 12px; background:var(--surface); border:1px solid #ded8cf; border-radius:8px; color:var(--text); font:inherit; font-size:.88rem; font-weight:500; text-align:left; }
+  button.hub-select-trigger:hover { border-color:var(--border-strong); }
+  button.hub-select-trigger:focus-visible,.hub-select.open .hub-select-trigger { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  button.hub-select-trigger::after { content:""; position:absolute; right:16px; top:50%; width:7px; height:7px; border-right:1.7px solid var(--accent); border-bottom:1.7px solid var(--accent); transform:translateY(-68%) rotate(45deg); }
+  button.hub-select-trigger:disabled { opacity:.6; cursor:default; }
+  .hub-select-menu { position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:120; display:none; max-height:260px; overflow-y:auto; padding:5px; background:var(--surface); border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow); }
+  .hub-select.open .hub-select-menu { display:block; }
+  .hub-select.open-up .hub-select-menu { top:auto; bottom:calc(100% + 4px); }
+  button.hub-select-option { display:block; width:100%; min-height:40px; padding:9px 10px; border:0; border-radius:6px; background:transparent; color:var(--text); font:inherit; font-size:.86rem; line-height:1.35; text-align:left; cursor:pointer; }
+  button.hub-select-option:hover,button.hub-select-option:focus-visible,button.hub-select-option.selected { outline:none; background:var(--surface-2); color:var(--accent); }
+  button.hub-select-option:disabled { color:var(--text-dim); cursor:default; }
+
+  .modal-bg { background:rgba(23,23,23,.38); backdrop-filter:blur(4px); }
+  .modal { max-height:calc(100vh - 60px); overflow-y:auto; background:var(--surface); border-color:var(--border); border-radius:12px; box-shadow:var(--shadow); }
+  .modal-actions { position:sticky; bottom:-24px; margin:18px -24px -24px !important; padding:16px 24px; border-top:1px solid var(--border); background:color-mix(in srgb,var(--surface) 97%,transparent); z-index:4; }
+  .gate .card { border-color:var(--border); background:var(--surface); border-radius:12px; }
+  .gate .brand-logo { background:var(--accent); color:#fff; border-radius:12px; }
+
+  @media(max-width:680px) {
+    #app { padding:18px 16px 0; }
+    .topbar { align-items:flex-start; }
+    nav { gap:20px; margin:0 -16px 20px; padding:0 16px; }
+    #tab-build > .card:last-child { padding:16px; }
+    .row { flex-direction:column; }
+    .row > div { flex-basis:auto; width:100%; }
+    #tab-build > .card .row[style*="justify-content:flex-end"] { flex-direction:row; }
+    #tab-build > .card .row[style*="justify-content:flex-end"] > div { flex:1 1 calc(50% - 6px) !important; width:auto; }
+    #tab-build > .card .row[style*="justify-content:flex-end"] button { width:100%; min-height:44px; }
+    .meas { align-items:stretch; }
+    .meas .f,.meas .wide { flex:1 1 calc(50% - 5px); width:auto; }
+    .x-sym { display:none; }
+    .amt { width:100%; margin:8px 0 0; padding-top:10px; border-top:1px solid var(--border); }
+    #tab-saved > .card > .row:first-child,#tab-prices > .card > .row:first-child { align-items:flex-start !important; }
+    #tab-saved > .card > .row:first-child button,#tab-prices > .card > .row:first-child button { width:100%; }
+    .hub-select-menu { max-height:min(260px,45vh); }
+    button.hub-select-option { min-height:44px; }
+    .modal { padding:20px 16px; }
+    .modal-actions { bottom:-20px; margin:18px -16px -20px !important; padding:14px 16px; }
+    .settings-grid,.access-add { grid-template-columns:1fr; }
+    .settings-grid .settings-full { grid-column:auto; }
+    .access-add button { width:100%; }
+    .access-member { grid-template-columns:minmax(0,1fr) auto; gap:10px; padding:12px 0; }
+    .access-member .danger { grid-column:2; grid-row:1; }
+    .access-role { grid-column:1; grid-row:2; }
+  }
+
+  /* Calm operational dark theme with the same hierarchy and semantics. */
+  html[data-theme="dark"] {
+    --bg:#1b2527; --surface:#202b2d; --surface-2:#253133; --border:#394749; --border-strong:#526164;
+    --text:#f3f6f4; --text-dim:#b3bebb; --accent:#78b8cd; --accent-hover:#96c8d7; --accent-soft:#203b43;
+    --green:#55bd8b; --green-soft:#182c24; --red:#f07578; --red-soft:#352124;
+    --blue:#69aeca; --blue-soft:#1b2c34; --warning:#d8a84b; --warning-soft:#30291c;
+    --shadow:0 18px 48px rgba(0,0,0,.34);
+  }
+  html[data-theme="dark"] body { background:var(--bg); }
+  html[data-theme="dark"] .brand-sub,html[data-theme="dark"] nav button,html[data-theme="dark"] .sub,html[data-theme="dark"] label,html[data-theme="dark"] table.grid th,html[data-theme="dark"] .tag { color:var(--text-dim); }
+  html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea,html[data-theme="dark"] .user-pill,html[data-theme="dark"] .scope,html[data-theme="dark"] #tab-build > .card:last-child,html[data-theme="dark"] #savedList,html[data-theme="dark"] #pbList,html[data-theme="dark"] #auditList,html[data-theme="dark"] button.hub-select-trigger,html[data-theme="dark"] .hub-select-menu,html[data-theme="dark"] .modal,html[data-theme="dark"] .gate .card { background:var(--surface); border-color:var(--border); color:var(--text); }
+  html[data-theme="dark"] .scope .head,html[data-theme="dark"] table.grid th { background:var(--surface-2); }
+  html[data-theme="dark"] button.primary { background:#2f6d78; color:#fff; }
+  html[data-theme="dark"] button.primary:hover { background:#397d88; }
+  html[data-theme="dark"] button.ghost,html[data-theme="dark"] button.danger { background:var(--surface); }
+  html[data-theme="dark"] button.ghost:hover { background:var(--surface-2); border-color:var(--border-strong); }
+  html[data-theme="dark"] button.hub-select-option:hover,html[data-theme="dark"] button.hub-select-option:focus-visible,html[data-theme="dark"] button.hub-select-option.selected { background:var(--accent-soft); color:#c8e4e8; }
+  html[data-theme="dark"] input:focus,html[data-theme="dark"] select:focus,html[data-theme="dark"] textarea:focus,html[data-theme="dark"] button.hub-select-trigger:focus-visible,html[data-theme="dark"] .hub-select.open .hub-select-trigger { box-shadow:0 0 0 3px rgba(115,174,186,.16); }
+  html[data-theme="dark"] table.grid tr.click:hover td,html[data-theme="dark"] table.grid tr:hover td { background:var(--surface-2); }
+  html[data-theme="dark"] .modal-bg { background:rgba(0,0,0,.64); }
+  html[data-theme="dark"] .gbtn { background:#f1f4f3; color:#171a1b; }
 </style>
 </head>
 <body>
+<script>if (window.self !== window.top) document.body.classList.add('embedded');</script>
 
 <!-- ══════════ GATE 0 · SUPABASE CONFIG (shown once if keys not set) ══════════ -->
 <div class="gate" id="gateConfig" style="display:none;">
@@ -165,7 +374,7 @@
 <!-- ══════════ GATE 2 · NOT ON ALLOWLIST ══════════ -->
 <div class="gate" id="gateDenied" style="display:none;">
   <div class="card">
-    <div class="brand-logo">🔒</div>
+    <div class="brand-logo" aria-hidden="true"><i data-lucide="lock-keyhole"></i></div>
     <h2>Not authorised</h2>
     <div class="sub" style="margin-top:6px;"><span id="deniedEmail"></span> is not on the access list.<br>
       Ask your admin to add you under <b>Settings → Team access</b>.</div>
@@ -177,10 +386,10 @@
 <div id="app" style="display:none;">
   <div class="topbar">
     <div class="brand-block">
-      <div class="brand-logo">HG</div>
+      <div class="brand-logo" aria-hidden="true"><i data-lucide="calculator"></i></div>
       <div>
-        <div class="brand-name">Smart Quotation</div>
-        <div class="brand-sub">Supabase edition · Mall → scope → measure → price → quote</div>
+        <div class="brand-name">Smart Quotation <span class="tool-live">Live</span></div>
+        <div class="brand-sub">Select the mall · Build the scope · Price and issue one clear quote</div>
       </div>
     </div>
     <div class="user-pill"><b id="userPill">…</b><button onclick="signOut()">Sign out</button></div>
@@ -234,7 +443,7 @@
         <h2>3 · Quotation</h2>
         <div class="sub">Enter measurements — sqft auto-calculates. Rates come from the price book (editable).</div>
         <div id="scopes"></div>
-        <div id="noScopes" class="empty">No scope added yet. Add one above ↑</div>
+        <div id="noScopes" class="empty"><strong>No scope added</strong><span>Choose a service and sub-scope above to start building this quotation.</span></div>
         <div class="totals" id="totals" style="display:none;">
           <label class="switch"><input type="checkbox" id="sstToggle" checked onchange="renderTotals()"> Apply SST <span id="sstPctLbl"></span></label>
           <div class="ln"><span class="k">Subtotal</span><span class="v" id="tSub">RM 0.00</span></div>
@@ -256,7 +465,7 @@
       <div class="card">
         <div class="row" style="justify-content:space-between; align-items:center;">
           <div style="flex:1;"><h2>Saved quotes</h2><div class="sub" style="margin:0;">Most recent first. Click a row to view / print / export.</div></div>
-          <div style="flex:0 0 auto;"><button class="ghost" onclick="exportQuotesExcel()">⬇ Export Excel</button></div>
+          <div style="flex:0 0 auto;"><button class="ghost" onclick="exportQuotesExcel()">Export Excel</button></div>
         </div>
         <div id="savedList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
       </div>
@@ -268,7 +477,7 @@
         <div class="row" style="justify-content:space-between; align-items:center;">
           <div style="flex:1;"><h2>Price book</h2>
             <div class="sub" style="margin:0;">Rows under <span class="tag">(All Malls)</span> apply everywhere; a mall-specific row overrides them.</div></div>
-          <div style="flex:0 0 auto;"><button class="ghost" onclick="exportPriceBookExcel()">⬇ Export Excel</button></div>
+          <div style="flex:0 0 auto;"><button class="ghost" onclick="exportPriceBookExcel()">Export Excel</button></div>
         </div>
         <div class="row" style="margin-top:12px;">
           <div><label>Filter mall</label><select id="pbMall" onchange="renderPriceBook()"></select></div>
@@ -291,15 +500,13 @@
         <div id="setForm" class="loading"><span class="spin"></span> Loading…</div>
       </div>
       <div class="card" id="teamCard" style="display:none;">
-        <h2>Team access (admin)</h2>
-        <div class="sub">Who can sign in. Google login + this list = access. Admins can manage this list.</div>
-        <div class="row">
+        <div class="access-head"><div><h2>Team access</h2>
+        <div class="sub" style="margin:0;">Control who can sign in with their Google account.</div></div><span class="access-count" id="auCount">0 members</span></div>
+        <div class="access-add">
           <div><label>Email</label><input id="au_email" placeholder="name@gmail.com"></div>
-          <div><label>Name</label><input id="au_name" placeholder="optional"></div>
-          <div style="flex:0 0 auto; display:flex; align-items:flex-end; gap:8px;">
-            <label class="switch" style="margin:0 0 10px;"><input type="checkbox" id="au_admin"> Admin</label>
-            <button class="primary" onclick="addAllowed()">Add</button>
-          </div>
+          <div><label>Name</label><input id="au_name" placeholder="Optional"></div>
+          <label class="switch"><input type="checkbox" id="au_admin"> Admin</label>
+          <button class="primary" onclick="addAllowed()">Add member</button>
         </div>
         <div id="auMsg" class="msg"></div>
         <div id="auList" style="margin-top:10px;"></div>
@@ -345,7 +552,7 @@
       <div style="flex:2;"><label>Notes</label><input id="pf_notes"></div>
     </div>
     <div id="pbMsg" class="msg"></div>
-    <div class="row" style="margin-top:16px; justify-content:flex-end;">
+    <div class="row modal-actions" style="margin-top:16px; justify-content:flex-end;">
       <div style="flex:0 0 auto;"><button class="danger" id="pbDelBtn" onclick="deletePrice()">Delete</button></div>
       <div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal('pbModal')">Cancel</button></div>
       <div style="flex:0 0 auto;"><button class="primary" onclick="savePrice()">Save</button></div>
@@ -365,7 +572,7 @@
       <div><label>Location (optional)</label><input id="m_loc" placeholder="e.g. Mid Valley City"></div>
     </div>
     <div id="mallMsg" class="msg"></div>
-    <div class="row" style="margin-top:16px; justify-content:flex-end;">
+    <div class="row modal-actions" style="margin-top:16px; justify-content:flex-end;">
       <div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal('mallModal')">Cancel</button></div>
       <div style="flex:0 0 auto;"><button class="primary" onclick="saveMall()">Add mall</button></div>
     </div>
@@ -381,7 +588,7 @@
     <label>Type</label>
     <select id="s_extra"><option value="N">Main scope</option><option value="Y">Extra work (like Fit-Out / Scaffold)</option></select>
     <div id="svcMsg" class="msg"></div>
-    <div class="row" style="margin-top:16px; justify-content:flex-end;">
+    <div class="row modal-actions" style="margin-top:16px; justify-content:flex-end;">
       <div style="flex:0 0 auto;"><button class="ghost" onclick="closeModal('svcModal')">Cancel</button></div>
       <div style="flex:0 0 auto;"><button class="primary" onclick="saveSvc()">Add service</button></div>
     </div>
@@ -412,6 +619,97 @@ var SCOPES = [];          // [{key, service, subScope, items:[line], optional:[i
 var SAVED = [];
 var PRICEBOOK = [];       // raw price_book rows
 var LAST = null;
+var LOCAL_MOCK = (location.hostname==='127.0.0.1' || location.hostname==='localhost') &&
+  new URLSearchParams(location.search).get('mock')==='1';
+
+function mockPrice(id,mall,service,sub,item,unit,compulsory,minQty,minCharge,mallRate,contractorRate,tenantRate,sort,notes){
+  return { id:id, mall:mall, service:service, sub_scope:sub, item:item, unit:unit,
+    compulsory:compulsory, min_qty:minQty, min_charge:minCharge, price_mall:mallRate,
+    price_contractor:contractorRate, price_tenant:tenantRate, sort:sort, notes:notes||'',
+    updated_by:'marketing@hggroup.com.my', updated_at:'2026-07-13T09:30:00+08:00' };
+}
+
+function mockLine(service,subScope,item,unit,qty,rate,note){
+  return { service:service, subScope:subScope, item:item, unit:unit, qty:qty, rate:rate,
+    amount:round2(qty*rate), note:note||'' };
+}
+
+function seedLocalMock(){
+  BOOT = {
+    malls:[
+      {id:'mall-pavilion',name:'Pavilion Kuala Lumpur',code:'PKL',location:'Bukit Bintang'},
+      {id:'mall-midvalley',name:'Mid Valley Megamall',code:'MVM',location:'Mid Valley City'},
+      {id:'mall-trx',name:'The Exchange TRX',code:'TRX',location:'Tun Razak Exchange'}
+    ],
+    services:[
+      {id:'svc-hoarding',name:'Hoarding',is_extra:false,sort:1},
+      {id:'svc-visual',name:'Visual',is_extra:false,sort:2},
+      {id:'svc-scaffold',name:'Scaffold',is_extra:true,sort:3},
+      {id:'svc-reinstatement',name:'Reinstatement',is_extra:true,sort:4}
+    ],
+    settings:{
+      COMPANY_NAME:'HG Services (M) Sdn Bhd', COMPANY_REG:'202001012345 (1378665-X)',
+      COMPANY_ADDRESS:'Kuala Lumpur, Malaysia', COMPANY_PHONE:'+60 3-2788 8800',
+      COMPANY_EMAIL:'operations@hggroup.com.my', SST_PERCENT:'6', QUOTE_PREFIX:'HGQ',
+      VALIDITY_DAYS:'30', QUOTE_FOOTER:'Prices are valid for 30 days and subject to final site measurement.'
+    },
+    clientTypes:['Mall','Contractor','Tenant']
+  };
+  PRICEBOOK = [
+    mockPrice('pb-01','(All Malls)','Hoarding','Installation','Hoarding panel','sqft',true,100,1500,10.8,11.6,12.5,1,'Includes standard white panel finish.'),
+    mockPrice('pb-02','(All Malls)','Hoarding','Installation','Timber framework','ft',true,50,600,6.8,7.2,7.8,2,'Standard internal timber support.'),
+    mockPrice('pb-03','(All Malls)','Hoarding','Installation','Double swing access door','nos',false,1,0,850,920,980,3,'Lockset and basic ironmongery included.'),
+    mockPrice('pb-04','(All Malls)','Hoarding','Installation','Aluminium skirting','ft',false,20,280,5.2,5.8,6.4,4,''),
+    mockPrice('pb-05','Pavilion Kuala Lumpur','Hoarding','Installation','Hoarding panel','sqft',true,100,1500,11.2,12.1,12.8,1,'Pavilion after-hours handling included.'),
+    mockPrice('pb-06','(All Malls)','Visual','Branding','Printed sticker','sqft',true,50,500,6.4,7.0,7.6,1,'Print-ready artwork supplied by client.'),
+    mockPrice('pb-07','(All Malls)','Visual','Branding','Matte lamination','sqft',false,50,300,2.1,2.4,2.7,2,''),
+    mockPrice('pb-08','(All Malls)','Scaffold','Rental','Mobile scaffold set','m2',true,20,650,12.5,13.2,14.0,1,'Monthly rental.'),
+    mockPrice('pb-09','(All Malls)','Scaffold','Rental','Delivery and collection','trip',true,1,0,280,320,350,2,''),
+    mockPrice('pb-10','(All Malls)','Reinstatement','Making good','Patching and touch-up','lot',true,1,450,480,520,580,1,'Final amount subject to joint inspection.'),
+    mockPrice('pb-11','(All Malls)','Reinstatement','Making good','Paint touch-up','sqft',false,50,250,3.2,3.6,4.0,2,'Colour matching included.')
+  ];
+
+  var q1Lines=[
+    mockLine('Hoarding','Installation','Hoarding panel','sqft',512,12.8),
+    mockLine('Hoarding','Installation','Timber framework','ft',128,7.8),
+    mockLine('Hoarding','Installation','Double swing access door','nos',2,980),
+    mockLine('Visual','Branding','Printed sticker','sqft',512,7.6),
+    mockLine('Scaffold','Rental','Mobile scaffold set','m2',120,14),
+    mockLine('Scaffold','Rental','Delivery and collection','trip',2,350)
+  ];
+  var q2Lines=[
+    mockLine('Hoarding','Installation','Hoarding panel','sqft',320,12.5),
+    mockLine('Visual','Branding','Printed sticker','sqft',320,7.6),
+    mockLine('Reinstatement','Making good','Patching and touch-up','lot',1,580)
+  ];
+  var q3Lines=[
+    mockLine('Scaffold','Rental','Mobile scaffold set','m2',85,14),
+    mockLine('Scaffold','Rental','Delivery and collection','trip',2,350)
+  ];
+  var q4Lines=[
+    mockLine('Hoarding','Installation','Hoarding panel','sqft',760,12.5),
+    mockLine('Hoarding','Installation','Timber framework','ft',190,7.8),
+    mockLine('Hoarding','Installation','Double swing access door','nos',3,980)
+  ];
+  function saved(id,no,date,mall,client,type,status,by,project,lines){
+    var subtotal=round2(lines.reduce(function(sum,line){return sum+Number(line.amount||0);},0));
+    var sst=round2(subtotal*0.06), computedTotal=round2(subtotal+sst);
+    return {id:id,quote_no:no,quote_date:date,mall:mall,client_name:client,client_type:type,
+      total:computedTotal,status:status,created_by:by,project:project,attention:'',subtotal:subtotal,
+      sst_pct:6,sst:sst,notes:'',_lines:lines};
+  }
+  SAVED = [
+    saved('mock-q-1','HGQ-2026-0713','2026-07-13','Pavilion Kuala Lumpur','Meridian Retail Sdn Bhd','Tenant','Draft','marketing@hggroup.com.my','Lot 3.15 flagship fit-out',q1Lines),
+    saved('mock-q-2','HGQ-2026-0709','2026-07-09','Mid Valley Megamall','Northstar Apparel Sdn Bhd','Tenant','Sent','marketing@hggroup.com.my','Lot F-028 refurbishment',q2Lines),
+    saved('mock-q-3','HGQ-2026-0705','2026-07-05','The Exchange TRX','Lumen Project Management','Contractor','Confirmed','lee@hggroup.com.my','Atrium scaffold access',q3Lines),
+    saved('mock-q-4','HGQ-2026-0628','2026-06-28','Pavilion Kuala Lumpur','Apex Concepts Sdn Bhd','Contractor','Cancelled','lee@hggroup.com.my','Level 5 temporary hoarding',q4Lines)
+  ];
+}
+
+function localMockNotice(message, target){
+  var id=target||'buildMsg';
+  if(el(id)) showMsg(id,message||'Local mock preview only — no data was saved.',true);
+}
 
 // ═══════════════════════════ HELPERS ═══════════════════════════
 function el(id){ return document.getElementById(id); }
@@ -419,14 +717,91 @@ function rm(n){ return 'RM ' + (Number(n)||0).toLocaleString('en-MY',{minimumFra
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 function uid(){ return 'u'+Math.random().toString(36).slice(2,10); }
 function round2(n){ return Math.round((Number(n)+Number.EPSILON)*100)/100; }
-function openModalEl(id){ el(id).classList.add('show'); }
-function closeModal(id){ el(id).classList.remove('show'); }
-document.addEventListener('click', function(e){ if(e.target.classList && e.target.classList.contains('modal-bg')) e.target.classList.remove('show'); });
+function openModalEl(id){ var modal=el(id); modal.classList.add('show'); initHubSelects(modal); syncHubSelects(modal); }
+function closeModal(id){ closeHubSelects(); el(id).classList.remove('show'); }
+document.addEventListener('click', function(e){ if(e.target.classList && e.target.classList.contains('modal-bg')){ closeHubSelects(); e.target.classList.remove('show'); } });
 function showMsg(id, t, ok){ var m=el(id); m.textContent=t; m.className='msg show '+(ok?'ok':'err'); setTimeout(function(){m.classList.remove('show');},4500); }
 function buildMsg(t, ok){ showMsg('buildMsg', t, ok); }
 function fmtQty(n){ return (Math.round(n*100)/100).toString(); }
 function fail(e){ alert(e && e.message ? e.message : String(e)); }
 function fmtDate(d){ if(!d) return ''; var x=new Date(d); return isNaN(x)?String(d):x.toLocaleDateString('en-MY',{day:'2-digit',month:'short',year:'numeric'}); }
+
+// Shared HG Hub dropdown treatment. Native selects remain the source of truth for
+// validation, existing change handlers, and Supabase payloads.
+function closeHubSelects(except){
+  document.querySelectorAll('.hub-select.open').forEach(function(wrap){
+    if(wrap!==except){
+      wrap.classList.remove('open','open-up');
+      var trigger=wrap.querySelector('.hub-select-trigger');
+      if(trigger) trigger.setAttribute('aria-expanded','false');
+    }
+  });
+}
+function syncHubSelects(root){
+  (root||document).querySelectorAll('select[data-hub-select]').forEach(function(select){
+    if(select._hubSelectSync) select._hubSelectSync();
+  });
+}
+function initHubSelects(root){
+  var scope=root||document, selects=[];
+  if(scope.nodeType===1 && scope.matches('select:not([data-hub-select])')) selects.push(scope);
+  if(scope.querySelectorAll) selects=selects.concat(Array.from(scope.querySelectorAll('select:not([data-hub-select])')));
+  selects.forEach(function(select){
+    var wrap=document.createElement('div'); wrap.className='hub-select';
+    select.parentNode.insertBefore(wrap,select); wrap.appendChild(select);
+    select.dataset.hubSelect='true'; select.classList.add('hub-select-native');
+    select.tabIndex=-1; select.setAttribute('aria-hidden','true');
+
+    var trigger=document.createElement('button');
+    trigger.type='button'; trigger.className='hub-select-trigger';
+    trigger.setAttribute('aria-haspopup','listbox'); trigger.setAttribute('aria-expanded','false');
+    var label=wrap.parentElement && wrap.parentElement.querySelector('label');
+    if(label) trigger.setAttribute('aria-label',label.textContent.trim());
+    else if(select.getAttribute('aria-label')) trigger.setAttribute('aria-label',select.getAttribute('aria-label'));
+    var menu=document.createElement('div'); menu.className='hub-select-menu'; menu.setAttribute('role','listbox');
+    wrap.appendChild(trigger); wrap.appendChild(menu);
+
+    function sync(){
+      var selected=select.options[select.selectedIndex];
+      trigger.textContent=selected ? selected.textContent : 'Select';
+      trigger.disabled=select.disabled; menu.innerHTML='';
+      Array.from(select.options).forEach(function(option){
+        var item=document.createElement('button');
+        item.type='button'; item.className='hub-select-option'+(option.selected?' selected':'');
+        item.textContent=option.textContent; item.disabled=option.disabled;
+        item.setAttribute('role','option'); item.setAttribute('aria-selected',option.selected?'true':'false');
+        item.addEventListener('click',function(event){
+          event.stopPropagation(); select.value=option.value;
+          select.dispatchEvent(new Event('change',{bubbles:true})); closeHubSelects();
+        });
+        menu.appendChild(item);
+      });
+    }
+    select._hubSelectSync=sync; select.addEventListener('change',sync);
+    new MutationObserver(sync).observe(select,{childList:true,subtree:true,attributes:true});
+    trigger.addEventListener('click',function(event){
+      event.stopPropagation();
+      var open=!wrap.classList.contains('open'); closeHubSelects(wrap); sync();
+      if(open){
+        var rect=trigger.getBoundingClientRect(), estimated=Math.min(260,menu.children.length*44+10);
+        wrap.classList.toggle('open-up',window.innerHeight-rect.bottom-16<estimated && rect.top>window.innerHeight-rect.bottom);
+      } else wrap.classList.remove('open-up');
+      wrap.classList.toggle('open',open); trigger.setAttribute('aria-expanded',open?'true':'false');
+    });
+    sync();
+  });
+}
+function startHubSelects(){
+  initHubSelects(document);
+  new MutationObserver(function(mutations){
+    mutations.forEach(function(mutation){
+      mutation.addedNodes.forEach(function(node){ if(node.nodeType===1) initHubSelects(node); });
+    });
+  }).observe(document.body,{childList:true,subtree:true});
+}
+document.addEventListener('DOMContentLoaded',startHubSelects);
+document.addEventListener('pointerdown',function(e){ if(!e.target.closest('.hub-select')) closeHubSelects(); },true);
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeHubSelects(); });
 
 // ═══════════════════════════ BOOT / AUTH FLOW ═══════════════════════════
 function saveConfig(){
@@ -441,12 +816,59 @@ function saveConfig(){
 }
 
 async function start(){
+  if(LOCAL_MOCK){ await startLocalMock(); return; }
   if(!SUPABASE_URL || !SUPABASE_KEY){ el('gateConfig').style.display='flex'; return; }
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   var s = await sb.auth.getSession();
   SESSION = s.data.session;
   sb.auth.onAuthStateChange(function(_e, session){ if(!!session !== !!SESSION){ SESSION = session; route(); } });
   route();
+}
+
+async function startLocalMock(){
+  seedLocalMock();
+  SESSION={user:{email:'marketing@hggroup.com.my'}};
+  IS_ADMIN=false;
+  ['gateConfig','gateLogin','gateDenied'].forEach(function(g){ el(g).style.display='none'; });
+  el('app').style.display='block';
+  el('userPill').textContent='Local mock · no data saved';
+  var signOutButton=el('userPill').parentElement.querySelector('button');
+  signOutButton.textContent='Mock preview'; signOutButton.disabled=true;
+  el('teamCard').style.display='none';
+  CLIENT_TYPE='Tenant';
+  onBoot();
+  await onMallChange();
+  el('mall').value='Pavilion Kuala Lumpur';
+  el('client').value='Meridian Retail Sdn Bhd';
+  el('attention').value='Ms Aisha Rahman';
+  el('project').value='Lot 3.15 flagship fit-out';
+  await onMallChange();
+  SCOPES=[];
+  addMockScope('Hoarding','Installation',[
+    ['Hoarding panel','L','64','H','8','count','1'],
+    ['Timber framework','L','64','count','2'],
+    ['Double swing access door','qty','2']
+  ]);
+  addMockScope('Visual','Branding',[[ 'Printed sticker','L','64','H','8','count','1' ]]);
+  addMockScope('Scaffold','Rental',[
+    ['Mobile scaffold set','qty','120'],
+    ['Delivery and collection','qty','2']
+  ]);
+  renderScopes();
+  syncHubSelects(document);
+}
+
+function addMockScope(service,subScope,values){
+  var source=itemsFor(service,subScope), selected=[];
+  values.forEach(function(spec){
+    var item=source.find(function(x){return x.item===spec[0];});
+    if(!item) return;
+    var line=newLine(service,subScope,item);
+    for(var i=1;i<spec.length;i+=2) line[spec[i]]=spec[i+1];
+    selected.push(line);
+  });
+  SCOPES.push({key:(service+'|'+subScope).toLowerCase(),service:service,subScope:subScope,
+    items:selected,optional:source.filter(function(item){return !selected.some(function(line){return line.item===item.item;});})});
 }
 
 async function route(){
@@ -477,7 +899,7 @@ function signIn(){
       if(embedded && r.data && r.data.url){ window.top.location.href = r.data.url; }
     });
 }
-function signOut(){ sb.auth.signOut().then(function(){ location.reload(); }); }
+function signOut(){ if(LOCAL_MOCK) return; sb.auth.signOut().then(function(){ location.reload(); }); }
 
 // ═══════════════════════════ BOOTSTRAP DATA ═══════════════════════════
 async function loadBootstrap(){
@@ -510,6 +932,15 @@ function setClientType(t){
 
 // ═══════════════════════════ PRICE RESOLUTION (was resolvedPrices) ═══════════════════════════
 async function fetchPricesFor(mall){
+  if(LOCAL_MOCK){
+    var map={};
+    PRICEBOOK.filter(function(row){return row.mall==='(All Malls)' || row.mall===mall;}).forEach(function(row){
+      var key=[row.service,row.sub_scope,row.item].map(function(x){return String(x||'').trim().toLowerCase();}).join('|');
+      var current=map[key];
+      if(!current || (row.mall===mall && current.mall!==mall)) map[key]=row;
+    });
+    return Object.keys(map).map(function(key){return map[key];});
+  }
   var r = await sb.from('price_book').select('*').in('mall', ['(All Malls)', mall]).order('sort');
   if(r.error){ fail(r.error); return []; }
   var map = {};
@@ -612,7 +1043,7 @@ function renderScopes(){
       sc.optional.map(function(it,i){ return '<span class="chip" onclick="addOptional(\''+sc.key+'\','+i+')">'+esc(it.item)+'</span>'; }).join('') +
       '</div>') : '';
     return '<div class="scope"><div class="head"><span>'+esc(sc.service)+' · '+esc(sc.subScope)+'</span>'+
-           '<span class="x" onclick="removeScope(\''+sc.key+'\')">Remove ✕</span></div>'+
+           '<span class="x" onclick="removeScope(\''+sc.key+'\')">Remove</span></div>'+
            (lines||'<div class="lineitem muted">All items removed.</div>')+opts+'</div>';
   }).join('');
   renderTotals();
@@ -639,7 +1070,7 @@ function lineHtml(scopeKey, li){
            '<span class="it-name">'+esc(li.item)+'</span> '+
            (li.compulsory?'<span class="badge req">required</span>':'<span class="badge opt">added</span>')+' '+noteBadge+
            (li.notes?'<div class="it-note">'+esc(li.notes)+'</div>':'')+
-         '</div><span class="rm" onclick="removeLine(\''+scopeKey+'\',\''+li.uid+'\')">✕</span></div>'+
+         '</div><span class="rm" onclick="removeLine(\''+scopeKey+'\',\''+li.uid+'\')">Remove</span></div>'+
          '<div class="meas">'+meas+rateInp+
            '<div class="amt"><div class="lbl">Amount</div><div class="v" id="amt_'+li.uid+'">'+rm(c.amount)+'</div></div>'+
          '</div></div>';
@@ -692,6 +1123,17 @@ async function saveQuoteNow(){
   var p = collectPayload();
   if(!p.clientName){ buildMsg('Enter the client name.', false); return; }
   if(!p.lines.length){ buildMsg('Add at least one item.', false); return; }
+  if(LOCAL_MOCK){
+    var draft=currentQuoteForOutput(), mockId='mock-q-'+Date.now();
+    SAVED.unshift({id:mockId,quote_no:'MOCK-DRAFT',quote_date:'2026-07-13',mall:draft.mall,
+      client_name:draft.client,client_type:draft.clientType,total:draft.total,status:'Draft',
+      created_by:'marketing@hggroup.com.my',project:draft.project,attention:draft.attention,
+      subtotal:draft.subtotal,sst_pct:draft.sstPct,sst:draft.sst,notes:'',_lines:draft.lines});
+    LAST=draft;
+    buildMsg('Added to this local preview only — no data was saved.',true);
+    showTab('saved');
+    return;
+  }
   var btn = el('saveBtn'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Saving…';
   var r = await sb.rpc('save_quote', { payload: p });
   btn.disabled = false; btn.textContent = 'Save quote';
@@ -710,14 +1152,17 @@ function resetBuilder(){
 // ═══════════════════════════ SAVED QUOTES ═══════════════════════════
 async function loadSaved(){
   el('savedList').innerHTML = '<div class="loading"><span class="spin"></span> Loading…</div>';
+  if(LOCAL_MOCK){ renderSaved(); return; }
   var r = await sb.from('quotes').select('*').order('created_at', {ascending:false});
-  if(r.error){ el('savedList').innerHTML = '<div class="empty">'+esc(r.error.message)+'</div>'; return; }
+  el('savedList').classList.remove('loading');
+  if(r.error){ el('savedList').innerHTML = '<div class="empty"><strong>Saved quotes unavailable</strong><span>'+esc(r.error.message)+'</span></div>'; return; }
   SAVED = r.data;
   renderSaved();
 }
 function renderSaved(){
-  if(!SAVED.length){ el('savedList').innerHTML = '<div class="empty">No quotes saved yet.</div>'; return; }
-  el('savedList').innerHTML = '<table class="grid"><thead><tr><th>Quote No</th><th>Date</th><th>Mall</th><th>Client</th><th>Type</th><th style="text-align:right">Total</th><th>Status</th><th>By</th></tr></thead><tbody>'+
+  var host=el('savedList'); host.classList.remove('loading');
+  if(!SAVED.length){ host.innerHTML = '<div class="empty"><strong>No saved quotes yet</strong><span>Quotes saved from the builder will appear here.</span></div>'; return; }
+  host.innerHTML = '<table class="grid"><thead><tr><th>Quote No</th><th>Date</th><th>Mall</th><th>Client</th><th>Type</th><th style="text-align:right">Total</th><th>Status</th><th>By</th></tr></thead><tbody>'+
     SAVED.map(function(q){
       return '<tr class="click" onclick="viewQuote(\''+q.id+'\')"><td><b>'+esc(q.quote_no)+'</b></td><td>'+esc(fmtDate(q.quote_date))+'</td>'+
         '<td>'+esc(q.mall)+'</td><td>'+esc(q.client_name)+'</td><td>'+esc(q.client_type)+'</td>'+
@@ -728,6 +1173,15 @@ function renderSaved(){
 }
 
 async function getQuote(id){
+  if(LOCAL_MOCK){
+    var mock=SAVED.find(function(q){return q.id===id;});
+    if(!mock) throw new Error('Mock quote not found.');
+    return {id:mock.id,quoteNo:mock.quote_no,date:fmtDate(mock.quote_date),mall:mock.mall,
+      client:mock.client_name,clientType:mock.client_type,attention:mock.attention||'',project:mock.project||'',
+      subtotal:Number(mock.subtotal),sstPct:Number(mock.sst_pct),sst:Number(mock.sst),total:Number(mock.total),
+      status:mock.status,notes:mock.notes||'',createdBy:mock.created_by,company:BOOT.settings,
+      lines:(mock._lines||[]).map(function(line){return Object.assign({},line);})};
+  }
   var q = await sb.from('quotes').select('*').eq('id', id).single();
   if(q.error) throw q.error;
   var ls = await sb.from('quote_lines').select('*').eq('quote_id', id).order('sort');
@@ -755,19 +1209,19 @@ async function viewQuote(id){
     el('viewBody').innerHTML =
       '<div class="row" style="justify-content:space-between; align-items:center;">'+
         '<h2 style="margin:0;">'+esc(q.quoteNo)+' <span class="status-pill st-'+esc(q.status)+'">'+esc(q.status)+'</span></h2>'+
-        '<button class="ghost" style="flex:0 0 auto;" onclick="closeModal(\'viewModal\')">✕ Close</button></div>'+
+        '<button class="ghost" style="flex:0 0 auto;" onclick="closeModal(\'viewModal\')">Close</button></div>'+
       '<div class="sub" style="margin-top:6px;">'+esc(q.date)+' · '+esc(q.mall)+' · '+esc(q.client)+' ('+esc(q.clientType)+')'+
         (q.project?(' · '+esc(q.project)):'')+'</div>'+
-      '<table class="grid"><thead><tr><th>#</th><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Rate</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<div class="table-scroll"><table class="grid"><thead><tr><th>#</th><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Rate</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
       '<div class="totals" style="margin-top:14px;">'+
         '<div class="ln"><span class="k">Subtotal</span><span class="v">'+rm(q.subtotal)+'</span></div>'+
         (q.sstPct?('<div class="ln"><span class="k">SST ('+q.sstPct+'%)</span><span class="v">'+rm(q.sst)+'</span></div>'):'')+
         '<div class="ln grand"><span class="k">Total</span><span class="v">'+rm(q.total)+'</span></div></div>'+
       '<div class="row" style="margin-top:18px; justify-content:flex-end;">'+
-        '<div style="flex:0 0 auto;"><select id="qStatus" onchange="setStatus(\''+q.id+'\', this.value)" style="padding:9px 12px;">'+
+        '<div style="flex:0 0 auto;"><select id="qStatus" aria-label="Quote status" onchange="setStatus(\''+q.id+'\', this.value)" style="padding:9px 12px;">'+
           ['Draft','Sent','Confirmed','Cancelled'].map(function(s){ return '<option'+(s===q.status?' selected':'')+'>'+s+'</option>'; }).join('')+'</select></div>'+
         '<div style="flex:0 0 auto;"><button class="danger" onclick="delQuote(\''+q.id+'\')">Delete</button></div>'+
-        '<div style="flex:0 0 auto;"><button class="ghost" onclick="exportQuoteExcel()">⬇ Excel</button></div>'+
+        '<div style="flex:0 0 auto;"><button class="ghost" onclick="exportQuoteExcel()">Export Excel</button></div>'+
         '<div style="flex:0 0 auto;"><button class="ghost" onclick="copyWhatsAppSaved()">Copy WhatsApp</button></div>'+
         '<div style="flex:0 0 auto;"><button class="primary" onclick="doPrint(LAST)">Print / PDF</button></div></div>';
     openModalEl('viewModal');
@@ -775,6 +1229,13 @@ async function viewQuote(id){
 }
 
 async function setStatus(id, status){
+  if(LOCAL_MOCK){
+    var mock=SAVED.find(function(q){return q.id===id;});
+    if(mock) mock.status=status;
+    if(LAST && LAST.id===id) LAST.status=status;
+    closeModal('viewModal'); renderSaved();
+    return;
+  }
   var r = await sb.from('quotes').update({status:status}).eq('id', id);
   if(r.error){ fail(r.error); return; }
   await sb.rpc('log_audit', { p_action:'STATUS', p_details:String(id).slice(0,8)+' → '+status });
@@ -782,6 +1243,7 @@ async function setStatus(id, status){
 }
 async function delQuote(id){
   if(!confirm('Delete this quote? This cannot be undone.')) return;
+  if(LOCAL_MOCK){ SAVED=SAVED.filter(function(q){return q.id!==id;}); closeModal('viewModal'); renderSaved(); return; }
   var r = await sb.from('quotes').delete().eq('id', id);   // lines cascade
   if(r.error){ fail(r.error); return; }
   await sb.rpc('log_audit', { p_action:'DELETE QUOTE', p_details:String(id).slice(0,8) });
@@ -868,6 +1330,20 @@ function doPrint(q){
 
 // Excel exports (SheetJS) — the "get my data out any time" guarantee
 async function exportQuotesExcel(){
+  if(LOCAL_MOCK){
+    var wbMock=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wbMock,XLSX.utils.json_to_sheet(SAVED.map(function(q){return {
+      'Quote No':q.quote_no,'Date':q.quote_date,'Mall':q.mall,'Client':q.client_name,
+      'Client Type':q.client_type,'Project':q.project,'Subtotal':Number(q.subtotal),
+      'SST %':Number(q.sst_pct),'SST':Number(q.sst),'Total':Number(q.total),'Status':q.status,
+      'Created By':q.created_by};})),'Quotes');
+    var mockLines=[];
+    SAVED.forEach(function(q){(q._lines||[]).forEach(function(line){mockLines.push({
+      'Quote No':q.quote_no,'Client':q.client_name,'Service':line.service,'Sub-scope':line.subScope,
+      'Item':line.item,'Unit':line.unit,'Qty':line.qty,'Rate':line.rate,'Amount':line.amount,'Note':line.note||''});});});
+    XLSX.utils.book_append_sheet(wbMock,XLSX.utils.json_to_sheet(mockLines),'Quote Lines');
+    XLSX.writeFile(wbMock,'HG-Quotes-Mock-Preview.xlsx'); return;
+  }
   var qs = await sb.from('quotes').select('*').order('created_at');
   var ls = await sb.from('quote_lines').select('*').order('sort');
   if(qs.error||ls.error){ fail(qs.error||ls.error); return; }
@@ -901,6 +1377,11 @@ function exportQuoteExcel(){
   XLSX.writeFile(wb, (LAST.quoteNo||'quote').replace(/[^\w\-]/g,'_')+'.xlsx');
 }
 async function exportPriceBookExcel(){
+  if(LOCAL_MOCK){
+    var mockBook=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(mockBook,XLSX.utils.json_to_sheet(PRICEBOOK),'PriceBook');
+    XLSX.writeFile(mockBook,'HG-PriceBook-Mock-Preview.xlsx'); return;
+  }
   var r = await sb.from('price_book').select('*').order('mall').order('service').order('sort');
   if(r.error){ fail(r.error); return; }
   var wb = XLSX.utils.book_new();
@@ -917,6 +1398,11 @@ async function exportPriceBookExcel(){
 async function saveMall(){
   var name = el('m_name').value.trim();
   if(!name){ showMsg('mallMsg','Mall name is required.', false); return; }
+  if(LOCAL_MOCK){
+    BOOT.malls.push({id:'mock-mall-'+Date.now(),name:name,code:el('m_code').value.trim(),location:el('m_loc').value.trim()});
+    closeModal('mallModal'); onBoot(); el('mall').value=name; await onMallChange();
+    localMockNotice('Mall added to this local preview only — no data was saved.'); return;
+  }
   var r = await sb.from('malls').insert({ name:name, code:el('m_code').value.trim(), location:el('m_loc').value.trim() });
   if(r.error){ showMsg('mallMsg', r.error.message, false); return; }
   await sb.rpc('log_audit', { p_action:'ADD Malls', p_details:name });
@@ -927,6 +1413,10 @@ async function saveSvc(){
   var name = el('s_name').value.trim();
   if(!name){ showMsg('svcMsg','Service name is required.', false); return; }
   var maxSort = BOOT.services.reduce(function(m,s){ return Math.max(m, s.sort||0); }, 0);
+  if(LOCAL_MOCK){
+    BOOT.services.push({id:'mock-service-'+Date.now(),name:name,is_extra:el('s_extra').value==='Y',sort:maxSort+1});
+    closeModal('svcModal'); onBoot(); localMockNotice('Service added to this local preview only — no data was saved.'); return;
+  }
   var r = await sb.from('services').insert({ name:name, is_extra:el('s_extra').value==='Y', sort:maxSort+1 });
   if(r.error){ showMsg('svcMsg', r.error.message, false); return; }
   await sb.rpc('log_audit', { p_action:'ADD Services', p_details:name });
@@ -936,21 +1426,28 @@ async function saveSvc(){
 
 // ═══════════════════════════ PRICE BOOK TAB ═══════════════════════════
 async function loadPriceBook(){
+  if(LOCAL_MOCK){ configurePriceBookControls(); return; }
   var r = await sb.from('price_book').select('*').order('mall').order('service').order('sort');
-  if(r.error){ el('pbList').innerHTML = '<div class="empty">'+esc(r.error.message)+'</div>'; return; }
+  el('pbList').classList.remove('loading');
+  if(r.error){ el('pbList').innerHTML = '<div class="empty"><strong>Price book unavailable</strong><span>'+esc(r.error.message)+'</span></div>'; return; }
   PRICEBOOK = r.data;
+  configurePriceBookControls();
+}
+function configurePriceBookControls(){
   var malls = ['(All Malls)'].concat(BOOT.malls.map(function(m){ return m.name; }));
   el('pbMall').innerHTML = '<option value="">All</option>'+malls.map(function(m){ return '<option>'+esc(m)+'</option>'; }).join('');
   var svcs = {};
   PRICEBOOK.forEach(function(p){ svcs[p.service]=1; });
   el('pbSvc').innerHTML = '<option value="">All</option>'+Object.keys(svcs).sort().map(function(s){ return '<option>'+esc(s)+'</option>'; }).join('');
   el('pf_mall').innerHTML = malls.map(function(m){ return '<option>'+esc(m)+'</option>'; }).join('');
+  syncHubSelects(document);
   renderPriceBook();
 }
 function renderPriceBook(){
+  el('pbList').classList.remove('loading');
   var fm = el('pbMall').value, fs = el('pbSvc').value;
   var rows = PRICEBOOK.filter(function(p){ return (!fm || p.mall===fm) && (!fs || p.service===fs); });
-  if(!rows.length){ el('pbList').innerHTML = '<div class="empty">No items match.</div>'; return; }
+  if(!rows.length){ el('pbList').innerHTML = '<div class="empty"><strong>No price items match</strong><span>Adjust the mall or service filter to see other rates.</span></div>'; return; }
   el('pbList').innerHTML = '<table class="grid"><thead><tr><th>Mall</th><th>Service · Sub-scope</th><th>Item</th><th>Unit</th><th>Comp.</th><th style="text-align:right">Mall</th><th style="text-align:right">Contr.</th><th style="text-align:right">Tenant</th><th>Min</th></tr></thead><tbody>'+
     rows.map(function(p){
       var min = [];
@@ -997,6 +1494,14 @@ async function savePrice(){
   };
   if(!obj.service || !obj.sub_scope || !obj.item){ showMsg('pbMsg','Service, sub-scope and item are required.', false); return; }
   var id = el('pf_id').value, r;
+  if(LOCAL_MOCK){
+    if(id){
+      var existing=PRICEBOOK.find(function(row){return row.id===id;});
+      if(existing) Object.assign(existing,obj);
+    } else { obj.id='mock-price-'+Date.now(); PRICEBOOK.push(obj); }
+    closeModal('pbModal'); configurePriceBookControls(); await onMallChange();
+    localMockNotice('Price item updated in this local preview only — no data was saved.','pbMsg2'); return;
+  }
   if(id){ r = await sb.from('price_book').update(obj).eq('id', id); }
   else  { r = await sb.from('price_book').insert(obj); }
   if(r.error){ showMsg('pbMsg', r.error.message, false); return; }
@@ -1008,6 +1513,11 @@ async function savePrice(){
 async function deletePrice(){
   var id = el('pf_id').value;
   if(!id || !confirm('Delete this price item?')) return;
+  if(LOCAL_MOCK){
+    PRICEBOOK=PRICEBOOK.filter(function(row){return row.id!==id;}); closeModal('pbModal');
+    configurePriceBookControls(); await onMallChange();
+    localMockNotice('Price item removed from this local preview only — no data was saved.','pbMsg2'); return;
+  }
   var r = await sb.from('price_book').delete().eq('id', id);
   if(r.error){ showMsg('pbMsg', r.error.message, false); return; }
   await sb.rpc('log_audit', { p_action:'DELETE PriceBook', p_details:id });
@@ -1031,6 +1541,10 @@ async function cloneDefaults(){
       price_mall:p.price_mall, price_contractor:p.price_contractor, price_tenant:p.price_tenant,
       sort:p.sort, notes:p.notes, updated_by:SESSION.user.email }; });
   if(!toInsert.length){ showMsg('pbMsg2','Nothing to clone — '+mall+' already has every default.', true); return; }
+  if(LOCAL_MOCK){
+    toInsert.forEach(function(row,index){row.id='mock-clone-'+Date.now()+'-'+index;PRICEBOOK.push(row);});
+    configurePriceBookControls(); localMockNotice('Defaults cloned in this local preview only — no data was saved.','pbMsg2'); return;
+  }
   var r = await sb.from('price_book').insert(toInsert);
   if(r.error){ showMsg('pbMsg2', r.error.message, false); return; }
   await sb.rpc('log_audit', { p_action:'CLONE DEFAULTS', p_details:mall+' ('+toInsert.length+' rows)' });
@@ -1045,9 +1559,9 @@ var SETTING_KEYS = [
   ['QUOTE_PREFIX','Quote no. prefix'], ['VALIDITY_DAYS','Validity (days)'], ['QUOTE_FOOTER','Quote footer']
 ];
 function loadSettings(){
-  el('setForm').innerHTML = SETTING_KEYS.map(function(k){
-    return '<label>'+k[1]+'</label><input id="set_'+k[0]+'" value="'+esc(BOOT.settings[k[0]]||'')+'">';
-  }).join('') +
+  el('setForm').innerHTML = '<div class="settings-grid">'+SETTING_KEYS.map(function(k,i){
+    return '<div class="'+(i===2||i===8?'settings-full':'')+'"><label>'+k[1]+'</label><input id="set_'+k[0]+'" value="'+esc(BOOT.settings[k[0]]||'')+'"></div>';
+  }).join('')+'</div>'+
   '<div id="setMsg" class="msg"></div>'+
   '<div class="row" style="margin-top:14px; justify-content:flex-end;"><div style="flex:0 0 auto;">'+
   '<button class="primary" onclick="saveSettings()">Save settings</button></div></div>';
@@ -1056,6 +1570,11 @@ function loadSettings(){
 }
 async function saveSettings(){
   var rows = SETTING_KEYS.map(function(k){ return { key:k[0], value:el('set_'+k[0]).value }; });
+  if(LOCAL_MOCK){
+    rows.forEach(function(x){ BOOT.settings[x.key]=x.value; });
+    showMsg('setMsg','Updated in this local preview only — no data was saved.',true);
+    el('sstPctLbl').textContent='('+(BOOT.settings.SST_PERCENT||6)+'%)'; return;
+  }
   var r = await sb.from('app_settings').upsert(rows);
   if(r.error){ showMsg('setMsg', r.error.message, false); return; }
   await sb.rpc('log_audit', { p_action:'EDIT Settings', p_details:'company/quote settings' });
@@ -1064,26 +1583,44 @@ async function saveSettings(){
   el('sstPctLbl').textContent = '('+(BOOT.settings.SST_PERCENT||6)+'%)';
 }
 async function loadAudit(){
+  el('auditList').classList.remove('loading');
+  if(LOCAL_MOCK){
+    var mockAudit=[
+      {at:'2026-07-13T10:42:00+08:00',user_email:'marketing@hggroup.com.my',action:'STATUS',details:'HGQ-2026-0709 → Sent'},
+      {at:'2026-07-13T09:30:00+08:00',user_email:'marketing@hggroup.com.my',action:'EDIT PriceBook',details:'Pavilion Kuala Lumpur · Hoarding · Hoarding panel'},
+      {at:'2026-07-12T16:18:00+08:00',user_email:'lee@hggroup.com.my',action:'ADD QUOTE',details:'HGQ-2026-0713 · Meridian Retail Sdn Bhd'}
+    ];
+    el('auditList').innerHTML='<table class="grid"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>'+mockAudit.map(function(a){var meta=quotationAuditMeta(a.action);return '<tr><td class="muted">'+esc(new Date(a.at).toLocaleString('en-MY'))+'</td><td>'+esc(a.user_email.split('@')[0])+'</td><td><span class="audit-action '+meta.cls+'">'+esc(meta.label)+'</span></td><td class="muted">'+esc(a.details)+'</td></tr>';}).join('')+'</tbody></table>';
+    return;
+  }
   var r = await sb.from('audit_log').select('*').order('at', {ascending:false}).limit(50);
-  if(r.error){ el('auditList').innerHTML = '<div class="empty">'+esc(r.error.message)+'</div>'; return; }
-  if(!r.data.length){ el('auditList').innerHTML = '<div class="empty">No activity yet.</div>'; return; }
+  if(r.error){ el('auditList').innerHTML = '<div class="empty"><strong>Audit log unavailable</strong><span>'+esc(r.error.message)+'</span></div>'; return; }
+  if(!r.data.length){ el('auditList').innerHTML = '<div class="empty"><strong>No activity yet</strong><span>Quotation changes will appear here as the team uses the tool.</span></div>'; return; }
   el('auditList').innerHTML = '<table class="grid"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>'+
-    r.data.map(function(a){ return '<tr><td class="muted">'+esc(new Date(a.at).toLocaleString('en-MY'))+'</td>'+
-      '<td>'+esc(String(a.user_email||'').split('@')[0])+'</td><td><b>'+esc(a.action)+'</b></td><td class="muted">'+esc(a.details)+'</td></tr>'; }).join('')+
+    r.data.map(function(a){ var meta=quotationAuditMeta(a.action); return '<tr><td class="muted">'+esc(new Date(a.at).toLocaleString('en-MY'))+'</td>'+
+      '<td>'+esc(String(a.user_email||'').split('@')[0])+'</td><td><span class="audit-action '+meta.cls+'">'+esc(meta.label)+'</span></td><td class="muted">'+esc(a.details||'No additional detail.')+'</td></tr>'; }).join('')+
     '</tbody></table>';
+}
+function quotationAuditMeta(action){
+  var clean=String(action||'Activity').trim(), parts=clean.split(/\s+/), code=(parts.shift()||'').toUpperCase(), raw=parts.join(' ')||'activity';
+  var subjects={User:'member',Users:'member',PriceBook:'price item',Malls:'mall',Services:'service',Settings:'settings',QUOTE:'quote'};
+  var verbs={CREATE:'Added',ADD:'Added',UPDATE:'Updated',EDIT:'Updated',DELETE:'Removed',REMOVE:'Removed',STATUS:'Updated',CLONE:'Cloned'};
+  var subject=code==='STATUS'?'quote status':(code==='CLONE'?'default rates':(subjects[raw]||raw.toLowerCase()));
+  return {label:(verbs[code]||code.charAt(0)+code.slice(1).toLowerCase())+' '+subject,cls:(code==='CREATE'||code==='ADD'?'created':(code==='DELETE'||code==='REMOVE'?'deleted':'updated'))};
 }
 async function loadAllowed(){
   var r = await sb.from('allowed_users').select('*').order('added_at');
-  if(r.error){ el('auList').innerHTML = '<div class="empty">'+esc(r.error.message)+'</div>'; return; }
-  el('auList').innerHTML = '<table class="grid"><thead><tr><th>Email</th><th>Name</th><th>Role</th><th></th></tr></thead><tbody>'+
-    r.data.map(function(u){ return '<tr><td>'+esc(u.email)+'</td><td>'+esc(u.full_name||'')+'</td>'+
-      '<td>'+(u.is_admin?'<span class="tag">admin</span>':'staff')+'</td>'+
-      '<td style="text-align:right"><button class="danger" style="padding:5px 12px; font-size:0.76rem;" onclick="removeAllowed(\''+esc(u.email)+'\')">Remove</button></td></tr>'; }).join('')+
-    '</tbody></table>';
+  if(r.error){ el('auList').innerHTML = '<div class="empty"><strong>Team access unavailable</strong><span>'+esc(r.error.message)+'</span></div>'; return; }
+  el('auCount').textContent=r.data.length+' member'+(r.data.length===1?'':'s');
+  el('auList').innerHTML = r.data.map(function(u){ var fallback=String(u.email||'').split('@')[0]; return '<div class="access-member"><div class="access-person"><b>'+esc(u.full_name||fallback)+'</b><span>'+esc(u.email)+'</span></div>'+
+      '<span class="access-role '+(u.is_admin?'admin':'')+'">'+(u.is_admin?'Admin':'Staff')+'</span>'+
+      '<button class="danger" style="padding:7px 10px; font-size:0.76rem;" onclick="removeAllowed(\''+esc(u.email)+'\')">Remove</button></div>'; }).join('') ||
+      '<div class="empty"><strong>No team members</strong><span>Add an approved Google account above.</span></div>';
 }
 async function addAllowed(){
   var email = el('au_email').value.trim().toLowerCase();
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showMsg('auMsg','Enter a valid email.', false); return; }
+  if(LOCAL_MOCK){ showMsg('auMsg','Local mock preview only — team access was not changed.',true); return; }
   var r = await sb.from('allowed_users').insert({ email:email, full_name:el('au_name').value.trim(),
     is_admin:el('au_admin').checked, added_by:SESSION.user.email });
   if(r.error){ showMsg('auMsg', r.error.message, false); return; }
@@ -1093,6 +1630,7 @@ async function addAllowed(){
   loadAllowed();
 }
 async function removeAllowed(email){
+  if(LOCAL_MOCK){ showMsg('auMsg','Local mock preview only — team access was not changed.',true); return; }
   if(email.toLowerCase() === (SESSION.user.email||'').toLowerCase()){ alert('You cannot remove yourself.'); return; }
   if(!confirm('Remove '+email+' from access?')) return;
   var r = await sb.from('allowed_users').delete().eq('email', email);
@@ -1110,6 +1648,7 @@ function showTab(t){
   if(t==='settings') loadSettings();
 }
 
+if(window.lucide) window.lucide.createIcons();
 start();
 </script>
 </body>

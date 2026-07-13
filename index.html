@@ -1120,15 +1120,16 @@
 	    width: calc(100% - 32px);
 	    margin: 0 auto;
 	    padding: 26px 0 18px;
-	    gap: 14px;
+	    gap: 12px;
+	    align-items: center;
 	    border-bottom: 0;
 	    cursor: pointer;
 	    justify-content: flex-start;
 	    transition: width 0.2s ease, padding 0.2s ease, justify-content 0.2s ease;
 	  }
 	  .sb-brand::after { display: none; }
-		  .sb-wordmark { width: 54px; height: auto; flex: 0 0 54px; object-fit: contain; opacity: 0.95; margin-left: 0; }
-	  .sb-identity { min-width: 0; }
+		  .sb-wordmark { width: 54px; height: 40px; flex: 0 0 54px; object-fit: contain; opacity: 0.95; margin-left: 0; align-self: center; }
+	  .sb-identity { min-width: 0; min-height: 39px; display: grid; align-content: center; gap: 0; }
 	  .sb-pname { color: #171717; font-size: 15px; line-height: 21px; font-weight: 750; letter-spacing: 0; }
 	  .sb-prole { color: #8b837b; font-size: 12.5px; line-height: 18px; font-weight: 500; }
 	  .sb-nav {
@@ -2915,6 +2916,154 @@
     html[data-theme="ops-dark"] aside,
     html[data-theme="ops-dark"] .shell.collapsed aside { background: #151d1f; box-shadow: 0 18px 44px rgba(0,0,0,0.36); }
   }
+  /* ── Executive Home + role-view switcher ─────────────────────────────── */
+  .sb-role-switch { position: relative; margin-top: 0; min-width: 0; }
+  .sb-role-toggle { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; border-radius: 7px; padding: 0; }
+  .sb-role-toggle:hover { color: var(--text); }
+  .sb-role-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .sb-role-toggle svg { width: 13px; height: 13px; flex: 0 0 auto; }
+  .sb-role-toggle .sb-prole { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sb-role-menu { position: absolute; top: calc(100% + 9px); left: -10px; z-index: 80; min-width: 210px; padding: 7px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-solid); box-shadow: var(--shadow); display: none; }
+  .sb-role-menu.open { display: grid; gap: 3px; }
+  .sb-role-choice { width: 100%; display: grid; grid-template-columns: 30px 1fr 18px; align-items: center; gap: 8px; padding: 9px; border: 0; border-radius: 8px; background: transparent; color: var(--text); text-align: left; cursor: pointer; font: 600 12px/1.3 var(--font-ui); }
+  .sb-role-choice:hover, .sb-role-choice.active { background: var(--accent-soft); }
+  .sb-role-choice > svg:first-child { width: 17px; height: 17px; color: var(--text-dim); }
+  .sb-role-choice .role-copy { display: grid; gap: 2px; }
+  .sb-role-choice .role-copy small { color: var(--text-dim); font-size: 10px; font-weight: 500; }
+  .sb-role-choice .role-check { width: 15px; height: 15px; color: var(--green); opacity: 0; }
+  .sb-role-choice.active .role-check { opacity: 1; }
+  .sb-role-switch.is-static .sb-role-toggle { cursor: default; }
+  .sb-role-switch.is-static .sb-role-toggle > svg { display: none; }
+  .shell.collapsed .sb-role-switch { display: none; }
+
+  .executive-screen { padding-bottom: 48px; }
+  .exec-hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 28px; margin-bottom: 26px; }
+  .exec-hero-copy { max-width: 820px; }
+  .exec-eyebrow { color: var(--text-dim); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+  .exec-hero h1 { font: 700 clamp(30px, 3.2vw, 48px)/1.08 var(--font-display); color: var(--text); letter-spacing: -.035em; }
+  .exec-hero p { margin-top: 10px; color: var(--text-dim); font-size: 15px; }
+  .exec-context-banner { display: none; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 14px; margin-bottom: 18px; border-radius: 10px; background: var(--blue-soft); color: var(--text); font-size: 12px; font-weight: 600; }
+  .exec-context-banner.show { display: flex; }
+  .exec-context-banner button { border: 0; background: transparent; color: var(--accent); font: inherit; cursor: pointer; }
+  .exec-data-notice { display: none; align-items: flex-start; gap: 10px; padding: 11px 13px; margin: 0 0 16px; border-radius: 10px; background: var(--amber-soft); color: var(--text-dim); font-size: 12px; }
+  .exec-data-notice.show { display: flex; }
+  .exec-data-notice svg { width: 16px; height: 16px; color: var(--amber); flex: 0 0 auto; margin-top: 1px; }
+  .exec-data-notice button { margin-left: auto; border: 0; background: transparent; color: var(--accent); font: 700 11px/1.3 var(--font-ui); cursor: pointer; white-space: nowrap; }
+  .executive-screen .op-card-head { min-height: 72px; padding: 18px 20px 14px; align-items: flex-start; }
+  .executive-screen .op-card-head h2 { font-size: 20px; line-height: 26px; }
+  .executive-screen .op-card-head p { margin-top: 2px; font-size: 13px; line-height: 18px; }
+  .exec-snapshot { margin-bottom: 18px; padding: 22px 24px 24px; }
+  .exec-snapshot-title { font: 700 20px/1.3 var(--font-display); margin-bottom: 22px; }
+  .exec-kpi-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .exec-kpi { min-width: 0; padding: 0 18px; border-left: 1px solid var(--border); background: transparent; text-align: left; color: var(--text); }
+  button.exec-kpi { border-top: 0; border-right: 0; border-bottom: 0; cursor: pointer; font: inherit; }
+  .exec-kpi:first-child { border-left: 0; padding-left: 0; }
+  .exec-kpi:last-child { padding-right: 0; }
+  .exec-kpi-label { display: flex; align-items: flex-start; min-height: 30px; max-width: 150px; color: var(--text-dim); font-size: 11px; line-height: 15px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .exec-kpi-metric { display: flex; align-items: baseline; flex-wrap: wrap; gap: 7px; min-height: 44px; margin-top: 8px; }
+  .exec-kpi-metric b { font: 700 clamp(27px, 2.2vw, 34px)/1 var(--font-display); letter-spacing: -.035em; }
+  .exec-kpi-metric em { color: var(--text-dim); font-style: normal; font-size: 12px; line-height: 16px; }
+  .exec-kpi[data-status="critical"] b { color: var(--red); }
+  .exec-kpi[data-status="warning"] b, .exec-kpi[data-status="watch"] b { color: var(--amber); }
+  .exec-kpi[data-status="clear"] b { color: var(--text); }
+  .exec-kpi[data-status="unavailable"] b { color: var(--text-dim2); }
+  .exec-main-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; margin-bottom: 18px; align-items: start; }
+  .exec-main-grid > .op-card { height: auto; }
+  .exec-decisions-card { scroll-margin-top: 28px; transition: border-color .18s ease, box-shadow .18s ease; }
+  .exec-decisions-card:focus { outline: none; }
+  .exec-decisions-card.review-focus { border-color: var(--border-strong); box-shadow: 0 0 0 3px rgba(20, 61, 74, .08); }
+  .exec-decision-count[data-state="clear"] { border-color: rgba(21, 148, 93, .2); background: var(--green-soft); color: var(--green); }
+  .exec-decision-count[data-state="unavailable"] { border-color: var(--border); background: var(--surface-2); color: var(--text-dim); }
+  .exec-decision-list { display: grid; grid-template-columns: minmax(0, 1fr); padding: 0 0 8px; }
+  .exec-decision-list > .empty-state,
+  .exec-decision-list > .dash-load { grid-column: 1 / -1; }
+  .exec-decision { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, .34fr); gap: 24px; align-items: center; }
+  .exec-decision-group { min-width: 0; padding: 10px 0 2px; }
+  .exec-decision-group + .exec-decision-group { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-strong); }
+  .exec-decision-group-head { display: flex; align-items: center; gap: 7px; width: 100%; min-height: 36px; margin: 0; padding: 9px 20px; background: transparent; color: var(--text-dim); }
+  .exec-decision-group-head::before { content:""; width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: currentColor; }
+  .exec-decision-group-head b { font-size: 11px; line-height: 16px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .exec-decision-group-head span { display: inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:999px; background:var(--surface-2); color:var(--text-dim); font-size:10px; font-weight:800; }
+  .exec-decision-group.critical .exec-decision-group-head { color: var(--red); }
+  .exec-decision-group.warning .exec-decision-group-head { color: var(--amber); }
+  .exec-decision-group.watch .exec-decision-group-head { color: var(--blue); }
+  .exec-activity-list { display: grid; padding: 0 20px 8px; }
+  .empty-state { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 104px; padding: 20px; color: var(--text); }
+  .empty-state > svg { width: 20px; height: 20px; color: var(--green); flex: 0 0 auto; }
+  .empty-state.unavailable > svg { color: var(--amber); }
+  .empty-state > div { display: grid; gap: 2px; }
+  .empty-state b { font-size: 12px; }
+  .empty-state span { color: var(--text-dim); font-size: 11px; }
+  .exec-decision { width: 100%; min-height: 76px; padding: 14px 20px; border: 0; border-top: 1px solid var(--border); background: transparent; color: var(--text); text-align: left; cursor: pointer; }
+  .exec-decision-group-head + .exec-decision { border-top: 0; }
+  .exec-decision:hover .exec-decision-title, .exec-decision:focus-visible .exec-decision-title { color: var(--accent); }
+  .exec-decision:hover { background: var(--surface-2); }
+  .exec-decision:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 6px; }
+  .exec-decision-summary { min-width: 0; display: grid; gap: 3px; }
+  .exec-decision-heading { min-width: 0; display: flex; align-items: center; gap: 8px; }
+  .exec-decision-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; line-height: 19px; transition: color .15s ease; }
+  .exec-decision-impact { display:inline-flex; align-items:center; flex:0 0 auto; min-height:23px; padding:3px 8px; border-radius:999px; background:var(--surface-2); color:var(--text-dim); font-size:11px; line-height:15px; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .exec-decision-detail { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-dim); font-size: 12px; line-height: 17px; }
+  .exec-decision-due { color: var(--text-dim); font-size: 11px; line-height: 16px; }
+  .exec-decision-action { display: flex; align-items: center; justify-content: flex-end; gap: 7px; min-width: 0; color: var(--accent); }
+  .exec-decision-action strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; line-height: 17px; }
+  .exec-decision-action svg { width: 14px; height: 14px; flex: 0 0 auto; color: var(--text-dim); }
+  .exec-pulse { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 0 20px 16px; }
+  .exec-pulse-group { min-width: 0; padding: 14px 16px 0; border-left: 1px solid var(--border); }
+  .exec-pulse-group:first-child { padding-left: 0; border-left: 0; }
+  .exec-pulse-group:last-child { padding-right: 0; }
+  .exec-pulse-group h3 { padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-dim); letter-spacing: .06em; text-transform: uppercase; }
+  .exec-pulse-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: baseline; padding: 5px 0; }
+  .exec-pulse-row span { color: var(--text-dim); font-size: 12px; line-height: 17px; }
+  .exec-pulse-row b { font: 700 14px/1.2 var(--font-display); }
+  .exec-activity-row { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 13px; align-items: center; padding: 12px 0; border-top: 1px solid var(--border); }
+  button.exec-activity-row { width: 100%; border-right: 0; border-bottom: 0; border-left: 0; background: transparent; color: var(--text); text-align: left; font: inherit; cursor: pointer; }
+  button.exec-activity-row:hover .exec-activity-copy b { color: var(--accent); }
+  .exec-activity-row:first-child { border-top: 0; }
+  .exec-activity-time, .exec-activity-actor { color: var(--text-dim); font-size: 10px; }
+  .exec-activity-copy { min-width: 0; display: grid; gap: 2px; }
+  .exec-activity-copy b { font-size: 12px; }
+  .exec-activity-copy span { color: var(--text-dim); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html[data-theme="ops-dark"] .sb-role-menu { background: #17232a; border-color: #33434b; }
+  html[data-theme="ops-dark"] .exec-context-banner { background: rgba(60, 141, 177, .12); }
+  html[data-theme="ops-dark"] .exec-decisions-card.review-focus { border-color: #607176; box-shadow: 0 0 0 3px rgba(120, 184, 205, .2); }
+  @media (max-width: 1180px) {
+    .exec-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 22px; }
+    .exec-kpi:nth-child(4) { border-left: 0; padding-left: 0; }
+  }
+  @media (max-width: 1000px) {
+    .exec-decision { grid-template-columns: minmax(0, 1fr) auto; gap: 16px; padding: 14px 20px; }
+    .exec-decision-summary { grid-column: 1; }
+    .exec-decision-action { grid-column: 2; grid-row: 1; }
+  }
+  @media (max-width: 860px) {
+    .shell.collapsed .sb-role-switch { display: block; }
+    .sb-role-menu { position: fixed; left: 18px; right: 18px; top: 106px; min-width: 0; }
+    .exec-hero { align-items: flex-start; flex-direction: column; gap: 16px; margin-bottom: 20px; }
+    .exec-hero h1 { font-size: 31px; }
+    .exec-hero p { font-size: 14px; }
+    .exec-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 20px; }
+    .exec-kpi { padding-left: 16px; padding-right: 10px; }
+    .exec-kpi:nth-child(odd) { border-left: 0; padding-left: 0; }
+    .exec-kpi:nth-child(4) { border-left: 1px solid var(--border); padding-left: 16px; }
+    .exec-kpi-label { min-height: 30px; }
+    .exec-decision-action { grid-column: 1 / -1; grid-row: auto; justify-content: flex-start; margin-top: 2px; }
+    .exec-pulse { grid-template-columns: 1fr; }
+    .exec-pulse-group { padding: 15px 0; border-top: 1px solid var(--border); border-left: 0; }
+    .exec-pulse-group:first-child { padding-top: 14px; border-top: 0; }
+    .exec-pulse-group h3 { padding-bottom: 0; border-bottom: 0; }
+    .exec-activity-row { grid-template-columns: 48px minmax(0, 1fr); }
+    .exec-activity-actor { grid-column: 2; }
+  }
+  @media (max-width: 520px) {
+    .exec-snapshot { padding: 20px 18px 22px; }
+    .executive-screen .op-card-head { padding-left: 18px; padding-right: 18px; }
+    .exec-pulse, .exec-activity-list { padding-left: 18px; padding-right: 18px; }
+    .exec-decision-group-head, .exec-decision { padding-left: 18px; padding-right: 18px; }
+    .exec-kpi-metric b { font-size: 27px; }
+    .exec-decision-group { padding-top: 14px; }
+    .exec-decision-title,.exec-decision-detail { white-space: normal; }
+  }
 </style>
 </head>
 <body>
@@ -3001,7 +3150,12 @@
 			      <img class="sb-wordmark" src="hg-logo.png" data-light-src="hg-logo.png" data-dark-src="hg-logo-light.png" alt="HG" />
 			      <div class="sb-identity">
 		        <div class="sb-pname" id="sbPname">Black Lee</div>
-		        <div class="sb-prole" id="sbProle">Operations / Site</div>
+		        <div class="sb-role-switch" id="sbRoleSwitch">
+		          <button class="sb-role-toggle" id="sbRoleToggle" type="button" onclick="toggleRoleViewMenu(event)" aria-haspopup="menu" aria-expanded="false">
+		            <span class="sb-prole" id="sbProle">Operations / Site</span><i data-lucide="chevron-down"></i>
+		          </button>
+		          <div class="sb-role-menu" id="sbRoleMenu" role="menu" aria-label="Switch Hub view"></div>
+		        </div>
 		      </div>
 		    </div>
 	    <input id="sbSearch" type="text" style="display:none" autocomplete="off" />
@@ -3059,7 +3213,11 @@
 
     <div class="views">
       <div id="homeView">
-        <section class="hub-screen is-active" id="screenHome" data-screen="home">
+	        <section class="hub-screen is-active" id="screenHome" data-screen="home">
+	          <div class="exec-context-banner" id="execContextBanner">
+	            <span>Viewing as Operations / Site with your Executive access.</span>
+	            <button type="button" onclick="switchHomeView('executive')">Return to Executive</button>
+	          </div>
 	          <header class="op-hero">
 	            <div>
 	              <div class="op-date" id="opDate">Wednesday, July 8</div>
@@ -3146,6 +3304,68 @@
           </div>
         </section>
 
+        <section class="hub-screen executive-screen" id="screenExecutiveHome" data-screen="executive-home">
+          <header class="exec-hero">
+            <div class="exec-hero-copy">
+              <div class="exec-eyebrow" id="execDate">Executive command view</div>
+              <h1 id="execGreeting">Good afternoon, Black</h1>
+              <p>Review company decisions, financial position, and operational exceptions from one trusted view.</p>
+            </div>
+            <div class="op-actions">
+              <button class="btn-primary" type="button" onclick="openToolByName('Project Revenue vs Expenses (P&L)')">Open Project P&amp;L</button>
+            </div>
+          </header>
+
+          <div class="exec-data-notice" id="execDataNotice"><i data-lucide="triangle-alert"></i><span id="execDataNoticeText"></span><button id="execNoticeRetry" type="button" onclick="loadExecutiveHome()">Retry</button><button id="execNoticeReview" type="button" onclick="openToolByName('Project Revenue vs Expenses (P&L)')">Review P&amp;L</button></div>
+
+          <section class="op-card exec-snapshot" id="executiveSnapshot">
+            <div class="exec-snapshot-title">Executive Snapshot</div>
+            <div class="exec-kpi-grid">
+              <button type="button" class="exec-kpi" id="execKpiAttention" onclick="focusExecutiveDecisions()" data-status="unavailable">
+                <span class="exec-kpi-label">Critical attention</span><span class="exec-kpi-metric"><b id="execAttention" data-skel>—</b><em id="execAttentionNote">decisions</em></span>
+              </button>
+              <button type="button" class="exec-kpi" id="execKpiQuotes" onclick="openToolByName('Smart Quotation')" data-status="unavailable">
+                <span class="exec-kpi-label">Open quotations</span><span class="exec-kpi-metric"><b id="execQuotes" data-skel>—</b><em id="execQuotesNote">draft / sent</em></span>
+              </button>
+              <button type="button" class="exec-kpi" id="execKpiProjects" onclick="openToolByName('Project Revenue vs Expenses (P&L)')" data-status="unavailable">
+                <span class="exec-kpi-label">Active projects</span><span class="exec-kpi-metric"><b id="execProjects" data-skel>—</b><em>Project P&amp;L</em></span>
+              </button>
+              <button type="button" class="exec-kpi" id="execKpiRevenue" onclick="openToolByName('Project Revenue vs Expenses (P&L)')" data-status="unavailable">
+                <span class="exec-kpi-label">Net revenue MTD</span><span class="exec-kpi-metric"><b id="execRevenue" data-skel>—</b><em>ex-SST</em></span>
+              </button>
+              <button type="button" class="exec-kpi" id="execKpiOutstanding" onclick="openToolByName('Project Revenue vs Expenses (P&L)')" data-status="unavailable">
+                <span class="exec-kpi-label">Client outstanding</span><span class="exec-kpi-metric"><b id="execOutstanding" data-skel>—</b><em>invoiced projects</em></span>
+              </button>
+              <button type="button" class="exec-kpi" id="execKpiProfit" onclick="openToolByName('Project Revenue vs Expenses (P&L)')" data-status="unavailable">
+                <span class="exec-kpi-label">Project profit MTD</span><span class="exec-kpi-metric"><b id="execProfit" data-skel>—</b><em id="execProfitNote">invoice cohort</em></span>
+              </button>
+            </div>
+          </section>
+
+          <div class="exec-main-grid">
+            <section class="op-card exec-decisions-card" id="execDecisionsCard" tabindex="-1" aria-labelledby="execDecisionsTitle">
+              <div class="op-card-head">
+                <div><h2 id="execDecisionsTitle">Needs your decision</h2><p>Critical exceptions first, routed to the tool that owns the next action</p></div>
+                <span class="count-pill exec-decision-count" id="execDecisionCount" data-state="unavailable" aria-live="polite">—</span>
+              </div>
+              <div class="exec-decision-list" id="execDecisionList" aria-live="polite" aria-busy="true"><div class="dash-load"><span class="brief-spin"></span></div></div>
+            </section>
+
+            <section class="op-card">
+              <div class="op-card-head"><div><h2>Business pulse</h2><p>Commercial, delivery, people, and assets</p></div></div>
+              <div class="exec-pulse" id="execPulse"><div class="dash-load"><span class="brief-spin"></span></div></div>
+            </section>
+          </div>
+
+          <section class="op-card">
+            <div class="op-card-head">
+              <div><h2>Executive activity</h2><p>Latest changes across the business, most recent first</p></div>
+              <button class="mini-btn" type="button" onclick="showHubScreen('activity')">View activity</button>
+            </div>
+            <div class="exec-activity-list" id="execActivityList"><div class="dash-load"><span class="brief-spin"></span></div></div>
+          </section>
+        </section>
+
         <section class="hub-screen" id="screenTools" data-screen="tools">
           <header class="screen-head">
             <div>
@@ -3203,8 +3423,8 @@
           <header class="screen-head">
             <div>
               <div class="op-date">Wednesday, July 8</div>
-              <h1>Recent activity</h1>
-              <p>Track operational updates from the audit log across site tracking, dispatch, reports, workers, scaffold, and catalog activity.</p>
+              <h1 id="activityScreenTitle">Recent activity</h1>
+              <p id="activityScreenCopy">Track operational updates from the audit log across site tracking, dispatch, reports, workers, scaffold, and catalog activity.</p>
             </div>
             <div class="op-actions">
               <button class="btn-ghost" onclick="showHubScreen('catalog')">View all tools</button>
@@ -3284,7 +3504,7 @@
       </div>
     </div>
   </div>
-  <nav class="mobile-tabbar" aria-label="Mobile navigation">
+  <nav class="mobile-tabbar" id="mobileTabbar" aria-label="Mobile navigation">
     <button class="active" data-screen-link="home" onclick="showHubScreen('home')"><i data-lucide="home"></i><span>Home</span></button>
     <button data-tool-link="Daily Readiness & Dispatch" onclick="openToolByName('Daily Readiness & Dispatch')"><i data-lucide="truck"></i><span>Dispatch</span></button>
     <button onclick="focusOpenBlockers()"><i data-lucide="bell"></i><span>Alerts</span></button>
@@ -3373,7 +3593,7 @@
     { name: "Sales & Quotation", icon: "badge-dollar-sign", color: "#f59e0b", tools: [
       { icon:"calculator", name:"Smart Quotation", type:"live",
         desc:"Supabase edition — mall-driven quote builder, PriceBook, L×H → sqft, client-type pricing. Google login, audit log, Excel & PDF export.",
-        file:"quotation-supabase.html", dark:true, cloud:{ key:"bl_quotation_url" } },
+        file:"quotation-supabase.html", dark:false, cloud:{ key:"bl_quotation_url" } },
       { icon:"ruler", name:"Hoarding Pricing System", type:"live",
         desc:"Supabase edition — metal-deck hoarding quoting, calc verified to the cent vs the HG Excel. Materials, suppliers, price history.",
         file:"hoarding-supabase.html", dark:true, cloud:{ key:"bl_hoarding_url" } },
@@ -3412,7 +3632,7 @@
         file:"subcon-invoice-supabase.html", dark:true, cloud:{ key:"bl_subcon_url" } },
       { icon:"trending-up", name:"Project Revenue vs Expenses (P&L)", type:"live",
         desc:"Supabase edition — end-to-end project financials, materials, manpower, subcon/supplier payments, RBAC roles.",
-        file:"project-pl-supabase.html", dark:true, cloud:{ key:"bl_projectpl_url" } },
+        file:"project-pl-supabase.html", dark:false, cloud:{ key:"bl_projectpl_url" } },
       { icon:"receipt", name:"Receipt Claims", type:"live",
         desc:"Supabase edition — staff submit expense claims by photo; Gemini (Edge Function) reads the receipt; saved to Storage.",
         file:"claims-supabase.html", dark:true, cloud:{ key:"bl_claims_url" } },
@@ -3472,6 +3692,15 @@
   const ROLE_MODES = {
     operations: {
       label: "Operations / Site",
+      homeScreen: "home",
+      navTools: [
+        ["Readiness & Dispatch", "truck", "Daily Readiness & Dispatch"],
+        ["Site Tracking", "map-pin", "Daily Site Tracking"],
+        ["Job Completion", "clipboard-check", "Job Completion Report"],
+        ["Workers / Permits", "user-check", "Workers Documentation & Permits"],
+        ["Scaffold / Green Tag", "badge-check", "Scaffold & Green Tag System"],
+        ["Inventory", "package", "Inventory, Tools & Purchasing"]
+      ],
       homeTools: [
         "Operations Command Center",
         "Daily Site Tracking",
@@ -3507,10 +3736,27 @@
         "Workers Documentation & Permits"
       ],
       alarmSources: ["Dispatch", "Workers", "Scaffold", "Storage"]
+    },
+    executive: {
+      label: "Executive",
+      homeScreen: "executive-home",
+      navTools: [
+        ["Project P&L", "trending-up", "Project Revenue vs Expenses (P&L)"],
+        ["Smart Quotation", "calculator", "Smart Quotation"],
+        ["Readiness & Dispatch", "truck", "Daily Readiness & Dispatch"],
+        ["Site Tracking", "map-pin", "Daily Site Tracking"],
+        ["Workers / Permits", "user-check", "Workers Documentation & Permits"],
+        ["Scaffold / Green Tag", "badge-check", "Scaffold & Green Tag System"],
+        ["Inventory", "package", "Inventory, Tools & Purchasing"]
+      ],
+      catalogTools: null,
+      alarmSources: ["Dispatch", "Workers", "Scaffold", "Storage", "Inventory", "Finance"]
     }
   };
 
   const TOOL_LABELS = {
+    "Smart Quotation": { short: "Smart Quotation", initials: "SQ", sub: "Build and issue quotations" },
+    "Project Revenue vs Expenses (P&L)": { short: "Project P&L", initials: "PL", sub: "Revenue, costs and margin" },
     "Operations Command Center": { short: "Operations Command", initials: "OC", sub: "Ops entrance and launchers" },
     "Daily Site Tracking": { short: "Daily Site Tracking", initials: "ST", sub: "Progress and daily report" },
     "Daily Readiness & Dispatch": { short: "Readiness & Dispatch", initials: "RD", sub: "Job gates and dispatch" },
@@ -3523,6 +3769,8 @@
   };
 
   const TOOL_SUBTITLES = {
+    "Smart Quotation": "Select the mall · Build the scope · Price and issue one clear quote",
+    "Project Revenue vs Expenses (P&L)": "Track project revenue, costs, outstanding payments, profit, and margin.",
     "Operations Command Center": "Black Lee · Contractor Support · 14-module AI system",
     "Daily Site Tracking": "Capture progress, blockers, and tomorrow’s plan in one shared daily board.",
     "Daily Readiness & Dispatch": "Eason checks the gates · Calvin loads the teams · Everyone sees the same board",
@@ -3565,8 +3813,79 @@
   let CURRENT = null;   // {ci, ti}
   let CURRENT_SCREEN = "home";
   let DASHBOARD_STATE = { attention: [], recent: [], activityToday: 0 };
+  let EXECUTIVE_STATE = null;
+  let USER_PROFILE = null;
+  let DEFAULT_HOME_MODE = "operations";
+  let ACTIVE_HOME_MODE = "operations";
+  let HOME_MODE_AVAILABLE = false;
   let ACTIVITY_FILTER = "all";
   let ACTIVITY_FILTERS_OPEN = false;
+  const LOCAL_MOCK_PREVIEW = ["127.0.0.1", "localhost"].includes(location.hostname) && new URLSearchParams(location.search).get("mock") === "1";
+  const EXECUTIVE_MOCK_DATA = {
+    version: "executive-home-v1",
+    as_of: "2026-07-13",
+    timezone: "Asia/Kuala_Lumpur",
+    generated_at: "2026-07-13T09:15:00+08:00",
+    role: { home_mode: "executive", finance_role: "Admin" },
+    snapshot: {
+      urgent_exceptions: { value: 2, unit: "count", status: "critical", basis: "As of 2026-07-13", source: "executive_attention" },
+      open_quotations: { value: 7, count: 7, unit: "count", status: "warning", basis: "Draft and sent", source: "quotes" },
+      active_projects: { value: 9, unit: "count", status: "clear", basis: "Project P&L", source: "hub_pl_project_financials_v1" },
+      net_revenue_mtd: { value: 286450, unit: "MYR", status: "clear", basis: "Invoice-date cohort · ex-SST", source: "hub_pl_project_financials_v1" },
+      client_outstanding: { value: 78400, count: 4, unit: "MYR", status: "warning", basis: "All invoiced tracked projects", source: "hub_pl_project_financials_v1" },
+      profit_mtd: { value: 62480, unit: "MYR", margin: 21.8, status: "clear", basis: "Projects invoiced this month", source: "hub_pl_project_financials_v1" }
+    },
+    execution: {
+      dispatch: { active: 12, ready: 7, permit_alarms: 1, at_risk: 3, blocked: 2 },
+      workforce: { expired: 2, due_7_days: 4, due_30_days: 7 },
+      scaffold_storage: { scaffold_overdue: 1, scaffold_due: 2, storage_overdue: 2, storage_due: 3 },
+      inventory: { critical: 3, warning: 6, low_stock: 9 }
+    },
+    attention: {
+      total: 4,
+      critical: 2,
+      warning: 1,
+      watch: 1,
+      items: [
+        {
+          item_key: "mock-finance-klcc-margin", domain: "finance", severity: "critical", type: "negative_profit",
+          title: "KLCC fit-out margin is below target", detail: "Current project margin is -6.4% after the latest subcontractor cost update.",
+          owner: "Black Lee", due_date: "2026-07-13", amount: 18500, source: "hub_pl_project_financials_v1", source_ref: "PL-2026-018",
+          tool_id: "Project Revenue vs Expenses (P&L)", tool_tab: null, action_label: "Review project P&L"
+        },
+        {
+          item_key: "mock-dispatch-permit", domain: "dispatch", severity: "critical", type: "permit_alarm",
+          title: "Permit approval blocks tonight's installation", detail: "Lot G-17 cannot move to dispatch until the work permit is confirmed.",
+          impact: "Dispatch blocked",
+          owner: "Eason", due_date: "2026-07-13", amount: null, source: "dsp_alarms", source_ref: "JOB-260713-04",
+          tool_id: "Daily Readiness & Dispatch", tool_tab: null, action_label: "Open dispatch"
+        },
+        {
+          item_key: "mock-workforce-expiry", domain: "workforce", severity: "warning", type: "document_expiry",
+          title: "Two worker documents expire this week", detail: "Renew access documents before the workers' next assigned shift.",
+          impact: "2 documents",
+          owner: "Calvin", due_date: "2026-07-16", amount: null, source: "wkr_alarms", source_ref: "WKR-DOC-0716",
+          tool_id: "Workers Documentation & Permits", tool_tab: null, action_label: "Open worker docs"
+        },
+        {
+          item_key: "mock-inventory-mdf", domain: "inventory", severity: "watch", type: "low_stock",
+          title: "MDF board stock reached reorder level", detail: "Eight sheets remain against a reorder threshold of ten.",
+          impact: "8 remaining",
+          owner: "Store team", due_date: "2026-07-18", amount: 2240, source: "inv_materials", source_ref: "MAT-MDF-18MM",
+          tool_id: "Inventory, Tools & Purchasing", tool_tab: null, action_label: "Open inventory"
+        }
+      ]
+    },
+    activity: [
+      { at: "2026-07-13T09:08:00+08:00", actor: "marketing@hggroup.com.my", action_code: "quote.sent", action_label: "Sent quotation", detail: "Q-2026-071 · Pavilion hoarding works", domain: "commercial", tool_id: "Smart Quotation" },
+      { at: "2026-07-13T08:46:00+08:00", actor: "lee@hggroup.com.my", action_code: "pl.cost.updated", action_label: "Updated project cost", detail: "PL-2026-018 · KLCC fit-out", domain: "finance", tool_id: "Project Revenue vs Expenses (P&L)" },
+      { at: "2026-07-13T08:21:00+08:00", actor: "eason@hggroup.com.my", action_code: "dsp.job.updated", action_label: "Updated dispatch job", detail: "JOB-260713-04 · Permit pending", domain: "dispatch", tool_id: "Daily Readiness & Dispatch" },
+      { at: "2026-07-13T07:55:00+08:00", actor: "calvin@hggroup.com.my", action_code: "wkr.document.updated", action_label: "Updated worker document", detail: "Two access documents flagged for renewal", domain: "workforce", tool_id: "Workers Documentation & Permits" },
+      { at: "2026-07-12T18:32:00+08:00", actor: "marketing@hggroup.com.my", action_code: "quote.updated", action_label: "Updated quotation", detail: "Q-2026-069 · Mid Valley reinstatement", domain: "commercial", tool_id: "Smart Quotation" }
+    ],
+    data_quality: [],
+    unavailable: []
+  };
 
   function eachTool(fn) {
     CATS.forEach((cat, ci) => cat.tools.forEach((tool, ti) => fn(tool, cat, ci, ti)));
@@ -3631,8 +3950,9 @@
       const fr = document.getElementById("toolFrame");
       fr.className = t.dark ? "dark" : "";
       const localPreview = location.hostname === "127.0.0.1" || location.hostname === "localhost";
+      const mockQuery = LOCAL_MOCK_PREVIEW ? "&mock=1" : "";
       const nextSrc = localPreview
-        ? t.file + (t.file.indexOf("?") < 0 ? "?r=" : "&r=") + Date.now()
+        ? t.file + (t.file.indexOf("?") < 0 ? "?r=" : "&r=") + Date.now() + mockQuery
         : t.file;
       if (localPreview || fr.getAttribute("src") !== t.file) fr.setAttribute("src", nextSrc);
       const tt = document.getElementById("tbTitle");
@@ -3654,7 +3974,7 @@
 
   function goHome() {
     CURRENT = null;
-    CURRENT_SCREEN = "home";
+    CURRENT_SCREEN = homeScreenForMode(ACTIVE_HOME_MODE);
     document.getElementById("toolView").style.display = "none";
     document.getElementById("homeView").style.display = "block";
     document.getElementById("toolFrame").setAttribute("src", "about:blank");
@@ -3662,14 +3982,19 @@
     document.getElementById("tbGreet").style.display = "none";
     document.getElementById("tbReload").style.display = "none";
     document.getElementById("tbPop").style.display = "none";
-    showHubScreen("home", false);
+    showHubScreen(CURRENT_SCREEN, false);
     markActive();
     closeSidebarMobile();
   }
   function showHubScreen(screen, resetTool = true) {
     if (screen === "attention") {
-      showHubScreen("home", resetTool);
-      requestAnimationFrame(focusOpenBlockers);
+      if (ACTIVE_HOME_MODE === "executive") {
+        showHubScreen("executive-home", resetTool);
+        requestAnimationFrame(focusExecutiveDecisions);
+      } else {
+        showHubScreen("home", resetTool);
+        requestAnimationFrame(focusOpenBlockers);
+      }
       return;
     }
     if (screen === "tools") screen = "catalog";
@@ -3700,7 +4025,19 @@
 	      setTimeout(() => card.classList.remove("focus-ring"), 1300);
 	    });
 	  }
-	  function scrollAttention() { focusOpenBlockers(); }
+	  function focusExecutiveDecisions() {
+	    showHubScreen("executive-home");
+	    requestAnimationFrame(() => {
+	      const card = document.getElementById("execDecisionsCard");
+	      if (!card) return;
+	      card.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "center" });
+	      card.focus({ preventScroll: true });
+	      card.classList.add("review-focus");
+	      clearTimeout(card._reviewFocusTimer);
+	      card._reviewFocusTimer = setTimeout(() => card.classList.remove("review-focus"), 1300);
+	    });
+	  }
+	  function scrollAttention() { ACTIVE_HOME_MODE === "executive" ? focusExecutiveDecisions() : focusOpenBlockers(); }
 	  function currentThemeName() {
 	    return document.documentElement.dataset.theme === "ops-dark" ? "dark" : "light";
 	  }
@@ -3803,11 +4140,14 @@
 	  function reloadTool() {
     if (!CURRENT) return;
     const t = CATS[CURRENT.ci].tools[CURRENT.ti];
-    document.getElementById("toolFrame").setAttribute("src", t.file + (t.file.indexOf("?")<0 ? "?r=" : "&r=") + Date.now());
+    const mockQuery = LOCAL_MOCK_PREVIEW ? "&mock=1" : "";
+    document.getElementById("toolFrame").setAttribute("src", t.file + (t.file.indexOf("?")<0 ? "?r=" : "&r=") + Date.now() + mockQuery);
   }
   function popOut() {
     if (!CURRENT) return;
-    window.open(CATS[CURRENT.ci].tools[CURRENT.ti].file, "_blank");
+    const file = CATS[CURRENT.ci].tools[CURRENT.ti].file;
+    const mockQuery = LOCAL_MOCK_PREVIEW ? (file.indexOf("?") < 0 ? "?mock=1" : "&mock=1") : "";
+    window.open(file + mockQuery, "_blank");
   }
 
 	  const toolFrame = document.getElementById("toolFrame");
@@ -3826,17 +4166,10 @@
   function paintIcons() { try { if (window.lucide) lucide.createIcons(); } catch (e) {} }
 
   function renderSidebar() {
-    const nav = [
-      { label: "Home", icon: "home", screen: "home" },
-      { label: "Readiness & Dispatch", icon: "truck", tool: "Daily Readiness & Dispatch" },
-      { label: "Site Tracking", icon: "map-pin", tool: "Daily Site Tracking" },
-      { label: "Job Completion", icon: "clipboard-check", tool: "Job Completion Report" },
-      { label: "Workers / Permits", icon: "user-check", tool: "Workers Documentation & Permits" },
-      { label: "Scaffold / Green Tag", icon: "badge-check", tool: "Scaffold & Green Tag System" },
-      { label: "Inventory", icon: "package", tool: "Inventory, Tools & Purchasing" },
-      { divider: true },
-      { label: "All Tools", icon: "layout-grid", screen: "catalog" }
-    ];
+    const role = ROLE_MODES[ACTIVE_HOME_MODE] || ROLE_MODES.operations;
+    const nav = [{ label: "Home", icon: "home", screen: role.homeScreen }]
+      .concat((role.navTools || []).map(item => ({ label: item[0], icon: item[1], tool: item[2] })))
+      .concat([{ divider: true }, { label: "All Tools", icon: "layout-grid", screen: "catalog" }]);
     document.getElementById("sbNav").innerHTML = nav.map(item => {
       if (item.divider) return '<div class="sb-role-divider"></div>';
       const cls = item.cls || "sb-role-link";
@@ -3845,7 +4178,71 @@
         : ' onclick="' + item.action + '"';
 	      return '<button class="' + cls + '" title="' + esc(item.label) + '"' + attrs + '><span class="ic">' + ico(item.icon) + '</span><span class="sb-label">' + esc(item.label) + '</span></button>';
     }).join("");
+    renderRoleViewSwitcher();
     paintIcons();
+  }
+
+  function allowedHomeModes() {
+    return DEFAULT_HOME_MODE === "executive" ? ["executive", "operations"] : ["operations"];
+  }
+  function homeModeStorageKey() {
+    const email = USER_PROFILE && USER_PROFILE.email ? USER_PROFILE.email.toLowerCase() : "anonymous";
+    return "hg_active_home_mode:" + email;
+  }
+  function homeScreenForMode(mode) {
+    return (ROLE_MODES[mode] || ROLE_MODES.operations).homeScreen;
+  }
+  function resolveActiveHomeMode() {
+    const allowed = allowedHomeModes();
+    let stored = "";
+    try { stored = sessionStorage.getItem(homeModeStorageKey()) || ""; } catch (e) {}
+    ACTIVE_HOME_MODE = allowed.includes(stored) ? stored : DEFAULT_HOME_MODE;
+    if (!allowed.includes(ACTIVE_HOME_MODE)) ACTIVE_HOME_MODE = "operations";
+    return ACTIVE_HOME_MODE;
+  }
+  function renderRoleViewSwitcher() {
+    const host = document.getElementById("sbRoleSwitch");
+    const menu = document.getElementById("sbRoleMenu");
+    const toggle = document.getElementById("sbRoleToggle");
+    if (!host || !menu || !toggle) return;
+    const allowed = allowedHomeModes();
+    const canSwitch = allowed.length > 1;
+    host.classList.toggle("is-static", !canSwitch);
+    toggle.disabled = !canSwitch;
+    toggle.setAttribute("aria-haspopup", canSwitch ? "menu" : "false");
+    const options = [
+      ["executive", "briefcase-business", "Executive", "Company command view"],
+      ["operations", "hard-hat", "Operations / Site", "Site delivery workspace"]
+    ].filter(item => allowed.includes(item[0]));
+    menu.innerHTML = options.map(item =>
+      '<button class="sb-role-choice' + (ACTIVE_HOME_MODE === item[0] ? ' active' : '') + '" type="button" role="menuitemradio" aria-checked="' + (ACTIVE_HOME_MODE === item[0]) + '" onclick="switchHomeView(\'' + item[0] + '\')">' +
+      ico(item[1]) + '<span class="role-copy"><span>' + esc(item[2]) + '</span><small>' + esc(item[3]) + '</small></span>' + ico("check", "role-check") + '</button>'
+    ).join("");
+    toggle.setAttribute("title", canSwitch ? "Switch Hub view" : (ROLE_MODES[ACTIVE_HOME_MODE] || ROLE_MODES.operations).label);
+  }
+  function toggleRoleViewMenu(event) {
+    if (event) event.stopPropagation();
+    if (allowedHomeModes().length < 2) return;
+    const menu = document.getElementById("sbRoleMenu");
+    const toggle = document.getElementById("sbRoleToggle");
+    const open = menu && menu.classList.toggle("open");
+    if (toggle) toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) setTimeout(() => { const first = menu.querySelector("button"); if (first) first.focus(); }, 0);
+  }
+  function closeRoleViewMenu() {
+    const menu = document.getElementById("sbRoleMenu");
+    const toggle = document.getElementById("sbRoleToggle");
+    if (menu) menu.classList.remove("open");
+    if (toggle) toggle.setAttribute("aria-expanded", "false");
+  }
+  function switchHomeView(mode) {
+    if (!allowedHomeModes().includes(mode)) { toast("That view is not assigned to this account."); return; }
+    ACTIVE_HOME_MODE = mode;
+    try { sessionStorage.setItem(homeModeStorageKey(), mode); } catch (e) {}
+    closeRoleViewMenu();
+    renderRoleView();
+    goHome();
+    toast(mode === "executive" ? "Executive view" : "Viewing as Operations / Site");
   }
 
   function markActive() {
@@ -3874,12 +4271,13 @@
   }
 
   function renderCatalog() {
-    const roleTools = new Set(ROLE_MODES.operations.catalogTools || []);
+    const configuredTools = (ROLE_MODES[ACTIVE_HOME_MODE] || ROLE_MODES.operations).catalogTools;
+    const roleTools = configuredTools ? new Set(configuredTools) : null;
     let html = "", nTools = 0, nLive = 0, nCloud = 0, nDocs = 0, nCats = 0;
     CATS.forEach((cat, ci) => {
       const visibleTools = cat.tools
         .map((tool, ti) => ({ tool, ti }))
-        .filter(({ tool }) => roleTools.has(tool.name));
+        .filter(({ tool }) => !roleTools || roleTools.has(tool.name));
       if (!visibleTools.length) return;
       nCats++;
       nTools += visibleTools.length;
@@ -4002,7 +4400,8 @@
   /* ── Wire up ── */
   document.getElementById("sbSearch").addEventListener("input", applySearch);
   document.getElementById("cloudModal").addEventListener("click", e => { if (e.target.id === "cloudModal") closeCloudManager(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape") closeCloudManager(); });
+  document.addEventListener("click", e => { if (!(e.target && e.target.closest && e.target.closest("#sbRoleSwitch"))) closeRoleViewMenu(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") { closeCloudManager(); closeRoleViewMenu(); } });
 
   /* ════════════════ COMMAND PALETTE (Ctrl+K) ════════════════ */
   let cmdkSel = 0, cmdkResults = [];
@@ -4105,7 +4504,10 @@
     SB.auth.signInWithOAuth({ provider: "google", options: { redirectTo: here } })
       .then(r => { if (r.error) gateMsg("loginMsg", r.error.message, false); });
   }
-  function hubSignOut() { if (SB) SB.auth.signOut().then(() => location.reload()); else location.reload(); }
+  function hubSignOut() {
+    try { sessionStorage.removeItem(homeModeStorageKey()); } catch (e) {}
+    if (SB) SB.auth.signOut().then(() => location.reload()); else location.reload();
+  }
 
 	  function enterApp() {
 	    ["gateConfig", "gateLogin", "gateDenied"].forEach(g => document.getElementById(g).classList.remove("show"));
@@ -4115,34 +4517,75 @@
 	    if (!RENDERED) {
       RENDERED = true;
       // render the directory FIRST and independently — nothing else may block it
-      safe("renderSidebar", renderSidebar);
-      safe("renderCatalog", renderCatalog);
       safe("renderToolTabs", renderToolTabs);
       safe("renderQuickShortcuts", renderQuickShortcuts);
-      safe("applyIdentity", applyIdentity);
       safe("runCountUps", runCountUps);
       if (IS_ADMIN) { const a = document.getElementById("tbAi"); if (a) a.style.display = "flex"; }
-      // data loads are async and must never block the UI
-      Promise.resolve().then(() => { try { loadBriefing(false); } catch (e) { console.error(e); } });
-      Promise.resolve().then(() => { try { loadDashboard(); } catch (e) { console.error(e); } });
     }
+    renderRoleView();
     goHome();
   }
   function safe(label, fn) { try { fn(); } catch (e) { console.error("[hub] " + label + " failed:", e); } }
 
+  function renderRoleView() {
+    safe("renderSidebar", renderSidebar);
+    safe("renderCatalog", renderCatalog);
+    safe("renderMobileNavigation", renderMobileNavigation);
+    safe("applyIdentity", applyIdentity);
+    const context = document.getElementById("execContextBanner");
+    if (context) context.classList.toggle("show", DEFAULT_HOME_MODE === "executive" && ACTIVE_HOME_MODE === "operations");
+    const activityTitle = document.getElementById("activityScreenTitle");
+    const activityCopy = document.getElementById("activityScreenCopy");
+    if (activityTitle) activityTitle.textContent = ACTIVE_HOME_MODE === "executive" ? "Executive activity" : "Recent activity";
+    if (activityCopy) activityCopy.textContent = ACTIVE_HOME_MODE === "executive"
+      ? "Review the latest company changes across finance, operations, people, and assets."
+      : "Track operational updates from the audit log across site tracking, dispatch, reports, workers, scaffold, and catalog activity.";
+    if (ACTIVE_HOME_MODE === "executive") {
+      Promise.resolve().then(() => loadExecutiveHome().catch(err => console.error("[hub] executive home failed:", err)));
+    } else {
+      Promise.resolve().then(() => { try { loadBriefing(false); } catch (e) { console.error(e); } });
+      Promise.resolve().then(() => { try { loadDashboard(); } catch (e) { console.error(e); } });
+    }
+    markActive();
+    paintIcons();
+  }
+
+  function renderMobileNavigation() {
+    const nav = document.getElementById("mobileTabbar");
+    if (!nav) return;
+    if (ACTIVE_HOME_MODE === "executive") {
+      nav.innerHTML =
+        '<button data-screen-link="executive-home" onclick="goHome()">' + ico("home") + '<span>Home</span></button>' +
+        '<button onclick="focusExecutiveDecisions()">' + ico("circle-alert") + '<span>Decisions</span></button>' +
+        '<button data-tool-link="Project Revenue vs Expenses (P&L)" onclick="openToolByName(\'Project Revenue vs Expenses (P&L)\')">' + ico("landmark") + '<span>Finance</span></button>' +
+        '<button data-screen-link="activity" onclick="showHubScreen(\'activity\')">' + ico("bar-chart-3") + '<span>Activity</span></button>';
+    } else {
+      nav.innerHTML =
+        '<button data-screen-link="home" onclick="goHome()">' + ico("home") + '<span>Home</span></button>' +
+        '<button data-tool-link="Daily Readiness & Dispatch" onclick="openToolByName(\'Daily Readiness & Dispatch\')">' + ico("truck") + '<span>Dispatch</span></button>' +
+        '<button onclick="focusOpenBlockers()">' + ico("bell") + '<span>Alerts</span></button>' +
+        '<button data-screen-link="activity" onclick="showHubScreen(\'activity\')">' + ico("bar-chart-3") + '<span>Activity</span></button>';
+    }
+    paintIcons();
+  }
+
   // greeting + profile from the signed-in user
 	  function applyIdentity() {
 	    const email = (SB && SESSION && SESSION.user && SESSION.user.email) || localStorage.getItem("hg_last_email") || "";
-	    const name = email ? email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : "there";
+	    const fallbackName = email ? email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : "there";
+	    const name = (USER_PROFILE && USER_PROFILE.full_name) || fallbackName;
 	    const first = name.split(" ")[0];
 	    const hr = Number(new Date().toLocaleString("en-US", { hour: "numeric", hour12: false, timeZone: "Asia/Kuala_Lumpur" }));
 	    const part = hr < 12 ? "Good morning" : hr < 18 ? "Good afternoon" : "Good evening";
 	    const setTxt = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
 	    setTxt("tbHello", part + ", " + first);
 	    setTxt("opGreeting", part + ", " + first);
+	    setTxt("execGreeting", part + ", " + first);
+	    setTxt("execDate", new Date().toLocaleDateString("en-MY", { timeZone: "Asia/Kuala_Lumpur", weekday: "long", day: "numeric", month: "long", year: "numeric" }));
 	    setTxt("sbPname", name);
-	    setTxt("sbProle", "Operations / Site");
+	    setTxt("sbProle", (ROLE_MODES[ACTIVE_HOME_MODE] || ROLE_MODES.operations).label);
 	    setTxt("sbAvatar", (first[0] || "H").toUpperCase() + (name.split(" ")[1] ? name.split(" ")[1][0].toUpperCase() : ""));
+	    renderRoleViewSwitcher();
 	  }
 
   // filter tabs on the All-Tools grid
@@ -4410,6 +4853,205 @@
     setNote("snapWorkerNote", workers ? "permit due" : "clear", workers ? "warn" : "clear");
     setKpi("snapQuotes", data.openCount || 0);
     setKpi("snapValue", formatMoneyCompact(data.openValue || 0));
+  }
+
+  function execMetricValue(metric) {
+    if (!metric || metric.status === "unavailable" || metric.value == null) return "—";
+    return metric.unit === "MYR" ? formatMoneyCompact(metric.value) : String(metric.value);
+  }
+  function setExecutiveMetric(valueId, cardId, metric, noteId, note) {
+    const value = document.getElementById(valueId);
+    const card = document.getElementById(cardId);
+    if (value) { value.textContent = execMetricValue(metric); value.classList.remove("skel"); }
+    if (card) card.dataset.status = (metric && metric.status) || "unavailable";
+    if (noteId && document.getElementById(noteId)) document.getElementById(noteId).textContent = note || "unavailable";
+  }
+  function renderExecutiveSnapshot(data) {
+    const s = (data && data.snapshot) || {};
+    setExecutiveMetric("execAttention", "execKpiAttention", s.urgent_exceptions, "execAttentionNote", s.urgent_exceptions && s.urgent_exceptions.value === 1 ? "decision" : "decisions");
+    setExecutiveMetric("execQuotes", "execKpiQuotes", s.open_quotations, "execQuotesNote", "draft / sent");
+    setExecutiveMetric("execProjects", "execKpiProjects", s.active_projects);
+    setExecutiveMetric("execRevenue", "execKpiRevenue", s.net_revenue_mtd);
+    setExecutiveMetric("execOutstanding", "execKpiOutstanding", s.client_outstanding);
+    const profit = s.profit_mtd;
+    const profitNote = profit && profit.status !== "unavailable" ? ((Number(profit.margin) || 0).toFixed(1) + "% margin") : "unavailable";
+    setExecutiveMetric("execProfit", "execKpiProfit", profit, "execProfitNote", profitNote);
+  }
+  function executiveItemOpen(index) {
+    const item = EXECUTIVE_STATE && EXECUTIVE_STATE.attention && EXECUTIVE_STATE.attention.items && EXECUTIVE_STATE.attention.items[index];
+    if (!item || !item.tool_id) return;
+    openToolByName(item.tool_id);
+  }
+  function renderExecutiveDecisions(data) {
+    const attention = (data && data.attention) || { total: 0, items: [] };
+    const items = Array.isArray(attention.items) ? attention.items : [];
+    const count = document.getElementById("execDecisionCount");
+    const list = document.getElementById("execDecisionList");
+    if (count) {
+      count.textContent = attention.total == null ? "—" : attention.total;
+      count.dataset.state = attention.total == null ? "unavailable" : (attention.total === 0 ? "clear" : "attention");
+      count.setAttribute("aria-label", attention.total == null ? "Decision count unavailable" : attention.total + " decision" + (attention.total === 1 ? "" : "s"));
+    }
+    if (!list) return;
+    list.setAttribute("aria-busy", "false");
+    if (attention.total == null) {
+      list.innerHTML = '<div class="empty-state unavailable"><i data-lucide="triangle-alert"></i><div><b>Decision data unavailable</b><span>Reconnect the Executive Home data source, then refresh this view.</span></div></div>';
+      paintIcons(); return;
+    }
+    if (!items.length) {
+      list.innerHTML = '<div class="empty-state"><i data-lucide="shield-check"></i><div><b>No executive decisions waiting</b><span>Operations and financial exceptions are clear right now.</span></div></div>';
+      paintIcons(); return;
+    }
+    const severityOrder = ["critical", "warning", "watch"];
+    const indexedItems = items.map((item, index) => ({ item, index }));
+    const groups = severityOrder.map(severity => {
+      const group = indexedItems.filter(entry => {
+        const value = String(entry.item.severity || "watch").toLowerCase();
+        return severity === "watch" ? !["critical", "warning"].includes(value) : value === severity;
+      });
+      if (!group.length) return "";
+      const rows = group.map(entry => {
+        const item = entry.item;
+        const due = item.due_date ? new Date(item.due_date + "T00:00:00").toLocaleDateString("en-MY", { day: "numeric", month: "short" }) : "No due date";
+        const amount = item.amount != null ? formatMoneyCompact(item.amount) : "";
+        const title = item.title || "Decision required";
+        const detail = item.detail || "Open the owning tool to review.";
+        const actionLabel = item.action_label || "Open owning tool";
+        const fallbackImpact = {
+          permit_alarm: "Blocked",
+          document_expiry: "Expiry",
+          low_stock: "Low stock",
+          negative_profit: "Margin risk"
+        }[item.type] || readable(item.type || "Review");
+        const impact = item.impact || amount || fallbackImpact;
+        return '<button type="button" class="exec-decision" onclick="executiveItemOpen(' + entry.index + ')" aria-label="' + esc(title + '. ' + detail + '. Impact: ' + impact + '. Due ' + due + '. ' + actionLabel) + '">' +
+          '<span class="exec-decision-summary"><span class="exec-decision-heading"><b class="exec-decision-title">' + esc(title) + '</b><span class="exec-decision-impact">' + esc(impact) + '</span></span><span class="exec-decision-detail">' + esc(detail) + '</span><span class="exec-decision-due">' + esc(item.due_date ? "Due " + due : "No due date") + '</span></span>' +
+          '<span class="exec-decision-action"><strong>' + esc(actionLabel) + '</strong><i data-lucide="chevron-right"></i></span></button>';
+      }).join("");
+      return '<section class="exec-decision-group ' + severity + '" aria-label="' + esc(readable(severity) + ' decisions') + '">' +
+        '<div class="exec-decision-group-head"><b>' + esc(readable(severity)) + '</b><span>' + group.length + '</span></div>' + rows + '</section>';
+    }).join("");
+    list.innerHTML = groups;
+    paintIcons();
+  }
+  function pulseValue(value, unavailable) { return unavailable ? "—" : String(value == null ? 0 : value); }
+  function renderExecutivePulse(data) {
+    const el = document.getElementById("execPulse"); if (!el) return;
+    const s = (data && data.snapshot) || {};
+    const x = (data && data.execution) || {};
+    const d = x.dispatch || {}, w = x.workforce || {}, ss = x.scaffold_storage || {}, inv = x.inventory || {};
+    const groups = [
+      ["Commercial", [
+        ["Open quotations", pulseValue(s.open_quotations && s.open_quotations.count, !s.open_quotations || s.open_quotations.status === "unavailable")],
+        ["Client outstanding", execMetricValue(s.client_outstanding)]
+      ]],
+      ["Operations", [
+        ["Active dispatch jobs", pulseValue(d.active, !x.dispatch)],
+        ["Ready to dispatch", pulseValue(d.ready, !x.dispatch)],
+        ["Blocked / at risk", pulseValue((d.blocked || 0) + (d.at_risk || 0), !x.dispatch)]
+      ]],
+      ["People & assets", [
+        ["Expired worker items", pulseValue(w.expired, !x.workforce)],
+        ["Scaffold / storage overdue", pulseValue((ss.scaffold_overdue || 0) + (ss.storage_overdue || 0), !x.scaffold_storage)],
+        ["Critical stock", pulseValue(inv.critical, !x.inventory)]
+      ]]
+    ];
+    el.innerHTML = groups.map(group => '<div class="exec-pulse-group"><h3>' + esc(group[0]) + '</h3>' + group[1].map(row => '<div class="exec-pulse-row"><span>' + esc(row[0]) + '</span><b>' + esc(row[1]) + '</b></div>').join("") + '</div>').join("");
+  }
+  function renderExecutiveActivity(data) {
+    const el = document.getElementById("execActivityList"); if (!el) return;
+    if (data && data.activity === null) {
+      el.innerHTML = '<div class="empty-state unavailable"><i data-lucide="triangle-alert"></i><div><b>Activity unavailable</b><span>The audit source could not be loaded.</span></div></div>';
+      paintIcons(); return;
+    }
+    const rows = data && Array.isArray(data.activity) ? data.activity.slice(0, 6) : [];
+    if (!rows.length) {
+      el.innerHTML = '<div class="empty-state"><i data-lucide="inbox"></i><div><b>No activity yet</b><span>Business updates will appear here as the team uses HG Hub.</span></div></div>';
+      paintIcons(); return;
+    }
+    el.innerHTML = rows.map((row, index) => {
+      const at = row.at ? new Date(row.at).toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", hour12: false }) : "—";
+      const actor = String(row.actor || "System").split("@")[0].replace(/[._-]/g, " ");
+      const meta = activityActionMeta({ action: row.action_code || row.action_label || "", details: row.detail || "" });
+      const tag = row.tool_id ? "button" : "div";
+      const action = row.tool_id ? ' type="button" onclick="executiveActivityOpen(' + index + ')"' : "";
+      return '<' + tag + ' class="exec-activity-row"' + action + '><span class="exec-activity-time">' + esc(at) + '</span><span class="exec-activity-copy"><b>' + esc(meta.label || readable(row.action_code)) + '</b><span>' + esc(row.detail || row.domain || "HG Hub update") + '</span></span><span class="exec-activity-actor">' + esc(actor) + '</span></' + tag + '>';
+    }).join("");
+  }
+  function executiveActivityOpen(index) {
+    const row = EXECUTIVE_STATE && Array.isArray(EXECUTIVE_STATE.activity) ? EXECUTIVE_STATE.activity[index] : null;
+    if (row && row.tool_id) openToolByName(row.tool_id);
+  }
+  function renderExecutiveNotices(data, fatalMessage) {
+    const notice = document.getElementById("execDataNotice");
+    const text = document.getElementById("execDataNoticeText");
+    if (!notice || !text) return;
+    const unavailable = data && Array.isArray(data.unavailable) ? data.unavailable : [];
+    const quality = data && Array.isArray(data.data_quality) ? data.data_quality : [];
+    const retry = document.getElementById("execNoticeRetry");
+    const review = document.getElementById("execNoticeReview");
+    const messages = [];
+    if (fatalMessage) messages.push(fatalMessage);
+    if (unavailable.length) {
+      const names = unavailable.map(item => readable(item && item.source)).filter(Boolean);
+      messages.push((names.length ? names.join(", ") : unavailable.length + " data source" + (unavailable.length === 1 ? "" : "s")) + " unavailable");
+    }
+    if (quality.length) messages.push(quality.length + " project data-quality item" + (quality.length === 1 ? "" : "s") + " to review");
+    text.textContent = messages.join(" · ");
+    notice.classList.toggle("show", messages.length > 0);
+    if (retry) retry.style.display = (fatalMessage || unavailable.length) ? "inline-flex" : "none";
+    if (review) review.style.display = quality.length ? "inline-flex" : "none";
+    paintIcons();
+  }
+  function renderExecutiveUnavailable(message) {
+    const unavailable = { value: null, status: "unavailable" };
+    renderExecutiveSnapshot({ snapshot: {
+      urgent_exceptions: unavailable, open_quotations: unavailable, active_projects: unavailable,
+      net_revenue_mtd: unavailable, client_outstanding: unavailable, profit_mtd: unavailable
+    }});
+    renderExecutiveDecisions({ attention: { total: null, items: [] } });
+    renderExecutivePulse({});
+    renderExecutiveActivity({ activity: null });
+    renderExecutiveNotices(null, message);
+  }
+  async function loadExecutiveHome() {
+    ["execAttention", "execQuotes", "execProjects", "execRevenue", "execOutstanding", "execProfit"].forEach(id => {
+      const el = document.getElementById(id); if (el) { el.textContent = "—"; el.classList.add("skel"); }
+    });
+    const decisionCount = document.getElementById("execDecisionCount");
+    const decisionList = document.getElementById("execDecisionList");
+    if (decisionCount) { decisionCount.textContent = "—"; decisionCount.dataset.state = "unavailable"; decisionCount.setAttribute("aria-label", "Loading decision count"); }
+    if (decisionList) { decisionList.setAttribute("aria-busy", "true"); decisionList.innerHTML = '<div class="dash-load"><span class="brief-spin"></span></div>'; }
+    if (LOCAL_MOCK_PREVIEW) {
+      EXECUTIVE_STATE = EXECUTIVE_MOCK_DATA;
+      renderExecutiveSnapshot(EXECUTIVE_MOCK_DATA);
+      renderExecutiveDecisions(EXECUTIVE_MOCK_DATA);
+      renderExecutivePulse(EXECUTIVE_MOCK_DATA);
+      renderExecutiveActivity(EXECUTIVE_MOCK_DATA);
+      renderActivity(EXECUTIVE_MOCK_DATA.activity.map(row => ({
+        at: row.at, user_email: row.actor, action: row.action_code, details: row.detail
+      })));
+      renderExecutiveNotices(EXECUTIVE_MOCK_DATA, "");
+      paintIcons();
+      return;
+    }
+    const result = await SB.rpc("hub_executive_home_v1", { p_as_of: null, p_attention_limit: 20 });
+    if (result.error || !result.data) {
+      renderExecutiveUnavailable(result.error && /function .* does not exist/i.test(result.error.message || "")
+        ? "Executive Home database setup is not installed yet. Run supabase/schema-executive-home.sql."
+        : "Executive data is unavailable: " + ((result.error && result.error.message) || "Unknown error"));
+      return;
+    }
+    EXECUTIVE_STATE = result.data;
+    renderExecutiveSnapshot(result.data);
+    renderExecutiveDecisions(result.data);
+    renderExecutivePulse(result.data);
+    renderExecutiveActivity(result.data);
+    renderActivity((result.data.activity || []).map(row => ({
+      at: row.at, user_email: row.actor, action: row.action_code, details: row.detail
+    })));
+    renderExecutiveNotices(result.data, "");
+    paintIcons();
   }
 
   async function loadDashboard() {
@@ -4770,9 +5412,22 @@
     const email = (session.user.email || "").toLowerCase();
     try { localStorage.setItem("hg_last_email", email); } catch (e) {}
     let allowed = null;
-    try { allowed = (await SB.from("allowed_users").select("email, is_admin").ilike("email", email).maybeSingle()).data; } catch (e) {}
+    try { allowed = (await SB.from("allowed_users").select("email, full_name, is_admin").ilike("email", email).maybeSingle()).data; } catch (e) {}
     IS_ADMIN = !!(allowed && allowed.is_admin);
     if (!allowed) { document.getElementById("deniedEmail").textContent = email; showGate("gateDenied"); return; }
+    USER_PROFILE = { email: email, full_name: allowed.full_name || "", is_admin: IS_ADMIN };
+    DEFAULT_HOME_MODE = "operations";
+    HOME_MODE_AVAILABLE = false;
+    try {
+      const modeResult = await SB.rpc("hub_my_home_mode");
+      if (!modeResult.error && ["operations", "executive"].includes(modeResult.data)) {
+        DEFAULT_HOME_MODE = modeResult.data;
+        HOME_MODE_AVAILABLE = true;
+      } else if (modeResult.error) {
+        console.warn("[hub] Executive Home schema is not installed yet:", modeResult.error.message);
+      }
+    } catch (e) { console.warn("[hub] Home mode unavailable:", e); }
+    resolveActiveHomeMode();
     enterApp();
     toast("Signed in as " + email);
   }
