@@ -4,128 +4,151 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HG Lorry Fleet — Supabase</title>
+<script>
+  (function(){
+    var media=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');
+    function preference(){
+      try { var saved=localStorage.getItem('hg_hub_theme'); if(saved==='light'||saved==='dark'||saved==='system') return saved; } catch(e) {}
+      return 'system';
+    }
+    function resolved(value){ return value==='light'||value==='dark' ? value : (media&&media.matches?'dark':'light'); }
+    function apply(value){ var theme=resolved(value); document.documentElement.dataset.theme=theme; document.documentElement.style.colorScheme=theme; }
+    apply(preference());
+    window.addEventListener('message',function(event){ if(event.data&&event.data.type==='hg-theme-change'&&(event.data.theme==='light'||event.data.theme==='dark')) apply(event.data.theme); });
+    window.addEventListener('storage',function(event){ if(event.key==='hg_hub_theme') apply(preference()); });
+    if(media){ var sync=function(){ if(preference()==='system') apply('system'); }; if(media.addEventListener) media.addEventListener('change',sync); else if(media.addListener) media.addListener(sync); }
+  })();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <style>
-  :root {
-    --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335; --border:#2a3245;
-    --text:#ffffff; --text-dim:#a0a8b8; --accent:#f59e0b; --accent-hover:#d97706;
-    --accent-soft:rgba(245,158,11,0.12); --green:#22c55e; --green-soft:rgba(34,197,94,0.15);
-    --red:#ef4444; --red-soft:rgba(239,68,68,0.15); --blue:#3b82f6; --blue-soft:rgba(59,130,246,0.15);
-    --purple:#a855f7; --purple-soft:rgba(168,85,247,0.15); --radius:14px;
-  }
+  :root { --bg:#fff; --surface:#fff; --surface-2:#f8f7f4; --surface-raised:#fff; --border:#e4ded6; --border-strong:#cfc8bd; --text:#171717; --text-dim:#817970; --accent:#143d4a; --accent-hover:#0e303b; --accent-soft:#eef6f3; --green:#15945d; --green-soft:#edf8f3; --red:#d84d4f; --red-soft:#fff1ee; --blue:#2f7fa5; --blue-soft:#eef7fb; --purple:#7067d9; --purple-soft:#f1effc; --amber:#a66b00; --amber-soft:#fff6e2; --radius:8px; --shadow:0 12px 30px rgba(23,23,23,.12); }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-         background:var(--bg); color:var(--text); line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased; }
-  .topbar { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
-            padding:16px 22px; border-bottom:1px solid var(--border); }
-  .brand-block { display:flex; align-items:center; gap:13px; }
-  .brand-logo { width:44px; height:44px; background:linear-gradient(135deg,var(--accent),var(--accent-hover));
-                border-radius:11px; display:flex; align-items:center; justify-content:center; color:#0a0e1a; font-weight:900; }
-  .brand-name { font-weight:800; font-size:1.15rem; letter-spacing:-0.01em; }
-  .brand-sub { font-size:0.78rem; color:var(--text-dim); }
-  .user-pill { background:var(--surface); border:1px solid var(--border); border-radius:999px;
-               padding:8px 14px; font-size:0.8rem; color:var(--text-dim); display:flex; align-items:center; gap:10px; }
-  .user-pill b { color:var(--text); font-weight:600; }
-  .user-pill button { background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.78rem; font-weight:700; font-family:inherit; }
-  nav { display:flex; gap:6px; padding:14px 22px 0; flex-wrap:wrap; }
-  nav button { background:var(--surface); border:1px solid var(--border); color:var(--text-dim);
-               padding:10px 16px; border-radius:10px 10px 0 0; cursor:pointer; font-family:inherit;
-               font-size:0.88rem; font-weight:600; border-bottom:none; }
-  nav button.active { background:var(--surface-2); color:var(--accent); border-color:var(--accent); }
-  main { padding:18px 22px 70px; max-width:1200px; margin:0 auto; }
-  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-          padding:22px; margin-bottom:18px; }
-  h2 { font-size:1.05rem; font-weight:800; margin-bottom:4px; }
-  h3 { font-size:0.95rem; font-weight:700; margin-bottom:4px; }
-  .sub { color:var(--text-dim); font-size:0.85rem; margin-bottom:14px; }
-  label { display:block; font-size:0.72rem; color:var(--text-dim); margin:10px 0 5px; font-weight:600;
-          text-transform:uppercase; letter-spacing:0.04em; }
-  input, select, textarea { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text);
-          border-radius:9px; padding:10px 12px; font-size:0.92rem; font-family:inherit; }
-  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); }
-  input:disabled { opacity:0.6; }
-  textarea { min-height:60px; resize:vertical; }
+  body { min-height:100vh; background:var(--bg); color:var(--text); font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  #app { padding:26px 28px 0; }
+  body.embedded #app { padding-top:0; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:0 0 20px; margin:0 0 18px; border-bottom:1px solid var(--border); }
+  body.embedded .topbar { display:none; }
+  .brand-block { display:flex; align-items:center; gap:9px; min-width:0; }
+  .brand-logo { width:24px; height:24px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; color:var(--accent); }
+  .brand-logo svg { width:21px; height:21px; stroke-width:2; }
+  .gate .brand-logo { width:60px; height:60px; margin:0 auto 16px; border-radius:12px; background:var(--accent); color:#fff; font-size:1.35rem; font-weight:800; }
+  .brand-name { display:flex; align-items:center; gap:10px; color:var(--text); font-size:1.05rem; font-weight:800; letter-spacing:-.02em; }
+  .brand-sub { margin-top:3px; color:var(--text-dim); font-size:13px; line-height:17px; }
+  .tool-live { display:inline-flex; align-items:center; height:21px; padding:0 9px; border-radius:999px; background:var(--green-soft); color:var(--green); font-size:.64rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .user-pill { display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--surface); border:1px solid var(--border); border-radius:999px; color:var(--text-dim); font-size:.78rem; }
+  .user-pill b { color:var(--accent); font-weight:700; }
+  .user-pill button { padding:0; background:none; border:0; color:var(--amber); cursor:pointer; font:inherit; font-weight:700; }
+  nav { display:flex; gap:26px; padding:0; margin:0 0 24px; overflow-x:auto; flex-wrap:nowrap; border-bottom:1px solid var(--border); scrollbar-width:none; }
+  nav::-webkit-scrollbar { display:none; }
+  nav button { flex:0 0 auto; padding:0 0 12px; background:transparent; border:0; border-bottom:3px solid transparent; border-radius:0; color:#716b65; cursor:pointer; font:inherit; font-size:.78rem; font-weight:800; white-space:nowrap; }
+  nav button:hover,nav button.active { color:var(--accent); }
+  nav button.active { border-color:var(--accent); }
+  main { max-width:none; margin:0; padding:0 0 72px; }
+  .card { margin-bottom:16px; padding:18px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:none; }
+  section[id^="tab-"] > .card { padding:0; border:0; border-radius:0; background:transparent; }
+  #tab-settings > .card { padding:0 0 20px; margin-bottom:20px; border-bottom:1px solid var(--border); }
+  #dashBoard > .card { padding:0; border:0; }
+  h2 { margin-bottom:4px; color:var(--text); font-size:1.22rem; font-weight:800; letter-spacing:-.025em; }
+  h3 { margin-bottom:4px; color:var(--text); font-size:.95rem; font-weight:800; }
+  .sub { margin-bottom:14px; color:#716b65; font-size:.86rem; }
+  .section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:14px; }
+  .dashboard-filters { display:flex; align-items:flex-end; gap:8px; flex:0 0 auto; }
+  label { display:block; margin:10px 0 5px; color:#716b65; font-size:.72rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+  input,select,textarea { width:100%; min-height:42px; padding:10px 12px; background:var(--surface); border:1px solid #ded8cf; border-radius:8px; color:var(--text); font:inherit; font-size:.88rem; }
+  select { appearance:none; -webkit-appearance:none; padding-right:42px; }
+  input:focus,select:focus,textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  input:disabled { opacity:.6; }
+  input[type="date"],input[type="month"] { color-scheme:light; }
+  input[type="checkbox"] { width:16px; min-height:16px; height:16px; padding:0; accent-color:var(--accent); }
+  textarea { min-height:68px; resize:vertical; }
   .row { display:flex; gap:14px; flex-wrap:wrap; }
   .row > div { flex:1 1 190px; min-width:0; }
-  button.primary { background:var(--accent); color:#0a0e1a; border:none; border-radius:10px; padding:11px 20px;
-                   font-weight:700; cursor:pointer; font-family:inherit; font-size:0.92rem; }
+  button.primary,button.ghost,button.danger { min-height:42px; padding:9px 12px; border-radius:8px; cursor:pointer; font:inherit; font-size:.82rem; font-weight:700; }
+  button.primary { background:var(--accent); border:1px solid var(--accent); color:#fff; }
   button.primary:hover { background:var(--accent-hover); }
-  button.primary:disabled { opacity:0.6; cursor:default; }
-  button.ghost { background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:10px;
-                 padding:11px 18px; font-weight:600; cursor:pointer; font-family:inherit; font-size:0.9rem; }
-  button.ghost:hover { border-color:var(--accent); }
-  button.danger { background:var(--red-soft); color:#f87171; border:1px solid var(--red); border-radius:10px;
-                  padding:11px 18px; font-weight:600; cursor:pointer; font-family:inherit; font-size:0.9rem; }
-  .btn-sm { padding:6px 12px !important; font-size:0.78rem !important; }
-  .msg { font-size:0.86rem; margin-top:10px; min-height:20px; opacity:0; transition:opacity 0.2s; }
-  .msg.show { opacity:1; } .msg.ok { color:var(--green); } .msg.err { color:#f87171; }
-  table.grid { width:100%; border-collapse:collapse; font-size:0.85rem; }
-  table.grid th { text-align:left; color:var(--text-dim); font-size:0.68rem; text-transform:uppercase;
-                  letter-spacing:0.05em; padding:8px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
-  table.grid td { padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
-  table.grid tr.click { cursor:pointer; } table.grid tr.click:hover td { background:var(--surface-2); }
-  .tag { display:inline-block; background:var(--surface-2); border:1px solid var(--border); border-radius:8px;
-         padding:2px 9px; font-size:0.74rem; color:var(--text-dim); }
-  .badge { display:inline-block; font-size:0.66rem; font-weight:700; border-radius:999px; padding:3px 9px;
-           text-transform:uppercase; letter-spacing:0.03em; vertical-align:middle; white-space:nowrap; }
-  .badge-green { background:var(--green-soft); color:var(--green); }
-  .badge-red   { background:var(--red-soft); color:#f87171; }
-  .badge-blue  { background:var(--blue-soft); color:#60a5fa; }
-  .badge-amber { background:var(--accent-soft); color:var(--accent); }
-  .badge-purple{ background:var(--purple-soft); color:#c084fc; }
-  .badge-grey  { background:var(--surface-2); color:var(--text-dim); }
-  .kpi-strip { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin-bottom:18px; }
-  .kpi { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; }
-  .kpi.red { border-color:var(--red); }
-  .kpi.purple { border-color:var(--purple); }
-  .kpi .num { font-size:1.4rem; font-weight:800; color:var(--accent); }
-  .kpi .lbl { font-size:0.72rem; color:var(--text-dim); margin-top:2px; }
-  .alertbox { background:var(--surface); border:1px solid var(--accent); border-radius:var(--radius); padding:16px; margin-bottom:18px; }
-  .alertbox .hd { font-weight:800; color:var(--accent); margin-bottom:10px; }
-  .alertrow { display:flex; gap:12px; align-items:center; padding:8px 0; border-top:1px solid var(--border); flex-wrap:wrap; }
-  .alertrow .grow { flex:1; min-width:150px; }
-  .spin { display:inline-block; width:14px; height:14px; border:2px solid var(--accent); border-top-color:transparent;
-          border-radius:50%; animation:s .7s linear infinite; vertical-align:middle; margin-right:6px; }
+  button.primary:disabled { opacity:.6; cursor:default; }
+  button.ghost { background:var(--surface); border:1px solid var(--border); color:var(--accent); }
+  button.ghost:hover { background:var(--surface-2); border-color:var(--border-strong); }
+  button.danger { background:var(--surface); border:1px solid #f1c8c5; color:var(--red); }
+  button.danger:hover { background:var(--red-soft); }
+  .btn-sm { min-height:34px !important; padding:7px 10px !important; font-size:.78rem !important; }
+  .msg { min-height:20px; margin-top:10px; opacity:0; color:var(--text-dim); font-size:.86rem; transition:opacity .2s; }
+  .msg.show { opacity:1; } .msg.ok { color:var(--green); } .msg.err { color:var(--red); }
+  #lorriesList,#complianceList,#fuelList,#tollList,#maintList,#incidentsList,#driversList,#summonsList,#alarmsList,#auditList { margin-top:14px !important; overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); }
+  #lorriesList:has(> table.grid),#complianceList:has(> table.grid),#fuelList:has(> table.grid),#tollList:has(> table.grid),#maintList:has(> table.grid),#incidentsList:has(> table.grid),#driversList:has(> table.grid),#summonsList:has(> table.grid),#alarmsList:has(> table.grid),#auditList:has(> table.grid) { padding:0; color:var(--text); text-align:left; }
+  table.grid { width:100%; min-width:760px; border-collapse:collapse; font-size:.82rem; }
+  table.grid th { padding:10px 12px; background:var(--surface-2); border-bottom:1px solid var(--border); color:#716b65; font-size:.66rem; font-weight:800; letter-spacing:.05em; text-align:left; text-transform:uppercase; white-space:nowrap; }
+  table.grid td { padding:11px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+  table.grid tbody tr:last-child td { border-bottom:0; }
+  table.grid tr.click { cursor:pointer; } table.grid tr.click:hover td,table.grid tr:hover td { background:var(--surface-2); }
+  #lorriesList th:nth-child(4),#lorriesList td:nth-child(4),#fuelList th:nth-child(3),#fuelList td:nth-child(3),#fuelList th:nth-child(4),#fuelList td:nth-child(4),#fuelList th:nth-child(5),#fuelList td:nth-child(5),#tollList th:nth-child(4),#tollList td:nth-child(4),#maintList th:nth-child(4),#maintList td:nth-child(4),#maintList th:nth-child(7),#maintList td:nth-child(7),#maintList th:nth-child(8),#maintList td:nth-child(8),#complianceList th:nth-child(6),#complianceList td:nth-child(6),#summonsList th:nth-child(7),#summonsList td:nth-child(7) { text-align:right; font-variant-numeric:tabular-nums; }
+  .tag { display:inline-block; padding:3px 8px; background:var(--surface-2); border:0; border-radius:999px; color:#716b65; font-size:.74rem; }
+  .access-list { margin-top:12px; border-top:1px solid var(--border); }
+  .access-row { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid var(--border); }
+  .access-row:last-child { border-bottom:0; }
+  .access-name { color:var(--text); font-weight:700; }
+  .access-email { margin-top:2px; color:var(--text-dim); font-size:.78rem; }
+  .badge { display:inline-block; padding:3px 9px; border-radius:999px; font-size:.66rem; font-weight:800; letter-spacing:.03em; text-transform:uppercase; vertical-align:middle; white-space:nowrap; }
+  .badge-green { background:var(--green-soft); color:var(--green); } .badge-red { background:var(--red-soft); color:var(--red); } .badge-blue { background:var(--blue-soft); color:var(--blue); } .badge-amber { background:var(--amber-soft); color:var(--amber); } .badge-purple { background:var(--purple-soft); color:var(--purple); } .badge-grey { background:var(--surface-2); color:var(--text-dim); }
+  .tool-snapshot { margin-bottom:18px; padding:18px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); }
+  .tool-snapshot-title { margin-bottom:14px; color:var(--text); font-size:.9rem; font-weight:800; }
+  .kpi-strip { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:0; margin:0; }
+  .kpi { min-width:0; min-height:92px; padding:8px 16px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); }
+  .kpi:nth-child(5n) { border-right:0; } .kpi:nth-last-child(-n+5) { border-bottom:0; }
+  .kpi .lbl { min-height:34px; color:#716b65; font-size:.66rem; font-weight:800; letter-spacing:.04em; line-height:17px; text-transform:uppercase; }
+  .kpi .num { color:var(--accent); font-size:1.36rem; font-weight:800; font-variant-numeric:tabular-nums; line-height:36px; white-space:nowrap; }
+  .kpi.red .num { color:var(--red); } .kpi.purple .num { color:var(--purple); }
+  .alertbox { margin-bottom:14px; padding:16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); }
+  .alertbox .hd { margin-bottom:10px; color:var(--text); font-weight:800; }
+  .alertrow { display:flex; align-items:center; gap:12px; padding:10px 0; border-top:1px solid var(--border); flex-wrap:wrap; }
+  .alertrow .grow { min-width:150px; flex:1; }
+  .spin { display:inline-block; width:14px; height:14px; margin-right:6px; border:2px solid var(--border-strong); border-top-color:var(--accent); border-radius:50%; animation:s .7s linear infinite; vertical-align:middle; }
   @keyframes s { to { transform:rotate(360deg); } }
-  .loading { text-align:center; color:var(--text-dim); padding:40px; }
-  .empty { text-align:center; color:var(--text-dim); padding:30px; font-size:0.9rem; }
-  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:flex-start;
-              justify-content:center; padding:30px 16px; overflow-y:auto; z-index:50; backdrop-filter:blur(6px); }
+  .loading,.empty { padding:28px 20px; color:var(--text-dim); font-size:.88rem; text-align:center; }
+  .empty h3 { margin-bottom:4px; color:var(--text); }
+  .modal-bg { position:fixed; inset:0; z-index:50; display:none; align-items:flex-start; justify-content:center; padding:30px 16px; overflow-y:auto; background:rgba(5,8,10,.58); backdrop-filter:blur(5px); }
   .modal-bg.show { display:flex; }
-  .modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-           max-width:820px; width:100%; padding:24px; }
-  .hide { display:none !important; }
-  .muted { color:var(--text-dim); }
-  .thumbs { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-  .thumb-item { position:relative; width:70px; height:70px; }
-  .thumb-item img { width:70px; height:70px; object-fit:cover; border-radius:8px; border:1px solid var(--border); cursor:pointer; background:var(--surface-2); }
-  .thumb-item .remove { position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%;
-        background:var(--red); color:#fff; border:none; cursor:pointer; font-size:0.7rem; line-height:1; }
+  .modal { width:100%; max-width:820px; padding:24px; background:var(--surface-raised); border:1px solid var(--border); border-radius:12px; box-shadow:0 18px 50px rgba(0,0,0,.22); }
+  .hide { display:none !important; } .muted { color:var(--text-dim); }
+  .thumbs { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; } .thumb-item { position:relative; width:70px; height:70px; } .thumb-item img { width:70px; height:70px; object-fit:cover; border:1px solid var(--border); border-radius:8px; cursor:pointer; background:var(--surface-2); } .thumb-item .remove { position:absolute; top:-8px; right:-8px; min-width:24px; height:24px; padding:0 6px; border:0; border-radius:999px; background:var(--red); color:#fff; cursor:pointer; font-size:.62rem; font-weight:700; line-height:24px; }
   .filerow { display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap; }
-  .lightbox { position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; flex-direction:column; z-index:60; padding:20px; }
-  .lightbox.show { display:flex; }
-  .lightbox img { max-width:92vw; max-height:82vh; border-radius:8px; }
-  .lightbox a { color:var(--accent); margin-top:14px; font-weight:700; }
-  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--surface-2);
-           border:1px solid var(--accent); color:var(--text); padding:12px 22px; border-radius:10px; z-index:80;
-           opacity:0; pointer-events:none; transition:opacity .2s; font-size:0.9rem; }
-  .toast.show { opacity:1; } .toast.err { border-color:var(--red); color:#f87171; }
-  .loading-overlay { position:fixed; inset:0; background:rgba(10,14,26,0.7); display:none; align-items:center; justify-content:center; flex-direction:column; z-index:90; }
-  .loading-overlay.show { display:flex; }
-  .grid-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
-  .veh-card { background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:14px; }
-  .veh-card h3 { color:var(--accent); }
-  .lineitem-row { display:flex; gap:8px; margin-bottom:8px; align-items:flex-end; flex-wrap:wrap; }
-  .lineitem-row > div { flex:1 1 90px; }
-  /* login + config gates */
-  .gate { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
-  .gate .card { max-width:430px; width:100%; text-align:center; padding:36px 30px; }
-  .gate .brand-logo { margin:0 auto 16px; width:60px; height:60px; font-size:1.4rem; }
-  .gbtn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:18px;
-          background:#fff; color:#1a1a1a; border:none; border-radius:10px; padding:13px; font-weight:700;
-          font-size:0.95rem; cursor:pointer; font-family:inherit; }
-  .gate input { text-align:left; margin-bottom:4px; }
+  .lightbox { position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center; flex-direction:column; padding:20px; background:rgba(0,0,0,.9); } .lightbox.show { display:flex; } .lightbox img { max-width:92vw; max-height:82vh; border-radius:8px; } .lightbox a { margin-top:14px; color:#b8dce2; font-weight:700; }
+  .toast { position:fixed; bottom:20px; left:50%; z-index:80; padding:12px 22px; transform:translateX(-50%); opacity:0; pointer-events:none; background:var(--surface-raised); border:1px solid var(--border); border-radius:10px; color:var(--text); box-shadow:var(--shadow); font-size:.9rem; transition:opacity .2s; } .toast.show { opacity:1; } .toast.err { border-color:#f1c8c5; color:var(--red); }
+  .loading-overlay { position:fixed; inset:0; z-index:90; display:none; align-items:center; justify-content:center; flex-direction:column; background:rgba(255,255,255,.72); } .loading-overlay.show { display:flex; }
+  .grid-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+  .veh-card { padding:16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); } .veh-card h3 { color:var(--accent); }
+  .lineitem-row { display:flex; align-items:flex-end; gap:8px; margin-bottom:8px; flex-wrap:wrap; } .lineitem-row > div { flex:1 1 90px; }
+  .hub-select { position:relative; width:100%; } .hub-select-native { position:absolute; width:1px !important; height:1px; opacity:0; pointer-events:none; }
+  button.hub-select-trigger { position:relative; display:flex; align-items:center; width:100%; min-height:42px; padding:10px 42px 10px 12px; background:var(--surface); border:1px solid #ded8cf; border-radius:8px; color:var(--text); cursor:pointer; font:inherit; font-size:.88rem; font-weight:500; text-align:left; }
+  button.hub-select-trigger:hover { border-color:var(--border-strong); } button.hub-select-trigger:focus-visible,.hub-select.open .hub-select-trigger { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  button.hub-select-trigger::after { content:""; position:absolute; top:50%; right:16px; width:7px; height:7px; transform:translateY(-68%) rotate(45deg); border-right:1.7px solid var(--accent); border-bottom:1.7px solid var(--accent); }
+  button.hub-select-trigger:disabled { opacity:.6; cursor:default; }
+  .hub-select-menu { position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:140; display:none; max-height:260px; padding:5px; overflow-y:auto; background:var(--surface-raised); border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow); }
+  .hub-select.open .hub-select-menu { display:block; } .hub-select.open-up .hub-select-menu { top:auto; bottom:calc(100% + 4px); }
+  button.hub-select-option { display:block; width:100%; min-height:40px; padding:9px 10px; background:transparent; border:0; border-radius:6px; color:var(--text); cursor:pointer; font:inherit; font-size:.86rem; line-height:1.35; text-align:left; }
+  button.hub-select-option:hover,button.hub-select-option:focus-visible,button.hub-select-option.selected { outline:none; background:var(--surface-2); color:var(--accent); } button.hub-select-option:disabled { color:var(--text-dim); cursor:default; }
+  .gate { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; } .gate .card { max-width:430px; width:100%; padding:36px 30px; text-align:center; } .gbtn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:44px; margin-top:18px; padding:13px; background:#fff; border:1px solid var(--border); border-radius:8px; color:#1a1a1a; cursor:pointer; font:inherit; font-size:.95rem; font-weight:700; } .gate input { margin-bottom:4px; text-align:left; }
+  html[data-theme="dark"] { --bg:#1b2527; --surface:#202b2d; --surface-2:#253133; --surface-raised:#2b383a; --border:#394749; --border-strong:#536164; --text:#f3f6f4; --text-dim:#b3bebb; --accent:#73aeba; --accent-hover:#82bdc8; --accent-soft:#263d42; --green:#79cca1; --green-soft:#1d352b; --red:#f08a8a; --red-soft:#3a2528; --blue:#7cb8d3; --blue-soft:#24383f; --purple:#aaa3ec; --purple-soft:#34324d; --amber:#d8a84b; --amber-soft:#382f1e; --shadow:0 16px 36px rgba(0,0,0,.35); }
+  html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea,html[data-theme="dark"] button.hub-select-trigger { background:var(--surface); border-color:var(--border-strong); }
+  html[data-theme="dark"] input[type="date"],html[data-theme="dark"] input[type="month"] { color-scheme:dark; }
+  html[data-theme="dark"] nav button { color:#aeb9b6; } html[data-theme="dark"] nav button:hover,html[data-theme="dark"] nav button.active { color:#c8e4e8; }
+  html[data-theme="dark"] table.grid th { color:#a5aeaa; } html[data-theme="dark"] .loading-overlay { background:rgba(27,37,39,.72); } html[data-theme="dark"] .gbtn { background:#f1f4f3; border-color:transparent; }
+  @media(max-width:760px){
+    #app { padding:18px 16px 0; } body.embedded #app { padding-top:0; } .topbar { align-items:flex-start; gap:12px; } .brand-sub { display:none; } .user-pill { display:none; }
+    nav { gap:22px; margin-bottom:20px; } nav button { font-size:.84rem; }
+    main { padding-bottom:48px; } section[id^="tab-"] > .card > .row:first-child { align-items:flex-start !important; flex-direction:column; } section[id^="tab-"] > .card > .row:first-child > div:last-child { width:100%; display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)); } section[id^="tab-"] > .card > .row:first-child button { width:100%; }
+    .section-head { align-items:flex-start; flex-direction:column; } .dashboard-filters { width:100%; } .dashboard-filters > div { flex:1; }
+    .tool-snapshot { padding:16px; } .kpi-strip { grid-template-columns:repeat(2,minmax(0,1fr)); } .kpi { min-height:88px; padding:8px 12px; border-right:1px solid var(--border); } .kpi:nth-child(5n) { border-right:1px solid var(--border); } .kpi:nth-child(2n) { border-right:0; } .kpi:nth-last-child(-n+5) { border-bottom:1px solid var(--border); } .kpi:nth-last-child(-n+2) { border-bottom:0; } .kpi:last-child:nth-child(odd) { grid-column:1/-1; border-right:0; }
+    .grid-cards { grid-template-columns:1fr; } .row { gap:10px; } .row > div { flex-basis:100%; } #tab-dashboard > .row > div { flex-basis:auto; } #dashMonth { width:100% !important; }
+    .hub-select-menu { max-height:min(260px,45vh); } button.hub-select-option { min-height:44px; }
+    .access-row { grid-template-columns:minmax(0,1fr) auto; } .access-row .danger { grid-column:2; }
+    .modal-bg { padding:12px; } .modal { padding:18px; } .alertrow { align-items:flex-start; } .alertrow button { margin-left:auto; }
+  }
 </style>
 </head>
 <body>
@@ -163,7 +186,7 @@
 <!-- ══════════ GATE 2 · NOT ON ALLOWLIST ══════════ -->
 <div class="gate" id="gateDenied" style="display:none;">
   <div class="card">
-    <div class="brand-logo">🔒</div>
+    <div class="brand-logo">HG</div>
     <h2>Not authorised</h2>
     <div class="sub" style="margin-top:6px;"><span id="deniedEmail"></span> is not on the access list.<br>
       Ask your admin to add you under <b>Settings → Team access</b>.</div>
@@ -175,35 +198,38 @@
 <div id="app" style="display:none;">
   <div class="topbar">
     <div class="brand-block">
-      <div class="brand-logo">HG</div>
+      <div class="brand-logo"><i data-lucide="truck" aria-hidden="true"></i></div>
       <div>
-        <div class="brand-name">Lorry Fleet</div>
-        <div class="brand-sub">Supabase edition · fuel · toll · maintenance · compliance · drivers · summons · incidents</div>
+        <div class="brand-name">Lorry Fleet <span class="tool-live">Live</span></div>
+        <div class="brand-sub">Fuel, toll, maintenance, compliance, drivers, summons, and incidents.</div>
       </div>
     </div>
     <div class="user-pill"><b id="userPill">…</b><button onclick="signOut()">Sign out</button></div>
   </div>
 
   <nav>
-    <button class="active" data-tab="dashboard" onclick="showTab('dashboard')">📊 Dashboard</button>
-    <button data-tab="lorries" onclick="showTab('lorries')">🚗 Vehicles</button>
-    <button data-tab="compliance" onclick="showTab('compliance')">🪪 Compliance</button>
-    <button data-tab="fuel" onclick="showTab('fuel')">⛽ Fuel</button>
-    <button data-tab="tollpark" onclick="showTab('tollpark')">🛣 Toll &amp; Parking</button>
-    <button data-tab="maint" onclick="showTab('maint')">🔧 Maintenance</button>
-    <button data-tab="incidents" onclick="showTab('incidents')">🚨 Incidents</button>
-    <button data-tab="drivers" onclick="showTab('drivers')">🧑‍✈️ Drivers</button>
-    <button data-tab="summons" onclick="showTab('summons')">🚓 Summons</button>
-    <button data-tab="settings" onclick="showTab('settings')">⚙ Settings</button>
+    <button class="active" data-tab="dashboard" onclick="showTab('dashboard')">Dashboard</button>
+    <button data-tab="lorries" onclick="showTab('lorries')">Vehicles</button>
+    <button data-tab="compliance" onclick="showTab('compliance')">Compliance</button>
+    <button data-tab="fuel" onclick="showTab('fuel')">Fuel</button>
+    <button data-tab="tollpark" onclick="showTab('tollpark')">Toll &amp; Parking</button>
+    <button data-tab="maint" onclick="showTab('maint')">Maintenance</button>
+    <button data-tab="incidents" onclick="showTab('incidents')">Incidents</button>
+    <button data-tab="drivers" onclick="showTab('drivers')">Drivers</button>
+    <button data-tab="summons" onclick="showTab('summons')">Summons</button>
+    <button data-tab="settings" onclick="showTab('settings')">Settings</button>
   </nav>
 
   <main>
     <section id="tab-dashboard">
-      <div class="row" style="justify-content:space-between; align-items:flex-end; margin-bottom:12px;">
-        <div style="flex:0 0 auto;"><label>Month</label><input type="month" id="dashMonth" onchange="renderDashboard()" style="width:170px;"></div>
-        <div style="flex:0 0 auto;"><button class="ghost" onclick="renderDashboard()">Refresh</button></div>
+      <div class="section-head">
+        <div><h2>Fleet overview</h2><div class="sub" style="margin:0;">Review vehicle costs, compliance, service, drivers, and open fleet action.</div></div>
+        <div class="dashboard-filters">
+          <div><label>Month</label><input type="month" id="dashMonth" onchange="renderDashboard()" style="width:170px;"></div>
+          <button class="ghost" onclick="renderDashboard()">Refresh</button>
+        </div>
       </div>
-      <div class="kpi-strip" id="kpiStrip"></div>
+      <div class="tool-snapshot"><div class="tool-snapshot-title">Fleet snapshot</div><div class="kpi-strip" id="kpiStrip"></div></div>
       <div id="dashBoard"></div>
     </section>
 
@@ -211,7 +237,7 @@
       <div class="card">
         <div class="row" style="justify-content:space-between; align-items:center;">
           <div style="flex:1;"><h2>Vehicles</h2><div class="sub" style="margin:0;">Your fleet register.</div></div>
-          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('lorries')">⬇ Export Excel</button><button class="primary" onclick="openLorryForm()">+ Vehicle</button></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('lorries')">Export Excel</button><button class="primary" onclick="openLorryForm()">+ Vehicle</button></div>
         </div>
         <div id="lorriesList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
       </div>
@@ -221,7 +247,7 @@
       <div class="card">
         <div class="row" style="justify-content:space-between; align-items:center;">
           <div style="flex:1;"><h2>Compliance — Road Tax · Insurance · Puspakom</h2><div class="sub" style="margin:0;">Renewal chain with expiry alerts.</div></div>
-          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('compliance')">⬇ Export Excel</button><button class="primary" onclick="openComplianceForm()">+ Entry</button></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('compliance')">Export Excel</button><button class="primary" onclick="openComplianceForm()">+ Entry</button></div>
         </div>
         <div id="complianceList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
       </div>
@@ -231,7 +257,7 @@
       <div class="card">
         <div class="row" style="justify-content:space-between; align-items:center;">
           <div style="flex:1;"><h2>Fuel logs</h2><div class="sub" style="margin:0;">Pump + receipt photos.</div></div>
-          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('fuel')">⬇ Export Excel</button><button class="primary" onclick="openFuelForm()">+ Fuel</button></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('fuel')">Export Excel</button><button class="primary" onclick="openFuelForm()">+ Fuel</button></div>
         </div>
         <div id="fuelList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
       </div>
@@ -241,7 +267,7 @@
       <div class="card">
         <div class="row" style="justify-content:space-between; align-items:center;">
           <div style="flex:1;"><h2>Toll &amp; Parking</h2><div class="sub" style="margin:0;">Toll + parking entries with receipts.</div></div>
-          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('toll')">⬇ Export Excel</button><button class="primary" onclick="openTollForm()">+ Toll / Parking</button></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('toll')">Export Excel</button><button class="primary" onclick="openTollForm()">+ Toll / Parking</button></div>
         </div>
         <div id="tollList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
       </div>
@@ -251,7 +277,7 @@
       <div class="card">
         <div class="row" style="justify-content:space-between; align-items:center;">
           <div style="flex:1;"><h2>Maintenance &amp; Repair</h2><div class="sub" style="margin:0;">Line items, per-line tax, before/after photos, payment slips.</div></div>
-          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('maint')">⬇ Export Excel</button><button class="primary" onclick="openMaintForm()">+ Maintenance</button></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('maint')">Export Excel</button><button class="primary" onclick="openMaintForm()">+ Maintenance</button></div>
         </div>
         <div id="maintList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
       </div>
@@ -261,7 +287,7 @@
       <div class="card">
         <div class="row" style="justify-content:space-between; align-items:center;">
           <div style="flex:1;"><h2>Incidents</h2><div class="sub" style="margin:0;">Accidents · theft · vandalism · special cases.</div></div>
-          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('incidents')">⬇ Export Excel</button><button class="primary" onclick="openIncidentForm()">+ Incident</button></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('incidents')">Export Excel</button><button class="primary" onclick="openIncidentForm()">+ Incident</button></div>
         </div>
         <div id="incidentsList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
       </div>
@@ -271,7 +297,7 @@
       <div class="card">
         <div class="row" style="justify-content:space-between; align-items:center;">
           <div style="flex:1;"><h2>Drivers</h2><div class="sub" style="margin:0;">Licence + GDL expiry, docs.</div></div>
-          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('drivers')">⬇ Export Excel</button><button class="primary" onclick="openDriverForm()">+ Driver</button></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('drivers')">Export Excel</button><button class="primary" onclick="openDriverForm()">+ Driver</button></div>
         </div>
         <div id="driversList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
       </div>
@@ -281,7 +307,7 @@
       <div class="card">
         <div class="row" style="justify-content:space-between; align-items:center;">
           <div style="flex:1;"><h2>Traffic Summonses</h2><div class="sub" style="margin:0;">Discount-deadline logic on payment.</div></div>
-          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('summons')">⬇ Export Excel</button><button class="primary" onclick="openSummonForm()">+ Summon</button></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportExcel('summons')">Export Excel</button><button class="primary" onclick="openSummonForm()">+ Summon</button></div>
         </div>
         <div id="summonsList" class="loading" style="margin-top:14px;"><span class="spin"></span> Loading…</div>
       </div>
@@ -340,7 +366,7 @@
 
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <img id="lightboxImg" onclick="event.stopPropagation()" />
-  <a id="lightboxOpen" href="#" target="_blank" onclick="event.stopPropagation()">Open full ↗</a>
+  <a id="lightboxOpen" href="#" target="_blank" onclick="event.stopPropagation()">Open full image</a>
 </div>
 <div class="loading-overlay" id="loadingOverlay"><div class="spin" style="width:34px;height:34px;border-width:4px;"></div><div id="loadingMsg" style="margin-top:14px;color:var(--text-dim);">Working…</div></div>
 <div class="toast" id="toast">Saved!</div>
@@ -506,7 +532,7 @@ async function renderThumbs(thumbsId, hid){
   for(var i=0;i<ids.length;i++){
     var u = await signedUrl(ids[i]);
     parts.push('<div class="thumb-item"><img src="'+esc(u)+'" onclick="lightboxPath(\''+esc(ids[i])+'\')"/>'+
-      '<button type="button" class="remove" onclick="removeThumb(\''+thumbsId+'\',\''+hid+'\','+i+')">✕</button></div>');
+      '<button type="button" class="remove" onclick="removeThumb(\''+thumbsId+'\',\''+hid+'\','+i+')">Remove</button></div>');
   }
   host.innerHTML = parts.join('');
 }
@@ -540,7 +566,7 @@ function listOutstanding(){
   state.summons.forEach(function(s){ if(isSummonOutstanding(s)) out.push({kind:'summon',id:s.id,plate:s.plate,label:s.summon_number,amount:summonOutstandingAmt(s)}); });
   return out;
 }
-var COMP_TYPE_LBL = { roadtax:{label:'Road Tax',icon:'🪪'}, insurance:{label:'Insurance',icon:'🛡'}, puspakom:{label:'Puspakom',icon:'🔍'} };
+var COMP_TYPE_LBL = { roadtax:{label:'Road Tax'}, insurance:{label:'Insurance'}, puspakom:{label:'Puspakom'} };
 function urgencyBadge(days){
   if(days==null) return '';
   if(days<0) return '<span class="badge badge-red">EXPIRED '+Math.abs(days)+'d</span>';
@@ -575,7 +601,7 @@ function renderDashboard(){
 
   el('kpiStrip').innerHTML =
     kpi(activeCount,'Active Vehicles')+kpi(rm(fuelRM),'Fuel — '+ym)+kpi(rm(tollRM),'Toll — '+ym)+
-    kpi(rm(parkRM),'Parking — '+ym,'purple')+kpi(rm(maintRM),'Maintenance — '+ym)+
+    kpi(rm(parkRM),'Parking — '+ym)+kpi(rm(maintRM),'Maintenance — '+ym)+
     kpi(serviceDue,'Service Due Now',serviceDue?'red':'')+kpi(serviceByDate,'Service Date ≤30d',serviceByDate?'red':'')+
     kpi(compAlerts.roadtax,'Road Tax — Action',compAlerts.roadtax?'red':'')+kpi(compAlerts.insurance,'Insurance — Action',compAlerts.insurance?'red':'')+
     kpi(compAlerts.puspakom,'Puspakom — Action',compAlerts.puspakom?'red':'')+
@@ -585,11 +611,11 @@ function renderDashboard(){
     kpi(sumOut.length+' · '+rm(sumRM),'Outstanding Summons',sumOut.length?'red':'');
 
   var board=el('dashBoard');
-  if(!state.lorries.length){ board.innerHTML='<div class="empty"><h3>No vehicles yet lah.</h3><p>Go to 🚗 Vehicles and add your fleet.</p></div>'; return; }
+  if(!state.lorries.length){ board.innerHTML='<div class="empty"><h3>No vehicles recorded</h3><p>Open Vehicles to start the fleet register.</p></div>'; return; }
   board.innerHTML = complianceAlertBanner()+outstandingBanner(outstanding,outTotal)+licenceBanner()+summonBanner(sumOut)+
     '<div class="card"><h2>Fleet</h2><div class="grid-cards" style="margin-top:12px;">'+state.lorries.map(vehCard).join('')+'</div></div>';
 }
-function kpi(num,lbl,cls){ return '<div class="kpi '+(cls||'')+'"><div class="num">'+num+'</div><div class="lbl">'+esc(lbl)+'</div></div>'; }
+function kpi(num,lbl,cls){ return '<div class="kpi '+(cls||'')+'"><div class="lbl">'+esc(lbl)+'</div><div class="num">'+num+'</div></div>'; }
 function vehCard(l){
   var cur=maxOdoFor(l.plate), nk=latestNextServiceKm(l.plate);
   var fuelC=state.fuel.filter(function(f){return f.plate===l.plate;}).length;
@@ -604,14 +630,14 @@ function complianceAlertBanner(){
   state.compliance.forEach(function(c){ if(!(c.status==='active'||c.status===''))return; var d=daysUntil(c.expiry_date); if(d!=null&&d<=30) items.push({c:c,d:d}); });
   if(!items.length) return '';
   items.sort(function(a,b){return a.d-b.d;});
-  return alertBox('🪪 COMPLIANCE — '+items.length+' expiring/expired', items.map(function(x){
+  return alertBox('Compliance · '+items.length+' expiring or expired', items.map(function(x){
     var t=(COMP_TYPE_LBL[x.c.type]||{}).label||x.c.type;
     return alertRow(urgencyBadge(x.d), '<strong>'+esc(x.c.plate)+'</strong> · '+t+' · expires '+fmtDate(x.c.expiry_date), 'openComplianceForm(\''+x.c.id+'\')');
   }).join(''));
 }
 function outstandingBanner(list,total){
   if(!list.length) return '';
-  return alertBox('💰 OUTSTANDING PAYMENTS — '+rm(total)+' · '+list.length+' bill(s)', list.map(function(x){
+  return alertBox('Outstanding payments · '+rm(total)+' · '+list.length+' bill(s)', list.map(function(x){
     var open = x.kind==='compliance'?'openComplianceForm':x.kind==='maint'?'openMaintForm':'openSummonForm';
     return alertRow('<span class="badge badge-amber">'+x.kind+'</span>', '<strong>'+esc(x.plate||'—')+'</strong> · '+esc(x.label)+' · '+rm(x.amount), open+'(\''+x.id+'\')');
   }).join('')+'<div style="margin-top:10px;"><button class="primary btn-sm" onclick="openBulkPay()">Bulk mark-paid →</button></div>');
@@ -622,14 +648,14 @@ function licenceBanner(){
     [['license_expiry_date','Licence'],['gdl_expiry_date','GDL']].forEach(function(p){ var x=daysUntil(d[p[0]]); if(x!=null&&x<=30) items.push({d:d,k:p[1],days:x,date:d[p[0]]}); }); });
   if(!items.length) return '';
   items.sort(function(a,b){return a.days-b.days;});
-  return alertBox('🪪 LICENCE EXPIRING — '+items.length, items.map(function(x){
+  return alertBox('Licence expiring · '+items.length, items.map(function(x){
     return alertRow(urgencyBadge(x.days)+' <span class="badge badge-grey">'+x.k+'</span>', '<strong>'+esc(x.d.name)+'</strong>'+(x.d.assigned_plate?' · '+esc(x.d.assigned_plate):'')+' · expires '+fmtDate(x.date), 'openDriverForm(\''+x.d.id+'\')');
   }).join(''));
 }
 function summonBanner(list){
   var items=list.filter(function(s){var d=daysUntil(s.payment_deadline); return d!=null&&d<=14;});
   if(!items.length) return '';
-  return alertBox('🚓 SUMMONS DEADLINE — '+items.length, items.map(function(s){
+  return alertBox('Summons deadline · '+items.length, items.map(function(s){
     return alertRow(urgencyBadge(daysUntil(s.payment_deadline)), '<strong>'+esc(s.plate||'—')+'</strong> · '+esc(s.summon_number)+' · '+rm(summonOutstandingAmt(s))+' · by '+fmtDate(s.payment_deadline), 'openSummonForm(\''+s.id+'\')');
   }).join(''));
 }
@@ -653,7 +679,7 @@ function renderLorries(){
 function openLorryForm(id){
   var l = id ? state.lorries.find(function(x){return x.id===id;}) : {};
   el('formBody').innerHTML =
-    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' vehicle</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' vehicle</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">Close</button></div>'+
     '<input type="hidden" id="lf_id" value="'+esc(l.id||'')+'">'+
     '<div class="row"><div><label>Plate *</label><input id="lf_plate" value="'+esc(l.plate||'')+'"></div>'+
       '<div><label>Vehicle code</label><input id="lf_code" value="'+esc(l.vehicle_code||'')+'"></div></div>'+
@@ -693,13 +719,13 @@ function renderFuel(){
     return '<tr class="click" onclick="openFuelForm(\''+f.id+'\')"><td>'+fmtDate(f.date)+'</td><td><b>'+esc(f.plate)+'</b></td>'+
       '<td>'+fmtKm(f.odometer)+'</td><td>'+(f.litres!=null?esc(f.litres):'—')+'</td><td>'+rm(f.amount_rm)+'</td>'+
       '<td>'+esc(f.station)+'</td><td>'+esc(f.paid_by)+'</td><td>'+esc(f.driver)+'</td>'+
-      '<td>'+((f.pump_photo_path||f.receipt_photo_path)?'📎':'')+'</td></tr>';
+      '<td>'+((f.pump_photo_path||f.receipt_photo_path)?'<span class="tag">Files</span>':'')+'</td></tr>';
   }));
 }
 function openFuelForm(id){
   var f = id ? state.fuel.find(function(x){return x.id===id;}) : {date:todayISO()};
   el('formBody').innerHTML =
-    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' fuel</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' fuel</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">Close</button></div>'+
     '<input type="hidden" id="ff_id" value="'+esc(f.id||'')+'">'+
     '<div class="row"><div><label>Date *</label><input type="date" id="ff_date" value="'+esc(f.date||todayISO())+'"></div>'+
       '<div><label>Plate *</label><select id="ff_plate">'+plateOptions(f.plate)+'</select></div></div>'+
@@ -744,13 +770,13 @@ function renderToll(){
     var lb=t.type==='parking'?'<span class="badge badge-purple">Parking</span>':'<span class="badge badge-blue">Toll</span>';
     return '<tr class="click" onclick="openTollForm(\''+t.id+'\')"><td>'+fmtDate(t.date)+'</td><td><b>'+esc(t.plate)+'</b></td>'+
       '<td>'+lb+'</td><td>'+rm(t.amount_rm)+'</td><td>'+esc(t.location)+'</td><td>'+esc(t.paid_by)+'</td>'+
-      '<td>'+esc(t.driver)+'</td><td>'+esc(t.job_ref)+'</td><td>'+(t.receipt_photo_path?'📎':'')+'</td></tr>';
+      '<td>'+esc(t.driver)+'</td><td>'+esc(t.job_ref)+'</td><td>'+(t.receipt_photo_path?'<span class="tag">Files</span>':'')+'</td></tr>';
   }));
 }
 function openTollForm(id){
   var t = id ? state.toll.find(function(x){return x.id===id;}) : {date:todayISO(),type:'toll'};
   el('formBody').innerHTML =
-    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' toll / parking</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' toll / parking</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">Close</button></div>'+
     '<input type="hidden" id="tf_id" value="'+esc(t.id||'')+'">'+
     '<div class="row"><div><label>Date *</label><input type="date" id="tf_date" value="'+esc(t.date||todayISO())+'"></div>'+
       '<div><label>Plate *</label><select id="tf_plate">'+plateOptions(t.plate)+'</select></div>'+
@@ -798,7 +824,7 @@ function renderMaint(){
       '<td>'+esc(m.workshop)+'</td><td>'+rm(m.cost_rm)+'</td>'+
       '<td>'+(paid?'<span class="badge badge-green">paid</span>':(maintOutstanding(m)>0?'<span class="badge badge-amber">'+rm(maintOutstanding(m))+'</span>':'—'))+'</td>'+
       '<td>'+(m.next_service_km?fmtKm(m.next_service_km):(m.next_service_date?fmtDate(m.next_service_date):'—'))+'</td>'+
-      '<td>'+(hasAnyDoc(m,['receipt_photo_paths','before_photo_paths','after_photo_paths','payment_slip_paths'])?'📎':'')+'</td></tr>';
+      '<td>'+(hasAnyDoc(m,['receipt_photo_paths','before_photo_paths','after_photo_paths','payment_slip_paths'])?'<span class="tag">Files</span>':'')+'</td></tr>';
   }));
 }
 function hasAnyDoc(row, fields){ return fields.some(function(f){ var a=row[f]; return Array.isArray(a)&&a.length; }); }
@@ -807,7 +833,7 @@ function maintLineRow(li){ li=li||{}; return '<div class="lineitem-row" data-lin
   '<div><label>Qty</label><input class="ml-qty" type="number" value="'+esc(li.qty||'')+'" oninput="recalcMaint()"></div>'+
   '<div><label>Rate</label><input class="ml-rate" type="number" value="'+esc(li.rate||'')+'" oninput="recalcMaint()"></div>'+
   '<div><label>Tax %</label><input class="ml-tax" type="number" value="'+esc(li.tax||'')+'" oninput="recalcMaint()"></div>'+
-  '<div style="flex:0 0 auto;"><label>&nbsp;</label><button class="ghost btn-sm" onclick="this.closest(\'.lineitem-row\').remove();recalcMaint();">✕</button></div></div>'; }
+  '<div style="flex:0 0 auto;"><label>&nbsp;</label><button class="ghost btn-sm" onclick="this.closest(\'.lineitem-row\').remove();recalcMaint();">Remove</button></div></div>'; }
 function addMaintLine(){ var h=el('mf_lines'); h.insertAdjacentHTML('beforeend', maintLineRow({})); }
 function collectMaintLines(){
   return Array.prototype.map.call(document.querySelectorAll('#mf_lines .lineitem-row'), function(r){
@@ -826,7 +852,7 @@ function openMaintForm(id){
   var m = id ? state.maint.find(function(x){return x.id===id;}) : {date:todayISO(),type:'service'};
   var lines = Array.isArray(m.line_items)?m.line_items:[];
   el('formBody').innerHTML =
-    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' maintenance</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' maintenance</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">Close</button></div>'+
     '<input type="hidden" id="mf_id" value="'+esc(m.id||'')+'">'+
     '<div class="row"><div><label>Date *</label><input type="date" id="mf_date" value="'+esc(m.date||todayISO())+'"></div>'+
       '<div><label>Plate *</label><select id="mf_plate">'+plateOptions(m.plate)+'</select></div>'+
@@ -882,17 +908,17 @@ var COMP_STATUS=['active','renewed','cancelled','lost','archived'];
 function renderCompliance(){
   el('complianceList').innerHTML = tbl(['Type','Plate','Status','Issued','Expiry','Amount','Insurer / Agency',''], state.compliance.map(function(c){
     var t=(COMP_TYPE_LBL[c.type]||{}); var d=daysUntil(c.expiry_date);
-    return '<tr class="click" onclick="openComplianceForm(\''+c.id+'\')"><td>'+(t.icon||'')+' '+(t.label||esc(c.type))+'</td>'+
+    return '<tr class="click" onclick="openComplianceForm(\''+c.id+'\')"><td>'+(t.label||esc(c.type))+'</td>'+
       '<td><b>'+esc(c.plate)+'</b></td><td>'+esc(c.status)+' '+(c.status==='active'?urgencyBadge(d):'')+'</td>'+
       '<td>'+fmtDate(c.issued_date)+'</td><td>'+fmtDate(c.expiry_date)+'</td><td>'+rm(c.amount_rm)+'</td>'+
-      '<td>'+esc(c.insurer||c.agency_name||'')+'</td><td>'+(hasAnyDoc(c,['main_doc_paths','receipt_paths','agent_invoice_paths','payment_slip_paths'])?'📎':'')+'</td></tr>';
+      '<td>'+esc(c.insurer||c.agency_name||'')+'</td><td>'+(hasAnyDoc(c,['main_doc_paths','receipt_paths','agent_invoice_paths','payment_slip_paths'])?'<span class="tag">Files</span>':'')+'</td></tr>';
   }));
 }
 function openComplianceForm(id, renewOf){
   var base = id ? state.compliance.find(function(x){return x.id===id;}) : {};
   var c = renewOf ? { type:renewOf.type, plate:renewOf.plate, insurer:renewOf.insurer, policy_number:renewOf.policy_number, agency_name:renewOf.agency_name, prev_id:renewOf.id } : base;
   el('formBody').innerHTML =
-    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(renewOf?'Renew':(id?'Edit':'Add'))+' compliance</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(renewOf?'Renew':(id?'Edit':'Add'))+' compliance</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">Close</button></div>'+
     '<input type="hidden" id="cf_id" value="'+esc((id&&!renewOf)?c.id:'')+'"><input type="hidden" id="cf_prev" value="'+esc(c.prev_id||'')+'">'+
     '<div class="row"><div><label>Type *</label><select id="cf_type">'+opts([['roadtax','Road Tax'],['insurance','Insurance'],['puspakom','Puspakom']],c.type||'roadtax')+'</select></div>'+
       '<div><label>Plate *</label><select id="cf_plate">'+plateOptions(c.plate)+'</select></div>'+
@@ -960,13 +986,13 @@ function renderDrivers(){
       '<td>'+fmtDate(d.license_expiry_date)+' '+((d.status==='active'||d.status==='on-leave')&&lu!=null&&lu<=30?urgencyBadge(lu):'')+'</td>'+
       '<td>'+fmtDate(d.gdl_expiry_date)+' '+((d.status==='active'||d.status==='on-leave')&&gu!=null&&gu<=30?urgencyBadge(gu):'')+'</td>'+
       '<td>'+esc(d.status)+'</td><td>'+esc(d.assigned_plate)+'</td>'+
-      '<td>'+(hasAnyDoc(d,['license_doc_paths','ic_doc_paths'])||d.photo_path?'📎':'')+'</td></tr>';
+      '<td>'+(hasAnyDoc(d,['license_doc_paths','ic_doc_paths'])||d.photo_path?'<span class="tag">Files</span>':'')+'</td></tr>';
   }));
 }
 function openDriverForm(id){
   var d = id ? state.drivers.find(function(x){return x.id===id;}) : {status:'active',category:'in-house'};
   el('formBody').innerHTML =
-    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' driver</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' driver</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">Close</button></div>'+
     '<input type="hidden" id="df_id" value="'+esc(d.id||'')+'">'+
     '<div class="row"><div><label>Name *</label><input id="df_name" value="'+esc(d.name||'')+'"></div>'+
       '<div><label>IC number</label><input id="df_ic" value="'+esc(d.ic_number||'')+'"></div>'+
@@ -1031,13 +1057,13 @@ function renderSummons(){
       '<td>'+esc(s.issued_by)+'</td><td>'+esc(s.plate)+'</td><td>'+esc(s.driver_name)+'</td><td>'+esc(s.offence_type)+'</td>'+
       '<td>'+rm(s.fine_rm)+'</td><td>'+esc(s.status)+'</td>'+
       '<td>'+fmtDate(s.payment_deadline)+' '+(isSummonOutstanding(s)&&d!=null&&d<=14?urgencyBadge(d):'')+'</td>'+
-      '<td>'+(hasAnyDoc(s,['payment_proof_paths','summon_copy_paths'])?'📎':'')+'</td></tr>';
+      '<td>'+(hasAnyDoc(s,['payment_proof_paths','summon_copy_paths'])?'<span class="tag">Files</span>':'')+'</td></tr>';
   }));
 }
 function openSummonForm(id){
   var s = id ? state.summons.find(function(x){return x.id===id;}) : {issued_date:todayISO(),status:'outstanding',responsible_party:'company'};
   el('formBody').innerHTML =
-    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' summon</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' summon</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">Close</button></div>'+
     '<input type="hidden" id="sf_id" value="'+esc(s.id||'')+'">'+
     '<div class="row"><div><label>Summon number *</label><input id="sf_number" value="'+esc(s.summon_number||'')+'"></div>'+
       '<div><label>Issued date *</label><input type="date" id="sf_issued" value="'+esc(s.issued_date||todayISO())+'"></div>'+
@@ -1108,13 +1134,13 @@ function renderIncidents(){
       '<td>'+esc(i.type)+'</td><td>'+esc(i.driver_name)+'</td><td>'+esc(i.fault_party)+'</td>'+
       '<td>'+esc(i.police_report_status)+'</td><td>'+esc(i.claim_status)+'</td>'+
       '<td>'+(open?'<span class="badge badge-red">'+esc(i.status)+'</span>':'<span class="badge badge-green">'+esc(i.status)+'</span>')+'</td>'+
-      '<td>'+(hasAnyDoc(i,['incident_photo_paths','police_report_paths','quotation_paths','compensation_paid_paths','compensation_received_paths'])?'📎':'')+'</td></tr>';
+      '<td>'+(hasAnyDoc(i,['incident_photo_paths','police_report_paths','quotation_paths','compensation_paid_paths','compensation_received_paths'])?'<span class="tag">Files</span>':'')+'</td></tr>';
   }));
 }
 function openIncidentForm(id){
   var i = id ? state.incidents.find(function(x){return x.id===id;}) : {date:todayISO(),type:'accident',status:'open',fault_party:'n-a',collision_type:'none',towed:'none',injury_action:'none',police_report_status:'not-filed',claim_status:'none',repair_action:'not-required'};
   el('formBody').innerHTML =
-    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' incident</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">✕</button></div>'+
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>'+(id?'Edit':'Add')+' incident</h2><button class="ghost btn-sm" onclick="closeModal(\'formModal\')">Close</button></div>'+
     '<input type="hidden" id="if_id" value="'+esc(i.id||'')+'">'+
     '<div class="row"><div><label>Date *</label><input type="date" id="if_date" value="'+esc(i.date||todayISO())+'"></div>'+
       '<div><label>Time</label><input id="if_time" value="'+esc(i.time||'')+'" placeholder="e.g. 14:30"></div>'+
@@ -1225,7 +1251,7 @@ async function deleteRow(table, id, kind, label){
 function openBulkPay(){
   var list = listOutstanding();
   el('bulkBody').innerHTML =
-    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>Bulk mark-paid</h2><button class="ghost btn-sm" onclick="closeModal(\'bulkModal\')">✕</button></div>'+
+    '<div class="row" style="justify-content:space-between;align-items:center;"><h2>Bulk mark-paid</h2><button class="ghost btn-sm" onclick="closeModal(\'bulkModal\')">Close</button></div>'+
     '<div class="sub">Tick the bills this one slip covers. Summons use the discounted amount if the deadline has not passed.</div>'+
     (list.length? '<table class="grid"><thead><tr><th></th><th>Kind</th><th>Plate</th><th>Ref</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
       list.map(function(x,idx){ return '<tr><td><input type="checkbox" class="bp-chk" style="width:auto;" data-kind="'+x.kind+'" data-id="'+x.id+'" data-amt="'+x.amount+'" onchange="bulkSum()"></td>'+
@@ -1284,10 +1310,12 @@ async function loadAudit(){
 async function loadAllowed(){
   var r = await sb.from('allowed_users').select('*').order('added_at');
   if(r.error){ el('auList').innerHTML='<div class="empty">'+esc(r.error.message)+'</div>'; return; }
-  el('auList').innerHTML = '<table class="grid"><thead><tr><th>Email</th><th>Name</th><th>Role</th><th></th></tr></thead><tbody>'+
-    r.data.map(function(u){ return '<tr><td>'+esc(u.email)+'</td><td>'+esc(u.full_name||'')+'</td>'+
-      '<td>'+(u.is_admin?'<span class="tag">admin</span>':'staff')+'</td>'+
-      '<td style="text-align:right"><button class="danger btn-sm" onclick="removeAllowed(\''+esc(u.email)+'\')">Remove</button></td></tr>'; }).join('')+'</tbody></table>';
+  if(!r.data.length){ el('auList').innerHTML='<div class="empty">No team members have access.</div>'; return; }
+  el('auList').innerHTML = '<div class="access-list">'+r.data.map(function(u){
+    return '<div class="access-row"><div><div class="access-name">'+esc(u.full_name||String(u.email||'').split('@')[0])+'</div><div class="access-email">'+esc(u.email)+'</div></div>'+
+      '<span class="tag">'+(u.is_admin?'Admin':'Staff')+'</span>'+
+      '<button class="danger btn-sm" onclick="removeAllowed(\''+esc(u.email)+'\')">Remove</button></div>';
+  }).join('')+'</div>';
 }
 async function addAllowed(){
   var email=el('au_email').value.trim().toLowerCase();
@@ -1324,6 +1352,51 @@ function exportExcel(which){
   XLSX.writeFile(wb, 'HG-Lorry-'+m[0]+'-'+todayISO()+'.xlsx');
 }
 
+// Shared HG Hub dropdown treatment. Native selects remain the value source for
+// existing validation, change handlers, and Supabase payloads.
+function closeHubSelects(except){
+  document.querySelectorAll('.hub-select.open').forEach(function(wrap){
+    if(wrap!==except){ wrap.classList.remove('open','open-up'); var trigger=wrap.querySelector('.hub-select-trigger'); if(trigger) trigger.setAttribute('aria-expanded','false'); }
+  });
+}
+function initHubSelects(root){
+  var scope=root||document,selects=[];
+  if(scope.nodeType===1&&scope.matches&&scope.matches('select:not([data-hub-select])')) selects.push(scope);
+  if(scope.querySelectorAll) selects=selects.concat(Array.prototype.slice.call(scope.querySelectorAll('select:not([data-hub-select])')));
+  selects.forEach(function(select){
+    var wrap=document.createElement('div'); wrap.className='hub-select';
+    select.parentNode.insertBefore(wrap,select); wrap.appendChild(select);
+    select.dataset.hubSelect='true'; select.classList.add('hub-select-native'); select.tabIndex=-1; select.setAttribute('aria-hidden','true');
+    var trigger=document.createElement('button'); trigger.type='button'; trigger.className='hub-select-trigger'; trigger.setAttribute('aria-haspopup','listbox'); trigger.setAttribute('aria-expanded','false');
+    var label=wrap.parentElement&&wrap.parentElement.querySelector('label'); if(label) trigger.setAttribute('aria-label',label.textContent.trim());
+    var menu=document.createElement('div'); menu.className='hub-select-menu'; menu.setAttribute('role','listbox'); wrap.appendChild(trigger); wrap.appendChild(menu);
+    function sync(){
+      var selected=select.options[select.selectedIndex]; trigger.textContent=selected?selected.textContent:'Select'; trigger.disabled=select.disabled; menu.innerHTML='';
+      Array.prototype.forEach.call(select.options,function(option){
+        var item=document.createElement('button'); item.type='button'; item.className='hub-select-option'+(option.selected?' selected':''); item.textContent=option.textContent; item.disabled=option.disabled; item.setAttribute('role','option'); item.setAttribute('aria-selected',option.selected?'true':'false');
+        item.addEventListener('click',function(event){ event.stopPropagation(); select.value=option.value; select.dispatchEvent(new Event('change',{bubbles:true})); closeHubSelects(); });
+        menu.appendChild(item);
+      });
+    }
+    select._hubSelectSync=sync; select.addEventListener('change',sync); new MutationObserver(sync).observe(select,{childList:true,subtree:true,attributes:true});
+    trigger.addEventListener('click',function(event){
+      event.stopPropagation(); var open=!wrap.classList.contains('open'); closeHubSelects(wrap); sync();
+      if(open){ var rect=trigger.getBoundingClientRect(),estimated=Math.min(260,menu.children.length*44+10); wrap.classList.toggle('open-up',window.innerHeight-rect.bottom-16<estimated&&rect.top>window.innerHeight-rect.bottom); }
+      else wrap.classList.remove('open-up');
+      wrap.classList.toggle('open',open); trigger.setAttribute('aria-expanded',open?'true':'false');
+    });
+    sync();
+  });
+}
+function startHubSelects(){
+  initHubSelects(document);
+  new MutationObserver(function(mutations){ mutations.forEach(function(m){ Array.prototype.forEach.call(m.addedNodes,function(node){ if(node.nodeType===1) initHubSelects(node); }); }); }).observe(document.body,{childList:true,subtree:true});
+}
+document.addEventListener('pointerdown',function(event){ if(!event.target.closest('.hub-select')) closeHubSelects(); },true);
+document.addEventListener('keydown',function(event){ if(event.key==='Escape') closeHubSelects(); });
+if(window.self!==window.top) document.body.classList.add('embedded');
+startHubSelects();
+if(window.lucide) window.lucide.createIcons();
 start();
 </script>
 </body>

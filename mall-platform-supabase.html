@@ -4,8 +4,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HG Mall Platform — Supabase</title>
+<script>
+(function(){
+  function preference(){
+    var saved='';
+    try{ saved=localStorage.getItem('hg_hub_theme')||''; }catch(e){}
+    return saved==='light'||saved==='dark'||saved==='system' ? saved : 'system';
+  }
+  function resolved(value){
+    if(value==='light'||value==='dark') return value;
+    return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  function apply(value){ document.documentElement.dataset.theme=resolved(value); }
+  window.HGToolTheme={apply:apply,preference:preference};
+  apply(preference());
+  window.addEventListener('message',function(event){
+    if(event.origin!==location.origin||!event.data||event.data.type!=='hg-theme-change') return;
+    if(event.data.theme==='light'||event.data.theme==='dark') apply(event.data.theme);
+  });
+  window.addEventListener('storage',function(event){ if(event.key==='hg_hub_theme') apply(preference()); });
+  if(window.matchMedia){
+    var media=window.matchMedia('(prefers-color-scheme: dark)');
+    var sync=function(){ if(preference()==='system') apply('system'); };
+    if(media.addEventListener) media.addEventListener('change',sync); else if(media.addListener) media.addListener(sync);
+  }
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <style>
   :root {
     --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335; --border:#2a3245;
@@ -204,6 +234,81 @@
   .gate input { text-align:left; margin-bottom:4px; }
   .gmsg { font-size:0.86rem; margin-top:10px; min-height:20px; opacity:0; transition:opacity 0.2s; }
   .gmsg.show { opacity:1; } .gmsg.ok { color:var(--green); } .gmsg.err { color:#f87171; }
+
+  /* HG Hub operational tool redesign */
+  :root {
+    --bg:#fff; --surface:#fff; --surface-2:#f8f7f4; --surface-raised:#fff;
+    --border:#e4ded6; --border-strong:#cfc8bd; --text:#171717; --text-dim:#817970;
+    --accent:#143d4a; --accent-hover:#0e303b; --accent-soft:#eef6f3;
+    --green:#15945d; --green-soft:#edf8f3; --red:#d84d4f; --red-soft:#fff1ee;
+    --amber:#a66b00; --amber-soft:#fff7e7; --radius:8px; --shadow:0 12px 30px rgba(23,23,23,.12);
+  }
+  body { font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); font-size:14px; line-height:1.5; }
+  #app { padding:26px 28px 0; }
+  .topbar { max-width:none; margin:0 0 18px; padding:0 0 20px; border-bottom:1px solid var(--border); }
+  body.embedded .topbar { display:none; }
+  .brand-block { gap:9px; }
+  .brand-logo { width:24px; height:24px; padding:0; background:transparent; border-radius:0; color:var(--accent); font-size:0; }
+  .brand-logo svg { width:20px; height:20px; stroke-width:2; }
+  .brand-name { display:flex; align-items:center; gap:10px; color:var(--accent); font-size:1.05rem; font-weight:800; letter-spacing:-.02em; }
+  .brand-sub { color:var(--text-dim); font-size:13px; line-height:17px; margin-top:3px; }
+  .tool-live { display:inline-flex; align-items:center; height:21px; padding:0 9px; border-radius:999px; background:var(--green-soft); color:var(--green); font-size:.64rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .user-pill { background:var(--surface); border-color:var(--border); padding:8px 12px; color:var(--text-dim); font-size:.78rem; }
+  .user-pill::before { display:none; }.user-pill b { color:var(--accent); font-weight:700; }.user-pill button { color:var(--amber); }
+  nav { max-width:none; margin:0 0 24px; padding:0; display:flex; gap:26px; flex-wrap:nowrap; overflow-x:auto; border-bottom:1px solid var(--border); scrollbar-width:thin; }
+  nav button { flex:0 0 auto; padding:0 0 12px; border:0; border-bottom:3px solid transparent; background:transparent; color:#716b65; font-size:.78rem; font-weight:800; }
+  nav button:hover { color:var(--accent); } nav button.active { color:var(--accent); border-bottom-color:var(--accent); }
+  main { max-width:none; margin:0; padding:0 0 72px; }
+  h2 { color:var(--text); font-size:1.18rem; font-weight:800; letter-spacing:-.02em; margin-bottom:4px; }
+  .sub { color:#716b65; font-size:.86rem; margin-bottom:18px; }
+  label { color:#716b65; font-size:.72rem; font-weight:800; margin:12px 0 5px; letter-spacing:.04em; }
+  input,select,textarea { min-height:42px; padding:10px 12px; border:1px solid #ded8cf; border-radius:8px; background:#fff; color:var(--text); font-size:.88rem; }
+  input:focus,select:focus,textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  .row { gap:16px; }.row>div { min-width:180px; }.inline { gap:8px; align-items:flex-end; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; margin-bottom:16px; box-shadow:none; }
+  #vault>.card,#requests>.card,#d2lookup>.card,#d3gen>.card,#audit>.card,
+  #d2req>.card,#d2malls>.card,#d2panels>.card,#d2lists>.card,#d3tpl>.card,
+  [id^="mgr"]>.card { border:0; border-bottom:1px solid var(--border); border-radius:0; padding:0 0 22px; margin-bottom:22px; }
+  #vault>.card:last-child,#requests>.card:last-child,#audit>.card:last-child { border-bottom:0; }
+  button.primary,button.ghost,.btn { border-radius:8px; padding:9px 12px; font-size:.82rem; font-weight:700; }
+  button.primary { margin-top:16px; background:var(--accent); color:#fff; } button.primary:hover { background:var(--accent-hover); }
+  button.ghost { background:#fff; color:var(--accent); border-color:var(--border); } button.ghost:hover { background:var(--surface-2); border-color:var(--border-strong); }
+  .drop { min-height:116px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border-strong); border-radius:8px; padding:22px; background:var(--surface); color:var(--text-dim); }
+  .drop:hover,.drop.has { border-color:var(--accent); color:var(--accent); }
+  .lot,.req { border-color:var(--border); border-radius:8px; background:var(--surface); }.lot .head { background:var(--surface-2); }.ver { border-color:var(--border); }
+  .req.flag { border-color:var(--amber); box-shadow:inset 3px 0 0 var(--amber); }
+  .badge,.tag { border:0; background:var(--accent-soft); color:var(--accent); }.meta { color:var(--text-dim); font-size:.76rem; }
+  .subnav { display:flex; gap:24px; flex-wrap:nowrap; overflow-x:auto; margin:0 0 22px; border-bottom:1px solid var(--border); }
+  .subnav button { flex:0 0 auto; padding:0 0 10px; border:0; border-bottom:3px solid transparent; border-radius:0; background:transparent; color:#716b65; font-size:.78rem; font-weight:800; }
+  .subnav button:hover { border-color:transparent; color:var(--accent); }.subnav button.active { border-color:var(--accent); background:transparent; color:var(--accent); }
+  .mgr-head { margin-bottom:14px; }.mgr-head .hbtns { gap:8px; }
+  .form-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 16px; margin:0 0 18px; padding:0 0 18px; border:0; border-bottom:1px solid var(--border); border-radius:0; background:transparent; }
+  .form-actions { justify-content:flex-end; }
+  .table-shell { width:100%; overflow-x:auto; border:1px solid var(--border); border-radius:8px; background:var(--surface); }
+  table.tbl { width:100%; border-collapse:separate; border-spacing:0; border:0; border-radius:0; background:var(--surface); font-size:.82rem; }
+  table.tbl th { padding:10px 12px; border-color:var(--border); background:var(--surface-2); color:#716b65; font-size:.66rem; font-weight:800; }
+  table.tbl td { padding:11px 12px; border-color:var(--border); } table.tbl tr:last-child td { border-bottom:0; } table.tbl tr:hover td { background:var(--surface-2); }
+  .card .reqgroup { overflow-x:auto; }.card .reqgroup table.tbl { min-width:620px; border:0; border-radius:0; }.card .reqgroup table.tbl th:first-child,.card .reqgroup table.tbl td:first-child { padding-left:0; }.card .reqgroup table.tbl th:last-child,.card .reqgroup table.tbl td:last-child { padding-right:0; }
+  .rowbtns button { border-color:var(--border); color:var(--accent); }.rowbtns button:hover { border-color:var(--border-strong); color:var(--accent); }.rowbtns button.del { color:var(--red); }
+  .filterbar { max-width:320px; }.wa-msg { border-color:var(--border); border-radius:8px; background:var(--surface-2); color:var(--text); }.banner { border:0; background:var(--amber-soft); color:var(--amber); }
+  .chips { gap:8px; }.chips label,.chips button { min-height:40px; border-color:var(--border); border-radius:8px; background:var(--surface); color:var(--text); }.chips label:hover,.chips button:hover { border-color:var(--border-strong); }.chips button.active { border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
+  .empty { padding:22px; color:var(--text-dim); }.card.empty { min-height:88px; display:flex; align-items:center; justify-content:center; }
+  .swms { border:1px solid var(--border); border-radius:8px; box-shadow:none; }
+  .hub-select { position:relative; width:100%; }.hub-select-native { position:absolute!important; width:1px!important; height:1px!important; opacity:0!important; pointer-events:none!important; }
+  button.hub-select-trigger { position:relative; display:flex; align-items:center; width:100%; min-height:42px; padding:10px 42px 10px 12px; background:#fff; border:1px solid #ded8cf; border-radius:8px; color:var(--text); font:inherit; font-size:.88rem; font-weight:500; text-align:left; cursor:pointer; }
+  button.hub-select-trigger:hover { background:#fff; border-color:var(--border-strong); } button.hub-select-trigger:focus-visible,.hub-select.open .hub-select-trigger { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  button.hub-select-trigger::after { content:""; position:absolute; right:16px; top:50%; width:7px; height:7px; border-right:1.7px solid var(--accent); border-bottom:1.7px solid var(--accent); transform:translateY(-68%) rotate(45deg); }
+  button.hub-select-trigger:disabled { opacity:.6; cursor:default; }
+  .hub-select-menu { position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:140; display:none; max-height:260px; overflow-y:auto; padding:5px; background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow); }.hub-select.open .hub-select-menu { display:block; }.hub-select.open-up .hub-select-menu { top:auto; bottom:calc(100% + 4px); }
+  button.hub-select-option { display:block; width:100%; min-height:40px; padding:9px 10px; border:0; border-radius:6px; background:transparent; color:var(--text); font:inherit; font-size:.86rem; line-height:1.35; text-align:left; cursor:pointer; } button.hub-select-option:hover,button.hub-select-option:focus-visible,button.hub-select-option.selected { outline:none; background:var(--surface-2); color:var(--accent); }
+  .inline>.hub-select { flex:1 1 auto; }.row>.hub-select { flex:1 1 180px; min-width:0; }
+  .gate .card { border:1px solid var(--border); border-radius:12px; }.gate .brand-logo { width:42px; height:42px; color:var(--accent); font-size:1rem; }
+  @media(max-width:760px){ #app { padding:20px 18px 0; }.form-grid { grid-template-columns:1fr; }.row { gap:12px; }.mgr-head { flex-direction:column; }.mgr-head .hbtns { width:100%; }.mgr-head .hbtns button { flex:1 1 0; } }
+  @media(max-width:560px){ #app { padding:18px 14px 0; }.topbar { flex-wrap:nowrap; }.brand-sub,.user-pill { display:none; } nav { gap:24px; margin-bottom:20px; } main { padding-bottom:28px; } h2 { font-size:1.1rem; }.card { padding:16px; }.form-grid { padding-bottom:16px; margin-bottom:16px; }.row,.inline { flex-direction:column; align-items:stretch; }.row>div,.row>.hub-select,.inline>.hub-select { width:100%; min-width:0; }.inline button,.form-actions button { width:100%; justify-content:center; }.subnav { gap:22px; }.hub-select-menu { max-height:min(260px,45vh); } button.hub-select-option { min-height:44px; } table.tbl { min-width:700px; }.req .rtop { flex-direction:column; }.swms { padding:22px 18px; overflow-x:auto; } }
+  html[data-theme="dark"] { --bg:#1b2527; --surface:#202b2d; --surface-2:#253133; --surface-raised:#2b383a; --border:#394749; --border-strong:#526164; --text:#f3f6f4; --text-dim:#b3bebb; --accent:#78b8cd; --accent-hover:#90c9d9; --accent-soft:rgba(75,131,161,.22); --shadow:0 16px 36px rgba(0,0,0,.35); }
+  html[data-theme="dark"] input,html[data-theme="dark"] textarea,html[data-theme="dark"] button.hub-select-trigger,html[data-theme="dark"] .hub-select-menu { background:var(--surface); border-color:var(--border); color:var(--text); }
+  html[data-theme="dark"] button.hub-select-trigger:hover { background:var(--surface-raised); border-color:var(--border-strong); } html[data-theme="dark"] button.hub-select-option { color:var(--text); } html[data-theme="dark"] button.hub-select-option:hover,html[data-theme="dark"] button.hub-select-option.selected { background:var(--accent-soft); color:#c8e4e8; }
+  html[data-theme="dark"] button.ghost { background:var(--surface); border-color:var(--border); color:var(--text); } html[data-theme="dark"] button.ghost:hover { background:var(--surface-raised); border-color:var(--border-strong); } html[data-theme="dark"] table.tbl th { background:var(--surface-2); color:var(--text-dim); } html[data-theme="dark"] .drop,html[data-theme="dark"] .wa-msg { background:var(--surface); } html[data-theme="dark"] .gate .card { background:var(--surface); }
 </style>
 </head>
 <body>
@@ -241,7 +346,7 @@
 <!-- ══════════ GATE 2 · NOT ON ALLOWLIST ══════════ -->
 <div class="gate" id="gateDenied" style="display:none;">
   <div class="card">
-    <div class="brand-logo">🔒</div>
+    <div class="brand-logo" aria-hidden="true"><i data-lucide="lock-keyhole"></i></div>
     <h2>Not authorised</h2>
     <div class="sub" style="margin-top:6px;"><span id="deniedEmail"></span> is not on the access list.<br>
       Ask your admin to add you to <b>allowed_users</b>.</div>
@@ -253,21 +358,21 @@
 <div id="app" style="display:none;">
   <header class="topbar">
     <div class="brand-block">
-      <div class="brand-logo">HG</div>
+      <div class="brand-logo" aria-hidden="true"><i data-lucide="building-2"></i></div>
       <div>
-        <div class="brand-name">Mall Platform</div>
-        <div class="brand-sub">Site intelligence · Supabase edition · Black Lee</div>
+        <div class="brand-name">Mall Platform <span class="tool-live">Live</span></div>
+        <div class="brand-sub">Site intelligence · Drawings → measurements → requirements</div>
       </div>
     </div>
     <div class="user-pill"><b id="userPill">…</b><button onclick="signOut()">Sign out</button></div>
   </header>
 
   <nav>
-    <button class="active" data-tab="vault">🗂 Site Drawing Vault</button>
-    <button data-tab="requests">🎯 Measurement Requests</button>
-    <button data-tab="lookup">📋 Requirement Lookup</button>
-    <button data-tab="safety">🦺 HIRARC / MOS</button>
-    <button data-tab="audit">🧾 Audit</button>
+    <button class="active" data-tab="vault">Site Drawing Vault</button>
+    <button data-tab="requests">Measurement Requests</button>
+    <button data-tab="lookup">Requirement Lookup</button>
+    <button data-tab="safety">HIRARC / MOS</button>
+    <button data-tab="audit">Audit</button>
   </nav>
 
   <main>
@@ -331,7 +436,7 @@
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px">
           <button class="ghost" onclick="loadSketches()">Search</button>
-          <button class="ghost" onclick="exportSketchesExcel()">⬇ Export Excel</button>
+          <button class="ghost" onclick="exportSketchesExcel()">Export Excel</button>
         </div>
         <div id="results" style="margin-top:16px"></div>
       </div>
@@ -359,7 +464,7 @@
         <pre id="mrMsg" class="wa-msg"></pre>
         <div style="display:flex; gap:10px; flex-wrap:wrap">
           <button class="primary" style="margin-top:0" id="mrSaveBtn" onclick="saveRequest()">Save request(s)</button>
-          <button class="ghost" onclick="copyMsg()">📋 Copy message</button>
+          <button class="ghost" onclick="copyMsg()">Copy message</button>
         </div>
         <div class="msg" id="mrFeedback"></div>
       </div>
@@ -368,7 +473,7 @@
         <div class="mgr-head"><div>
           <h2>Tracker</h2>
           <p class="sub" style="margin-bottom:0">After measurement is taken, advance the status. Anything measured but not yet quoted is flagged.</p>
-        </div><button class="ghost" onclick="exportRequestsExcel()">⬇ Excel</button></div>
+        </div><button class="ghost" onclick="exportRequestsExcel()">Export Excel</button></div>
         <div class="chips" id="mrFilters"></div>
         <div id="mrBanner"></div>
         <div id="mrList"></div>
@@ -378,11 +483,11 @@
     <!-- DOOR 2 -->
     <section id="lookup" style="display:none">
       <div class="subnav">
-        <button class="active" data-d2="d2lookup">🔎 Lookup</button>
-        <button data-d2="d2req">📋 Requirements</button>
-        <button data-d2="d2malls">🏬 Malls</button>
-        <button data-d2="d2panels">🏢 Panel Rates</button>
-        <button data-d2="d2lists">⚙ Lists</button>
+        <button class="active" data-d2="d2lookup">Lookup</button>
+        <button data-d2="d2req">Requirements</button>
+        <button data-d2="d2malls">Malls</button>
+        <button data-d2="d2panels">Panel Rates</button>
+        <button data-d2="d2lists">Lists</button>
       </div>
 
       <!-- staff-facing read view -->
@@ -422,8 +527,8 @@
     <!-- DOOR 3 -->
     <section id="safety" style="display:none">
       <div class="subnav">
-        <button class="active" data-d3="d3gen">📝 Generate</button>
-        <button data-d3="d3tpl">🗂 Templates</button>
+        <button class="active" data-d3="d3gen">Generate</button>
+        <button data-d3="d3tpl">Templates</button>
       </div>
 
       <div id="d3gen">
@@ -473,6 +578,84 @@
 </div>
 
 <script>
+if(window.self!==window.top) document.body.classList.add('embedded');
+if(window.lucide) window.lucide.createIcons();
+
+// Shared HG Hub select shell. Native selects remain the source of truth for
+// existing validation, dependent fields, filters, and Supabase payloads.
+function closeHubSelects(except){
+  document.querySelectorAll('.hub-select.open').forEach(function(wrap){
+    if(wrap!==except){
+      wrap.classList.remove('open','open-up');
+      var trigger=wrap.querySelector('.hub-select-trigger');
+      if(trigger) trigger.setAttribute('aria-expanded','false');
+    }
+  });
+}
+function syncHubSelects(root){
+  (root||document).querySelectorAll('select[data-hub-select]').forEach(function(select){
+    if(select._hubSelectSync) select._hubSelectSync();
+  });
+}
+function initHubSelects(root){
+  var scope=root||document;
+  var selects=[];
+  if(scope.nodeType===1&&scope.matches('select:not([data-hub-select])')) selects.push(scope);
+  if(scope.querySelectorAll) selects=selects.concat(Array.from(scope.querySelectorAll('select:not([data-hub-select])')));
+  selects.forEach(function(select){
+    var wrap=document.createElement('div'); wrap.className='hub-select';
+    if(select.style.maxWidth) wrap.style.maxWidth=select.style.maxWidth;
+    select.parentNode.insertBefore(wrap,select); wrap.appendChild(select);
+    select.dataset.hubSelect='true'; select.classList.add('hub-select-native');
+    select.tabIndex=-1; select.setAttribute('aria-hidden','true');
+    var trigger=document.createElement('button');
+    trigger.type='button'; trigger.className='hub-select-trigger';
+    trigger.setAttribute('aria-haspopup','listbox'); trigger.setAttribute('aria-expanded','false');
+    var label=wrap.parentElement&&wrap.parentElement.querySelector('label');
+    if(label) trigger.setAttribute('aria-label',label.textContent.trim());
+    var menu=document.createElement('div'); menu.className='hub-select-menu'; menu.setAttribute('role','listbox');
+    wrap.appendChild(trigger); wrap.appendChild(menu);
+    function sync(){
+      var selected=select.options[select.selectedIndex];
+      trigger.textContent=selected?selected.textContent:'Select'; trigger.disabled=select.disabled; menu.innerHTML='';
+      Array.from(select.options).forEach(function(option){
+        var item=document.createElement('button');
+        item.type='button'; item.className='hub-select-option'+(option.selected?' selected':'');
+        item.textContent=option.textContent; item.disabled=option.disabled;
+        item.setAttribute('role','option'); item.setAttribute('aria-selected',option.selected?'true':'false');
+        item.addEventListener('click',function(event){
+          event.stopPropagation(); select.value=option.value;
+          select.dispatchEvent(new Event('change',{bubbles:true})); closeHubSelects();
+        });
+        menu.appendChild(item);
+      });
+    }
+    select._hubSelectSync=sync; select.addEventListener('change',sync);
+    new MutationObserver(sync).observe(select,{childList:true,subtree:true,attributes:true});
+    trigger.addEventListener('click',function(event){
+      event.stopPropagation();
+      var open=!wrap.classList.contains('open'); closeHubSelects(wrap); sync();
+      if(open){
+        var rect=trigger.getBoundingClientRect();
+        var estimated=Math.min(260,menu.children.length*44+10);
+        wrap.classList.toggle('open-up',window.innerHeight-rect.bottom-16<estimated&&rect.top>window.innerHeight-rect.bottom);
+      }else wrap.classList.remove('open-up');
+      wrap.classList.toggle('open',open); trigger.setAttribute('aria-expanded',open?'true':'false');
+    });
+    sync();
+  });
+}
+document.addEventListener('DOMContentLoaded',function(){
+  initHubSelects(document);
+  new MutationObserver(function(mutations){
+    mutations.forEach(function(mutation){
+      mutation.addedNodes.forEach(function(node){ if(node.nodeType===1) initHubSelects(node); });
+    });
+  }).observe(document.body,{childList:true,subtree:true});
+});
+document.addEventListener('pointerdown',function(event){ if(!event.target.closest('.hub-select')) closeHubSelects(); },true);
+document.addEventListener('keydown',function(event){ if(event.key==='Escape') closeHubSelects(); });
+
 // ═══════════════════════════ CONFIG (same keys as every HG tool) ═══════════════════════════
 // Option A: paste your values here (recommended once stable):
 var SUPABASE_URL = '';   // e.g. 'https://abcd1234.supabase.co'
@@ -776,7 +959,7 @@ function checkUploadLot(){
   if(!mall||!lot){ hint.innerHTML=''; return; }
   countMallLot(mall, lot).then(function(c){
     hint.innerHTML=(c.drawings||c.requests)
-      ? '⚠️ '+esc(mall)+' '+esc(lot)+' already exists — '+c.drawings+' drawing(s), '+c.requests+' request(s). Uploading adds a NEW version.'
+      ? 'Attention: '+esc(mall)+' '+esc(lot)+' already exists — '+c.drawings+' drawing(s), '+c.requests+' request(s). Uploading adds a NEW version.'
       : '';
   }).catch(function(){ hint.innerHTML=''; });
 }
@@ -799,7 +982,7 @@ function renderFiles(){
   drop.classList.toggle('has', picked.length>0);
   if(!picked.length){ d.innerHTML=''; return; }
   d.innerHTML = picked.map(function(f,i){
-    return '<div>📎 '+esc(f.name)+' &nbsp;<a href="#" onclick="rmFile('+i+');return false;">remove</a></div>';
+    return '<div>'+esc(f.name)+' &nbsp;<a href="#" onclick="rmFile('+i+');return false;">remove</a></div>';
   }).join('');
 }
 function rmFile(i){ picked.splice(i,1); renderFiles(); }
@@ -884,7 +1067,7 @@ function render(rows){
   if(!rows.length){ box.innerHTML='<div class="empty">No drawings yet.</div>'; return; }
   var groups={};
   rows.forEach(function(r){
-    var k=r.mall+' ▸ '+r.lotNo;
+    var k=r.mall+' / '+r.lotNo;
     (groups[k]=groups[k]||[]).push(r);
   });
   box.innerHTML = Object.keys(groups).map(function(k){
@@ -895,10 +1078,10 @@ function render(rows){
         '<span><span class="badge">v'+r.version+'</span> '+
         (r.shopType?('&nbsp;'+esc(r.shopType)):'')+'</span>'+
         '<span class="meta">'+esc(r.timestamp)+' · '+esc(r.uploadedBy)+'</span></div>'+
-        (r.remarks?('<div class="meta" style="margin-top:4px">📝 '+esc(r.remarks)+'</div>'):'')+
+        (r.remarks?('<div class="meta" style="margin-top:4px">'+esc(r.remarks)+'</div>'):'')+
         '<div class="files">'+
           (r.url && isImg ? '<a href="'+esc(r.url)+'" target="_blank"><img src="'+esc(r.url)+'" class="thumb" title="'+esc(r.fileName)+'"></a>' : '')+
-          '📎 <a href="'+esc(r.url||'#')+'" target="_blank">'+esc(r.fileName)+'</a></div>'+
+          '<a href="'+esc(r.url||'#')+'" target="_blank">'+esc(r.fileName)+'</a></div>'+
         '<div class="rowbtns" style="text-align:left;margin-top:8px">'+
           '<button style="margin-left:0" onclick="editSketch(\''+r.fileId+'\')">Move / Edit</button>'+
           '<button class="del" onclick="delSketch(\''+r.fileId+'\')">Delete</button></div>'+
@@ -1351,7 +1534,7 @@ function mountManager(mountId, cfg){
 
   function listHtml(){
     var rows=visibleRows();
-    if(!rows.length) return '<div class="empty">Nothing yet. Click + Add.</div>';
+    if(!rows.length) return '<div class="empty">No records yet.</div>';
     var head='<tr>'+cfg.columns.map(function(c){return '<th>'+esc(c)+'</th>';}).join('')+'<th></th></tr>';
     var body=rows.map(function(r){
       var tds=cfg.columns.map(function(c){
@@ -1363,13 +1546,13 @@ function mountManager(mountId, cfg){
         '<button onclick="MGR[\''+mountId+'\'].edit(\''+r._id+'\')">Edit</button>'+
         '<button class="del" onclick="MGR[\''+mountId+'\'].del(\''+r._id+'\')">Delete</button></td></tr>';
     }).join('');
-    return '<table class="tbl">'+head+body+'</table>';
+    return '<div class="table-shell"><table class="tbl">'+head+body+'</table></div>';
   }
 
   function paint(){
     elx.innerHTML='<div class="card"><div class="mgr-head"><div><h2>'+esc(cfg.title)+'</h2>'+
       '<p class="sub">'+esc(cfg.subtitle)+'</p></div>'+
-      '<div class="hbtns"><button class="ghost" onclick="MGR[\''+mountId+'\'].exportX()">⬇ Excel</button>'+
+      '<div class="hbtns"><button class="ghost" onclick="MGR[\''+mountId+'\'].exportX()">Export Excel</button>'+
       '<button class="ghost" onclick="MGR[\''+mountId+'\'].add()">+ Add</button></div></div>'+
       formHtml()+filterHtml()+'<div>'+listHtml()+'</div></div>';
   }
@@ -1530,7 +1713,7 @@ function generateSwms(){
 
 function renderSwms(services, steps, equip, ppe){
   function v(id){ var n=el(id); return n?esc(n.value):''; }
-  var h='<div class="printbar no-print"><button class="primary" style="margin-top:0" onclick="window.print()">🖨 Print / Save PDF</button>'+
+  var h='<div class="printbar no-print"><button class="primary" style="margin-top:0" onclick="window.print()">Print / Save PDF</button>'+
         '<button class="ghost" onclick="generateSwms()">Regenerate</button></div>';
   h+='<div class="swms">';
   h+='<h1>SAFE WORK METHOD STATEMENT &amp; HIRARC</h1>';
@@ -1603,10 +1786,10 @@ function addLotRow(pref){
       '<div style="flex:1;min-width:120px"><input id="lr_lot_'+i+'" placeholder="Lot No. e.g. G118" oninput="mrPreview()" onchange="rowLotHint('+i+')"><div class="meta" id="lr_hint_'+i+'" style="margin-top:4px"></div></div>'+
       '<div style="flex:1;min-width:140px"><input id="lr_client_'+i+'" placeholder="Client e.g. ABC Sdn Bhd" oninput="mrPreview()"></div>'+
       '<div style="flex:1.4;min-width:160px"><input id="lr_rem_'+i+'" placeholder="Remarks (optional)" oninput="mrPreview()"></div>'+
-      '<button class="ghost" style="padding:10px 13px" onclick="removeLotRow('+i+')">✕</button>'+
+      '<button class="ghost" style="padding:10px 13px" onclick="removeLotRow('+i+')">Remove</button>'+
     '</div>'+
     '<div style="margin-top:8px">'+
-      '<button class="ghost" style="padding:6px 11px;font-size:0.8rem" onclick="document.getElementById(\'lr_file_'+i+'\').click()">📎 Add reference photos</button>'+
+      '<button class="ghost" style="padding:6px 11px;font-size:0.8rem" onclick="document.getElementById(\'lr_file_'+i+'\').click()">Add reference photos</button>'+
       '<input type="file" id="lr_file_'+i+'" multiple accept="image/*" style="display:none" onchange="lrFiles('+i+')">'+
       '<span class="meta" id="lr_files_'+i+'"></span>'+
     '</div>';
@@ -1627,7 +1810,7 @@ function lrFiles(i){
 function renderLrFiles(i){
   var span=el('lr_files_'+i); if(!span) return;
   var arr=(window.__lrFiles||{})[i]||[];
-  span.innerHTML=arr.length?(' &nbsp;'+arr.map(function(f,k){return '📷 '+esc(f.name)+' <a href="#" onclick="lrRm('+i+','+k+');return false;">✕</a>';}).join(' &nbsp; ')):'';
+  span.innerHTML=arr.length?(' &nbsp;'+arr.map(function(f,k){return esc(f.name)+' <a href="#" onclick="lrRm('+i+','+k+');return false;">remove</a>';}).join(' &nbsp; ')):'';
 }
 function lrRm(i,k){ ((window.__lrFiles||{})[i]||[]).splice(k,1); renderLrFiles(i); }
 function removeLotRow(i){
@@ -1654,7 +1837,7 @@ function rowLotHint(i){
   hintEl.innerHTML='<span class="meta">checking…</span>';
   countMallLot(mall, lot).then(function(c){
     var parts=[];
-    if(c.drawings) parts.push('✅ Already measured — '+c.drawings+' drawing'+(c.drawings>1?'s':'')+' in the Vault <a href="#" onclick="viewDrawings(\''+escAttr(mall)+'\',\''+escAttr(lot)+'\');return false;">view</a>');
+    if(c.drawings) parts.push('Already measured — '+c.drawings+' drawing'+(c.drawings>1?'s':'')+' in the Vault <a href="#" onclick="viewDrawings(\''+escAttr(mall)+'\',\''+escAttr(lot)+'\');return false;">view</a>');
     if(c.requests) parts.push(c.requests+' existing request'+(c.requests>1?'s':'')+' for this lot');
     hintEl.innerHTML = parts.length ? ('<span style="color:var(--accent);font-weight:600">'+parts.join(' &nbsp;·&nbsp; ')+'</span>') : '';
   }).catch(function(){ hintEl.innerHTML=''; });
@@ -1765,12 +1948,12 @@ function renderRequests(filter){
   window.__mrFilter=filter||'all';
   var rows=(D2.requests||[]).slice().reverse(); // newest first
   var needs=rows.filter(reqNeedsQuote).length;
-  var filters=[['all','All'],['needs','⚠ Needs quotation'],['requested','Requested'],['done','Done']];
+  var filters=[['all','All'],['needs','Needs quotation'],['requested','Requested'],['done','Done']];
   el('mrFilters').innerHTML=filters.map(function(f){
     return '<button class="'+(window.__mrFilter===f[0]?'active':'')+'" onclick="renderRequests(\''+f[0]+'\')">'+f[1]+(f[0]==='needs'&&needs?(' ('+needs+')'):'')+'</button>';
   }).join('');
   el('mrBanner').innerHTML = needs
-    ? '<div class="banner">⚠ '+needs+' measurement'+(needs>1?'s':'')+' taken but quotation not sent yet.</div>' : '';
+    ? '<div class="banner">Attention: '+needs+' measurement'+(needs>1?'s':'')+' taken but quotation not sent yet.</div>' : '';
 
   var view=rows.filter(function(r){
     if(window.__mrFilter==='needs') return reqNeedsQuote(r);
@@ -1783,21 +1966,21 @@ function renderRequests(filter){
   box.innerHTML=view.map(function(r){
     var sm=statusMeta(r.Status), flag=reqNeedsQuote(r);
     var acts='';
-    if(r.Status==='Requested') acts+='<button class="go" onclick="mrSet(\''+r._id+'\',\'Measured\')">✔ Mark measured</button>';
-    else if(r.Status==='Measured' && r.Purpose!=='Reference only') acts+='<button class="go" onclick="mrSet(\''+r._id+'\',\'Quotation Sent\')">✔ Quotation sent</button>';
-    else if(r.Status==='Measured') acts+='<button class="go" onclick="mrSet(\''+r._id+'\',\'Closed\')">✔ Mark done</button>';
-    else acts+='<button onclick="mrSet(\''+r._id+'\',\'Requested\')">↺ Reopen</button>';
-    acts+='<button onclick="viewDrawings(\''+escAttr(r.Mall)+'\',\''+escAttr(r['Lot No'])+'\')">🗂 Drawings</button>';
-    acts+='<button onclick="mrEdit(\''+r._id+'\')">✏ Edit</button>';
+    if(r.Status==='Requested') acts+='<button class="go" onclick="mrSet(\''+r._id+'\',\'Measured\')">Mark measured</button>';
+    else if(r.Status==='Measured' && r.Purpose!=='Reference only') acts+='<button class="go" onclick="mrSet(\''+r._id+'\',\'Quotation Sent\')">Quotation sent</button>';
+    else if(r.Status==='Measured') acts+='<button class="go" onclick="mrSet(\''+r._id+'\',\'Closed\')">Mark done</button>';
+    else acts+='<button onclick="mrSet(\''+r._id+'\',\'Requested\')">Reopen</button>';
+    acts+='<button onclick="viewDrawings(\''+escAttr(r.Mall)+'\',\''+escAttr(r['Lot No'])+'\')">Drawings</button>';
+    acts+='<button onclick="mrEdit(\''+r._id+'\')">Edit</button>';
     acts+='<button class="del" onclick="mrDelete(\''+r._id+'\')">Delete</button>';
     return '<div class="req'+(flag?' flag':'')+'">'+
-      '<div class="rtop"><span class="rtitle">'+esc(r.Mall)+' ▸ '+esc(r['Lot No'])+' &nbsp;·&nbsp; '+esc(r.Client)+'</span>'+
+      '<div class="rtop"><span class="rtitle">'+esc(r.Mall)+' / '+esc(r['Lot No'])+' &nbsp;·&nbsp; '+esc(r.Client)+'</span>'+
       '<span class="stbadge" style="background:'+sm.c+';color:#0a0e1a">'+sm.t+'</span></div>'+
       '<div class="meta" style="margin-top:5px">'+esc(r.Date)+' · req by '+esc(r.Requestor)+
-        (r['Assigned To']?(' · 👷 '+esc(r['Assigned To'])):'')+' · '+esc(r.Purpose||'')+
+        (r['Assigned To']?(' · Assigned to '+esc(r['Assigned To'])):'')+' · '+esc(r.Purpose||'')+
         (r['Quote Sent On']?(' · quoted '+esc(r['Quote Sent On'])):'')+'</div>'+
       (r['Work Type']?('<div class="meta" style="margin-top:3px">Measure for: '+esc(r['Work Type'])+'</div>'):'')+
-      (r.Remarks?('<div class="meta" style="margin-top:3px">📝 '+esc(r.Remarks)+'</div>'):'')+
+      (r.Remarks?('<div class="meta" style="margin-top:3px">'+esc(r.Remarks)+'</div>'):'')+
       refPhotosHtml(r['Ref Photos'])+
       '<div class="ractions">'+acts+'</div>'+
       '<div id="mre_'+r._id+'"></div></div>';
@@ -1806,7 +1989,7 @@ function renderRequests(filter){
 function refPhotosHtml(s){
   var lines=String(s==null?'':s).split('\n').filter(function(x){return x.trim();});
   if(!lines.length) return '';
-  return '<div class="meta" style="margin-top:3px">📷 '+lines.map(function(l){
+  return '<div class="meta" style="margin-top:3px">Reference photos: '+lines.map(function(l){
     var p=l.split('|');
     return '<a href="#" onclick="openStored(\''+escAttr(p[1]||'')+'\');return false;">'+esc(p[0]||'photo')+'</a>';
   }).join(' · ')+'</div>';
@@ -1888,6 +2071,7 @@ function viewDrawings(mall, lot){
   ['vault','requests','lookup','safety','audit'].forEach(function(id){ el(id).style.display=(id==='vault')?'block':'none'; });
   var fm=el('fMall'), fl=el('fLot');
   if(fm) fm.value=mall; if(fl) fl.value=lot;
+  syncHubSelects(document);
   loadSketches(); window.scrollTo(0,0);
 }
 
@@ -1907,13 +2091,15 @@ function renderAudit(){
     if(!f) return true;
     return [a.user_email, a.action, a.details].join(' ').toLowerCase().indexOf(f)>=0;
   });
-  if(!rows.length){ el('auditList').innerHTML='<div class="empty">No matching activity.</div>'; return; }
-  el('auditList').innerHTML='<table class="tbl"><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr>'+
+  var box=el('auditList');
+  if(!rows.length){ box.className='empty'; box.innerHTML='No matching activity.'; return; }
+  box.className='';
+  box.innerHTML='<div class="table-shell"><table class="tbl"><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr>'+
     rows.map(function(a){
       return '<tr><td class="meta" style="white-space:nowrap">'+esc(fmtDT(a.at))+'</td>'+
         '<td>'+esc(String(a.user_email||'').split('@')[0])+'</td>'+
         '<td><b>'+esc(a.action)+'</b></td><td class="meta">'+esc(a.details)+'</td></tr>';
-    }).join('')+'</table>';
+    }).join('')+'</table></div>';
 }
 
 start();

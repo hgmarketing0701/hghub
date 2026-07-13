@@ -3036,12 +3036,33 @@
   .finance-queue-row b { color: var(--text); font: 700 13px/1.25 var(--font-display); white-space: nowrap; }
   .finance-queue-action { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; border: 0; background: transparent; color: var(--accent); font: 700 12px/1.3 var(--font-ui); cursor: pointer; }
   .finance-queue-action svg { width: 13px; height: 13px; }
+  .role-screen { padding-bottom: 48px; }
+  .role-screen .op-card-head { min-height: 72px; padding: 18px 20px 14px; align-items: flex-start; }
+  .role-screen .op-card-head h2 { font-size: 20px; line-height: 26px; }
+  .role-screen .op-card-head p { margin-top: 2px; font-size: 13px; line-height: 18px; }
+  .role-kpi-grid { display: grid; grid-template-columns: repeat(var(--role-kpi-count, 5), minmax(0, 1fr)); }
+  .role-kpi-grid .exec-kpi-label { max-width: 170px; }
+  .role-attention-card { margin-bottom: 18px; }
+  .role-lower-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(340px, .95fr); gap: 18px; align-items: start; margin-bottom: 18px; }
+  .role-workflow-list { display: grid; padding: 0 20px 10px; }
+  .role-workflow-row { width: 100%; display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; min-height: 62px; padding: 10px 0; border: 0; border-top: 1px solid var(--border); background: transparent; color: var(--text); text-align: left; cursor: pointer; font: inherit; }
+  .role-workflow-row:first-child { border-top: 0; }
+  .role-workflow-step { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 8px; background: var(--surface-2); color: var(--text-dim); font: 800 11px/1 var(--font-ui); }
+  .role-workflow-copy { min-width: 0; display: grid; gap: 2px; }
+  .role-workflow-copy b { font-size: 13px; line-height: 18px; }
+  .role-workflow-copy span { color: var(--text-dim); font-size: 11px; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .role-workflow-action { display: inline-flex; align-items: center; gap: 5px; color: var(--accent); font-size: 11px; font-weight: 800; white-space: nowrap; }
+  .role-workflow-action svg { width: 13px; height: 13px; }
+  .role-workflow-row:hover .role-workflow-copy b { color: var(--accent); }
+  .role-workflow-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 7px; }
   html[data-theme="ops-dark"] .sb-role-menu { background: #17232a; border-color: #33434b; }
   html[data-theme="ops-dark"] .exec-context-banner { background: rgba(60, 141, 177, .12); }
   html[data-theme="ops-dark"] .exec-decisions-card.review-focus { border-color: #607176; box-shadow: 0 0 0 3px rgba(120, 184, 205, .2); }
   @media (max-width: 1180px) {
     .exec-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 22px; }
     .exec-kpi:nth-child(4) { border-left: 0; padding-left: 0; }
+    .role-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .role-kpi-grid .exec-kpi:nth-child(4) { border-left: 0; padding-left: 0; }
     .finance-queue-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 18px; }
     .finance-queue:nth-child(3) { padding-left: 0; border-left: 0; }
   }
@@ -3072,12 +3093,20 @@
     .finance-queue { padding: 15px 0; border-top: 1px solid var(--border); border-left: 0; }
     .finance-queue:first-child { padding-top: 14px; border-top: 0; }
     .finance-queue h3 { border-bottom: 0; padding-bottom: 0; }
+    .role-lower-grid { grid-template-columns: 1fr; }
+    .role-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .role-kpi-grid .exec-kpi:nth-child(odd) { border-left: 0; padding-left: 0; }
+    .role-kpi-grid .exec-kpi:nth-child(4) { border-left: 1px solid var(--border); padding-left: 16px; }
   }
   @media (max-width: 520px) {
     .exec-snapshot { padding: 20px 18px 22px; }
     .executive-screen .op-card-head, .finance-screen .op-card-head { padding-left: 18px; padding-right: 18px; }
     .exec-pulse, .exec-activity-list { padding-left: 18px; padding-right: 18px; }
     .finance-queue-grid { padding-left: 18px; padding-right: 18px; }
+    .role-screen .op-card-head { padding-left: 18px; padding-right: 18px; }
+    .role-workflow-list { padding-left: 18px; padding-right: 18px; }
+    .role-workflow-row { grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; }
+    .role-workflow-copy span { white-space: normal; }
     .exec-decision-group-head, .exec-decision { padding-left: 18px; padding-right: 18px; }
     .exec-kpi-metric b { font-size: 27px; }
     .exec-decision-group { padding-top: 14px; }
@@ -3432,6 +3461,50 @@
             </div>
             <div class="exec-activity-list" id="financeActivityList"><div class="dash-load"><span class="brief-spin"></span></div></div>
           </section>
+        </section>
+
+        <section class="hub-screen role-screen" id="screenRoleHome" data-screen="role-home">
+          <header class="exec-hero">
+            <div class="exec-hero-copy">
+              <div class="exec-eyebrow" id="roleHomeDate">Role command view</div>
+              <h1 id="roleHomeGreeting">Good afternoon</h1>
+              <p id="roleHomeIntro">Review the work that needs action from one shared view.</p>
+            </div>
+            <div class="op-actions">
+              <button class="btn-ghost" id="roleHomeSecondary" type="button" onclick="runRoleHomeAction('secondary')">Review attention</button>
+              <button class="btn-primary" id="roleHomePrimary" type="button" onclick="runRoleHomeAction('primary')">Open tool</button>
+            </div>
+          </header>
+
+          <div class="exec-data-notice" id="roleHomeNotice"><i data-lucide="triangle-alert"></i><span id="roleHomeNoticeText"></span><button type="button" onclick="loadRoleHome()">Retry</button></div>
+
+          <section class="op-card exec-snapshot" id="roleHomeSnapshot">
+            <div class="exec-snapshot-title" id="roleHomeSnapshotTitle">Role Snapshot</div>
+            <div class="role-kpi-grid" id="roleHomeKpiGrid"><div class="dash-load"><span class="brief-spin"></span></div></div>
+          </section>
+
+          <section class="op-card exec-decisions-card role-attention-card" id="roleHomeAttentionCard" tabindex="-1" aria-labelledby="roleHomeAttentionTitle">
+            <div class="op-card-head">
+              <div><h2 id="roleHomeAttentionTitle">Needs attention</h2><p id="roleHomeAttentionCopy">Exceptions routed directly to the tool that owns the next action</p></div>
+              <span class="count-pill exec-decision-count" id="roleHomeAttentionCount" data-state="unavailable" aria-live="polite">—</span>
+            </div>
+            <div class="exec-decision-list" id="roleHomeAttentionList" aria-live="polite" aria-busy="true"><div class="dash-load"><span class="brief-spin"></span></div></div>
+          </section>
+
+          <div class="role-lower-grid">
+            <section class="op-card">
+              <div class="op-card-head"><div><h2 id="roleHomeWorkflowTitle">Workflow</h2><p id="roleHomeWorkflowCopy">Open the existing tool that owns each step</p></div></div>
+              <div class="role-workflow-list" id="roleHomeWorkflowList"><div class="dash-load"><span class="brief-spin"></span></div></div>
+            </section>
+
+            <section class="op-card">
+              <div class="op-card-head">
+                <div><h2 id="roleHomeActivityTitle">Recent activity</h2><p id="roleHomeActivityCopy">Latest role updates, most recent first</p></div>
+                <button class="mini-btn" type="button" onclick="showHubScreen('activity')">View activity</button>
+              </div>
+              <div class="exec-activity-list" id="roleHomeActivityList"><div class="dash-load"><span class="brief-spin"></span></div></div>
+            </section>
+          </div>
         </section>
 
         <section class="hub-screen" id="screenTools" data-screen="tools">
@@ -3840,6 +3913,43 @@
         "Transport / Mover / Rorobin"
       ],
       alarmSources: ["Finance", "Scaffold", "Storage", "Transport"]
+    },
+    sales: {
+      label: "Sales / Quotation",
+      homeScreen: "role-home",
+      navTools: [
+        ["Smart Quotation", "calculator", "Smart Quotation"],
+        ["Hoarding Pricing", "ruler", "Hoarding Pricing System"],
+        ["Mall Platform", "building-2", "Mall Platform"],
+        ["Visual Works", "palette", "Visual Works Control"]
+      ],
+      catalogTools: ["Smart Quotation", "Hoarding Pricing System", "Mall Platform", "Visual Works Control", "CRM Spec"],
+      alarmSources: ["Sales", "Quotation", "Measurement", "Visual"]
+    },
+    inventory: {
+      label: "Inventory / Purchasing",
+      homeScreen: "role-home",
+      navTools: [
+        ["Inventory & Purchasing", "package", "Inventory, Tools & Purchasing"],
+        ["Scaffold / Collections", "badge-check", "Scaffold & Green Tag System"],
+        ["Hoarding Pricing", "ruler", "Hoarding Pricing System"]
+      ],
+      catalogTools: ["Inventory, Tools & Purchasing", "Scaffold & Green Tag System", "Hoarding Pricing System", "Lorry Fleet Management"],
+      alarmSources: ["Inventory", "Scaffold"]
+    },
+    transport: {
+      label: "Transport / Rental",
+      homeScreen: "role-home",
+      navTools: [
+        ["Transport Jobs", "boxes", "Transport / Mover / Rorobin"],
+        ["Readiness & Dispatch", "truck", "Daily Readiness & Dispatch"],
+        ["Lorry Fleet", "truck", "Lorry Fleet Management"],
+        ["Scaffold / Green Tag", "badge-check", "Scaffold & Green Tag System"],
+        ["Storage Rental", "warehouse", "Temporary Storage Rental"],
+        ["Job Completion", "clipboard-check", "Job Completion Report"]
+      ],
+      catalogTools: ["Transport / Mover / Rorobin", "Daily Readiness & Dispatch", "Lorry Fleet Management", "Scaffold & Green Tag System", "Temporary Storage Rental", "Job Completion Report"],
+      alarmSources: ["Transport", "Dispatch", "Fleet", "Scaffold", "Storage"]
     }
   };
 
@@ -3849,6 +3959,10 @@
     "Receipt Claims": { short: "Receipt Claims", initials: "RC", sub: "Submitted staff claims" },
     "Expenses Receipt System": { short: "Expenses", initials: "EX", sub: "Recorded business expenses" },
     "Subcon Invoice Generator": { short: "Subcon Invoices", initials: "SI", sub: "Generate subcontractor invoices" },
+    "Hoarding Pricing System": { short: "Hoarding Pricing", initials: "HP", sub: "Build and review hoarding prices" },
+    "Mall Platform": { short: "Mall Platform", initials: "MP", sub: "Measurement and mall work context" },
+    "Visual Works Control": { short: "Visual Works", initials: "VW", sub: "Artwork approval and visual handoff" },
+    "Lorry Fleet Management": { short: "Lorry Fleet", initials: "LF", sub: "Fleet compliance and maintenance" },
     "Temporary Storage Rental": { short: "Storage Rental", initials: "SR", sub: "Rental invoices and payments" },
     "Transport / Mover / Rorobin": { short: "Transport Billing", initials: "TR", sub: "Transport invoices and payments" },
     "Operations Command Center": { short: "Operations Command", initials: "OC", sub: "Ops entrance and launchers" },
@@ -4022,6 +4136,112 @@
     ],
     unavailable: []
   };
+  let ROLE_HOME_STATE = null;
+  const ROLE_HOME_CONFIG = {
+    sales: {
+      title: "Sales / Quotation", intro: "Build, follow up, and hand over quotation work from one shared view.",
+      snapshotTitle: "Sales Snapshot", attentionTitle: "Needs attention", attentionCopy: "Quotation and handoff work routed directly to its owning tool",
+      workflowTitle: "Quotation workflow", workflowCopy: "A source-aware view of measurement, quotation, and visual handoff work",
+      activityTitle: "Recent sales activity", activityCopy: "Latest quotation, measurement, and visual handoff updates",
+      primary: ["Create quotation", "Smart Quotation"], secondary: ["Open saved quotes", "Smart Quotation"], rpc: "hub_sales_home_v1",
+      metrics: [
+        ["needs_attention", "Needs attention", "items"], ["smart_quotes_open", "Smart quotes open", "draft / sent"],
+        ["hoarding_quotes_open", "Hoarding quotes open", "draft / sent"], ["confirmed_won_mtd", "Confirmed / Won MTD", "quotation-date cohort"],
+        ["open_quote_value", "Open quote value", "Smart + Hoarding"]
+      ],
+      workflow: [
+        ["Measurement requests", "Requests and completed measurements awaiting quotation", "Mall Platform", ["measurement_requested", "measurement_ready_for_quote"]],
+        ["Draft quotes", "Smart and Hoarding drafts retain their source identity", "Smart Quotation", ["smart_drafts", "hoarding_drafts"]],
+        ["Sent quotes", "Issued quotation work awaiting the next source status", "Smart Quotation", ["smart_sent", "hoarding_sent"]],
+        ["Confirmed / Won", "Accepted quotation outcomes by source", "Hoarding Pricing System", ["smart_confirmed", "hoarding_won"]],
+        ["Visual handoff", "Artwork, client approval, printing, and installation context", "Visual Works Control", ["visual_sent_client", "visual_approved"]]
+      ]
+    },
+    inventory: {
+      title: "Inventory / Purchasing", intro: "Review stock risk, tool availability, supplier pricing, and material movement.",
+      snapshotTitle: "Inventory Snapshot", attentionTitle: "Stock & purchasing attention", attentionCopy: "Stock, tool, supplier-price, count, and linked collection action",
+      workflowTitle: "Inventory workflow", workflowCopy: "Guided launchers into the existing Inventory tool",
+      activityTitle: "Recent inventory activity", activityCopy: "Latest stock, tool, repair, and physical-count movement",
+      primary: ["Open inventory", "Inventory, Tools & Purchasing"], secondary: ["Review attention", "#attention"], rpc: "hub_inventory_home_v1",
+      metrics: [
+        ["low_stock", "Low stock", "material types"], ["inventory_value", "Inventory value", "current stock basis"],
+        ["tools_available", "Tools available", "tool types"], ["tools_in_repair", "Tools in repair", "tool types"],
+        ["count_variances", "Count variances", "latest non-zero counts"]
+      ],
+      workflow: [
+        ["Supplier quotations", "Review supplier pricing and quotation expiry", "Inventory, Tools & Purchasing"],
+        ["Purchases / Stock IN", "Record purchases and material received", "Inventory, Tools & Purchasing"],
+        ["Stock availability", "Review current material and tool position", "Inventory, Tools & Purchasing"],
+        ["Stock OUT / Tool assignment", "Record deliveries, assignments, and recipients", "Inventory, Tools & Purchasing"],
+        ["Return / Repair", "Track returned tools and repair movement", "Inventory, Tools & Purchasing"],
+        ["Physical stock count", "Record counts and review variances", "Inventory, Tools & Purchasing"]
+      ]
+    },
+    transport: {
+      title: "Transport / Rental", intro: "Review today's movements, rental returns, collections, and fleet action.",
+      snapshotTitle: "Transport Snapshot", attentionTitle: "Needs attention", attentionCopy: "Movement, rental, collection, fleet, and evidence exceptions",
+      workflowTitle: "Operational lanes", workflowCopy: "Source-labelled movement, return, collection, and fleet work",
+      activityTitle: "Recent transport activity", activityCopy: "Latest transport, dispatch, rental, and fleet updates",
+      primary: ["Open transport jobs", "Transport / Mover / Rorobin"], secondary: ["Open dispatch", "Daily Readiness & Dispatch"], rpc: "hub_transport_home_v1",
+      metrics: [
+        ["runs_today", "Runs today", "Transport runs"], ["open_service_jobs", "Open service jobs", "Lorry / Mover / Rorobin"],
+        ["dispatch_tonight", "Dispatch tonight", "Dispatch board"], ["returns_collections", "Returns & collections", "action items"],
+        ["fleet_actions", "Fleet actions", "Fleet register"], ["photo_gaps", "Photo gaps", "required stages"]
+      ],
+      workflow: [
+        ["Today's movement", "Transport runs, service jobs, and dispatch assignments", "Transport / Mover / Rorobin", "movement"],
+        ["Rental returns & collections", "Rorobin, storage, scaffold, inspection, and tipping action", "Temporary Storage Rental", "returns_collections"],
+        ["Fleet compliance & maintenance", "Compliance, service, licence, GDL, and summons action", "Lorry Fleet Management", "fleet"]
+      ]
+    }
+  };
+  const ROLE_HOME_MOCK_DATA = {
+    sales: {
+      version: "sales-home-v1", snapshot: {
+        needs_attention: { value: 5, unit: "count", status: "warning" }, smart_quotes_open: { value: 7, count: 7, unit: "count", status: "warning" },
+        hoarding_quotes_open: { value: 4, count: 4, unit: "count", status: "watch" }, confirmed_won_mtd: { value: 3, count: 3, unit: "count", status: "clear" },
+        open_quote_value: { value: 126840, unit: "MYR", status: "warning", breakdown: [{ source: "quotes", value: 68900 }, { source: "hrd_quotes", value: 57940 }] }
+      }, attention: { total: 5, items: [
+        { severity: "critical", title: "Pavilion artwork was rejected", detail: "Client comments require a revised visual before handoff.", source_label: "Visual Works", tool: "Visual Works Control", action_label: "Open visual job" },
+        { severity: "warning", title: "Mid Valley measurement is ready for quotation", detail: "Measured request has no quotation-sent date.", source_label: "Mall Platform", tool: "Mall Platform", action_label: "Build quotation" },
+        { severity: "warning", title: "HGQ-2026-071 draft awaiting review", detail: "Smart quotation draft is 9 days old.", impact_value: 16730.19, source_label: "Smart Quotation", tool: "Smart Quotation", action_label: "Open quote" }
+      ] }, workflow: {
+        measurement_requested: { count: 3 }, measurement_ready_for_quote: { count: 2 }, smart_drafts: { count: 4 }, hoarding_drafts: { count: 2 },
+        smart_sent: { count: 3 }, hoarding_sent: { count: 2 }, smart_confirmed: { count: 2 }, hoarding_won: { count: 1 },
+        visual_sent_client: { count: 2 }, visual_approved: { count: 4 }
+      }, activity: [
+        { at: "2026-07-13T09:08:00+08:00", actor: "marketing@hggroup.com.my", action_label: "Sent quotation", detail: "HGQ-2026-0709 · Mid Valley Megamall", tool: "Smart Quotation" },
+        { at: "2026-07-13T08:31:00+08:00", actor: "marketing@hggroup.com.my", action_label: "Updated hoarding price", detail: "Pavilion Kuala Lumpur · Lot C3.10", tool: "Hoarding Pricing System" }
+      ]
+    },
+    inventory: {
+      version: "inventory-home-v1", snapshot: {
+        low_stock: { value: 6, unit: "count", status: "warning" }, inventory_value: { value: 184320, unit: "MYR", status: "clear" },
+        tools_available: { value: 18, unit: "count", status: "clear" }, tools_in_repair: { value: 3, unit: "count", status: "warning" }, count_variances: { value: 2, unit: "count", status: "watch" }
+      }, attention: { total: 4, items: [
+        { severity: "critical", title: "MDF 18mm is below zero", detail: "On hand -4 sheets against a low-stock threshold of 10.", impact: "-4 sheets", tool: "Inventory, Tools & Purchasing", action_label: "Open inventory" },
+        { severity: "warning", title: "Drill set remains in repair", detail: "Repair record is still marked SENT.", impact: "3 units", tool: "Inventory, Tools & Purchasing", action_label: "Review repair" },
+        { severity: "watch", title: "Scaffold collection due", detail: "Lot G-17 collection reminder is linked from Scaffold.", due_date: "2026-07-14", tool: "Scaffold & Green Tag System", action_label: "Open scaffold" }
+      ] }, activity: [
+        { at: "2026-07-13T10:22:00+08:00", actor: "store@hggroup.com.my", action_label: "Recorded Stock IN", detail: "Supplier purchase · 4 material lines", tool: "Inventory, Tools & Purchasing" },
+        { at: "2026-07-13T09:12:00+08:00", actor: "store@hggroup.com.my", action_label: "Assigned tools", detail: "KLCC fit-out · 2 tool types", tool: "Inventory, Tools & Purchasing" }
+      ]
+    },
+    transport: {
+      version: "transport-home-v1", snapshot: {
+        runs_today: { value: 5, unit: "count", status: "clear" }, open_service_jobs: { value: 8, unit: "count", status: "watch" },
+        dispatch_tonight: { value: 7, unit: "count", status: "warning" }, returns_collections: { value: 6, unit: "count", status: "warning" },
+        fleet_actions: { value: 3, unit: "count", status: "warning" }, photo_gaps: { value: 2, unit: "count", status: "watch" }
+      }, attention: { total: 5, items: [
+        { severity: "critical", title: "Permit blocks tonight's dispatch", detail: "Lot G-17 cannot move until the work permit is confirmed.", tool: "Daily Readiness & Dispatch", action_label: "Open dispatch" },
+        { severity: "warning", title: "Rorobin collection is overdue", detail: "RR-2026-018 has exceeded its planned collection date.", due_date: "2026-07-12", tool: "Transport / Mover / Rorobin", action_label: "Open transport job" },
+        { severity: "watch", title: "Road tax expires this month", detail: "VCA 7999 requires fleet review.", due_date: "2026-07-28", tool: "Lorry Fleet Management", action_label: "Open fleet" }
+      ] }, lanes: { movement: [{}, {}, {}], returns_collections: [{}, {}], fleet: [{}, {}, {}] }, activity: [
+        { at: "2026-07-13T08:21:00+08:00", actor: "eason@hggroup.com.my", action_label: "Updated dispatch assignment", detail: "JOB-260713-04 · Team and lorry confirmed", tool: "Daily Readiness & Dispatch" },
+        { at: "2026-07-13T07:48:00+08:00", actor: "calvin@hggroup.com.my", action_label: "Started transport run", detail: "TRIP-260713-02 · Pavilion pickup", tool: "Transport / Mover / Rorobin" }
+      ]
+    }
+  };
 
   function eachTool(fn) {
     CATS.forEach((cat, ci) => cat.tools.forEach((tool, ti) => fn(tool, cat, ci, ti)));
@@ -4130,6 +4350,9 @@
       } else if (ACTIVE_HOME_MODE === "finance") {
         showHubScreen("finance-home", resetTool);
         requestAnimationFrame(focusFinanceAttention);
+      } else if (ROLE_HOME_CONFIG[ACTIVE_HOME_MODE]) {
+        showHubScreen("role-home", resetTool);
+        requestAnimationFrame(focusRoleHomeAttention);
       } else {
         showHubScreen("home", resetTool);
         requestAnimationFrame(focusOpenBlockers);
@@ -4191,6 +4414,7 @@
 	  function scrollAttention() {
 	    if (ACTIVE_HOME_MODE === "executive") focusExecutiveDecisions();
 	    else if (ACTIVE_HOME_MODE === "finance") focusFinanceAttention();
+	    else if (ROLE_HOME_CONFIG[ACTIVE_HOME_MODE]) focusRoleHomeAttention();
 	    else focusOpenBlockers();
 	  }
 	  function currentThemeName() {
@@ -4339,7 +4563,11 @@
 
   function allowedHomeModes() {
     const modes = ["operations"];
+    const assigned = USER_PROFILE && Array.isArray(USER_PROFILE.home_roles) ? USER_PROFILE.home_roles : [];
+    assigned.forEach(mode => { if (ROLE_MODES[mode]) modes.push(mode); });
     if (DEFAULT_HOME_MODE === "executive") modes.unshift("executive");
+    if (["sales", "inventory", "transport"].includes(DEFAULT_HOME_MODE)) modes.push(DEFAULT_HOME_MODE);
+    if (USER_PROFILE && USER_PROFILE.is_admin) modes.push("executive", "sales", "inventory", "transport");
     const financeRole = USER_PROFILE && USER_PROFILE.finance_role;
     if (["Admin", "Manager"].includes(financeRole)) modes.push("finance");
     return Array.from(new Set(modes));
@@ -4372,7 +4600,10 @@
     const options = [
       ["executive", "briefcase-business", "Executive", "Company command view"],
       ["operations", "hard-hat", "Operations / Site", "Site delivery workspace"],
-      ["finance", "wallet", "Finance / Invoicing", "Cash, margin and payment queues"]
+      ["finance", "wallet", "Finance / Invoicing", "Cash, margin and payment queues"],
+      ["sales", "calculator", "Sales / Quotation", "Pricing and quotation handoff"],
+      ["inventory", "package", "Inventory / Purchasing", "Stock, tools and supplier action"],
+      ["transport", "boxes", "Transport / Rental", "Movement, rental and fleet action"]
     ].filter(item => allowed.includes(item[0]));
     menu.innerHTML = options.map(item =>
       '<button class="sb-role-choice' + (ACTIVE_HOME_MODE === item[0] ? ' active' : '') + '" type="button" role="menuitemradio" aria-checked="' + (ACTIVE_HOME_MODE === item[0]) + '" onclick="switchHomeView(\'' + item[0] + '\')">' +
@@ -4402,7 +4633,7 @@
     closeRoleViewMenu();
     renderRoleView();
     goHome();
-    toast(mode === "executive" ? "Executive view" : mode === "finance" ? "Finance / Invoicing view" : "Viewing as Operations / Site");
+    toast("Viewing as " + ((ROLE_MODES[mode] || ROLE_MODES.operations).label));
   }
 
   function markActive() {
@@ -4696,16 +4927,21 @@
     if (context) context.classList.toggle("show", DEFAULT_HOME_MODE === "executive" && ACTIVE_HOME_MODE === "operations");
     const activityTitle = document.getElementById("activityScreenTitle");
     const activityCopy = document.getElementById("activityScreenCopy");
-    if (activityTitle) activityTitle.textContent = ACTIVE_HOME_MODE === "executive" ? "Executive activity" : ACTIVE_HOME_MODE === "finance" ? "Finance activity" : "Recent activity";
+    const roleConfig = ROLE_HOME_CONFIG[ACTIVE_HOME_MODE];
+    if (activityTitle) activityTitle.textContent = ACTIVE_HOME_MODE === "executive" ? "Executive activity" : ACTIVE_HOME_MODE === "finance" ? "Finance activity" : roleConfig ? roleConfig.activityTitle : "Recent activity";
     if (activityCopy) activityCopy.textContent = ACTIVE_HOME_MODE === "executive"
       ? "Review the latest company changes across finance, operations, people, and assets."
       : ACTIVE_HOME_MODE === "finance"
         ? "Review the latest P&L, claims, expense, invoice, and billing updates."
+        : roleConfig
+          ? roleConfig.activityCopy + "."
         : "Track operational updates from the audit log across site tracking, dispatch, reports, workers, scaffold, and catalog activity.";
     if (ACTIVE_HOME_MODE === "executive") {
       Promise.resolve().then(() => loadExecutiveHome().catch(err => console.error("[hub] executive home failed:", err)));
     } else if (ACTIVE_HOME_MODE === "finance") {
       Promise.resolve().then(() => loadFinanceHome().catch(err => console.error("[hub] finance home failed:", err)));
+    } else if (roleConfig) {
+      Promise.resolve().then(() => loadRoleHome().catch(err => console.error("[hub] role home failed:", err)));
     } else {
       Promise.resolve().then(() => { try { loadBriefing(false); } catch (e) { console.error(e); } });
       Promise.resolve().then(() => { try { loadDashboard(); } catch (e) { console.error(e); } });
@@ -4728,6 +4964,24 @@
         '<button data-screen-link="finance-home" onclick="goHome()">' + ico("home") + '<span>Home</span></button>' +
         '<button data-tool-link="Project Revenue vs Expenses (P&L)" onclick="openToolByName(\'Project Revenue vs Expenses (P&L)\')">' + ico("trending-up") + '<span>P&amp;L</span></button>' +
         '<button data-tool-link="Receipt Claims" onclick="openToolByName(\'Receipt Claims\')">' + ico("receipt") + '<span>Claims</span></button>' +
+        '<button data-screen-link="activity" onclick="showHubScreen(\'activity\')">' + ico("bar-chart-3") + '<span>Activity</span></button>';
+    } else if (ACTIVE_HOME_MODE === "sales") {
+      nav.innerHTML =
+        '<button data-screen-link="role-home" onclick="goHome()">' + ico("home") + '<span>Home</span></button>' +
+        '<button data-tool-link="Smart Quotation" onclick="openToolByName(\'Smart Quotation\')">' + ico("calculator") + '<span>Quotes</span></button>' +
+        '<button data-tool-link="Mall Platform" onclick="openToolByName(\'Mall Platform\')">' + ico("building-2") + '<span>Requests</span></button>' +
+        '<button data-screen-link="activity" onclick="showHubScreen(\'activity\')">' + ico("bar-chart-3") + '<span>Activity</span></button>';
+    } else if (ACTIVE_HOME_MODE === "inventory") {
+      nav.innerHTML =
+        '<button data-screen-link="role-home" onclick="goHome()">' + ico("home") + '<span>Home</span></button>' +
+        '<button onclick="focusRoleHomeAttention()">' + ico("circle-alert") + '<span>Attention</span></button>' +
+        '<button data-tool-link="Inventory, Tools & Purchasing" onclick="openToolByName(\'Inventory, Tools & Purchasing\')">' + ico("package") + '<span>Inventory</span></button>' +
+        '<button data-screen-link="activity" onclick="showHubScreen(\'activity\')">' + ico("bar-chart-3") + '<span>Activity</span></button>';
+    } else if (ACTIVE_HOME_MODE === "transport") {
+      nav.innerHTML =
+        '<button data-screen-link="role-home" onclick="goHome()">' + ico("home") + '<span>Home</span></button>' +
+        '<button data-tool-link="Transport / Mover / Rorobin" onclick="openToolByName(\'Transport / Mover / Rorobin\')">' + ico("boxes") + '<span>Jobs</span></button>' +
+        '<button onclick="focusRoleHomeAttention()">' + ico("circle-alert") + '<span>Alerts</span></button>' +
         '<button data-screen-link="activity" onclick="showHubScreen(\'activity\')">' + ico("bar-chart-3") + '<span>Activity</span></button>';
     } else {
       nav.innerHTML =
@@ -4752,9 +5006,11 @@
 	    setTxt("opGreeting", part + ", " + first);
 	    setTxt("execGreeting", part + ", " + first);
 	    setTxt("financeGreeting", part + ", " + first);
+	    setTxt("roleHomeGreeting", part + ", " + first);
 	    const roleDate = new Date().toLocaleDateString("en-MY", { timeZone: "Asia/Kuala_Lumpur", weekday: "long", day: "numeric", month: "long", year: "numeric" });
 	    setTxt("execDate", roleDate);
 	    setTxt("financeDate", roleDate);
+	    setTxt("roleHomeDate", roleDate);
 	    setTxt("sbPname", name);
 	    setTxt("sbProle", (ROLE_MODES[ACTIVE_HOME_MODE] || ROLE_MODES.operations).label);
 	    setTxt("sbAvatar", (first[0] || "H").toUpperCase() + (name.split(" ")[1] ? name.split(" ")[1][0].toUpperCase() : ""));
@@ -5395,6 +5651,216 @@
     paintIcons();
   }
 
+  function activeRoleHomeConfig() { return ROLE_HOME_CONFIG[ACTIVE_HOME_MODE] || null; }
+  function runRoleHomeAction(kind) {
+    const config = activeRoleHomeConfig();
+    if (!config) return;
+    const action = kind === "secondary" ? config.secondary : config.primary;
+    if (!action) return;
+    if (action[1] === "#attention") focusRoleHomeAttention();
+    else openToolByName(action[1]);
+  }
+  function focusRoleHomeAttention() {
+    showHubScreen("role-home");
+    requestAnimationFrame(() => {
+      const card = document.getElementById("roleHomeAttentionCard");
+      if (!card) return;
+      card.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "center" });
+      card.focus({ preventScroll: true });
+      card.classList.add("review-focus");
+      clearTimeout(card._reviewFocusTimer);
+      card._reviewFocusTimer = setTimeout(() => card.classList.remove("review-focus"), 1300);
+    });
+  }
+  function configureRoleHome() {
+    const config = activeRoleHomeConfig();
+    if (!config) return;
+    const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+    set("roleHomeIntro", config.intro);
+    set("roleHomeSnapshotTitle", config.snapshotTitle);
+    set("roleHomeAttentionTitle", config.attentionTitle);
+    set("roleHomeAttentionCopy", config.attentionCopy);
+    set("roleHomeWorkflowTitle", config.workflowTitle);
+    set("roleHomeWorkflowCopy", config.workflowCopy);
+    set("roleHomeActivityTitle", config.activityTitle);
+    set("roleHomeActivityCopy", config.activityCopy);
+    set("roleHomePrimary", config.primary[0]);
+    set("roleHomeSecondary", config.secondary[0]);
+  }
+  function roleMetricValue(metric) {
+    if (!metric || metric.value == null) return "—";
+    if (metric.unit === "MYR") return formatMoneyCompact(metric.value);
+    if (metric.unit === "percent") return (Number(metric.value) || 0).toFixed(1) + "%";
+    return String(metric.value);
+  }
+  function renderRoleHomeSnapshot(data) {
+    const config = activeRoleHomeConfig();
+    const host = document.getElementById("roleHomeKpiGrid");
+    if (!config || !host) return;
+    const snapshot = (data && data.snapshot) || {};
+    host.style.setProperty("--role-kpi-count", config.metrics.length);
+    host.innerHTML = config.metrics.map(metricConfig => {
+      const metric = snapshot[metricConfig[0]];
+      const status = !metric || metric.value == null ? "unavailable" : (metric.status || "clear");
+      const note = metric && metric.basis ? metric.basis : metricConfig[2];
+      return '<div class="exec-kpi" data-status="' + esc(status) + '"><span class="exec-kpi-label">' + esc(metricConfig[1]) + '</span><span class="exec-kpi-metric"><b>' + esc(roleMetricValue(metric)) + '</b><em>' + esc(note) + '</em></span></div>';
+    }).join("");
+  }
+  function roleHomeItemOpen(index) {
+    const item = ROLE_HOME_STATE && ROLE_HOME_STATE.attention && Array.isArray(ROLE_HOME_STATE.attention.items) ? ROLE_HOME_STATE.attention.items[index] : null;
+    const tool = item && (item.tool || item.tool_id);
+    if (tool) openToolByName(tool);
+  }
+  function renderRoleHomeAttention(data) {
+    const attention = (data && data.attention) || { total: null, items: [] };
+    const items = Array.isArray(attention.items) ? attention.items : [];
+    const count = document.getElementById("roleHomeAttentionCount");
+    const list = document.getElementById("roleHomeAttentionList");
+    if (count) {
+      count.textContent = attention.total == null ? "—" : attention.total;
+      count.dataset.state = attention.total == null ? "unavailable" : (attention.total === 0 ? "clear" : "attention");
+    }
+    if (!list) return;
+    list.setAttribute("aria-busy", "false");
+    if (attention.total == null) {
+      list.innerHTML = '<div class="empty-state unavailable"><i data-lucide="triangle-alert"></i><div><b>Attention data unavailable</b><span>Reconnect the affected role sources, then refresh this view.</span></div></div>';
+      paintIcons(); return;
+    }
+    if (!items.length) {
+      const copy = ACTIVE_HOME_MODE === "inventory"
+        ? "No stock, tool, supplier-price, count, or collection action needs attention right now."
+        : ACTIVE_HOME_MODE === "transport"
+          ? "No movement, rental, collection, fleet, or photo action needs attention right now."
+          : "No quotation, measurement, or visual handoff action needs attention right now.";
+      list.innerHTML = '<div class="empty-state"><i data-lucide="shield-check"></i><div><b>All clear</b><span>' + esc(copy) + '</span></div></div>';
+      paintIcons(); return;
+    }
+    const indexed = items.map((item, index) => ({ item, index }));
+    list.innerHTML = ["critical", "warning", "watch"].map(severity => {
+      const group = indexed.filter(entry => {
+        const current = String(entry.item.severity || "watch").toLowerCase();
+        return severity === "watch" ? !["critical", "warning"].includes(current) : current === severity;
+      });
+      if (!group.length) return "";
+      const rows = group.map(entry => {
+        const item = entry.item;
+        const tool = item.tool || item.tool_id;
+        const title = item.title || "Review required";
+        const detail = item.detail || item.source_label || "Open the owning tool to review.";
+        const context = item.impact || item.reference || (item.impact_value != null ? formatMoneyCompact(item.impact_value) : "");
+        const action = item.action_label || "Open owning tool";
+        const date = item.due_date || item.event_date;
+        const due = date ? new Date(date + "T00:00:00").toLocaleDateString("en-MY", { day: "numeric", month: "short" }) : "";
+        const tag = tool ? "button" : "div";
+        const click = tool ? ' type="button" onclick="roleHomeItemOpen(' + entry.index + ')"' : "";
+        return '<' + tag + ' class="exec-decision"' + click + '><span class="exec-decision-summary"><span class="exec-decision-heading"><b class="exec-decision-title">' + esc(title) + '</b>' + (context ? '<span class="exec-decision-impact">' + esc(context) + '</span>' : '') + '</span><span class="exec-decision-detail">' + esc(detail) + '</span>' + (due ? '<span class="exec-decision-due">' + esc("Due " + due) + '</span>' : '') + '</span>' + (tool ? '<span class="exec-decision-action"><strong>' + esc(action) + '</strong><i data-lucide="chevron-right"></i></span>' : '') + '</' + tag + '>';
+      }).join("");
+      return '<section class="exec-decision-group ' + severity + '"><div class="exec-decision-group-head"><b>' + esc(readable(severity)) + '</b><span>' + group.length + '</span></div>' + rows + '</section>';
+    }).join("");
+    paintIcons();
+  }
+  function roleWorkflowOpen(index) {
+    const config = activeRoleHomeConfig();
+    const row = config && config.workflow[index];
+    if (row && row[2]) openToolByName(row[2]);
+  }
+  function renderRoleHomeWorkflow(data) {
+    const config = activeRoleHomeConfig();
+    const host = document.getElementById("roleHomeWorkflowList");
+    if (!config || !host) return;
+    const lanes = (data && data.lanes) || {};
+    const workflow = (data && data.workflow) || {};
+    host.innerHTML = config.workflow.map((row, index) => {
+      let laneCount = row[3] && typeof row[3] === "string" && Array.isArray(lanes[row[3]]) ? lanes[row[3]].length : null;
+      if (Array.isArray(row[3])) {
+        const counts = row[3].map(key => workflow[key] && workflow[key].count).filter(value => value != null).map(Number);
+        laneCount = counts.length === row[3].length ? counts.reduce((sum, value) => sum + value, 0) : null;
+      }
+      const description = laneCount == null ? row[1] : laneCount + " source-labelled item" + (laneCount === 1 ? "" : "s") + " · " + row[1];
+      return '<button type="button" class="role-workflow-row" onclick="roleWorkflowOpen(' + index + ')"><span class="role-workflow-step">' + (index + 1) + '</span><span class="role-workflow-copy"><b>' + esc(row[0]) + '</b><span>' + esc(description) + '</span></span><span class="role-workflow-action">Open<i data-lucide="arrow-right"></i></span></button>';
+    }).join("");
+    paintIcons();
+  }
+  function roleHomeActivityOpen(index) {
+    const row = ROLE_HOME_STATE && Array.isArray(ROLE_HOME_STATE.activity) ? ROLE_HOME_STATE.activity[index] : null;
+    const tool = row && (row.tool || row.tool_id);
+    if (tool) openToolByName(tool);
+  }
+  function renderRoleHomeActivity(data) {
+    const host = document.getElementById("roleHomeActivityList"); if (!host) return;
+    const rows = data && Array.isArray(data.activity) ? data.activity.slice(0, 6) : [];
+    if (!rows.length) {
+      host.innerHTML = '<div class="empty-state"><i data-lucide="inbox"></i><div><b>No recent activity</b><span>Role updates will appear here as the team uses the owning tools.</span></div></div>';
+      paintIcons(); return;
+    }
+    host.innerHTML = rows.map((row, index) => {
+      const atValue = row.at || row.occurred_at || row.created_at;
+      const at = atValue ? new Date(atValue).toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", hour12: false }) : "—";
+      const actor = String(row.actor || row.created_by || "System").split("@")[0].replace(/[._-]/g, " ");
+      const tool = row.tool || row.tool_id;
+      const tag = tool ? "button" : "div";
+      const action = tool ? ' type="button" onclick="roleHomeActivityOpen(' + index + ')"' : "";
+      return '<' + tag + ' class="exec-activity-row"' + action + '><span class="exec-activity-time">' + esc(at) + '</span><span class="exec-activity-copy"><b>' + esc(row.action_label || readable(row.action_code || row.type || "Updated record")) + '</b><span>' + esc(row.detail || row.source_label || "HG Hub update") + '</span></span><span class="exec-activity-actor">' + esc(actor) + '</span></' + tag + '>';
+    }).join("");
+    paintIcons();
+  }
+  function renderRoleHomeNotice(data, fatalMessage) {
+    const notice = document.getElementById("roleHomeNotice");
+    const text = document.getElementById("roleHomeNoticeText");
+    if (!notice || !text) return;
+    const unavailable = data && Array.isArray(data.unavailable) ? data.unavailable : [];
+    const messages = fatalMessage ? [fatalMessage] : unavailable.map(item => readable(item && (item.domain || item.source)) + " unavailable");
+    text.textContent = messages.join(" · ");
+    notice.classList.toggle("show", messages.length > 0);
+  }
+  function renderRoleHomeUnavailable(message) {
+    const config = activeRoleHomeConfig();
+    const snapshot = {};
+    if (config) config.metrics.forEach(metric => { snapshot[metric[0]] = { value: null, status: "unavailable" }; });
+    renderRoleHomeSnapshot({ snapshot: snapshot });
+    renderRoleHomeAttention({ attention: { total: null, items: [] } });
+    renderRoleHomeWorkflow({});
+    renderRoleHomeActivity({ activity: [] });
+    renderRoleHomeNotice(null, message);
+  }
+  async function loadRoleHome() {
+    const mode = ACTIVE_HOME_MODE;
+    const config = activeRoleHomeConfig();
+    if (!config) return;
+    configureRoleHome();
+    const count = document.getElementById("roleHomeAttentionCount");
+    const list = document.getElementById("roleHomeAttentionList");
+    const grid = document.getElementById("roleHomeKpiGrid");
+    if (count) { count.textContent = "—"; count.dataset.state = "unavailable"; }
+    if (list) { list.setAttribute("aria-busy", "true"); list.innerHTML = '<div class="dash-load"><span class="brief-spin"></span></div>'; }
+    if (grid) grid.innerHTML = '<div class="dash-load"><span class="brief-spin"></span></div>';
+    if (LOCAL_MOCK_PREVIEW) {
+      ROLE_HOME_STATE = ROLE_HOME_MOCK_DATA[mode];
+    } else {
+      const params = mode === "sales"
+        ? { p_as_of: null, p_attention_limit: 20, p_draft_review_days: 7 }
+        : mode === "inventory"
+          ? { p_as_of: null, p_attention_limit: 20, p_activity_limit: 12 }
+          : { p_as_of: null, p_attention_limit: 20 };
+      const result = await SB.rpc(config.rpc, params);
+      if (ACTIVE_HOME_MODE !== mode) return;
+      if (result.error || !result.data) {
+        renderRoleHomeUnavailable(result.error && /function .* does not exist/i.test(result.error.message || "")
+          ? config.title + " database setup is not installed yet."
+          : config.title + " data is unavailable: " + ((result.error && result.error.message) || "Unknown error"));
+        return;
+      }
+      ROLE_HOME_STATE = result.data;
+    }
+    renderRoleHomeSnapshot(ROLE_HOME_STATE);
+    renderRoleHomeAttention(ROLE_HOME_STATE);
+    renderRoleHomeWorkflow(ROLE_HOME_STATE);
+    renderRoleHomeActivity(ROLE_HOME_STATE);
+    renderRoleHomeNotice(ROLE_HOME_STATE, "");
+    renderActivity((ROLE_HOME_STATE.activity || []).map(row => ({ at: row.at || row.occurred_at || row.created_at, user_email: row.actor || row.created_by, action: row.action_code || row.action_label, details: row.detail })));
+    paintIcons();
+  }
+
   async function loadDashboard() {
     ["snapNeeds", "snapReady", "snapRisk", "snapBlocked", "snapTeam", "snapWorker", "snapQuotes", "snapValue"].forEach(id => { const e = document.getElementById(id); if (e) e.classList.add("skel"); });
     let openCount = 0, openValue = 0, attn = [], actToday = 0, recent = [], spark = new Array(14).fill(0), dispatchJobs = [];
@@ -5756,7 +6222,7 @@
     try { allowed = (await SB.from("allowed_users").select("email, full_name, is_admin").ilike("email", email).maybeSingle()).data; } catch (e) {}
     IS_ADMIN = !!(allowed && allowed.is_admin);
     if (!allowed) { document.getElementById("deniedEmail").textContent = email; showGate("gateDenied"); return; }
-    USER_PROFILE = { email: email, full_name: allowed.full_name || "", is_admin: IS_ADMIN, finance_role: "Viewer" };
+    USER_PROFILE = { email: email, full_name: allowed.full_name || "", is_admin: IS_ADMIN, finance_role: "Viewer", home_roles: [] };
     try {
       const financeRoleResult = await SB.rpc("pl_my_role");
       if (!financeRoleResult.error && ["Admin", "Manager", "Editor", "Viewer"].includes(financeRoleResult.data)) {
@@ -5765,11 +6231,19 @@
         console.warn("[hub] Project P&L role unavailable:", financeRoleResult.error.message);
       }
     } catch (e) { console.warn("[hub] Project P&L role unavailable:", e); }
+    try {
+      const roleResult = await SB.rpc("hub_my_home_roles");
+      if (!roleResult.error && Array.isArray(roleResult.data)) {
+        USER_PROFILE.home_roles = roleResult.data.filter(mode => ["executive", "sales", "inventory", "transport"].includes(mode));
+      } else if (roleResult.error) {
+        console.warn("[hub] Role Home assignments are not installed yet:", roleResult.error.message);
+      }
+    } catch (e) { console.warn("[hub] Role Home assignments unavailable:", e); }
     DEFAULT_HOME_MODE = "operations";
     HOME_MODE_AVAILABLE = false;
     try {
       const modeResult = await SB.rpc("hub_my_home_mode");
-      if (!modeResult.error && ["operations", "executive", "finance"].includes(modeResult.data)) {
+      if (!modeResult.error && ["operations", "executive", "finance", "sales", "inventory", "transport"].includes(modeResult.data)) {
         DEFAULT_HOME_MODE = modeResult.data;
         HOME_MODE_AVAILABLE = true;
       } else if (modeResult.error) {

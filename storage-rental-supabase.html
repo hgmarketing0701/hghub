@@ -4,130 +4,141 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HG — Temporary Storage Rental — Supabase</title>
+<script>
+  (function(){
+    var media=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');
+    function preference(){
+      try { var saved=localStorage.getItem('hg_hub_theme'); if(saved==='light'||saved==='dark'||saved==='system') return saved; } catch(e) {}
+      return 'system';
+    }
+    function resolved(value){ return value==='light'||value==='dark' ? value : (media&&media.matches?'dark':'light'); }
+    function apply(value){ var theme=resolved(value); document.documentElement.dataset.theme=theme; document.documentElement.style.colorScheme=theme; }
+    apply(preference());
+    window.addEventListener('message',function(event){ if(event.data&&event.data.type==='hg-theme-change'&&(event.data.theme==='light'||event.data.theme==='dark')) apply(event.data.theme); });
+    window.addEventListener('storage',function(event){ if(event.key==='hg_hub_theme') apply(preference()); });
+    if(media){ var sync=function(){ if(preference()==='system') apply('system'); }; if(media.addEventListener) media.addEventListener('change',sync); else if(media.addListener) media.addListener(sync); }
+  })();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <style>
-  :root{
-    --bg:#0a0e1a; --panel:#141926; --panel2:#1c2335; --line:#2a3245;
-    --ink:#ffffff; --mut:#a0a8b8; --acc:#f59e0b; --acc2:#d97706;
-    --acc-soft:rgba(245,158,11,0.12);
-    --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --blue:#3b82f6; --chip:#1c2335;
-    --radius:14px; --shadow:0 10px 40px rgba(0,0,0,0.4);
+  :root { --bg:#fff; --panel:#fff; --panel2:#f8f7f4; --raised:#fff; --line:#e4ded6; --line-strong:#cfc8bd; --ink:#171717; --mut:#817970; --acc:#143d4a; --acc2:#0e303b; --acc-soft:#eef6f3; --ok:#15945d; --ok-soft:#edf8f3; --warn:#a66b00; --warn-soft:#fff6e2; --bad:#d84d4f; --bad-soft:#fff1ee; --blue:#2f7fa5; --blue-soft:#eef7fb; --chip:#f8f7f4; --radius:8px; --shadow:0 12px 30px rgba(23,23,23,.12); }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  #app { padding:26px 28px 0; }
+  body.embedded #app { padding-top:0; }
+  a { color:var(--acc); }
+  header { display:flex; align-items:center; gap:16px; padding:0 0 20px; margin:0 0 18px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  body.embedded header { display:none; }
+  .brand-block { display:flex; align-items:center; gap:9px; min-width:0; }
+  .brand-logo { width:24px; height:24px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; color:var(--acc); }
+  .brand-logo svg { width:21px; height:21px; stroke-width:2; }
+  .gate .brand-logo { width:60px; height:60px; margin:0 auto 16px; border-radius:12px; background:var(--acc); color:#fff; font-size:1.35rem; font-weight:800; }
+  .brand-name { display:flex; align-items:center; gap:10px; color:var(--ink); font-size:1.05rem; font-weight:800; letter-spacing:-.02em; line-height:1.2; }
+  .brand-sub { margin-top:3px; color:var(--mut); font-size:13px; line-height:17px; }
+  .tool-live { display:inline-flex; align-items:center; height:21px; padding:0 9px; border-radius:999px; background:var(--ok-soft); color:var(--ok); font-size:.64rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  header .meta-pills { display:flex; align-items:center; gap:10px; margin-left:auto; flex-wrap:wrap; }
+  header .mpill { display:flex; align-items:center; gap:7px; padding:8px 12px; background:var(--panel); border:1px solid var(--line); border-radius:999px; color:var(--mut); font-size:.78rem; }
+  header .mpill strong { color:var(--acc); font-weight:700; }
+  header .mpill button { padding:0; background:none; border:0; color:var(--warn); cursor:pointer; font:inherit; font-weight:700; }
+  nav { display:flex; gap:26px; padding:0; margin:0 0 24px; overflow-x:auto; border-bottom:1px solid var(--line); flex-wrap:nowrap; scrollbar-width:none; }
+  nav::-webkit-scrollbar { display:none; }
+  nav button { flex:0 0 auto; padding:0 0 12px; background:transparent; border:0; border-bottom:3px solid transparent; border-radius:0; color:#716b65; cursor:pointer; font:inherit; font-size:.78rem; font-weight:800; white-space:nowrap; }
+  nav button:hover,nav button.active { color:var(--acc); } nav button.active { border-color:var(--acc); }
+  main { max-width:none; margin:0; padding:0 0 72px; }
+  .view { display:none; } .view.active { display:block; }
+  h2 { margin:0 0 14px; color:var(--ink); font-size:1.22rem; font-weight:800; letter-spacing:-.025em; }
+  h3 { margin:18px 0 8px; color:var(--ink); font-size:.9rem; font-weight:800; letter-spacing:0; text-transform:none; }
+  .section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:14px; }
+  .section-head h2 { margin-bottom:4px; }
+  .card { margin-bottom:16px; padding:18px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); box-shadow:none; }
+  #v-board > .card { padding:0; border:0; background:transparent; }
+  #v-rentals > .card,#v-invoices > .card,#v-lots > .card,#v-audit > .card,#v-reports > .card { padding:0; overflow-x:auto; }
+  #r-list > .muted,#i-list > .muted { padding:28px 20px; text-align:center; }
+  #v-audit > .card > .muted { padding:14px 16px 0; }
+  #v-reports > .card:empty { min-height:0; padding:0; border:0; }
+  .row { display:flex; gap:14px; flex-wrap:wrap; } .row > * { min-width:150px; flex:1; }
+  label { display:block; margin:0 0 6px; color:#716b65; font-size:.72rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+  input,select,textarea { width:100%; min-height:42px; padding:10px 12px; background:var(--panel); border:1px solid #ded8cf; border-radius:8px; color:var(--ink); font:inherit; font-size:.88rem; }
+  select { appearance:none; -webkit-appearance:none; padding-right:42px; }
+  input:focus,select:focus,textarea:focus { outline:none; border-color:var(--acc); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  input[type="date"],input[type="month"] { color-scheme:light; } input[type="checkbox"] { width:16px; min-height:16px; height:16px; padding:0; accent-color:var(--acc); }
+  textarea { min-height:68px; resize:vertical; }
+  button.btn,button.ghost { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:9px 12px; border-radius:8px; cursor:pointer; font:inherit; font-size:.82rem; font-weight:700; }
+  button.btn { background:var(--acc); border:1px solid var(--acc); color:#fff; } button.btn:hover { background:var(--acc2); } button.btn:active { transform:translateY(1px); }
+  button.ghost { background:var(--panel); border:1px solid var(--line); color:var(--acc); } button.ghost:hover { background:var(--panel2); border-color:var(--line-strong); }
+  button.sm { min-height:34px; padding:7px 10px; font-size:.78rem; } button.danger { background:var(--panel); border:1px solid #f1c8c5; color:var(--bad); } button.danger:hover { background:var(--bad-soft); } button.okbtn { background:var(--ok); border-color:var(--ok); color:#fff; }
+  .muted { color:var(--mut); }
+  table { width:100%; min-width:760px; border-collapse:collapse; font-size:.82rem; }
+  th { padding:10px 12px; background:var(--panel2); border-bottom:1px solid var(--line); color:#716b65; font-size:.66rem; font-weight:800; letter-spacing:.05em; text-align:left; text-transform:uppercase; white-space:nowrap; }
+  td { padding:11px 12px; border-bottom:1px solid var(--line); vertical-align:top; } tbody tr:last-child td { border-bottom:0; } tr:hover td { background:var(--panel2); }
+  .right { text-align:right; }
+  .pill { display:inline-block; padding:3px 9px; border-radius:999px; font-size:.68rem; font-weight:800; white-space:nowrap; }
+  .p-Active,.p-Paid { background:var(--ok-soft); color:var(--ok); } .p-Expiring,.p-Partial { background:var(--warn-soft); color:var(--warn); } .p-Expired,.p-Overdue { background:var(--bad-soft); color:var(--bad); } .p-Vacated,.p-Released,.p-Void { background:var(--panel2); color:var(--mut); } .p-SoldOff { background:var(--ink); color:var(--panel); } .p-Internal { background:var(--blue-soft); color:var(--blue); } .p-Unpaid { background:var(--panel2); color:var(--mut); }
+  .tag { display:inline-block; padding:3px 8px; background:var(--chip); border:0; border-radius:999px; color:#716b65; font-size:.7rem; }
+  .alert { display:flex; align-items:center; gap:10px; padding:10px 0; margin:0; border-bottom:1px solid var(--line); border-radius:0; color:var(--ink); cursor:pointer; font-size:.82rem; }
+  .alert:last-child { border-bottom:0; } .alert.expired,.alert.expiring { background:transparent; border-left:0; border-right:0; border-top:0; } .alert.expired::before,.alert.expiring::before { content:""; width:8px; height:8px; flex:0 0 auto; border-radius:50%; } .alert.expired::before { background:var(--bad); } .alert.expiring::before { background:var(--warn); }
+  .storage-snapshot { margin-bottom:16px; padding:18px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); }
+  .snapshot-title { margin-bottom:14px; color:var(--ink); font-size:.9rem; font-weight:800; }
+  .snapshot-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); }
+  .stat { min-width:0; min-height:84px; padding:6px 16px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .stat:nth-child(5n) { border-right:0; } .stat:nth-last-child(-n+4) { border-bottom:0; }
+  .stat .l { min-height:34px; color:#716b65; font-size:.66rem; font-weight:800; letter-spacing:.04em; line-height:17px; text-transform:uppercase; }
+  .stat .n { color:var(--acc); font-size:1.36rem; font-weight:800; font-variant-numeric:tabular-nums; line-height:36px; white-space:nowrap; } .stat .n.bad { color:var(--bad); } .stat .n.ok { color:var(--ok); }
+  .toolbar { display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap; } .toolbar input,.toolbar select { width:auto; flex:0 0 auto; } .toolbar .hub-select { width:auto; min-width:180px; flex:0 0 auto; }
+  .hint { margin-top:3px; color:var(--mut); font-size:.78rem; }
+  .availability-toolbar { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+  .availability-filters { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .availability-filter { display:inline-flex; align-items:center; gap:7px; min-height:34px; padding:7px 10px; background:var(--panel); border:1px solid var(--line); border-radius:999px; color:var(--mut); cursor:pointer; font:inherit; font-size:.76rem; font-weight:700; }
+  .availability-filter:hover { border-color:var(--line-strong); color:var(--acc); }
+  .availability-filter.active { background:var(--acc-soft); border-color:transparent; color:var(--acc); }
+  .availability-filter span { min-width:19px; padding:1px 6px; background:var(--panel2); border-radius:999px; color:inherit; font-size:.66rem; text-align:center; }
+  .availability-help { color:var(--mut); font-size:.78rem; }
+  .availability-board { border:0; background:transparent; }
+  .availability-empty { grid-column:1/-1; padding:28px 20px; color:var(--mut); text-align:center; }
+  .availability-empty strong { display:block; margin-bottom:3px; color:var(--ink); }
+  .zone { margin-bottom:24px; } .zone:last-child { margin-bottom:0; } .zone h3 { margin:0 0 10px; }
+  .lots { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:10px; }
+  .lot { display:grid; grid-template-rows:auto auto 1fr; gap:7px; min-height:116px; padding:14px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); cursor:pointer; transition:.15s; }
+  .lot:hover { border-color:var(--line-strong); background:var(--panel2); }
+  .lot.occ,.lot.avail,.lot.int { border-left:1px solid var(--line); }
+  .asset-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .lot .id { min-width:0; color:var(--ink); font-size:15px; font-weight:800; }
+  .asset-meta { color:var(--mut); font-size:.72rem; }
+  .asset-context { align-self:end; color:var(--mut); font-size:.76rem; line-height:1.35; }
+  .ltag { position:static; flex:0 0 auto; padding:3px 8px; border-radius:999px; font-size:.62rem; font-weight:800; letter-spacing:.02em; }
+  .ltag.avail { background:var(--ok-soft); color:var(--ok); } .ltag.occ { background:var(--bad-soft); color:var(--bad); } .ltag.int { background:var(--blue-soft); color:var(--blue); }
+  .photos { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; } .photos a img { height:64px; border:1px solid var(--line); border-radius:6px; }
+  .kv { min-width:0; } .kv td { padding:7px 8px; border-bottom:1px solid var(--line); } .kv td.k { width:170px; color:var(--mut); }
+  dialog { width:94%; max-width:860px; padding:0; background:var(--raised); border:1px solid var(--line); border-radius:12px; color:var(--ink); box-shadow:0 18px 50px rgba(0,0,0,.22); } dialog::backdrop { background:rgba(5,8,10,.6); backdrop-filter:blur(5px); }
+  .modal-h { display:flex; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line); } .modal-h h2 { margin:0; font-size:1.05rem; } .modal-h .x { min-width:44px; min-height:44px; margin-left:auto; background:none; border:0; color:var(--mut); cursor:pointer; font-size:22px; }
+  .modal-b { max-height:74vh; padding:18px; overflow:auto; } .modal-f { display:flex; justify-content:flex-end; gap:8px; padding:14px 18px; border-top:1px solid var(--line); flex-wrap:wrap; }
+  #toast { position:fixed; bottom:20px; left:50%; z-index:100; display:none; max-width:90%; padding:11px 18px; transform:translateX(-50%); background:var(--raised); border:1px solid var(--line); border-radius:10px; color:var(--ink); box-shadow:var(--shadow); } #toast.bad { border-color:#f1c8c5; color:var(--bad); } #toast.ok { border-color:#bfe1d1; color:var(--ok); }
+  .spin { display:inline-block; width:14px; height:14px; border:2px solid var(--line-strong); border-top-color:var(--acc); border-radius:50%; animation:s 1s linear infinite; vertical-align:-2px; } @keyframes s { to { transform:rotate(360deg); } }
+  .dz { padding:18px 12px; background:var(--panel); border:1.5px dashed var(--line-strong); border-radius:8px; text-align:center; cursor:pointer; transition:.15s; } .dz:hover,.dz.over { border-color:var(--acc); background:var(--acc-soft); } .dz-files { display:flex; justify-content:center; gap:6px; margin-top:8px; flex-wrap:wrap; } .dz-chip { padding:3px 8px; background:var(--chip); border:0; border-radius:999px; font-size:.7rem; } .dz-chip b { margin-left:4px; color:var(--bad); cursor:pointer; font-weight:700; }
+  .totbar { display:flex; align-items:baseline; justify-content:flex-end; gap:18px; margin-top:10px; padding-top:10px; border-top:1px solid var(--line); } .totbar .big { color:var(--acc); font-size:20px; font-weight:800; }
+  .clientOnly,.internalOnly { display:block; } .msg { min-height:20px; margin-top:10px; opacity:0; font-size:.86rem; transition:opacity .2s; } .msg.show { opacity:1; } .msg.ok { color:var(--ok); } .msg.err { color:var(--bad); }
+  .hub-select { position:relative; width:100%; } .hub-select-native { position:absolute; width:1px !important; height:1px; opacity:0; pointer-events:none; }
+  button.hub-select-trigger { position:relative; display:flex; align-items:center; width:100%; min-height:42px; padding:10px 42px 10px 12px; background:var(--panel); border:1px solid #ded8cf; border-radius:8px; color:var(--ink); cursor:pointer; font:inherit; font-size:.88rem; font-weight:500; text-align:left; }
+  button.hub-select-trigger:hover { border-color:var(--line-strong); } button.hub-select-trigger:focus-visible,.hub-select.open .hub-select-trigger { outline:none; border-color:var(--acc); box-shadow:0 0 0 3px rgba(20,61,74,.08); } button.hub-select-trigger::after { content:""; position:absolute; top:50%; right:16px; width:7px; height:7px; transform:translateY(-68%) rotate(45deg); border-right:1.7px solid var(--acc); border-bottom:1.7px solid var(--acc); } button.hub-select-trigger:disabled { opacity:.6; cursor:default; }
+  .hub-select-menu { position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:140; display:none; max-height:260px; padding:5px; overflow-y:auto; background:var(--raised); border:1px solid var(--line); border-radius:8px; box-shadow:var(--shadow); } .hub-select.open .hub-select-menu { display:block; } .hub-select.open-up .hub-select-menu { top:auto; bottom:calc(100% + 4px); }
+  button.hub-select-option { display:block; width:100%; min-height:40px; padding:9px 10px; background:transparent; border:0; border-radius:6px; color:var(--ink); cursor:pointer; font:inherit; font-size:.86rem; line-height:1.35; text-align:left; } button.hub-select-option:hover,button.hub-select-option:focus-visible,button.hub-select-option.selected { outline:none; background:var(--panel2); color:var(--acc); } button.hub-select-option:disabled { color:var(--mut); cursor:default; }
+  .gate { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; } .gate .card { max-width:430px; width:100%; padding:36px 30px; text-align:center; } .gbtn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:44px; margin-top:18px; padding:13px; background:#fff; border:1px solid var(--line); border-radius:8px; color:#1a1a1a; cursor:pointer; font:inherit; font-size:.95rem; font-weight:700; } .gate input { margin-bottom:4px; text-align:left; } .gate h2 { font-size:1.05rem; }
+  html[data-theme="dark"] { --bg:#1b2527; --panel:#202b2d; --panel2:#253133; --raised:#2b383a; --line:#394749; --line-strong:#536164; --ink:#f3f6f4; --mut:#b3bebb; --acc:#73aeba; --acc2:#82bdc8; --acc-soft:#263d42; --ok:#79cca1; --ok-soft:#1d352b; --warn:#d8a84b; --warn-soft:#382f1e; --bad:#f08a8a; --bad-soft:#3a2528; --blue:#7cb8d3; --blue-soft:#24383f; --chip:#2b383a; --shadow:0 16px 36px rgba(0,0,0,.35); }
+  html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea,html[data-theme="dark"] button.hub-select-trigger { background:var(--panel); border-color:var(--line-strong); } html[data-theme="dark"] input[type="date"],html[data-theme="dark"] input[type="month"] { color-scheme:dark; } html[data-theme="dark"] nav button { color:#aeb9b6; } html[data-theme="dark"] nav button:hover,html[data-theme="dark"] nav button.active { color:#c8e4e8; } html[data-theme="dark"] th { color:#a5aeaa; } html[data-theme="dark"] .p-SoldOff { background:#f3f6f4; color:#202b2d; } html[data-theme="dark"] .gbtn { background:#f1f4f3; border-color:transparent; }
+  @media(max-width:760px){
+    #app { padding:18px 16px 0; } body.embedded #app { padding-top:0; } header { align-items:flex-start; gap:12px; } .brand-sub { display:none; } header .meta-pills { display:none; }
+    nav { gap:22px; margin-bottom:20px; } nav button { font-size:.84rem; }
+    main { padding-bottom:48px; } .section-head { align-items:flex-start; flex-direction:column; } .section-head button { width:100%; } .toolbar { align-items:stretch; } .toolbar input,.toolbar select,.toolbar .hub-select { width:100%; min-width:0; flex:1 1 100%; } .toolbar button { flex:1; }
+    .storage-snapshot { padding:16px; } .snapshot-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .stat { min-height:84px; padding:6px 12px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); } .stat:nth-child(5n) { border-right:1px solid var(--line); } .stat:nth-child(2n) { border-right:0; } .stat:nth-last-child(-n+4) { border-bottom:1px solid var(--line); } .stat:last-child { grid-column:1/-1; border-right:0; border-bottom:0; }
+    .row { gap:10px; } .row > * { flex-basis:100%; } .availability-toolbar { align-items:flex-start; flex-direction:column; } .availability-filters { width:100%; } .availability-help { width:100%; } .lots { grid-template-columns:repeat(2,minmax(0,1fr)); } .lot { min-height:124px; padding:12px; }
+    .hub-select-menu { max-height:min(260px,45vh); } button.hub-select-option { min-height:44px; }
+    dialog { width:calc(100% - 24px); } .modal-b { padding:16px; } .modal-f button { flex:1; }
   }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
-  a{color:var(--acc)}
-  header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);
-    display:flex;align-items:center;gap:16px;padding:14px 22px;flex-wrap:wrap}
-  .brand-block{display:flex;align-items:center;gap:14px}
-  .brand-logo{width:46px;height:46px;background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:12px;
-    display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:#0a0e1a;font-weight:900;letter-spacing:.02em}
-  .brand-name{font-size:1.15rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1}
-  .brand-sub{font-size:.8rem;color:var(--mut);margin-top:2px}
-  header .meta-pills{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  header .mpill{background:var(--bg);border:1px solid var(--line);padding:8px 14px;border-radius:999px;
-    font-size:.82rem;color:var(--mut);display:flex;align-items:center;gap:7px}
-  header .mpill strong{color:var(--ink);font-weight:700}
-  header .mpill button{background:none;border:none;color:var(--acc);cursor:pointer;font-size:.78rem;font-weight:700;font-family:inherit}
-  nav{display:flex;gap:6px;flex-wrap:wrap;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);
-    position:sticky;top:75px;z-index:19}
-  nav button{background:transparent;border:1px solid transparent;color:var(--mut);padding:8px 15px;border-radius:10px;
-    cursor:pointer;font-size:13px;font-weight:600;font-family:inherit}
-  nav button.active{background:var(--acc);color:#0a0e1a}
-  nav button:hover:not(.active){background:var(--panel2);color:var(--ink);border-color:var(--line)}
-  main{padding:24px;max-width:1280px;margin:0 auto}
-  .view{display:none}.view.active{display:block}
-  h2{font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;margin:0 0 16px}
-  h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:var(--acc);margin:18px 0 8px;font-weight:700}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:16px}
-  .row{display:flex;gap:14px;flex-wrap:wrap}.row>*{flex:1;min-width:150px}
-  label{display:block;font-size:.82rem;color:var(--mut);margin:0 0 6px;font-weight:600}
-  input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);
-    border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit}
-  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
-  textarea{resize:vertical;min-height:54px}
-  button.btn{display:inline-flex;align-items:center;gap:8px;background:var(--acc);color:#0a0e1a;border:none;border-radius:10px;
-    padding:11px 18px;font-weight:700;cursor:pointer;font-size:14px;font-family:inherit;transition:transform .1s,background .2s}
-  button.btn:hover{background:var(--acc2)}button.btn:active{transform:translateY(1px)}
-  button.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
-  button.ghost:hover{background:var(--panel2);border-color:var(--acc)}
-  button.sm{padding:6px 11px;font-size:12px;border-radius:8px}
-  button.danger{background:transparent;border:1px solid var(--bad);color:#fca5a5}
-  button.danger:hover{background:rgba(239,68,68,.12)}
-  button.okbtn{background:var(--ok);color:#04240f}button.okbtn:hover{filter:brightness(1.1)}
-  .muted{color:var(--mut)}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th{text-align:left;color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:8px;border-bottom:1px solid var(--line)}
-  td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-  tr:hover td{background:var(--panel2)}
-  .right{text-align:right}
-  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
-  .p-Active,.p-Paid{background:#14432a;color:#86efac}
-  .p-Expiring,.p-Partial{background:#4a3a12;color:#fcd34d}
-  .p-Expired,.p-Overdue{background:#4c1d24;color:#fca5a5}
-  .p-Vacated,.p-Released,.p-Void{background:var(--line);color:var(--mut)}
-  .p-SoldOff{background:#0a0e1a;color:#fff;border:1px solid var(--line)}
-  .p-Internal{background:#1e3a5f;color:#93c5fd}
-  .p-Unpaid{background:#374151;color:#d1d5db}
-  .tag{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:11px;color:var(--mut)}
-  .alert{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:9px;margin-bottom:6px;font-size:13px;cursor:pointer}
-  .alert.expired{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4)}
-  .alert.expiring{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4)}
-  .stat{flex:1;min-width:130px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px;transition:border-color .2s}
-  .stat:hover{border-color:var(--acc)}
-  .stat .n{font-size:1.6rem;font-weight:800;color:var(--acc)}
-  .stat .n.bad{color:var(--bad)}.stat .n.ok{color:var(--ok)}
-  .stat .l{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
-  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
-  .toolbar input,.toolbar select{width:auto;flex:0 0 auto}
-  .hint{font-size:12px;color:var(--mut);margin-top:3px}
-  /* lot board */
-  .zone{margin-bottom:16px}
-  .zone h3{margin:0 0 8px}
-  .lots{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
-  .lot{border:1px solid var(--line);border-radius:10px;padding:11px;cursor:pointer;background:var(--panel2);position:relative;transition:.15s}
-  .lot:hover{border-color:var(--acc)}
-  .lot.occ{border-left:4px solid var(--bad)}.lot.avail{border-left:4px solid var(--ok)}.lot.int{border-left:4px solid var(--blue)}
-  .lot .id{font-weight:800;font-size:15px}
-  .lot .meta{font-size:11px;color:var(--mut);margin-top:2px}
-  .ltag{font-size:9px;font-weight:800;padding:2px 7px;border-radius:99px;position:absolute;top:9px;right:9px;letter-spacing:.03em}
-  .ltag.avail{background:#14432a;color:#86efac}.ltag.occ{background:#4c1d24;color:#fca5a5}.ltag.int{background:#1e3a5f;color:#93c5fd}
-  .photos{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  .photos a img{height:64px;border-radius:6px;border:1px solid var(--line)}
-  .kv{width:100%}.kv td{padding:6px 8px;border-bottom:1px solid var(--line)}.kv td.k{color:var(--mut);width:170px}
-  /* modal */
-  dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);padding:0;max-width:860px;width:94%;box-shadow:var(--shadow)}
-  dialog::backdrop{background:rgba(0,0,0,.75);backdrop-filter:blur(6px)}
-  .modal-h{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
-  .modal-h h2{margin:0;font-size:1.15rem}
-  .modal-h .x{margin-left:auto;background:none;border:none;color:var(--mut);font-size:22px;cursor:pointer}
-  .modal-b{padding:18px;max-height:74vh;overflow:auto}
-  .modal-f{display:flex;gap:8px;justify-content:flex-end;padding:14px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
-  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000;border:1px solid var(--line);
-    padding:11px 18px;border-radius:10px;z-index:100;display:none;max-width:90%}
-  #toast.bad{border-color:var(--bad)}#toast.ok{border-color:var(--ok)}
-  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--mut);border-top-color:var(--acc);border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px}
-  @keyframes s{to{transform:rotate(360deg)}}
-  .dz{border:1.5px dashed var(--line);border-radius:9px;padding:12px;text-align:center;cursor:pointer;background:var(--panel2);transition:.15s}
-  .dz:hover,.dz.over{border-color:var(--acc);background:var(--acc-soft)}
-  .dz-files{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;justify-content:center}
-  .dz-chip{background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:11px}
-  .dz-chip b{color:var(--bad);cursor:pointer;margin-left:4px;font-weight:700}
-  .totbar{display:flex;gap:18px;justify-content:flex-end;align-items:baseline;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
-  .totbar .big{font-size:20px;font-weight:800;color:var(--acc)}
-  .clientOnly,.internalOnly{display:block}
-  .msg{font-size:.86rem;margin-top:10px;min-height:20px;opacity:0;transition:opacity 0.2s}
-  .msg.show{opacity:1}.msg.ok{color:var(--ok)}.msg.err{color:#f87171}
-  /* login + config gates (pattern from quotation-supabase.html) */
-  .gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-  .gate .card{max-width:430px;width:100%;text-align:center;padding:36px 30px}
-  .gate .brand-logo{margin:0 auto 16px;width:60px;height:60px;font-size:1.4rem}
-  .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:18px;
-    background:#fff;color:#1a1a1a;border:none;border-radius:10px;padding:13px;font-weight:700;
-    font-size:.95rem;cursor:pointer;font-family:inherit}
-  .gate input{text-align:left;margin-bottom:4px}
-  .gate h2{font-size:1.05rem}
 </style>
 </head>
 <body>
@@ -165,7 +176,7 @@
 <!-- ══════════ GATE 2 · NOT ON ALLOWLIST ══════════ -->
 <div class="gate" id="gateDenied" style="display:none;">
   <div class="card">
-    <div class="brand-logo">🔒</div>
+    <div class="brand-logo">HG</div>
     <h2>Not authorised</h2>
     <div class="hint" style="margin-top:6px;"><span id="deniedEmail"></span> is not on the access list.<br>
       Ask your admin to add you under <b>Settings → Team access</b>.</div>
@@ -177,15 +188,15 @@
 <div id="app" style="display:none;">
 <header>
   <div class="brand-block">
-    <div class="brand-logo">BL</div>
+    <div class="brand-logo"><i data-lucide="warehouse" aria-hidden="true"></i></div>
     <div>
-      <div class="brand-name">Temporary Storage Rental</div>
-      <div class="brand-sub">Black Lee · HG Group · Supabase edition</div>
+      <div class="brand-name">Temporary Storage Rental <span class="tool-live">Live</span></div>
+      <div class="brand-sub">Track storage rentals, invoices, payments, and due dates.</div>
     </div>
   </div>
   <div class="meta-pills">
     <div class="mpill" id="dateNow">—</div>
-    <div class="mpill">👤 <strong id="who">…</strong><button onclick="signOut()">Sign out</button></div>
+    <div class="mpill"><strong id="who">…</strong><button onclick="signOut()">Sign out</button></div>
   </div>
 </header>
 <nav id="nav"></nav>
@@ -246,7 +257,7 @@ function pill(s,lbl){return '<span class="pill p-'+s+'">'+((lbl||{})[s]||s)+'</s
 function rpill(s){return pill(s,RENTAL_LABEL);}
 function ipill(s){return pill(s,INV_LABEL);}
 function field(lbl,inner){return '<div><label>'+lbl+'</label>'+inner+'</div>';}
-function stat(n,l,cls){return '<div class="stat"><div class="n '+(cls||'')+'">'+n+'</div><div class="l">'+l+'</div></div>';}
+function stat(n,l,cls){return '<div class="stat"><div class="l">'+l+'</div><div class="n '+(cls||'')+'">'+n+'</div></div>';}
 function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
 function today(){return DB.today||klToday();}
 function klToday(){return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kuala_Lumpur'});}
@@ -351,7 +362,7 @@ function boot(){
   buildNav();
   document.getElementById('who').textContent=EMAIL;
   document.getElementById('dateNow').textContent=new Date().toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Kuala_Lumpur'});
-  reloadAll().catch(function(e){document.getElementById('v-dash').innerHTML='<div class="card">⚠️ '+esc(e.message||e)+'</div>';});
+  reloadAll().catch(function(e){document.getElementById('v-dash').innerHTML='<div class="card">'+esc(e.message||e)+'</div>';});
 }
 
 async function reloadAll(){
@@ -504,32 +515,29 @@ function renderAll(){renderDash();renderBoard();renderRentals();renderInvoices()
 function renderDash(){
   var s=DB.stats;
   var alerts=DB.alerts.length?DB.alerts.map(function(a){
-    var icon=a.level==='expired'?'⛔':'⚠️';
     var lbl=a.kind==='invoice'?'Invoice':'Rental';
     var fn=a.kind==='invoice'?'openInvoice':'openRental';
-    return '<div class="alert '+a.level+'" onclick="'+fn+'(\''+a.id+'\')">'+icon+' <b>'+lbl+' · '+esc(a.who)+'</b> — '+esc(a.msg)+'</div>';
-  }).join(''):'<div class="muted">No expiring rentals or overdue invoices. ✅</div>';
+    return '<div class="alert '+a.level+'" onclick="'+fn+'(\''+a.id+'\')"><b>'+lbl+' · '+esc(a.who)+'</b> — '+esc(a.msg)+'</div>';
+  }).join(''):'<div class="muted">All clear · No expiring rentals or overdue invoices.</div>';
 
   /* str_alarms view — exactly what the daily-alarms Edge Function emails (2-notice renewal engine + overdue nudges) */
   var alarms=DB.alarms.length?'<table><thead><tr><th>Type</th><th>Ref</th><th>Detail</th><th>Due</th><th>Recipient</th></tr></thead><tbody>'+
     DB.alarms.map(function(a){return '<tr><td><span class="tag">'+esc(a.alarm_type)+'</span></td><td><b>'+esc(a.ref)+'</b></td>'+
       '<td class="muted">'+esc(a.detail)+'</td><td>'+esc(dateStr(a.due_date))+'</td><td class="muted">'+esc(a.recipient||'—')+'</td></tr>';}).join('')+
-    '</tbody></table>':'<div class="muted">Nothing queued for email alarms. ✅</div>';
+    '</tbody></table>':'<div class="muted">No email alarms queued.</div>';
 
   document.getElementById('v-dash').innerHTML=
-    '<h2>Dashboard <button class="ghost sm" style="float:right" onclick="settingsForm()">⚙ Settings</button></h2>'+
-    '<div class="row" style="margin-bottom:14px">'+
+    '<div class="section-head"><div><h2>Storage overview</h2><div class="muted">Review occupancy, renewals, invoices, payments, and current engagements.</div></div><button class="ghost sm" onclick="settingsForm()">Settings</button></div>'+
+    '<div class="storage-snapshot"><div class="snapshot-title">Storage snapshot</div><div class="snapshot-grid">'+
       stat(s.occupancyPct+'%','Occupancy')+stat(s.free,'Lots free','ok')+stat(s.occupied,'Client-occupied')+stat(s.internal,'Internal (HG)')+
-    '</div>'+
-    '<div class="row" style="margin-bottom:14px">'+
       stat(rm(s.mrr),'Monthly recurring')+
       stat(rm(s.outstanding),'Outstanding',s.outstanding>0?'bad':'')+
       stat(s.overdueCount,'Overdue invoices',s.overdueCount>0?'bad':'')+
       stat(rm(s.collectedThisMonth),'Collected this month','ok')+
       stat(rm(s.deposits),'Deposits held')+
-    '</div>'+
-    '<div class="card"><h3 style="margin-top:0">⏰ Renewal & payment alerts</h3>'+alerts+'</div>'+
-    '<div class="card"><h3 style="margin-top:0">📧 Email alarm queue (daily-alarms)</h3>'+
+    '</div></div>'+
+    '<div class="card"><h3 style="margin-top:0">Renewal &amp; payment alerts</h3>'+alerts+'</div>'+
+    '<div class="card"><h3 style="margin-top:0">Email alarm queue</h3>'+
       '<div class="hint" style="margin-bottom:8px">What the daily-alarms Edge Function will send — renewal notices (N1/N2), expired sell-off decisions, and invoice due/overdue nudges.</div>'+alarms+'</div>'+
     '<div class="card"><div class="toolbar"><h3 style="margin:0;flex:1">Recent engagements</h3>'+
       '<button class="btn sm" onclick="show(\'rentals\');rentalForm(null)">+ New engagement</button></div>'+
@@ -538,23 +546,32 @@ function renderDash(){
 function byUpdated(a,b){return String(b.updatedAt||'').localeCompare(String(a.updatedAt||''));}
 
 /* ═══════════════════════════ BOARD ═══════════════════════════ */
+var STORAGE_AVAIL_FILTER='All';
+function setStorageAvailabilityFilter(status){STORAGE_AVAIL_FILTER=status;renderBoard();}
 function renderBoard(){
-  var zones={};DB.lots.forEach(function(l){(zones[l.zone]=zones[l.zone]||[]).push(l);});
+  var counts={All:DB.lots.length,Available:0,Occupied:0,Internal:0};
+  DB.lots.forEach(function(l){counts[l.lotStatus]=(counts[l.lotStatus]||0)+1;});
+  var visible=DB.lots.filter(function(l){return STORAGE_AVAIL_FILTER==='All'||l.lotStatus===STORAGE_AVAIL_FILTER;});
+  var zones={};visible.forEach(function(l){(zones[l.zone]=zones[l.zone]||[]).push(l);});
   var html=Object.keys(zones).sort().map(function(z){
     var floor=zones[z][0].floor;
     return '<div class="zone"><h3>Zone '+esc(z)+' · '+esc(floor)+'</h3><div class="lots">'+
-      zones[z].map(function(l){
-        var st=l.lotStatus,cls=st==='Internal'?'int':(st==='Occupied'?'occ':'avail'),tag=st==='Internal'?'INTERNAL':(st==='Occupied'?'TAKEN':'FREE');
-        var area=l.areaSqm?num(l.areaSqm)+' m²':'size TBC';var sub=area;
-        if(st==='Occupied')sub=esc(l.holder.clientCompany)+' · ends '+esc(l.holder.endDate);
-        if(st==='Internal')sub='HG '+esc(l.holder.department||'')+(l.holder.endDate?' · ends '+esc(l.holder.endDate):' · open-ended');
-        return '<div class="lot '+cls+'" onclick="lotClick(\''+esc(l.id)+'\')"><span class="ltag '+cls+'">'+tag+'</span>'+
-          '<div class="id">'+esc(l.id)+'</div><div class="meta">🔒 '+esc(l.lockset)+'</div><div class="meta">'+sub+'</div></div>';
+      zones[z].slice().sort(function(a,b){return a.id.localeCompare(b.id);}).map(function(l){
+        var st=l.lotStatus,cls=st==='Internal'?'int':(st==='Occupied'?'occ':'avail'),tag=st==='Internal'?'Internal':(st==='Occupied'?'Occupied':'Available');
+        var area=l.areaSqm?num(l.areaSqm)+' m²':'Size not added';
+        var lock=l.lockset?'Lock '+esc(l.lockset):'Lock not added';
+        var context='Ready to assign';
+        if(st==='Occupied')context=esc(l.holder.clientCompany)+(l.holder.endDate?' · Ends '+esc(l.holder.endDate):'');
+        if(st==='Internal')context='HG '+esc(l.holder.department||'Internal use')+(l.holder.endDate?' · Ends '+esc(l.holder.endDate):' · Open-ended');
+        return '<div class="lot '+cls+'" onclick="lotClick(\''+esc(l.id)+'\')">'+
+          '<div class="asset-head"><div class="id">'+esc(l.id)+'</div><span class="ltag '+cls+'">'+tag+'</span></div>'+
+          '<div class="asset-meta">'+lock+' · '+area+'</div><div class="asset-context">'+context+'</div></div>';
       }).join('')+'</div></div>';
   }).join('');
-  document.getElementById('v-board').innerHTML='<h2>Availability Board</h2>'+
-    '<div class="toolbar"><span class="muted" style="flex:1">🟢 free · 🔴 client · 🔵 internal HG. Click a lot to view or rent it.</span></div>'+
-    '<div class="card">'+html+'</div>';
+  var filters=['All','Available','Occupied','Internal'].map(function(status){return '<button type="button" class="availability-filter'+(STORAGE_AVAIL_FILTER===status?' active':'')+'" aria-pressed="'+(STORAGE_AVAIL_FILTER===status?'true':'false')+'" onclick="setStorageAvailabilityFilter(\''+status+'\')">'+status+' <span>'+counts[status]+'</span></button>';}).join('');
+  document.getElementById('v-board').innerHTML='<h2>Lot availability</h2>'+
+    '<div class="availability-toolbar"><div class="availability-filters" role="group" aria-label="Filter storage lots by availability">'+filters+'</div><div class="availability-help">Select a lot to view details or create an engagement.</div></div>'+
+    '<div class="availability-board">'+(html||'<div class="availability-empty"><strong>No lots in this status</strong>Choose another availability filter to continue.</div>')+'</div>';
 }
 function lotClick(id){
   var l=DB.lots.filter(function(x){return x.id===id;})[0];
@@ -569,7 +586,7 @@ function renderRentals(){
     '<div class="toolbar"><input id="r-q" placeholder="Search company / dept / lot / PIC" oninput="filterRentals()" style="min-width:240px">'+
       '<select id="r-type" onchange="filterRentals()"><option value="">All types</option><option>Client</option><option>Internal</option></select>'+
       '<select id="r-status" onchange="filterRentals()"><option value="">All status</option>'+Object.keys(RENTAL_LABEL).map(function(s){return '<option>'+s+'</option>';}).join('')+'</select>'+
-      '<button class="ghost" style="margin-left:auto" onclick="exportRentalsExcel()">⬇ Export Excel</button>'+
+      '<button class="ghost" style="margin-left:auto" onclick="exportRentalsExcel()">Export Excel</button>'+
       '<button class="btn" onclick="rentalForm(null)">+ New engagement</button></div>'+
     '<div class="card" id="r-list">'+rentalsTable(DB.rentals)+'</div>';
 }
@@ -602,7 +619,7 @@ function lotOptions(cur){
   return '<option value="">— select lot —</option>'+DB.lots.map(function(l){
     var taken=l.lotStatus!=='Available'&&l.id!==cur;
     var why=l.lotStatus==='Internal'?' — INTERNAL':' — TAKEN';
-    return '<option value="'+esc(l.id)+'"'+(l.id===cur?' selected':'')+(taken?' disabled':'')+'>'+esc(l.id)+' (Zone '+esc(l.zone)+' · 🔒'+esc(l.lockset)+')'+(taken?why:'')+'</option>';
+    return '<option value="'+esc(l.id)+'"'+(l.id===cur?' selected':'')+(taken?' disabled':'')+'>'+esc(l.id)+' (Zone '+esc(l.zone)+' · Lock '+esc(l.lockset)+')'+(taken?why:'')+'</option>';
   }).join('');
 }
 function rentalForm(r,presetLot){
@@ -630,7 +647,7 @@ function rentalForm(r,presetLot){
       field('Agreement signed?','<select id="f-agr"><option value="">— not yet —</option><option'+(r.agreementSigned==='Yes'?' selected':'')+'>Yes</option><option'+(r.agreementSigned==='Pending'?' selected':'')+'>Pending</option></select>')+
     '</div>'+
     '<div class="clientOnly">'+field('Signed agreement file (upload the scan/photo after the client signs)',
-      '<input id="f-agrfile" type="file" accept="image/*,application/pdf">'+(e&&r.agreementPath?'<div class="hint">✅ <a href="#" onclick="openPath(\''+esc(r.agreementPath)+'\');return false;">current signed agreement on file ↗</a> — choose a file only to replace it</div>':'<div class="hint">Print the agreement first (open this engagement → Print agreement), get it signed, then upload here.</div>'))+'</div>'+
+      '<input id="f-agrfile" type="file" accept="image/*,application/pdf">'+(e&&r.agreementPath?'<div class="hint"><a href="#" onclick="openPath(\''+esc(r.agreementPath)+'\');return false;">Current signed agreement on file</a> — choose a file only to replace it</div>':'<div class="hint">Print the agreement first (open this engagement → Print agreement), get it signed, then upload here.</div>'))+'</div>'+
     '<div class="row">'+
       field('Handled by (liaison)','<input id="f-handled" value="'+esc(r.handledBy||DB.currentUser)+'">')+
       field('CCTV no','<input id="f-cctvno" value="'+esc(r.cctvNo||'')+'">')+
@@ -706,7 +723,7 @@ async function saveRentalForm(existing){
       if(r.error)throw r.error;
       await audit('CREATE Rental',lotId+' / '+(internal?'HG '+rec.department:rec.client_company));
     }
-    await reloadAll();closeModal();toast('Saved ✓','ok');
+    await reloadAll();closeModal();toast('Saved','ok');
   }catch(er){btn.disabled=false;btn.textContent='Save';toast(er.message||er,'bad');}
 }
 function openRental(id){
@@ -721,7 +738,7 @@ function openRental(id){
   var clientRows=internal?'':kv('Contact',esc(r.clientContact)+(r.clientEmail?' · '+esc(r.clientEmail):''))+
     kv('Monthly rate',r.monthlyRate?rm(r.monthlyRate):'-')+
     kv('Deposit',r.deposit?rm(r.deposit)+' <span class="tag">'+esc(r.depositStatus)+'</span>':'-')+
-    kv('Agreement',(r.agreementSigned||'—')+(r.agreementPath?' · <a href="#" onclick="openPath(\''+esc(r.agreementPath)+'\');return false;">signed copy ↗</a>':' <span class="muted">(no signed copy uploaded)</span>'))+
+    kv('Agreement',(r.agreementSigned||'—')+(r.agreementPath?' · <a href="#" onclick="openPath(\''+esc(r.agreementPath)+'\');return false;">Open signed copy</a>':' <span class="muted">(no signed copy uploaded)</span>'))+
     kv('Notices sent','N1: '+(r.notice1Sent||'—')+' · N2: '+(r.notice2Sent||'—'));
   var invBlock=internal?'':'<h3>Invoices</h3>'+(invs.length?'<table><tbody>'+invs.map(function(i){
       return '<tr><td><b>'+esc(i.invNo)+'</b></td><td>'+esc(i.invDate)+'</td><td class="right">'+rm(i.total)+'</td><td>'+ipill(i.overdue?'Overdue':i.payStatus)+'</td><td class="right"><button class="ghost sm" onclick="closeModal();openInvoice(\''+i.id+'\')">Open</button></td></tr>';
@@ -739,10 +756,10 @@ function openRental(id){
   var body='<div style="margin-bottom:8px">'+rpill(r.liveStatus)+(internal?' <span class="pill p-Internal">HG INTERNAL — no invoice / no sell-off</span>':'')+'</div>'+
     '<table class="kv"><tbody>'+
       kv('Lot / Zone',esc(r.lotId)+' · Zone '+esc(lot.zone||'')+' · '+esc(lot.floor||''))+
-      kv('Lockset','🔒 '+esc(lot.lockset||''))+kv('Size',lot.areaSqm?num(lot.areaSqm)+' m²':'TBC')+
+      kv('Lockset',esc(lot.lockset||''))+kv('Size',lot.areaSqm?num(lot.areaSqm)+' m²':'TBC')+
       kv(internal?'Department':'Client',internal?('HG — '+esc(r.department||'')):esc(r.clientCompany))+
       kv(internal?'Person in charge':'Client PIC',esc(r.clientPIC))+clientRows+
-      kv('Period',period)+kv('CCTV',esc(r.cctvNo)+(r.cctvUrl?' · <a href="'+esc(r.cctvUrl)+'" target="_blank">login ↗</a>':''))+
+      kv('Period',period)+kv('CCTV',esc(r.cctvNo)+(r.cctvUrl?' · <a href="'+esc(r.cctvUrl)+'" target="_blank">Open login</a>':''))+
       kv('Items',esc(r.itemsDescription))+kv('Handled by',esc(r.handledBy))+
       kv('Keyed in by',esc(r.createdBy)+' @ '+esc(r.createdAt))+kv('Last update',esc(r.updatedBy)+' @ '+esc(fmtTs(r.updatedAt)))+
       kv('Remarks',esc(r.remarks))+
@@ -779,7 +796,7 @@ async function rRenew(id,cur){
   var r=await sb.from('str_rentals').update({end_date:nd,status:'Active',notice1_sent:'',notice2_sent:'',updated_by:EMAIL,updated_at:new Date().toISOString()}).eq('id',id);
   if(r.error){toast(r.error.message,'bad');return;}
   await audit('RENEW Rental','Lot '+(r0?r0.lotId:id)+' extended to '+nd);
-  await reloadAll();closeModal();toast('Renewed ✓','ok');
+  await reloadAll();closeModal();toast('Renewed','ok');
 }
 async function rAction(id,kind){
   var msg={selloff:'SELL-OFF: client did not renew after 2 notices. Items disposed/sold, ownership passes to HG.\n\nRemarks:',
@@ -804,7 +821,7 @@ async function rAction(id,kind){
   var r=await sb.from('str_rentals').update(upd).eq('id',id);
   if(r.error){toast(r.error.message,'bad');return;}
   await audit(action+' Rental','Lot '+r0.lotId+' · '+(r0.clientCompany||('HG '+r0.department))+' :: '+(rem||''));
-  await reloadAll();closeModal();toast('Done ✓','ok');
+  await reloadAll();closeModal();toast('Done','ok');
 }
 
 /* ═══════════════════════════ INVOICES ═══════════════════════════ */
@@ -813,8 +830,8 @@ function renderInvoices(){
     '<h2>Invoices &amp; Payments</h2>'+
     '<div class="toolbar"><input id="i-q" placeholder="Search inv no / client / lot" oninput="filterInvoices()" style="min-width:240px">'+
       '<select id="i-status" onchange="filterInvoices()"><option value="">All status</option><option>Unpaid</option><option>Partial</option><option>Paid</option><option>Overdue</option><option>Void</option></select>'+
-      '<button class="ghost" style="margin-left:auto" onclick="exportInvoicesExcel()">⬇ Export Excel</button>'+
-      '<button class="ghost" onclick="genMonthly()">⚡ Generate monthly</button>'+
+      '<button class="ghost" style="margin-left:auto" onclick="exportInvoicesExcel()">Export Excel</button>'+
+      '<button class="ghost" onclick="genMonthly()">Generate monthly</button>'+
       '<button class="btn" onclick="invoiceForm(null)">+ New invoice</button></div>'+
     '<div class="card" id="i-list">'+invoicesTable(DB.invoices)+'</div>';
 }
@@ -871,7 +888,7 @@ function invoiceForm(inv,presetRental){
       field('SST 6%','<select id="iv-sst" onchange="invTot()"><option value="">No SST</option><option value="1"'+(inv.sstEnabled?' selected':'')+'>Add SST 6%</option></select>')+
     '</div>'+
     '<div class="totbar"><span class="muted">SST <span id="iv-sstout">RM 0.00</span></span><span class="muted">Total <span class="big" id="iv-totout">RM 0.00</span></span></div>'+
-    field('Invoice file (PDF/image)','<input id="iv-file" type="file" accept="image/*,application/pdf">'+(e&&inv.filePath?'<div class="hint"><a href="#" onclick="openPath(\''+esc(inv.filePath)+'\');return false;">current file ↗</a></div>':''))+
+    field('Invoice file (PDF/image)','<input id="iv-file" type="file" accept="image/*,application/pdf">'+(e&&inv.filePath?'<div class="hint"><a href="#" onclick="openPath(\''+esc(inv.filePath)+'\');return false;">Open current file</a></div>':''))+
     field('Notes','<textarea id="iv-notes">'+esc(inv.notes||'')+'</textarea>');
   var foot=(e?'<button class="danger" onclick="delInvoice(\''+inv.id+'\')">Delete</button>':'')+
     '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" id="iv-save">'+(e?'Save invoice':'Create invoice')+'</button>';
@@ -914,7 +931,7 @@ async function saveInvoiceForm(existing){
     else{rec.status='';rec.created_by=EMAIL;r=await sb.from('str_invoices').insert(rec);}
     if(r.error)throw r.error;
     await audit((id?'UPDATE':'CREATE')+' Invoice',invNo+' · '+rec.client_company+' · RM '+num(total));
-    await reloadAll();closeModal();toast('Saved ✓','ok');
+    await reloadAll();closeModal();toast('Saved','ok');
   }catch(er){btn.disabled=false;btn.textContent='Save';toast(er.message||er,'bad');}
 }
 function openInvoice(id){
@@ -934,7 +951,7 @@ function openInvoice(id){
       kv('Description',esc(i.description))+
       kv('Amount',rm(i.amount))+kv('SST',i.sstEnabled?rm(i.sstAmount)+' (6%)':'—')+
       kv('Total',rm(i.total))+kv('Paid',rm(i.amountPaid))+kv('Balance','<b>'+rm(i.balance)+'</b>')+
-      kv('File',i.filePath?'<a href="#" onclick="openPath(\''+esc(i.filePath)+'\');return false;">open ↗</a>':'-')+
+      kv('File',i.filePath?'<a href="#" onclick="openPath(\''+esc(i.filePath)+'\');return false;">Open file</a>':'-')+
       kv('Notes',esc(i.notes))+
     '</tbody></table>'+
     '<h3>Payments</h3>'+paysHtml;
@@ -961,7 +978,7 @@ function paymentForm(invId){
       received_by:val('pm-by')||EMAIL,notes:val('pm-notes'),created_by:EMAIL});
     if(r.error){btn.disabled=false;btn.textContent='Save payment';toast(r.error.message,'bad');return;}
     await audit('PAYMENT',i.invNo+' · RM '+num(val('pm-amt'))+' ('+(val('pm-method')||'n/a')+')');
-    await reloadAll();closeModal2();closeModal();toast('Payment recorded ✓','ok');
+    await reloadAll();closeModal2();closeModal();toast('Payment recorded','ok');
   };
 }
 async function delPayment(id){
@@ -1002,7 +1019,7 @@ function genMonthly(){
     if(res.count){openModal('Generated '+res.count+' invoice(s) — '+esc(res.month),
       '<div class="muted" style="margin-bottom:8px">New invoices created (Unpaid):</div><ul style="margin:0;padding-left:18px">'+(res.created||[]).map(function(c){return '<li>'+esc(c)+'</li>';}).join('')+'</ul>',
       '<button class="btn" onclick="closeModal()">Done</button>');
-      toast('Created '+res.count+' invoice(s) ✓','ok');
+      toast('Created '+res.count+' invoice(s)','ok');
     }else{toast('No new invoices needed for '+res.month+' (all already invoiced or no active rentals).','ok');}
   });
 }
@@ -1012,12 +1029,12 @@ function renderLots(){
   document.getElementById('v-lots').innerHTML=
     '<h2>Lots</h2>'+
     '<div class="toolbar"><span class="muted" style="flex:1">The storage inventory from your floor plans. Edit to fix dimensions / locksets.</span>'+
-      '<button class="ghost" onclick="exportLotsExcel()">⬇ Export Excel</button>'+
+      '<button class="ghost" onclick="exportLotsExcel()">Export Excel</button>'+
       '<button class="btn" onclick="lotForm(null)">+ Add lot</button></div>'+
     '<div class="card"><table><thead><tr><th>Lot</th><th>Zone · Floor</th><th>Type</th><th>Lockset</th><th class="right">W×D (mm)</th><th class="right">Area m²</th><th>Status</th><th>Notes</th><th></th></tr></thead><tbody>'+
     DB.lots.map(function(l){
       var tag=l.lotStatus==='Internal'?'<span class="pill p-Internal">Internal</span>':(l.lotStatus==='Occupied'?'<span class="pill p-Active">Occupied</span>':'<span class="tag">Free</span>');
-      return '<tr><td><b>'+esc(l.id)+'</b></td><td>'+esc(l.zone)+' · '+esc(l.floor)+'</td><td>'+esc(l.type)+'</td><td>🔒 '+esc(l.lockset)+'</td>'+
+      return '<tr><td><b>'+esc(l.id)+'</b></td><td>'+esc(l.zone)+' · '+esc(l.floor)+'</td><td>'+esc(l.type)+'</td><td>'+esc(l.lockset)+'</td>'+
         '<td class="right">'+(l.widthMm&&l.depthMm?num(l.widthMm)+'×'+num(l.depthMm):'—')+'</td><td class="right">'+(l.areaSqm?num(l.areaSqm):'—')+'</td>'+
         '<td>'+tag+'</td><td class="muted" style="font-size:11px">'+esc(l.notes||'')+'</td>'+
         '<td class="right"><button class="ghost sm" onclick=\'lotForm('+JSON.stringify({id:l.id,zone:l.zone,floor:l.floor,type:l.type,lockset:l.lockset,widthMm:l.widthMm,depthMm:l.depthMm,notes:l.notes}).replace(/'/g,'&#39;')+')\'>Edit</button></td></tr>';
@@ -1048,7 +1065,7 @@ function lotForm(l){
     var r=await sb.from('str_lots').upsert(rec);   // same as GAS saveLot (create or update)
     if(r.error){toast(r.error.message,'bad');return;}
     await audit((e?'UPDATE':'CREATE')+' Lot',rec.id+' · '+rec.zone+' / '+rec.lockset);
-    await reloadAll();closeModal();toast('Saved ✓','ok');
+    await reloadAll();closeModal();toast('Saved','ok');
   };
 }
 async function delLot(id){
@@ -1065,7 +1082,7 @@ async function delLot(id){
 async function renderAudit(){
   document.getElementById('v-audit').innerHTML='<h2>Audit Log</h2><div class="card"><div class="muted">Loading…</div></div>';
   var r=await sb.from('audit_log').select('*').order('at',{ascending:false}).limit(200);
-  if(r.error){document.getElementById('v-audit').innerHTML='<h2>Audit Log</h2><div class="card">⚠️ '+esc(r.error.message)+'</div>';return;}
+  if(r.error){document.getElementById('v-audit').innerHTML='<h2>Audit Log</h2><div class="card">'+esc(r.error.message)+'</div>';return;}
   document.getElementById('v-audit').innerHTML='<h2>Audit Log</h2>'+
     '<div class="card"><div class="muted" style="margin-bottom:10px">Every create / edit / payment / status change, newest first (last 200). Shared across all HG tools.</div>'+
     '<table><thead><tr><th>When</th><th>User</th><th>Action</th><th>Detail</th></tr></thead><tbody>'+
@@ -1084,9 +1101,9 @@ function renderReports(){
     '<div class="toolbar">'+
       '<select id="rep-type" onchange="CUR_REP=this.value;drawReport()">'+REPORTS.map(function(r){return '<option value="'+r[0]+'">'+r[1]+'</option>';}).join('')+'</select>'+
       '<span id="rep-monthwrap"><input type="month" id="rep-month" value="'+today().slice(0,7)+'" onchange="drawReport()"></span>'+
-      '<button class="ghost" style="margin-left:auto" onclick="downloadReportCsv()">⬇ Download CSV</button>'+
-      '<button class="ghost" onclick="exportReportExcel()">⬇ Export Excel</button>'+
-      '<button class="btn" onclick="printReport()">🖨 Print / Save PDF</button>'+
+      '<button class="ghost" style="margin-left:auto" onclick="downloadReportCsv()">Download CSV</button>'+
+      '<button class="ghost" onclick="exportReportExcel()">Export Excel</button>'+
+      '<button class="btn" onclick="printReport()">Print / Save PDF</button>'+
     '</div>'+
     '<div class="card" id="rep-body"></div>';
   document.getElementById('rep-type').value=CUR_REP;
@@ -1211,7 +1228,7 @@ function printReport(){
     'table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ccc;padding:5px 8px;text-align:left}th{background:#f3f3f3}.r{text-align:right}'+
     '.sum{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}.sum div{border:1px solid #ddd;border-radius:8px;padding:8px 14px;min-width:110px}.sum span{display:block;font-size:10px;color:#666;text-transform:uppercase}.sum b{font-size:16px}'+
     '@media print{button{display:none}}</style></head><body>'+
-    '<button onclick="print()" style="float:right;padding:8px 14px">🖨 Print / Save PDF</button>'+
+    '<button onclick="print()" style="float:right;padding:8px 14px">Print / Save PDF</button>'+
     '<h1>'+esc(c.COMPANY_NAME||'HG Group')+'</h1><div class="muted">Temporary Storage Rental</div>'+
     '<h2>'+esc(r.title)+'</h2><div class="muted">Generated '+today()+' · by '+esc(DB.currentUser)+'</div>'+
     sumHtml+tbl+'</body></html>');
@@ -1263,7 +1280,7 @@ function settingsForm(){
     field('Reminder recipient(s) — comma separated','<input id="c-to" value="'+esc(c.REMINDER_TO)+'" placeholder="you@hggroup.com.my">')+
     '<div class="hint">Emails are sent by the shared <b>daily-alarms</b> Edge Function (reads the str_alarms view shown on the dashboard). Each reminder also goes to the engagement\'s Handled-By staff if it is an email.</div>'+
     '<h3>Auto monthly invoicing</h3>'+
-    '<div class="hint" style="margin-bottom:8px">One invoice per active client rental that has a monthly rate. Already-invoiced periods are skipped. Run it via <b>Invoices → ⚡ Generate monthly</b>.</div>'+
+    '<div class="hint" style="margin-bottom:8px">One invoice per active client rental that has a monthly rate. Already-invoiced periods are skipped. Run it via <b>Invoices → Generate monthly</b>.</div>'+
     '<div class="row">'+
       field('Invoice no prefix','<input id="c-prefix" value="'+esc(c.INVOICE_PREFIX)+'" placeholder="STR-">')+
       field('Payment terms (days to due)','<input id="c-terms" type="number" value="'+esc(c.INVOICE_TERMS_DAYS)+'">')+
@@ -1273,7 +1290,7 @@ function settingsForm(){
     '<div class="row">'+field('Company name','<input id="c-name" value="'+esc(c.COMPANY_NAME)+'">')+field('Company reg no','<input id="c-reg" value="'+esc(c.COMPANY_REG)+'">')+'</div>'+
     '<div class="row">'+field('SST reg no','<input id="c-sst" value="'+esc(c.SST_NO)+'">')+field('Phone','<input id="c-phone" value="'+esc(c.COMPANY_PHONE)+'">')+'</div>'+
     field('Address','<textarea id="c-addr">'+esc(c.COMPANY_ADDRESS)+'</textarea>');
-  openModal('⚙ Settings',body,'<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" id="c-save">Save settings</button>');
+  openModal('Settings',body,'<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" id="c-save">Save settings</button>');
   document.getElementById('c-save').onclick=async function(){
     var obj={NOTICE1_DAYS:val('c-n1'),NOTICE2_DAYS:val('c-n2'),INVOICE_DUE_SOON_DAYS:val('c-due'),NEW_CLIENT_DAYS:val('c-newdays'),REMINDER_TO:val('c-to'),
       INVOICE_PREFIX:val('c-prefix'),INVOICE_TERMS_DAYS:val('c-terms'),AUTO_INVOICE_SST:val('c-autosst'),
@@ -1282,7 +1299,7 @@ function settingsForm(){
     var r=await sb.from('str_config').upsert(rows);
     if(r.error){toast(r.error.message,'bad');return;}
     await audit('CONFIG Storage',Object.keys(obj).join(','));
-    await reloadAll();closeModal();toast('Settings saved ✓','ok');
+    await reloadAll();closeModal();toast('Settings saved','ok');
   };
 }
 
@@ -1297,7 +1314,7 @@ function buildAgreement(o){
   var size=lot.areaSqm?num(lot.areaSqm)+' m² ('+(lot.widthMm||'?')+'mm × '+(lot.depthMm||'?')+'mm)':'as inspected on site';
   var w=window.open('','_blank');
   w.document.write('<html><head><title>Storage Agreement '+esc(r.id)+'</title><style>body{font:13px/1.6 Arial;max-width:780px;margin:30px auto;padding:0 20px;color:#111}h1{font-size:19px;text-align:center}h2{font-size:14px;margin-top:22px;border-bottom:1px solid #ccc;padding-bottom:4px}table{width:100%;border-collapse:collapse;margin:8px 0}td{padding:5px 8px;border:1px solid #ccc}td.k{background:#f5f5f5;width:170px;font-weight:bold}ol{padding-left:18px}li{margin:6px 0}.sign{display:flex;gap:40px;margin-top:50px}.sign div{flex:1;border-top:1px solid #000;padding-top:6px;font-size:12px}@media print{button{display:none}}</style></head><body>'+
-    '<button onclick="print()" style="float:right;padding:8px 14px">🖨 Print / Save PDF</button>'+
+    '<button onclick="print()" style="float:right;padding:8px 14px">Print / Save PDF</button>'+
     '<h1>'+esc(c.COMPANY_NAME||'HG Group')+'<br>TEMPORARY STORAGE — PRE-ENGAGEMENT AGREEMENT</h1>'+
     '<table><tr><td class="k">Agreement Ref</td><td>'+esc(r.id.slice(0,12))+'</td><td class="k">Date</td><td>'+esc(todayS)+'</td></tr>'+
     '<tr><td class="k">Client (Owner of Goods)</td><td colspan="3">'+esc(r.clientCompany)+(r.clientPIC?' — attn: '+esc(r.clientPIC):'')+'</td></tr>'+
@@ -1334,7 +1351,7 @@ function buildInvoice(o){
   var paysRows=pays.map(function(p){return '<tr><td>'+esc(p.payDate)+'</td><td>'+esc(p.method||'')+'</td><td>'+esc(p.reference||'')+'</td><td style="text-align:right">'+rm(p.amount)+'</td></tr>';}).join('');
   var w=window.open('','_blank');
   w.document.write('<html><head><title>Invoice '+esc(i.invNo)+'</title><style>body{font:13px/1.6 Arial;max-width:760px;margin:28px auto;padding:0 20px;color:#111}h1{font-size:22px;margin:0}.r{text-align:right}.head{display:flex;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:16px}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{padding:7px 9px;border:1px solid #ccc}th{background:#f5f5f5;text-align:left}.tot td{border:none;padding:3px 9px}.tot .big{font-size:17px;font-weight:bold}.muted{color:#666;font-size:12px}@media print{button{display:none}}</style></head><body>'+
-    '<button onclick="print()" style="float:right;padding:8px 14px">🖨 Print / Save PDF</button>'+
+    '<button onclick="print()" style="float:right;padding:8px 14px">Print / Save PDF</button>'+
     '<div class="head"><div><h1>'+esc(c.COMPANY_NAME||'HG Group')+'</h1><div class="muted">'+esc(c.COMPANY_REG||'')+(c.SST_NO?' · SST: '+esc(c.SST_NO):'')+'<br>'+esc(c.COMPANY_ADDRESS||'').replace(/\n/g,'<br>')+(c.COMPANY_PHONE?'<br>Tel: '+esc(c.COMPANY_PHONE):'')+'</div></div>'+
     '<div class="r"><h1 style="color:#888">'+(i.sstEnabled?'TAX INVOICE':'INVOICE')+'</h1><div><b>'+esc(i.invNo)+'</b><br>Date: '+esc(i.invDate)+(i.dueDate?'<br>Due: '+esc(i.dueDate):'')+'</div></div></div>'+
     '<div><b>Bill to:</b><br>'+esc(i.clientCompany)+'</div>'+
@@ -1352,6 +1369,51 @@ function buildInvoice(o){
   w.document.close();
 }
 
+// Shared HG Hub dropdown treatment. Native selects remain the value source for
+// existing validation, change handlers, and Supabase payloads.
+function closeHubSelects(except){
+  document.querySelectorAll('.hub-select.open').forEach(function(wrap){
+    if(wrap!==except){ wrap.classList.remove('open','open-up'); var trigger=wrap.querySelector('.hub-select-trigger'); if(trigger) trigger.setAttribute('aria-expanded','false'); }
+  });
+}
+function initHubSelects(root){
+  var scope=root||document,selects=[];
+  if(scope.nodeType===1&&scope.matches&&scope.matches('select:not([data-hub-select])')) selects.push(scope);
+  if(scope.querySelectorAll) selects=selects.concat(Array.prototype.slice.call(scope.querySelectorAll('select:not([data-hub-select])')));
+  selects.forEach(function(select){
+    var wrap=document.createElement('div'); wrap.className='hub-select';
+    select.parentNode.insertBefore(wrap,select); wrap.appendChild(select);
+    select.dataset.hubSelect='true'; select.classList.add('hub-select-native'); select.tabIndex=-1; select.setAttribute('aria-hidden','true');
+    var trigger=document.createElement('button'); trigger.type='button'; trigger.className='hub-select-trigger'; trigger.setAttribute('aria-haspopup','listbox'); trigger.setAttribute('aria-expanded','false');
+    var label=wrap.parentElement&&wrap.parentElement.querySelector('label'); if(label) trigger.setAttribute('aria-label',label.textContent.trim());
+    var menu=document.createElement('div'); menu.className='hub-select-menu'; menu.setAttribute('role','listbox'); wrap.appendChild(trigger); wrap.appendChild(menu);
+    function sync(){
+      var selected=select.options[select.selectedIndex]; trigger.textContent=selected?selected.textContent:'Select'; trigger.disabled=select.disabled; menu.innerHTML='';
+      Array.prototype.forEach.call(select.options,function(option){
+        var item=document.createElement('button'); item.type='button'; item.className='hub-select-option'+(option.selected?' selected':''); item.textContent=option.textContent; item.disabled=option.disabled; item.setAttribute('role','option'); item.setAttribute('aria-selected',option.selected?'true':'false');
+        item.addEventListener('click',function(event){ event.stopPropagation(); select.value=option.value; select.dispatchEvent(new Event('change',{bubbles:true})); closeHubSelects(); });
+        menu.appendChild(item);
+      });
+    }
+    select._hubSelectSync=sync; select.addEventListener('change',sync); new MutationObserver(sync).observe(select,{childList:true,subtree:true,attributes:true});
+    trigger.addEventListener('click',function(event){
+      event.stopPropagation(); var open=!wrap.classList.contains('open'); closeHubSelects(wrap); sync();
+      if(open){ var rect=trigger.getBoundingClientRect(),estimated=Math.min(260,menu.children.length*44+10); wrap.classList.toggle('open-up',window.innerHeight-rect.bottom-16<estimated&&rect.top>window.innerHeight-rect.bottom); }
+      else wrap.classList.remove('open-up');
+      wrap.classList.toggle('open',open); trigger.setAttribute('aria-expanded',open?'true':'false');
+    });
+    sync();
+  });
+}
+function startHubSelects(){
+  initHubSelects(document);
+  new MutationObserver(function(mutations){ mutations.forEach(function(m){ Array.prototype.forEach.call(m.addedNodes,function(node){ if(node.nodeType===1) initHubSelects(node); }); }); }).observe(document.body,{childList:true,subtree:true});
+}
+document.addEventListener('pointerdown',function(event){ if(!event.target.closest('.hub-select')) closeHubSelects(); },true);
+document.addEventListener('keydown',function(event){ if(event.key==='Escape') closeHubSelects(); });
+if(window.self!==window.top) document.body.classList.add('embedded');
+startHubSelects();
+if(window.lucide) window.lucide.createIcons();
 start();
 </script>
 </body>

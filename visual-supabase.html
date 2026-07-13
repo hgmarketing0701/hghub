@@ -4,8 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Visual Works Control — Supabase</title>
+<script>
+  (function(){
+    var key='hg_hub_theme';
+    var media=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');
+    function preference(){try{var saved=localStorage.getItem(key);if(saved==='light'||saved==='dark'||saved==='system')return saved;}catch(e){}return 'system';}
+    function resolved(value){return value==='light'||value==='dark'?value:(media&&media.matches?'dark':'light');}
+    function apply(value){var theme=resolved(value);document.documentElement.dataset.theme=theme;document.documentElement.style.colorScheme=theme;}
+    apply(preference());
+    window.addEventListener('message',function(event){if(!event.data||event.data.type!=='hg-theme-change')return;if(event.data.theme==='light'||event.data.theme==='dark')apply(event.data.theme);});
+    window.addEventListener('storage',function(event){if(event.key===key)apply(preference());});
+    if(media){var sync=function(){if(preference()==='system')apply('system');};if(media.addEventListener)media.addEventListener('change',sync);else if(media.addListener)media.addListener(sync);}
+  })();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0a0e1a; --panel:#141926; --panel2:#1c2335; --line:#2a3245;
@@ -135,9 +152,45 @@
     font-size:.95rem;cursor:pointer;font-family:inherit}
   .msg{font-size:.86rem;margin-top:10px;min-height:20px;opacity:0;transition:opacity .2s}
   .msg.show{opacity:1} .msg.ok{color:var(--ok)} .msg.err{color:#f87171}
+
+  /* HG Hub operational tool system */
+  :root{--bg:#fff;--panel:#fff;--panel2:#f8f7f4;--line:#e4ded6;--ink:#171717;--mut:#817970;--acc:#143d4a;--acc2:#0e303b;--acc-soft:#eef6f3;--ok:#15945d;--warn:#a66b00;--bad:#d84d4f;--chip:#f8f7f4;--radius:8px;--shadow:0 12px 30px rgba(23,23,23,.12)}
+  body{font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  #app{padding:26px 28px 0}
+  header{position:static;padding:0 0 20px;margin:0 0 18px;background:transparent;border-bottom:1px solid var(--line);gap:14px}
+  body.embedded header{display:none}
+  .brand-block{gap:9px}.brand-logo{width:24px;height:24px;padding:0;background:transparent;border-radius:0;color:var(--acc);font-size:0}.brand-logo svg{width:20px;height:20px;stroke-width:2.1}
+  .brand-name{display:flex;align-items:center;gap:10px;color:var(--ink);font-size:1.05rem;font-weight:800}.brand-sub{font-size:13px;line-height:17px;color:var(--mut);margin-top:3px}
+  .tool-live{display:inline-flex;align-items:center;height:21px;padding:0 9px;border-radius:999px;background:#edf8f3;color:var(--ok);font-size:.64rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  header .mpill{background:var(--panel);border-color:var(--line);border-radius:999px;color:var(--mut);padding:8px 12px}header .mpill strong{color:var(--acc)}header .mpill button{color:var(--warn)}
+  nav{position:static;top:auto;gap:26px;flex-wrap:nowrap;overflow-x:auto;padding:0;margin:0 0 26px;background:transparent;border-bottom:1px solid var(--line);scrollbar-width:none}nav::-webkit-scrollbar{display:none}
+  nav button{flex:0 0 auto;padding:0 0 12px;border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;color:#716b65;font-size:.78rem;font-weight:800;white-space:nowrap}nav button:hover:not(.active){background:transparent;border-color:transparent;color:var(--acc)}nav button.active{background:transparent;color:var(--acc);border-color:var(--acc)}
+  main{max-width:none;margin:0;padding:0 0 72px}.view>h2{font-size:1.45rem;letter-spacing:-.03em;margin:0 0 16px}.view>h2::after{display:block;margin-top:4px;color:#716b65;font-size:.9rem;font-weight:500;letter-spacing:0}
+  #v-dash>h2::after{content:"Monitor artwork, approvals, production, installation, and billing handoff."}#v-jobs>h2::after{content:"Move each visual job from request through client approval and completion."}#v-rates>h2::after{content:"Maintain the pricing rules used for visual work calculations."}#v-permits>h2::after{content:"Track mall permits and validity before installation."}#v-workers>h2::after{content:"Maintain the visual installation crew and document readiness."}#v-invoices>h2::after{content:"Reconcile subcontractor claims against HG's recorded measurements."}#v-audit>h2::after{content:"Review recent visual-work changes, most recent first."}
+  h3{color:var(--ink);font-size:.9rem;text-transform:none;letter-spacing:-.01em;font-weight:800;margin:18px 0 8px}
+  .card{background:var(--panel);border-color:var(--line);border-radius:var(--radius);padding:18px;margin-bottom:12px;box-shadow:none}
+  .card:has(>table){padding:0;overflow-x:auto}.card:has(>h3+table)>h3{margin:0;padding:16px;border-bottom:1px solid var(--line)}.card:has(>.toolbar>h3):has(>table){padding:0}.card:has(>.toolbar>h3):has(>table)>.toolbar{padding:16px 16px 12px;margin:0;border-bottom:1px solid var(--line)}
+  .row.tool-snapshot{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;margin:0 0 18px!important;padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+  .row.tool-snapshot .stat{min-width:0;min-height:78px;padding:6px 16px;border:0;border-right:1px solid var(--line);border-radius:0;background:transparent}.row.tool-snapshot .stat:last-child{border-right:0}.stat:hover{border-color:var(--line)}.stat .l{min-height:18px;line-height:18px;color:#716b65;font-size:.66rem;font-weight:800;white-space:nowrap}.stat .n{font-size:1.45rem;line-height:36px;color:var(--acc);font-variant-numeric:tabular-nums}
+  label{color:#716b65;font-size:.72rem;font-weight:800;margin:10px 0 5px}input,select,textarea{min-height:42px;background:var(--panel);border-color:#ded8cf;color:var(--ink);border-radius:8px;font-size:.88rem}input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(20,61,74,.08)}
+  select{appearance:none;-webkit-appearance:none;padding-right:42px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23143d4a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:14px}
+  .hub-select{position:relative;width:100%}.hub-select-native{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}.toolbar .hub-select{width:auto;min-width:170px;flex:0 0 auto}.selrow .hub-select{flex:1}
+  button.hub-select-trigger{position:relative;display:flex;align-items:center;width:100%;min-height:42px;padding:10px 42px 10px 12px;background:var(--panel);border:1px solid #ded8cf;border-radius:8px;color:var(--ink);font:inherit;font-size:.88rem;font-weight:500;text-align:left;cursor:pointer}button.hub-select-trigger::after{content:"";position:absolute;right:16px;top:50%;width:7px;height:7px;border-right:1.7px solid var(--acc);border-bottom:1.7px solid var(--acc);transform:translateY(-68%) rotate(45deg)}button.hub-select-trigger:hover{border-color:#cfc8bd}button.hub-select-trigger:focus-visible,.hub-select.open .hub-select-trigger{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(20,61,74,.08)}
+  .hub-select-menu{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:140;display:none;max-height:260px;overflow-y:auto;padding:5px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}.hub-select.open .hub-select-menu{display:block}.hub-select.open-up .hub-select-menu{top:auto;bottom:calc(100% + 4px)}button.hub-select-option{display:block;width:100%;min-height:40px;padding:9px 10px;border:0;border-radius:6px;background:transparent;color:var(--ink);font:inherit;font-size:.86rem;text-align:left;cursor:pointer}button.hub-select-option:hover,button.hub-select-option:focus-visible,button.hub-select-option.selected{outline:none;background:var(--panel2);color:var(--acc)}
+  button.btn,button.ghost,button.danger{border-radius:8px;padding:9px 12px;font-size:.82rem;font-weight:700}button.btn{background:var(--acc);color:#fff}button.btn:hover{background:var(--acc2)}button.ghost{background:var(--panel);color:var(--acc);border-color:var(--line)}button.ghost:hover{background:var(--panel2);border-color:#cfc8bd}button.danger{background:var(--panel);color:var(--bad);border-color:#f1c8c5}
+  .toolbar{gap:8px;margin-bottom:14px}.toolbar input{min-width:260px;flex:1 1 320px}.toolbar .btn,.toolbar .ghost{flex:0 0 auto}
+  table{min-width:760px;font-size:.84rem}th{padding:11px 14px;background:var(--panel2);color:#716b65;font-size:.68rem;font-weight:800}td{padding:11px 14px;border-bottom-color:var(--line)}tbody tr:last-child td{border-bottom:0}tr:hover td{background:var(--panel2)}
+  .empty-state{display:flex;align-items:center;justify-content:center;gap:12px;padding:28px 20px;color:var(--mut);text-align:left}.empty-state svg{width:22px;height:22px;color:var(--ok)}.empty-state strong{display:block;color:var(--ink);font-size:.88rem}.empty-state span{display:block;margin-top:2px;font-size:.8rem}
+  .ui-icon{display:inline-block;width:1em;height:1em;vertical-align:-.14em;stroke-width:2}.brand-logo .ui-icon{width:20px;height:20px}.mpill>.ui-icon{margin-right:6px}.btn .ui-icon,.ghost .ui-icon,.danger .ui-icon,.hint .ui-icon,[class^="recon-"] .ui-icon{margin-right:6px}.card-error{display:flex;align-items:center;gap:9px;padding:16px;color:var(--bad)}
+  .alert{border:0!important;border-radius:0;margin:0;padding:10px 0;border-bottom:1px solid var(--line)!important}.alert:last-child{border-bottom:0!important}.alert.expired,.alert.expiring{background:transparent}
+  dialog{background:var(--panel);color:var(--ink);border-color:var(--line);border-radius:12px}dialog::backdrop{background:rgba(12,18,20,.58);backdrop-filter:blur(2px)}.modal-h{padding:18px 20px}.modal-b{padding:20px}.modal-f{position:sticky;bottom:0;background:var(--panel);padding:14px 20px}
+  html[data-theme="dark"]{--bg:#1b2527;--panel:#202b2d;--panel2:#253133;--line:#394749;--ink:#f3f6f4;--mut:#b3bebb;--acc:#73aeba;--acc2:#8bc0c9;--acc-soft:#293d40;--chip:#253133;--ok:#65c99a;--warn:#e2ae5b;--bad:#ef8587;--shadow:0 14px 34px rgba(0,0,0,.38)}
+  html[data-theme="dark"] header .mpill,html[data-theme="dark"] .card,html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea,html[data-theme="dark"] button.hub-select-trigger,html[data-theme="dark"] .hub-select-menu,html[data-theme="dark"] dialog{background:var(--panel);border-color:var(--line);color:var(--ink)}html[data-theme="dark"] select{background-image:none}html[data-theme="dark"] .brand-sub,html[data-theme="dark"] nav button,html[data-theme="dark"] label,html[data-theme="dark"] .stat .l,html[data-theme="dark"] th{color:var(--mut)}html[data-theme="dark"] button.ghost{background:var(--panel);color:#c5dde1}html[data-theme="dark"] button.danger{background:var(--panel)}html[data-theme="dark"] button.hub-select-option:hover,html[data-theme="dark"] button.hub-select-option.selected{background:var(--acc-soft);color:#c8e4e8}
+  @media(max-width:760px){#app{padding:20px 16px 84px}header{flex-wrap:nowrap}.brand-sub{display:none}.meta-pills #dateNow{display:none}nav{gap:24px;margin-left:-16px;margin-right:-16px;padding:0 16px}.view>h2{font-size:1.35rem}.row.tool-snapshot{grid-template-columns:repeat(2,minmax(0,1fr));padding:0}.row.tool-snapshot .stat{padding:16px 18px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.row.tool-snapshot .stat:nth-child(2n){border-right:0}.row.tool-snapshot .stat:last-child{border-bottom:0}.toolbar{align-items:stretch}.toolbar input,.toolbar .hub-select,.toolbar button{width:100%;min-width:0;flex:1 1 100%}.panelrow{grid-template-columns:1fr}.panelrow .gridhead{display:none}table{min-width:760px}.card:has(>table){overflow-x:auto}.modal-f>*{flex:1 1 auto;min-height:44px}.hub-select-menu{max-height:min(260px,45vh)}button.hub-select-option{min-height:44px}}
 </style>
 </head>
 <body>
+<script>if(window.self!==window.top)document.body.classList.add('embedded');</script>
 
 <!-- ══════════ GATE 0 · SUPABASE CONFIG (shown once if keys not set) ══════════ -->
 <div class="gate" id="gateConfig" style="display:none;">
@@ -172,7 +225,7 @@
 <!-- ══════════ GATE 2 · NOT ON ALLOWLIST ══════════ -->
 <div class="gate" id="gateDenied" style="display:none;">
   <div class="card">
-    <div class="brand-logo">🔒</div>
+    <div class="brand-logo" aria-hidden="true"><i class="ui-icon" data-lucide="lock-keyhole"></i></div>
     <h2>Not authorised</h2>
     <div class="sub" style="margin-top:6px;"><span id="deniedEmail"></span> is not on the access list.<br>
       Ask your admin to add you under the team access list.</div>
@@ -184,15 +237,15 @@
 <div id="app" style="display:none;">
 <header>
   <div class="brand-block">
-    <div class="brand-logo">BL</div>
+    <div class="brand-logo" aria-hidden="true"><i data-lucide="palette"></i></div>
     <div>
-      <div class="brand-name">Visual Works Control</div>
-      <div class="brand-sub">Black Lee · Print &amp; Install subcon (B) · Supabase edition</div>
+      <div class="brand-name">Visual Works Control <span class="tool-live">Live</span></div>
+      <div class="brand-sub">Artwork approval, production, installation, and billing in one shared workflow.</div>
     </div>
   </div>
   <div class="meta-pills">
     <div class="mpill" id="dateNow">—</div>
-    <div class="mpill">👤 <strong id="who">…</strong><button onclick="signOut()">Sign out</button></div>
+    <div class="mpill"><i class="ui-icon" data-lucide="user-round" aria-hidden="true"></i><strong id="who">…</strong><button onclick="signOut()">Sign out</button></div>
   </div>
 </header>
 <nav id="nav"></nav>
@@ -208,12 +261,12 @@
 </div>
 
 <dialog id="modal">
-  <div class="modal-h"><h2 id="m-title">…</h2><button class="x" onclick="closeModal()">×</button></div>
+  <div class="modal-h"><h2 id="m-title">…</h2><button class="x" aria-label="Close" onclick="closeModal()"><i class="ui-icon" data-lucide="x"></i></button></div>
   <div class="modal-b" id="m-body"></div>
   <div class="modal-f" id="m-foot"></div>
 </dialog>
 <dialog id="modal2">
-  <div class="modal-h"><h2 id="m2-title">…</h2><button class="x" onclick="closeModal2()">×</button></div>
+  <div class="modal-h"><h2 id="m2-title">…</h2><button class="x" aria-label="Close" onclick="closeModal2()"><i class="ui-icon" data-lucide="x"></i></button></div>
   <div class="modal-b" id="m2-body"></div>
   <div class="modal-f" id="m2-foot"></div>
 </dialog>
@@ -273,6 +326,41 @@ function dstr(v){ return v?String(v).slice(0,10):''; }
 function safeName(s){ return String(s||'file').replace(/[^\w.\-]+/g,'_').slice(0,80); }
 function showMsg(id, t, ok){ var m=el(id); m.textContent=t; m.className='msg show '+(ok?'ok':'err'); setTimeout(function(){m.classList.remove('show');},4500); }
 function audit(action, details){ return sb.rpc('log_audit',{p_action:action,p_details:details||''}); }
+function humanAuditAction(action){
+  var parts=String(action||'').replace(/^vis\./,'').split('.'),verb=parts.pop()||'updated',subject=parts.pop()||'record';
+  var verbs={create:'Added',update:'Updated',delete:'Removed',status:'Changed',proceed:'Approved',upload:'Uploaded'};
+  return (verbs[verb]||verb.charAt(0).toUpperCase()+verb.slice(1))+' '+subject.replace(/_/g,' ');
+}
+function ico(name){return '<i class="ui-icon" data-lucide="'+name+'" aria-hidden="true"></i>';}
+
+/* Shared HG Hub dropdown treatment. Native selects remain the source of truth. */
+function closeHubSelects(except){
+  document.querySelectorAll('.hub-select.open').forEach(function(wrap){
+    if(wrap!==except){wrap.classList.remove('open','open-up');var trigger=wrap.querySelector('.hub-select-trigger');if(trigger)trigger.setAttribute('aria-expanded','false');}
+  });
+}
+function syncHubSelects(root){(root||document).querySelectorAll('select[data-hub-select]').forEach(function(select){if(select._hubSelectSync)select._hubSelectSync();});}
+function initHubSelects(root){
+  (root||document).querySelectorAll('select:not([data-hub-select]):not([multiple])').forEach(function(select){
+    var wrap=document.createElement('div');wrap.className='hub-select';select.parentNode.insertBefore(wrap,select);wrap.appendChild(select);
+    select.dataset.hubSelect='true';select.classList.add('hub-select-native');select.tabIndex=-1;select.setAttribute('aria-hidden','true');
+    var trigger=document.createElement('button');trigger.type='button';trigger.className='hub-select-trigger';trigger.setAttribute('aria-haspopup','listbox');trigger.setAttribute('aria-expanded','false');
+    var menu=document.createElement('div');menu.className='hub-select-menu';menu.setAttribute('role','listbox');wrap.appendChild(trigger);wrap.appendChild(menu);
+    function sync(){
+      var selected=select.options[select.selectedIndex];trigger.textContent=selected?selected.textContent:'Select';trigger.disabled=select.disabled;menu.innerHTML='';
+      Array.prototype.forEach.call(select.options,function(option){var item=document.createElement('button');item.type='button';item.className='hub-select-option'+(option.selected?' selected':'');item.textContent=option.textContent;item.disabled=option.disabled;item.setAttribute('role','option');item.setAttribute('aria-selected',option.selected?'true':'false');item.addEventListener('click',function(event){event.stopPropagation();select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));closeHubSelects();});menu.appendChild(item);});
+    }
+    select._hubSelectSync=sync;select.addEventListener('change',sync);new MutationObserver(sync).observe(select,{childList:true,subtree:true,attributes:true});
+    trigger.addEventListener('click',function(event){event.stopPropagation();var open=!wrap.classList.contains('open');closeHubSelects(wrap);sync();if(open){var rect=trigger.getBoundingClientRect(),estimated=Math.min(260,menu.children.length*44+10);wrap.classList.toggle('open-up',window.innerHeight-rect.bottom-16<estimated&&rect.top>window.innerHeight-rect.bottom);}else wrap.classList.remove('open-up');wrap.classList.toggle('open',open);trigger.setAttribute('aria-expanded',open?'true':'false');});
+    sync();
+  });
+}
+document.addEventListener('pointerdown',function(event){if(!event.target.closest('.hub-select'))closeHubSelects();},true);
+document.addEventListener('keydown',function(event){if(event.key==='Escape')closeHubSelects();});
+document.addEventListener('DOMContentLoaded',function(){
+  initHubSelects(document);if(window.lucide)window.lucide.createIcons();
+  new MutationObserver(function(records){records.forEach(function(record){record.addedNodes.forEach(function(node){if(node.nodeType===1)initHubSelects(node);});});}).observe(document.body,{childList:true,subtree:true});
+});
 
 /* ═══════════════════════════ BOOT / AUTH FLOW (copied from quotation-supabase.html) ═══════════════════════════ */
 function saveConfig(){
@@ -341,8 +429,8 @@ async function openStored(path){
 }
 /* one link that prefers the uploaded (private-bucket) file, else a pasted URL */
 function fileRef(url, path, label){
-  if(path) return '<a href="#" onclick="openStored(\''+esc(path)+'\');return false">'+esc(label)+' ↗</a>';
-  if(url)  return '<a href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(label)+' ↗</a>';
+  if(path) return '<a href="#" onclick="openStored(\''+esc(path)+'\');return false">'+esc(label)+' '+ico('external-link')+'</a>';
+  if(url)  return '<a href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(label)+' '+ico('external-link')+'</a>';
   return '';
 }
 
@@ -351,14 +439,14 @@ function openModal(title, bodyHtml, footHtml){
   el('m-title').textContent=title;
   el('m-body').innerHTML=bodyHtml;
   el('m-foot').innerHTML=footHtml||'';
-  el('modal').showModal();
+  el('modal').showModal(); initHubSelects(el('modal')); syncHubSelects(el('modal')); if(window.lucide)window.lucide.createIcons();
 }
 function closeModal(){el('modal').close();}
 function openModal2(title, bodyHtml, footHtml){
   el('m2-title').textContent=title;
   el('m2-body').innerHTML=bodyHtml;
   el('m2-foot').innerHTML=footHtml||'';
-  el('modal2').showModal();
+  el('modal2').showModal(); initHubSelects(el('modal2')); syncHubSelects(el('modal2')); if(window.lucide)window.lucide.createIcons();
 }
 function closeModal2(){el('modal2').close();}
 
@@ -382,7 +470,7 @@ function dzPick(id,fileList){
 }
 function dzRender(id){
   var d=DROPS[id];var x=el('dzf-'+id);if(!x)return;
-  x.innerHTML=d.files.map(function(f,i){return '<span class="dz-chip">'+esc(f.name)+'<b onclick="event.stopPropagation();dzRemove(\''+id+'\','+i+')">×</b></span>';}).join('');
+  x.innerHTML=d.files.map(function(f,i){return '<span class="dz-chip">'+esc(f.name)+'<b aria-label="Remove file" onclick="event.stopPropagation();dzRemove(\''+id+'\','+i+')">'+ico('x')+'</b></span>';}).join('');if(window.lucide)window.lucide.createIcons();
 }
 function dzRemove(id,i){DROPS[id].files.splice(i,1);dzRender(id);}
 function dzFiles(id){return (DROPS[id]&&DROPS[id].files)||[];}
@@ -396,7 +484,7 @@ function optionsFor(kind,current){
 }
 function managedSelect(kind,id,current){
   return '<div class="selrow"><select id="'+id+'" onchange="liveQuote&&liveQuote()">'+optionsFor(kind,current)+'</select>'+
-    '<button type="button" class="ghost sm" title="Add / edit / delete" onclick="manageList(\''+kind+'\',\''+id+'\')">⚙ Manage</button></div>';
+    '<button type="button" class="ghost sm" title="Add / edit / delete" onclick="manageList(\''+kind+'\',\''+id+'\')">'+ico('settings-2')+'Manage</button></div>';
 }
 function refreshManaged(kind,id){
   var sel=el(id);if(!sel)return;
@@ -479,7 +567,7 @@ async function refresh(){
     sb.from('vis_alarms').select('*')
   ]);
   var err = q.map(function(r){return r.error;}).filter(Boolean)[0];
-  if(err){ el('v-dash').innerHTML='<div class="card">⚠️ '+esc(err.message)+'</div>'; toast(err.message,'bad'); return; }
+  if(err){ el('v-dash').innerHTML='<div class="card card-error">'+ico('triangle-alert')+'<span>'+esc(err.message)+'</span></div>'; if(window.lucide)window.lucide.createIcons(); toast(err.message,'bad'); return; }
   DB.jobs = q[0].data.map(jobView);
   DB.rates = q[1].data.map(rateView);
   DB.permits = q[2].data.map(permitView).sort(function(a,b){return a.mall.localeCompare(b.mall)||String(b.validTo).localeCompare(String(a.validTo));});
@@ -490,7 +578,7 @@ async function refresh(){
   DB.alarms = q[7].data;
   renderAll();
 }
-function renderAll(){ renderDash(); renderJobs(); renderRates(); renderPermits(); renderWorkers(); renderInvoices(); }
+function renderAll(){ renderDash(); renderJobs(); renderRates(); renderPermits(); renderWorkers(); renderInvoices(); initHubSelects(document); syncHubSelects(document); if(window.lucide)window.lucide.createIcons(); }
 
 /* row → the shapes the original UI used */
 function jobView(r){
@@ -558,17 +646,17 @@ function renderDash(){
   }).sort(function(a,b){return a.days-b.days;});
   var alertsHtml = alarms.length ? alarms.map(function(a){
     var when = a.days<0 ? ('expired '+(-a.days)+'d ago') : ('expires in '+a.days+'d');
-    return '<div class="alert '+a.level+'">'+(a.level==='expired'?'⛔':'⚠️')+' <b>'+esc(a.detail)+'</b> — '+when+'</div>';
-  }).join('') : '<div class="muted">No permit or worker-doc expiries coming up. ✅</div>';
+    return '<div class="alert '+a.level+'"><i data-lucide="'+(a.level==='expired'?'circle-x':'triangle-alert')+'" aria-hidden="true"></i><div><b>'+esc(a.detail)+'</b><div class="muted">'+when+'</div></div></div>';
+  }).join('') : '<div class="empty-state"><i data-lucide="shield-check" aria-hidden="true"></i><div><strong>All clear</strong><span>No permit or worker-document expiries need action.</span></div></div>';
 
   el('v-dash').innerHTML =
     '<h2>Dashboard</h2>'+
-    '<div class="row" style="margin-bottom:14px">'+
+    '<div class="row tool-snapshot">'+
       stat(open,'Open jobs')+stat(byStatus.APPROVED||0,'Approved (PROCEED)')+
       stat(byStatus.PRINTING||0,'Printing')+stat(toBill,'Ready to bill')+
       stat(checkInv,'Invoices to check')+
     '</div>'+
-    '<div class="card"><h3 style="margin-top:0">⏰ Permit & worker-doc early warning</h3>'+alertsHtml+'</div>'+
+    '<div class="card"><h3 style="margin-top:0">Permit &amp; worker-document attention</h3>'+alertsHtml+'</div>'+
     '<div class="card"><div class="toolbar"><h3 style="margin:0;flex:1">Recent jobs</h3>'+
       '<button class="btn sm" onclick="show(\'jobs\');newJob()">+ New job order</button></div>'+
       jobsTable(DB.jobs.slice(0,12))+'</div>';
@@ -585,7 +673,7 @@ function renderJobs(){
       '<input id="j-q" placeholder="Search lot / mall / client / job no" oninput="filterJobs()" style="min-width:240px">'+
       '<select id="j-status" onchange="filterJobs()">'+statusOpts+'</select>'+
       '<select id="j-mall" onchange="filterJobs()">'+mallOpts+'</select>'+
-      '<button class="ghost sm" style="margin-left:auto" onclick="exportJobsExcel()">⬇ Export Excel</button>'+
+      '<button class="ghost sm" style="margin-left:auto" onclick="exportJobsExcel()">'+ico('download')+'Export Excel</button>'+
       '<button class="btn" onclick="newJob()">+ New job order</button>'+
     '</div>'+
     '<div class="card" id="j-list">'+jobsTable(DB.jobs)+'</div>';
@@ -600,9 +688,10 @@ function filterJobs(){
     return true;
   });
   el('j-list').innerHTML=jobsTable(rows);
+  if(window.lucide)window.lucide.createIcons();
 }
 function jobsTable(rows){
-  if(!rows.length) return '<div class="muted">No jobs yet.</div>';
+  if(!rows.length) return '<div class="empty-state"><i data-lucide="images" aria-hidden="true"></i><div><strong>No visual jobs found</strong><span>New visual jobs and matching search results will appear here.</span></div></div>';
   return '<table><thead><tr><th>Job</th><th>Mall · Lot</th><th>Type</th><th>Status</th>'+
     '<th class="right">sqft</th><th class="right">Expected RM</th><th>Install</th><th></th></tr></thead><tbody>'+
     rows.map(function(j){
@@ -715,10 +804,10 @@ function renderPanels(){
       '<input id="p-q-'+i+'" value="'+esc(p.qty)+'" inputmode="decimal" oninput="liveQuote()">'+
       '<input id="p-r-'+i+'" value="'+esc(p.ratePerSqft||'')+'" placeholder="auto" inputmode="decimal" oninput="liveQuote()">'+
       '<div class="ro right" id="p-out-'+i+'">'+num(p.sqft)+' · '+rm(p.amount)+'</div>'+
-      '<button class="danger sm" onclick="rmPanel('+i+')">×</button>'+
+      '<button class="danger sm" aria-label="Remove panel" onclick="rmPanel('+i+')">'+ico('trash-2')+'</button>'+
     '</div>';
   }).join('');
-  liveQuote();
+  if(window.lucide)window.lucide.createIcons();liveQuote();
 }
 
 /* ── SQFT + RATE ENGINE — client-side port of toFeet_/panelSqft_/pickRate_/quoteJob.
@@ -785,12 +874,12 @@ function liveQuote(){
     el('t-amt').textContent=rm(q.expectedAmount);
     var w=el('rate-warn');
     var msgs=[];
-    if(!q.rateFound) msgs.push('⚠️ No rate card matches this mall/material yet — amounts show RM 0 until you add a rate (or type a rate per panel). Add it under <b>Rate Card</b>.');
-    if(val('f-type')==='install_only') msgs.push('🔧 <b>Install only</b> — priced at the install rate (RM '+num(q.installRate)+'/sqft); B does not print.');
-    else if(q.usePackage) msgs.push('📦 Priced on <b>package rate</b> RM '+num(q.packageRate)+'/sqft (supply + install, all-in).');
+    if(!q.rateFound) msgs.push(ico('triangle-alert')+'No rate card matches this mall/material yet — amounts show RM 0 until you add a rate (or type a rate per panel). Add it under <b>Rate Card</b>.');
+    if(val('f-type')==='install_only') msgs.push(ico('wrench')+'<b>Install only</b> — priced at the install rate (RM '+num(q.installRate)+'/sqft); B does not print.');
+    else if(q.usePackage) msgs.push(ico('package')+'Priced on <b>package rate</b> RM '+num(q.packageRate)+'/sqft (supply + install, all-in).');
     else if(q.installAmount) msgs.push('Includes install RM '+num(q.installAmount)+' ('+num(q.installRate)+'/sqft × '+num(q.totalSqft)+' sqft).');
     if(q.minApplied) msgs.push('Minimum charge applied for this mall.');
-    w.innerHTML=msgs.join(' ');
+    w.innerHTML=msgs.join(' ');if(window.lucide)window.lucide.createIcons();
   },120);
 }
 async function saveJobForm(id){
@@ -835,7 +924,7 @@ function injectStatusBar(j){
   var next={
     NEW:[['DRAFT_IN','B sent draft']],
     DRAFT_IN:[['SENT_CLIENT','Sent to client'],['ARTWORK_REJECTED','Artwork rejected']],
-    SENT_CLIENT:[['APPROVED','✓ PROCEED'],['ARTWORK_REJECTED','Artwork rejected']],
+    SENT_CLIENT:[['APPROVED','Proceed'],['ARTWORK_REJECTED','Artwork rejected']],
     ARTWORK_REJECTED:[['DRAFT_IN','New draft in']],
     APPROVED:[['PRINTING','Start printing']],
     PRINTING:[['INSTALLED','Installed on site']],
@@ -849,14 +938,15 @@ function injectStatusBar(j){
       var cls=a[0]==='APPROVED'?'btn':(a[0]==='ARTWORK_REJECTED'?'danger':'ghost');
       return '<button class="'+cls+' sm" onclick="moveStatus(\''+j.id+'\',\''+a[0]+'\')">'+a[1]+'</button>';
     }).join('')+
-    (j.status==='INSTALLED'?'<button class="btn sm" onclick="photoUpload(\''+j.id+'\')">📷 Completion photos</button>':'')+
+    (j.status==='INSTALLED'?'<button class="btn sm" onclick="photoUpload(\''+j.id+'\')">'+ico('camera')+'Completion photos</button>':'')+
     '<span style="margin-left:auto"></span>'+
-    (j.artworkLink?'<a class="tag" href="'+esc(j.artworkLink)+'" target="_blank">artwork link ↗</a>':'')+
+    (j.artworkLink?'<a class="tag" href="'+esc(j.artworkLink)+'" target="_blank">'+ico('external-link')+'Artwork link</a>':'')+
     ((j.sketchUrl||j.sketchPath)?'<span class="tag">'+fileRef(j.sketchUrl,j.sketchPath,'sketch')+'</span>':'')+
     ((j.proofUrl||j.proofPath)?'<span class="tag">'+fileRef(j.proofUrl,j.proofPath,'proof')+'</span>':'')+
     (j.photoPaths.length?'<span class="tag">'+j.photoPaths.map(function(p,i){return fileRef('',p,'done '+(i+1));}).join(' · ')+'</span>':'')+
     '</div></div>';
   el('m-body').insertAdjacentHTML('afterbegin',bar);
+  if(window.lucide)window.lucide.createIcons();
 }
 async function moveStatus(id,status){
   var note='';
@@ -908,12 +998,12 @@ function renderRates(){
   el('v-rates').innerHTML=
     '<h2>Rate Card — B\'s rates per mall / material / job type</h2>'+
     '<div class="toolbar"><span class="muted" style="flex:1">Most specific match wins: Mall+Material+Type → Material → ALL.</span>'+
-      '<button class="ghost sm" onclick="exportRatesExcel()">⬇ Export Excel</button>'+
+      '<button class="ghost sm" onclick="exportRatesExcel()">'+ico('download')+'Export Excel</button>'+
       '<button class="btn" onclick="rateFormById(null)">+ Add rate</button></div>'+
     '<div class="card">'+ratesTable()+'</div>';
 }
 function ratesTable(){
-  if(!DB.rates.length)return '<div class="muted">No rates yet. Add B\'s agreed rates so job amounts auto-calculate.</div>';
+  if(!DB.rates.length)return '<div class="empty-state"><i data-lucide="badge-dollar-sign" aria-hidden="true"></i><div><strong>No rates added</strong><span>Add the agreed visual-work rates so job amounts calculate automatically.</span></div></div>';
   return '<table><thead><tr><th>Mall</th><th>Material</th><th>Type</th><th class="right">Print RM/sqft</th>'+
     '<th class="right">Install RM/sqft</th><th class="right">Package RM/sqft</th><th class="right">Min RM</th><th>From</th><th></th></tr></thead><tbody>'+
     DB.rates.map(function(r){
@@ -980,12 +1070,12 @@ function renderPermits(){
   el('v-permits').innerHTML=
     '<h2>Work Permits — by mall, with expiry warning</h2>'+
     '<div class="toolbar"><span class="muted" style="flex:1">Stored for quick retrieval; flags expiring within '+PERMIT_WARN_DAYS+' days.</span>'+
-      '<button class="ghost sm" onclick="exportPermitsExcel()">⬇ Export Excel</button>'+
+      '<button class="ghost sm" onclick="exportPermitsExcel()">'+ico('download')+'Export Excel</button>'+
       '<button class="btn" onclick="permitFormById(null)">+ Add permit</button></div>'+
     '<div class="card">'+permitsTable()+'</div>';
 }
 function permitsTable(){
-  if(!DB.permits.length)return '<div class="muted">No permits stored yet.</div>';
+  if(!DB.permits.length)return '<div class="empty-state"><i data-lucide="file-check-2" aria-hidden="true"></i><div><strong>No permits stored</strong><span>Mall work permits will appear here after they are added.</span></div></div>';
   return '<table><thead><tr><th>Mall</th><th>Lot</th><th>Type</th><th>Permit no</th><th>Valid</th><th>Status</th><th>File</th><th></th></tr></thead><tbody>'+
     DB.permits.map(function(p){
       var badge=p.state==='expired'?'<span class="pill p-ARTWORK_REJECTED">expired</span>':
@@ -1051,7 +1141,7 @@ function renderWorkers(){
   el('v-workers').innerHTML=
     '<h2>B\'s Team — worker name list & documents</h2>'+
     '<div class="toolbar"><span class="muted" style="flex:1">Flags docs expiring within '+DOC_WARN_DAYS+' days.</span>'+
-      '<button class="ghost sm" onclick="exportWorkersExcel()">⬇ Export Excel</button>'+
+      '<button class="ghost sm" onclick="exportWorkersExcel()">'+ico('download')+'Export Excel</button>'+
       '<button class="btn" onclick="workerFormById(null)">+ Add worker</button></div>'+
     '<div class="card">'+workersTable()+'</div>';
 }
@@ -1065,7 +1155,7 @@ function docChip(label,url,path,expiry,state,days){
   return '<div style="font-size:12px">'+link+badge+(expiry?'<span class="muted"> · exp '+esc(expiry)+'</span>':'')+'</div>';
 }
 function workersTable(){
-  if(!DB.workers.length)return '<div class="muted">No workers yet.</div>';
+  if(!DB.workers.length)return '<div class="empty-state"><i data-lucide="users" aria-hidden="true"></i><div><strong>No workers added</strong><span>Add visual installation workers to track their access documents.</span></div></div>';
   return '<table><thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>IC</th><th>Documents</th><th>Status</th><th></th></tr></thead><tbody>'+
     DB.workers.map(function(w){
       var docs=docChip('CIDB',w.cidbFileUrl,w.cidbFilePath,w.cidbExpiry,w.docState,w.daysLeft)+
@@ -1155,15 +1245,15 @@ function renderInvoices(){
   el('v-invoices').innerHTML=
     '<h2>B\'s Invoices & Reconciliation</h2>'+
     '<div class="toolbar"><span class="muted" style="flex:1">Pick the jobs on B\'s invoice → system checks each claimed amount against HG\'s recorded measurement.</span>'+
-      '<button class="ghost sm" onclick="exportInvoicesExcel()">⬇ Export Excel</button>'+
+      '<button class="ghost sm" onclick="exportInvoicesExcel()">'+ico('download')+'Export Excel</button>'+
       '<button class="btn" onclick="invForm(null)">+ Log B invoice</button></div>'+
     '<div class="card">'+invTable()+'</div>';
 }
 function invTable(){
-  if(!DB.invoices.length)return '<div class="muted">No invoices logged yet.</div>';
+  if(!DB.invoices.length)return '<div class="empty-state"><i data-lucide="receipt-text" aria-hidden="true"></i><div><strong>No invoices logged</strong><span>Subcontractor invoices will appear here for measurement reconciliation.</span></div></div>';
   return '<table><thead><tr><th>B Inv No</th><th>Date</th><th>Malls</th><th class="right">Claimed</th><th>Recon</th><th>Status</th><th>File</th><th></th></tr></thead><tbody>'+
     DB.invoices.map(function(i){
-      var v=i.reconVerdict==='MATCH'?'<span class="recon-MATCH">✓ MATCH</span>':i.reconVerdict==='CHECK'?'<span class="recon-CHECK">⚠ CHECK</span>':'<span class="muted">—</span>';
+      var v=i.reconVerdict==='MATCH'?'<span class="recon-MATCH">'+ico('circle-check')+'Match</span>':i.reconVerdict==='CHECK'?'<span class="recon-CHECK">'+ico('triangle-alert')+'Check</span>':'<span class="muted">—</span>';
       return '<tr><td><b>'+esc(i.invNo)+'</b></td><td>'+esc(i.invDate)+'</td><td>'+esc(i.malls||'—')+'</td>'+
         '<td class="right">'+rm(i.claimedTotal)+'</td><td>'+v+'</td><td><span class="tag">'+esc(i.status||'')+'</span></td>'+
         '<td>'+(fileRef(i.fileUrl,i.filePath,'open')||'—')+'</td>'+
@@ -1283,7 +1373,7 @@ function renderInvLines(){
         '<td class="right"><input id="il-sqft-'+i+'" value="'+esc(l.claimedSqft)+'" inputmode="decimal" style="width:80px;text-align:right" oninput="invRecon()"></td>'+
         '<td class="right"><input id="il-amt-'+i+'" value="'+esc(l.claimedAmount)+'" inputmode="decimal" style="width:96px;text-align:right" oninput="invRecon()"></td>'+
         '<td class="right" id="il-var-'+i+'">—</td>'+
-        '<td class="right"><button class="danger sm" onclick="rmInvLine('+i+')">×</button></td></tr>';
+        '<td class="right"><button class="danger sm" aria-label="Remove invoice line" onclick="rmInvLine('+i+')">'+ico('trash-2')+'</button></td></tr>';
     }).join('')+'</tbody></table>';
   invRecon();
 }
@@ -1307,14 +1397,14 @@ function invRecon(){
   var verdict=flagged?'CHECK':'MATCH';
   box.innerHTML='<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:baseline">'+
     '<div><div class="l muted" style="font-size:11px;text-transform:uppercase">Reconciliation</div>'+
-      '<div class="recon-'+verdict+'" style="font-size:18px">'+(verdict==='MATCH'?'✓ Tallies with HG record':('⚠ '+flagged+' job(s) to check'))+'</div></div>'+
+      '<div class="recon-'+verdict+'" style="font-size:18px">'+(verdict==='MATCH'?ico('circle-check')+'Tallies with HG record':ico('triangle-alert')+flagged+' job(s) to check')+'</div></div>'+
     '<div class="right"><div class="muted" style="font-size:12px">HG recorded total</div><b>'+rm(recorded)+'</b></div>'+
     '<div class="right"><div class="muted" style="font-size:12px">B claimed total</div><b>'+rm(claimed)+'</b></div>'+
     '<div class="right"><div class="muted" style="font-size:12px">Variance</div><b class="'+(Math.abs(claimed-recorded)<=RECON_TOL_RM?'flag-OK':'flag-OVER')+'">'+(claimed-recorded>=0?'+':'')+num(claimed-recorded)+'</b></div>'+
     (sst?'<div class="right"><div class="muted" style="font-size:12px">+ SST</div><b>'+rm(sst)+'</b></div>':'')+
     '<div class="right"><div class="muted" style="font-size:12px">Claimed w/ SST</div><b style="font-size:16px">'+rm(header+sst)+'</b></div>'+
   '</div>'+
-  (Math.abs(header-claimed)>1?'<div class="hint" style="color:var(--warn)">⚠ B\'s header amount ('+rm(header)+') ≠ sum of job lines ('+rm(claimed)+'). Gap '+rm(header-claimed)+'.</div>':'');
+  (Math.abs(header-claimed)>1?'<div class="hint" style="color:var(--warn)">'+ico('triangle-alert')+'B\'s header amount ('+rm(header)+') does not equal the sum of job lines ('+rm(claimed)+'). Gap '+rm(header-claimed)+'.</div>':'');if(window.lucide)window.lucide.createIcons();
 }
 async function saveInvForm(id){
   readInvLines();
@@ -1328,7 +1418,7 @@ async function saveInvForm(id){
     if(f) payload.filePath = await uploadFile('invoices/'+Date.now()+'-'+safeName('B-INV-'+payload.invNo)+'-'+safeName(f.name), f);
     var r = await sb.rpc('vis_save_invoice', { payload: payload });   // server re-runs the recon
     if(r.error) throw r.error;
-    toast((r.data.verdict==='MATCH'?'✓ MATCH — ':'⚠ CHECK — ')+r.data.reconNote, r.data.verdict==='MATCH'?'ok':'bad');
+    toast((r.data.verdict==='MATCH'?'Match — ':'Check — ')+r.data.reconNote, r.data.verdict==='MATCH'?'ok':'bad');
     closeModal(); await refresh();
   }catch(e){ btn.disabled=false; btn.textContent='Save'; toast(e.message||e,'bad'); }
 }
@@ -1348,7 +1438,7 @@ async function openInv(id){
     var body=
       '<div class="card" style="background:var(--panel2);margin-top:0">'+
         '<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:baseline">'+
-          '<div><div class="muted" style="font-size:11px;text-transform:uppercase">Verdict</div><div class="recon-'+s.verdict+'" style="font-size:18px">'+(s.verdict==='MATCH'?'✓ MATCH':('⚠ CHECK — '+s.flagged+' flagged'))+'</div></div>'+
+          '<div><div class="muted" style="font-size:11px;text-transform:uppercase">Verdict</div><div class="recon-'+s.verdict+'" style="font-size:18px">'+(s.verdict==='MATCH'?ico('circle-check')+'Match':ico('triangle-alert')+'Check — '+s.flagged+' flagged')+'</div></div>'+
           '<div class="right"><div class="muted" style="font-size:12px">HG recorded</div><b>'+rm(s.recordedTotal)+'</b></div>'+
           '<div class="right"><div class="muted" style="font-size:12px">B claimed</div><b>'+rm(s.claimedTotal)+'</b></div>'+
           '<div class="right"><div class="muted" style="font-size:12px">Variance</div><b class="'+(Math.abs(s.varianceRm)<=RECON_TOL_RM?'flag-OK':'flag-OVER')+'">'+(s.varianceRm>=0?'+':'')+num(s.varianceRm)+'</b></div>'+
@@ -1389,14 +1479,15 @@ async function delInv(id){
 async function loadAudit(){
   el('v-audit').innerHTML='<h2>Audit Log</h2><div class="card"><span class="spin"></span> Loading…</div>';
   var r=await sb.from('audit_log').select('*').order('at',{ascending:false}).limit(300);
-  if(r.error){el('v-audit').innerHTML='<div class="card">⚠️ '+esc(r.error.message)+'</div>';return;}
+  if(r.error){el('v-audit').innerHTML='<div class="card card-error">'+ico('triangle-alert')+'<span>'+esc(r.error.message)+'</span></div>';if(window.lucide)window.lucide.createIcons();return;}
   el('v-audit').innerHTML='<h2>Audit Log</h2>'+
     '<div class="card"><table><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>'+
     (r.data.length?r.data.map(function(a){
       return '<tr><td class="muted" style="white-space:nowrap">'+esc(String(a.at||'').replace('T',' ').slice(0,16))+'</td>'+
-        '<td>'+esc(a.user_email)+'</td><td><span class="tag">'+esc(a.action)+'</span></td>'+
+        '<td>'+esc(a.user_email)+'</td><td><span class="tag">'+esc(humanAuditAction(a.action))+'</span></td>'+
         '<td>'+esc(a.details)+'</td></tr>';
-    }).join(''):'<tr><td colspan="4" class="muted">No activity yet.</td></tr>')+'</tbody></table></div>';
+    }).join(''):'<tr><td colspan="4"><div class="empty-state"><i data-lucide="history" aria-hidden="true"></i><div><strong>No activity yet</strong><span>Visual-work changes will appear here as the team uses the tool.</span></div></div></td></tr>')+'</tbody></table></div>';
+  if(window.lucide)window.lucide.createIcons();
 }
 
 /* ═══════════════════════════ EXCEL EXPORTS (SheetJS) ═══════════════════════════ */

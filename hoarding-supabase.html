@@ -4,8 +4,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HG — Hoarding Pricing (Metal Deck) — Supabase</title>
+<script>
+(function(){
+  function preference(){
+    var saved='';
+    try{ saved=localStorage.getItem('hg_hub_theme')||''; }catch(e){}
+    return saved==='light'||saved==='dark'||saved==='system' ? saved : 'system';
+  }
+  function resolved(value){
+    if(value==='light'||value==='dark') return value;
+    return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  function apply(value){ document.documentElement.dataset.theme=resolved(value); }
+  window.HGToolTheme={apply:apply,preference:preference};
+  apply(preference());
+  window.addEventListener('message',function(event){
+    if(event.origin!==location.origin||!event.data||event.data.type!=='hg-theme-change') return;
+    if(event.data.theme==='light'||event.data.theme==='dark') apply(event.data.theme);
+  });
+  window.addEventListener('storage',function(event){ if(event.key==='hg_hub_theme') apply(preference()); });
+  if(window.matchMedia){
+    var media=window.matchMedia('(prefers-color-scheme: dark)');
+    var sync=function(){ if(preference()==='system') apply('system'); };
+    if(media.addEventListener) media.addEventListener('change',sync); else if(media.addListener) media.addListener(sync);
+  }
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <style>
 :root{
   --bg:#0a0e1a;--panel:#141926;--panel2:#1c2335;--line:#2a3245;
@@ -90,6 +120,58 @@ tbody tr:hover{background:var(--panel2)}
 .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:18px;background:#fff;color:#1a1a1a;border:none;border-radius:10px;padding:13px;font-weight:700;font-size:.95rem;cursor:pointer;font-family:inherit}
 .msg{font-size:.86rem;margin-top:10px;min-height:20px;opacity:0;transition:opacity .2s}
 .msg.show{opacity:1}.msg.ok{color:var(--good)}.msg.err{color:#f87171}
+
+/* HG Hub operational tool redesign */
+:root{
+  --bg:#fff;--panel:#fff;--panel2:#f8f7f4;--line:#e4ded6;--line-strong:#cfc8bd;
+  --ink:#171717;--muted:#817970;--soft:#9b938a;--accent:#143d4a;--accent-hover:#0e303b;
+  --accent-soft:#eef6f3;--accent2:#2f7fa5;--good:#15945d;--bad:#d84d4f;--warn:#a66b00;
+  --chip:#f8f7f4;--radius:8px;--shadow:0 12px 30px rgba(23,23,23,.12);
+}
+body{font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+#app{padding:26px 28px 0}
+header.topbar{max-width:none;margin:0 0 18px;padding:0 0 20px;gap:14px;border-bottom:1px solid var(--line)}
+body.embedded header.topbar{display:none}
+.brand-block{gap:9px}.brand-logo{width:24px;height:24px;padding:0;background:transparent;border-radius:0;color:var(--accent);font-size:0}
+.brand-logo svg{width:20px;height:20px;stroke-width:2}.brand-name{display:flex;align-items:center;gap:10px;color:var(--accent);font-size:1.05rem;font-weight:800;letter-spacing:-.02em}
+.brand-sub{color:var(--muted);font-size:13px;line-height:17px;margin-top:3px}.tool-live{display:inline-flex;align-items:center;height:21px;padding:0 9px;border-radius:999px;background:#edf8f3;color:var(--good);font-size:.64rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.user-pill{background:var(--panel);border-color:var(--line);padding:8px 12px;color:var(--muted);font-size:.78rem}.user-pill b{color:var(--accent);font-weight:700}.user-pill button{color:var(--warn)}
+nav{max-width:none;margin:0 0 24px;padding:0;display:flex;gap:26px;flex-wrap:nowrap;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:thin}
+nav button{flex:0 0 auto;padding:0 0 12px;border:0;border-bottom:3px solid transparent;background:transparent;color:#716b65;font-size:.78rem;font-weight:800}
+nav button:hover{color:var(--accent)}nav button.active{color:var(--accent);border-bottom-color:var(--accent)}
+main{max-width:none;margin:0;padding:0 0 72px}.view>h2{margin:0 0 4px;font-size:1.35rem;color:var(--ink)}.view>.sub{margin-bottom:22px;font-size:.86rem;color:#716b65}
+h3,.card h3{margin:0 0 14px;color:var(--accent);font-size:.78rem;font-weight:800;letter-spacing:.04em}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px;box-shadow:none}
+.form-section{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:0 0 22px;margin-bottom:22px}.form-section:last-child{border-bottom:0}
+.register-section{border:0;padding:0;margin-bottom:22px}.register-section>.row{margin-bottom:12px!important}.register-section>.tablewrap{margin:0}
+.register-work{border:0;padding:0;margin-bottom:24px}.register-work>h3{margin-bottom:10px}.register-work>.tablewrap{margin:0}
+.settings-section{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:0 0 22px;margin-bottom:22px}.settings-section:last-of-type{border-bottom:0}
+.grid{gap:16px}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+label{color:#716b65;font-size:.72rem;font-weight:800;margin-bottom:5px;letter-spacing:.04em}
+input,select,textarea{min-height:42px;background:#fff;border-color:#ded8cf;color:var(--ink);border-radius:8px;padding:10px 12px;font-size:.88rem}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(20,61,74,.08)}
+.editable{background:#fff;border-color:#ded8cf}.hint{color:var(--soft);font-size:.72rem}.small{font-size:.78rem}.muted{color:var(--muted)}
+button.btn{border-radius:8px;padding:9px 12px;background:var(--accent);color:#fff;font-size:.82rem;font-weight:700}button.btn:hover{background:var(--accent-hover)}
+button.btn.sec,button.btn.blue{background:#fff;color:var(--accent);border:1px solid var(--line)}button.btn.sec:hover,button.btn.blue:hover{background:var(--panel2);border-color:var(--line-strong);color:var(--accent)}button.btn.bad{background:#fff;color:var(--bad);border:1px solid #f1c8c5}
+.tablewrap{overflow:auto;max-height:62vh;border:1px solid var(--line);border-radius:8px;background:var(--panel)}table{min-width:760px;font-size:.82rem}th,td{padding:11px 12px;border-bottom:1px solid var(--line)}th{top:0;background:var(--panel2);color:#716b65;font-size:.66rem;font-weight:800}tbody tr:hover{background:var(--panel2)}tbody tr:last-child td{border-bottom:0}
+.kpi{min-height:92px;display:grid;grid-template-rows:20px 36px;align-content:start;gap:4px;background:transparent;border:0;border-right:1px solid var(--line);border-radius:0;padding:8px 18px}.kpi:last-child{border-right:0}.kpi:hover{border-color:var(--line)}.kpi .l{order:1;min-height:20px;color:#716b65;font-size:.66rem;font-weight:800;white-space:nowrap}.kpi .v{order:2;color:var(--accent);font-size:1.5rem;line-height:36px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#reportKpis{gap:0;border:1px solid var(--line);border-radius:8px;padding:12px 0;margin-bottom:22px;overflow:hidden}
+.chip{background:var(--panel2);border:0;color:var(--muted)}.chip.good{color:var(--good);background:#edf8f3}.chip.warn{color:var(--warn);background:#fff7e7}.chip.bad{color:var(--bad);background:#fff1ee}
+.totline{border-bottom:1px solid var(--line);padding:9px 0}.totline.grand{color:var(--accent);padding-top:12px}.statusbar{background:var(--panel2);border-color:var(--line);color:var(--muted)}.statusbar b{color:var(--ink)}
+.modal{background:rgba(15,23,24,.45);backdrop-filter:blur(3px)}.modal .box{background:var(--panel);border-color:var(--line);border-radius:12px;box-shadow:0 18px 50px rgba(23,23,23,.18)}
+.hub-select{position:relative;width:100%}.hub-select-native{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
+button.hub-select-trigger{position:relative;display:flex;align-items:center;width:100%;min-height:42px;padding:10px 42px 10px 12px;background:#fff;border:1px solid #ded8cf;border-radius:8px;color:var(--ink);font:inherit;font-size:.88rem;font-weight:500;text-align:left;cursor:pointer}
+button.hub-select-trigger:hover{background:#fff;border-color:var(--line-strong)}button.hub-select-trigger:focus-visible,.hub-select.open .hub-select-trigger{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(20,61,74,.08)}
+button.hub-select-trigger::after{content:"";position:absolute;right:16px;top:50%;width:7px;height:7px;border-right:1.7px solid var(--accent);border-bottom:1.7px solid var(--accent);transform:translateY(-68%) rotate(45deg)}
+.hub-select-menu{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:140;display:none;max-height:260px;overflow-y:auto;padding:5px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}.hub-select.open .hub-select-menu{display:block}.hub-select.open-up .hub-select-menu{top:auto;bottom:calc(100% + 4px)}
+button.hub-select-option{display:block;width:100%;min-height:40px;padding:9px 10px;border:0;border-radius:6px;background:transparent;color:var(--ink);font:inherit;font-size:.86rem;line-height:1.35;text-align:left;cursor:pointer}button.hub-select-option:hover,button.hub-select-option:focus-visible,button.hub-select-option.selected{outline:none;background:var(--panel2);color:var(--accent)}
+.row .hub-select{flex:0 1 220px}.row .hub-select+button{flex:0 0 auto}
+.gate .card{border:1px solid var(--line);border-radius:12px}.gate .brand-logo{width:42px;height:42px;color:var(--accent);font-size:1rem}
+@media(max-width:880px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g2{grid-template-columns:1fr}.kpi:nth-child(2){border-right:0}.kpi:nth-child(n+3){border-top:1px solid var(--line)}#app{padding:20px 18px 0}}
+@media(max-width:560px){#app{padding:18px 14px 0}.topbar{flex-wrap:nowrap}.brand-sub{display:none}.user-pill{display:none}nav{gap:24px;margin-bottom:20px}.view>h2{font-size:1.25rem}.g2,.g3,.g4{grid-template-columns:1fr}.form-section{padding-bottom:18px;margin-bottom:18px}.grid.g3>.card{margin-bottom:0}#reportKpis{grid-template-columns:1fr 1fr}.kpi{border-right:1px solid var(--line)}.kpi:nth-child(2n){border-right:0}.kpi:nth-child(n+3){border-top:1px solid var(--line)}.row{align-items:stretch}.row>input,.row>.hub-select,.row>button.btn{max-width:none!important;width:100%}.tablewrap{max-width:100%}.hub-select-menu{max-height:min(260px,45vh)}button.hub-select-option{min-height:44px}.statusbar{display:none}.modal{padding:16px 10px}.modal .box{padding:18px}.card{padding:16px}}
+html[data-theme="dark"]{--bg:#1b2527;--panel:#202b2d;--panel2:#253133;--line:#394749;--line-strong:#526164;--ink:#f3f6f4;--muted:#b3bebb;--soft:#899795;--accent:#78b8cd;--accent-hover:#90c9d9;--accent-soft:rgba(75,131,161,.22);--chip:#253133;--shadow:0 16px 36px rgba(0,0,0,.35)}
+html[data-theme="dark"] input,html[data-theme="dark"] textarea,html[data-theme="dark"] button.hub-select-trigger,html[data-theme="dark"] .hub-select-menu{background:var(--panel);border-color:var(--line);color:var(--ink)}html[data-theme="dark"] button.hub-select-trigger:hover{background:#2b383a;border-color:var(--line-strong)}html[data-theme="dark"] button.hub-select-option{color:var(--ink)}html[data-theme="dark"] button.hub-select-option:hover,html[data-theme="dark"] button.hub-select-option.selected{background:var(--accent-soft);color:#c8e4e8}
+html[data-theme="dark"] button.btn.sec,html[data-theme="dark"] button.btn.blue,html[data-theme="dark"] button.btn.bad{background:var(--panel);border-color:var(--line)}html[data-theme="dark"] th{background:var(--panel2);color:var(--muted)}html[data-theme="dark"] .editable{background:var(--panel)}html[data-theme="dark"] .modal .box{background:#2b383a}html[data-theme="dark"] .gate .card{background:var(--panel)}
 </style>
 </head>
 <body>
@@ -127,7 +209,7 @@ tbody tr:hover{background:var(--panel2)}
 <!-- ══════════ GATE 2 · NOT ON ALLOWLIST ══════════ -->
 <div class="gate" id="gateDenied" style="display:none;">
   <div class="card">
-    <div class="brand-logo">🔒</div>
+    <div class="brand-logo" aria-hidden="true"><i data-lucide="lock-keyhole"></i></div>
     <h2>Not authorised</h2>
     <div class="sub" style="margin-top:6px;"><span id="deniedEmail"></span> is not on the access list.<br>
       Ask your admin to add you under <b>Settings → Team access</b> in any HG tool.</div>
@@ -142,10 +224,10 @@ tbody tr:hover{background:var(--panel2)}
 
 <header class="topbar">
   <div class="brand-block">
-    <div class="brand-logo">H</div>
+    <div class="brand-logo" aria-hidden="true"><i data-lucide="ruler"></i></div>
     <div>
-      <div class="brand-name">HG — Hoarding Pricing</div>
-      <div class="brand-sub">Metal Deck · Quote → Record → Audit · Supabase edition</div>
+      <div class="brand-name">Hoarding Pricing System <span class="tool-live">Live</span></div>
+      <div class="brand-sub">Metal deck pricing · Quote → record → audit</div>
     </div>
   </div>
   <div class="user-pill"><b id="userPill">…</b><button onclick="signOut()">Sign out</button></div>
@@ -156,9 +238,9 @@ tbody tr:hover{background:var(--panel2)}
   <!-- BUILDER -->
   <section class="view active" data-view="builder">
     <h2>Quote Builder</h2>
-    <div class="sub">Verified exact port of your Excel calculator. Fill the yellow fields — totals recalc live; saving snapshots the rates into a permanent record.</div>
+    <div class="sub">Verified exact port of your Excel calculator. Fill the pricing fields — totals recalculate live, and saving snapshots the rates into a permanent record.</div>
     <div class="grid g2">
-      <div class="card"><h3>1. Project & Client</h3>
+      <div class="card form-section"><h3>1. Project & Client</h3>
         <div class="grid g2">
           <div><label>Quote No.</label><input id="f_quoteNo"></div>
           <div><label>Quote Date</label><input id="f_quoteDate" type="date"></div>
@@ -171,7 +253,7 @@ tbody tr:hover{background:var(--panel2)}
           <div style="grid-column:1/-1"><label>Project Location / Address</label><input id="f_location"></div>
         </div>
       </div>
-      <div class="card"><h3>2. Hoarding Parameters</h3>
+      <div class="card form-section"><h3>2. Hoarding Parameters</h3>
         <div class="grid g2">
           <div><label>Hoarding Length (m)</label><input id="p_length" type="number" class="editable" value="160" oninput="App.calc()"></div>
           <div><label>Hoarding Height (m)</label><input id="p_height" type="number" class="editable" value="2.4" oninput="App.calc()"></div>
@@ -190,7 +272,7 @@ tbody tr:hover{background:var(--panel2)}
       </div>
     </div>
     <div class="grid g2">
-      <div class="card"><h3>3. Productivity & Coefficients</h3>
+      <div class="card form-section"><h3>3. Productivity & Coefficients</h3>
         <div class="grid g3">
           <div><label>Posts/Day Install</label><input id="p_pInstall" type="number" value="8" oninput="App.calc()"></div>
           <div><label>Posts/Day Fab</label><input id="p_pFab" type="number" value="15" oninput="App.calc()"></div>
@@ -202,7 +284,7 @@ tbody tr:hover{background:var(--panel2)}
           <div><label>Gate Footings/door</label><input id="p_gFoot" type="number" value="4" oninput="App.calc()"></div>
         </div>
       </div>
-      <div class="card"><h3>4. X-Brace Add-on (optional)</h3>
+      <div class="card form-section"><h3>4. X-Brace Add-on (optional)</h3>
         <div class="grid g3">
           <div><label>X-Brace Material</label><select id="m_xbrace" class="editable" onchange="App.calc()"></select></div>
           <div><label>X-Brace Length/set (m)</label><input id="o_xbraceLen" type="number" class="editable" value="10.8" oninput="App.calc()"></div>
@@ -221,7 +303,7 @@ tbody tr:hover{background:var(--panel2)}
         <div class="hint">Excel labelled tax "8%" but computed 6% — defaulted to 6%. Set 0 to switch off.</div>
       </div>
     </div>
-    <div class="card"><h3>Costing Breakdown (live)</h3>
+    <div class="card register-work"><h3>Costing Breakdown (live)</h3>
       <div class="tablewrap" style="max-height:none"><table><thead><tr>
         <th>Item</th><th>Code</th><th class="num">Rate</th><th class="num">Per-unit Sub</th><th class="num">Qty</th><th>Unit</th><th class="num">Total (RM)</th>
       </tr></thead><tbody id="costBody"></tbody></table></div>
@@ -245,10 +327,10 @@ tbody tr:hover{background:var(--panel2)}
       <div class="card"><h3>Save / Output</h3>
         <div style="margin-bottom:8px"><label>Status</label>
           <select id="f_status"><option>Draft</option><option>Sent</option><option>Won</option><option>Lost</option></select></div>
-        <div class="row"><button class="btn" id="btnSave" onclick="App.saveQuote()">💾 Save Quote</button>
-          <button class="btn blue" onclick="App.printQuote()">🖨 Print / PDF</button></div>
+        <div class="row"><button class="btn" id="btnSave" onclick="App.saveQuote()">Save Quote</button>
+          <button class="btn blue" onclick="App.printQuote()">Print / PDF</button></div>
         <div class="row" style="margin-top:8px">
-          <button class="btn sec sm" onclick="App.newQuote()">＋ New / Clear</button></div>
+          <button class="btn sec sm" onclick="App.newQuote()">New / Clear</button></div>
         <div class="hint" id="editingHint"></div>
       </div>
     </div>
@@ -258,13 +340,13 @@ tbody tr:hover{background:var(--panel2)}
   <section class="view" data-view="records">
     <h2>Quotes & Client Records</h2>
     <div class="sub">Every saved quote, stored in Supabase with a full pricing snapshot. Shared live with everyone on the allowlist.</div>
-    <div class="card">
+    <div class="card register-section">
       <div class="row" style="margin-bottom:12px">
         <input id="rec_search" placeholder="Search client / project / quote no / mall…" oninput="App.renderRecords()" style="max-width:340px">
         <select id="rec_status" onchange="App.renderRecords()" style="max-width:140px">
           <option value="">All status</option><option>Draft</option><option>Sent</option><option>Won</option><option>Lost</option></select>
         <div class="spacer" style="flex:1"></div>
-        <button class="btn sec sm" onclick="App.exportQuotesExcel()">⬇ Export Excel</button>
+        <button class="btn sec sm" onclick="App.exportQuotesExcel()">Export Excel</button>
       </div>
       <div class="tablewrap"><table><thead><tr>
         <th>Quote No.</th><th>Date</th><th>Client</th><th>Project</th><th>Mall/Lot</th>
@@ -278,12 +360,12 @@ tbody tr:hover{background:var(--panel2)}
   <section class="view" data-view="materials">
     <h2>Material Catalog</h2>
     <div class="sub">Edit <b>Cost Price</b> / <b>Markup %</b> — Cost/Unit & Client Rate auto-calc. Every change is logged with date, operator & reason.</div>
-    <div class="card">
+    <div class="card register-section">
       <div class="row" style="margin-bottom:12px">
         <input id="mat_search" placeholder="Search code / type / size…" oninput="App.renderMaterials()" style="max-width:300px">
         <div class="spacer" style="flex:1"></div>
-        <button class="btn sec sm" onclick="App.exportMaterialsExcel()">⬇ Export Excel</button>
-        <button class="btn sm" onclick="App.addMaterial()">＋ New Material</button>
+        <button class="btn sec sm" onclick="App.exportMaterialsExcel()">Export Excel</button>
+        <button class="btn sm" onclick="App.addMaterial()">New Material</button>
       </div>
       <div class="tablewrap"><table><thead><tr>
         <th>Code</th><th>Type</th><th>Size</th><th class="num">Bar/Sheet</th><th>Unit</th>
@@ -296,12 +378,12 @@ tbody tr:hover{background:var(--panel2)}
   <section class="view" data-view="suppliers">
     <h2>Supplier Price Comparison</h2>
     <div class="sub"><b>Comparison only</b> — store multiple supplier quotes per material. "Apply" pushes a price into your catalog (logged).</div>
-    <div class="card">
+    <div class="card register-section">
       <div class="row" style="margin-bottom:12px">
         <select id="sup_matFilter" onchange="App.renderSuppliers()" style="max-width:260px"><option value="">All materials</option></select>
         <div class="spacer" style="flex:1"></div>
-        <button class="btn sec sm" onclick="App.exportSuppliersExcel()">⬇ Export Excel</button>
-        <button class="btn sm" onclick="App.addSupplierPrice()">＋ Add Supplier Price</button>
+        <button class="btn sec sm" onclick="App.exportSuppliersExcel()">Export Excel</button>
+        <button class="btn sm" onclick="App.addSupplierPrice()">Add Supplier Price</button>
       </div>
       <div class="tablewrap"><table><thead><tr>
         <th>Material</th><th>Supplier</th><th class="num">Cost Price</th><th>Unit</th><th class="num">Cost/Unit</th><th>Note</th><th>Recorded</th><th></th>
@@ -315,15 +397,15 @@ tbody tr:hover{background:var(--panel2)}
     <div class="sub">Everything inserted & quoted, retrieved live from Supabase.</div>
     <div class="grid g4" id="reportKpis"></div>
     <div class="grid g2">
-      <div class="card"><h3>Quotes by Client</h3>
+      <div class="card register-work"><h3>Quotes by Client</h3>
         <div class="tablewrap" style="max-height:40vh"><table><thead><tr><th>Client</th><th class="num">Quotes</th><th class="num">Total (RM)</th><th class="num">Won (RM)</th></tr></thead><tbody id="rep_client"></tbody></table></div>
       </div>
-      <div class="card"><h3>Price Change History</h3>
+      <div class="card register-work"><h3>Price Change History</h3>
         <div class="row" style="margin-bottom:8px"><input id="ph_search" placeholder="Filter by material code…" oninput="App.renderPriceHistory()" style="max-width:240px"></div>
         <div class="tablewrap" style="max-height:40vh"><table><thead><tr><th>When</th><th>Code</th><th>Field</th><th class="num">Old</th><th class="num">New</th><th>By</th><th>Reason</th></tr></thead><tbody id="rep_pricehist"></tbody></table></div>
       </div>
     </div>
-    <div class="card"><h3>Material Usage Across Quotes</h3>
+    <div class="card register-work"><h3>Material Usage Across Quotes</h3>
       <div class="tablewrap" style="max-height:40vh"><table><thead><tr><th>Material</th><th class="num">Times Quoted</th><th class="num">Total Qty</th><th class="num">Total Value (RM)</th></tr></thead><tbody id="rep_matusage"></tbody></table></div>
     </div>
   </section>
@@ -332,12 +414,12 @@ tbody tr:hover{background:var(--panel2)}
   <section class="view" data-view="audit">
     <h2>Audit Log</h2>
     <div class="sub">Server-stamped record of every action — signed-in email, what, when. Cannot be edited from here.</div>
-    <div class="card">
+    <div class="card register-section">
       <div class="row" style="margin-bottom:12px">
         <input id="aud_search" placeholder="Search action / entity / operator…" oninput="App.renderAudit()" style="max-width:340px">
         <div class="spacer" style="flex:1"></div>
         <span class="chip" id="audCount"></span>
-        <button class="btn sec sm" onclick="App.exportAuditExcel()">⬇ Export Excel</button>
+        <button class="btn sec sm" onclick="App.exportAuditExcel()">Export Excel</button>
       </div>
       <div class="tablewrap"><table><thead><tr><th>Timestamp</th><th>Operator</th><th>Action</th><th>Entity</th><th>Detail</th></tr></thead><tbody id="audBody"></tbody></table></div>
     </div>
@@ -347,7 +429,7 @@ tbody tr:hover{background:var(--panel2)}
   <section class="view" data-view="settings">
     <h2>Settings</h2>
     <div class="sub">Company header (used on printed quotes) and the fixed costing material codes. Saved to the hrd_config table.</div>
-    <div class="card"><h3>Company Header</h3>
+    <div class="card settings-section"><h3>Company Header</h3>
       <div class="grid g2">
         <div><label>Company Name</label><input id="c_COMPANY_NAME"></div>
         <div><label>Reg No.</label><input id="c_COMPANY_REG"></div>
@@ -357,7 +439,7 @@ tbody tr:hover{background:var(--panel2)}
         <div><label>Default SST %</label><input id="c_SST_PCT" type="number"></div>
       </div>
     </div>
-    <div class="card"><h3>Fixed Costing Material Codes</h3>
+    <div class="card settings-section"><h3>Fixed Costing Material Codes</h3>
       <div class="grid g3">
         <div><label>GI Plate</label><input id="c_CODE_GI"></div>
         <div><label>Deck (main)</label><input id="c_CODE_DECK_MAIN"></div>
@@ -368,7 +450,7 @@ tbody tr:hover{background:var(--panel2)}
         <div><label>X-Brace length (m)</label><input id="c_XBRACE_LEN" type="number"></div>
       </div>
     </div>
-    <div class="card"><h3>Quotation Terms &amp; Conditions</h3>
+    <div class="card settings-section"><h3>Quotation Terms &amp; Conditions</h3>
       <label>Terms (one per line — printed exactly as below on every quote)</label>
       <textarea id="c_TERMS" rows="9" style="font-family:inherit"></textarea>
       <div class="grid g2" style="margin-top:10px">
@@ -376,9 +458,9 @@ tbody tr:hover{background:var(--panel2)}
       </div>
       <div class="hint">Number them yourself (1., 2., …) if you want numbering — lines print verbatim. Blank lines are skipped.</div>
     </div>
-    <div class="card"><div class="row"><button class="btn" onclick="App.saveSettings()">💾 Save Settings</button>
+    <div class="card settings-section"><div class="row"><button class="btn" onclick="App.saveSettings()">Save Settings</button>
       <span class="muted small">Saves company header, costing codes, terms &amp; signatory to the hrd_config table.</span></div></div>
-    <div class="card"><h3>About</h3>
+    <div class="card settings-section"><h3>About</h3>
       <div class="small muted">Data lives in Supabase (tables: hrd_materials, hrd_quotes, hrd_supplier_prices, hrd_price_history, hrd_config + shared audit_log). Access controlled by the shared allowed_users allowlist. Use the Excel export buttons for raw backups / pivot tables.</div>
     </div>
   </section>
@@ -395,6 +477,84 @@ tbody tr:hover{background:var(--panel2)}
 </div><!-- /app -->
 
 <script>
+if(window.self!==window.top) document.body.classList.add('embedded');
+if(window.lucide) window.lucide.createIcons();
+
+// Shared HG Hub select shell. Native selects remain the source of truth for
+// existing calculations, validation, change handlers, and Supabase payloads.
+function closeHubSelects(except){
+  document.querySelectorAll('.hub-select.open').forEach(function(wrap){
+    if(wrap!==except){
+      wrap.classList.remove('open','open-up');
+      var trigger=wrap.querySelector('.hub-select-trigger');
+      if(trigger) trigger.setAttribute('aria-expanded','false');
+    }
+  });
+}
+function syncHubSelects(root){
+  (root||document).querySelectorAll('select[data-hub-select]').forEach(function(select){
+    if(select._hubSelectSync) select._hubSelectSync();
+  });
+}
+function initHubSelects(root){
+  var scope=root||document;
+  var selects=[];
+  if(scope.nodeType===1 && scope.matches('select:not([data-hub-select])')) selects.push(scope);
+  if(scope.querySelectorAll) selects=selects.concat(Array.from(scope.querySelectorAll('select:not([data-hub-select])')));
+  selects.forEach(function(select){
+    var wrap=document.createElement('div'); wrap.className='hub-select';
+    if(select.style.maxWidth) wrap.style.maxWidth=select.style.maxWidth;
+    select.parentNode.insertBefore(wrap,select); wrap.appendChild(select);
+    select.dataset.hubSelect='true'; select.classList.add('hub-select-native');
+    select.tabIndex=-1; select.setAttribute('aria-hidden','true');
+    var trigger=document.createElement('button');
+    trigger.type='button'; trigger.className='hub-select-trigger';
+    trigger.setAttribute('aria-haspopup','listbox'); trigger.setAttribute('aria-expanded','false');
+    var label=wrap.parentElement&&wrap.parentElement.querySelector('label');
+    if(label) trigger.setAttribute('aria-label',label.textContent.trim());
+    var menu=document.createElement('div'); menu.className='hub-select-menu'; menu.setAttribute('role','listbox');
+    wrap.appendChild(trigger); wrap.appendChild(menu);
+    function sync(){
+      var selected=select.options[select.selectedIndex];
+      trigger.textContent=selected?selected.textContent:'Select'; trigger.disabled=select.disabled; menu.innerHTML='';
+      Array.from(select.options).forEach(function(option){
+        var item=document.createElement('button');
+        item.type='button'; item.className='hub-select-option'+(option.selected?' selected':'');
+        item.textContent=option.textContent; item.disabled=option.disabled;
+        item.setAttribute('role','option'); item.setAttribute('aria-selected',option.selected?'true':'false');
+        item.addEventListener('click',function(event){
+          event.stopPropagation(); select.value=option.value;
+          select.dispatchEvent(new Event('change',{bubbles:true})); closeHubSelects();
+        });
+        menu.appendChild(item);
+      });
+    }
+    select._hubSelectSync=sync; select.addEventListener('change',sync);
+    new MutationObserver(sync).observe(select,{childList:true,subtree:true,attributes:true});
+    trigger.addEventListener('click',function(event){
+      event.stopPropagation();
+      var open=!wrap.classList.contains('open'); closeHubSelects(wrap); sync();
+      if(open){
+        var rect=trigger.getBoundingClientRect();
+        var estimated=Math.min(260,menu.children.length*44+10);
+        wrap.classList.toggle('open-up',window.innerHeight-rect.bottom-16<estimated&&rect.top>window.innerHeight-rect.bottom);
+      }else wrap.classList.remove('open-up');
+      wrap.classList.toggle('open',open); trigger.setAttribute('aria-expanded',open?'true':'false');
+    });
+    sync();
+  });
+}
+document.addEventListener('DOMContentLoaded',function(){
+  initHubSelects(document);
+  new MutationObserver(function(mutations){
+    mutations.forEach(function(mutation){
+      mutation.addedNodes.forEach(function(node){ if(node.nodeType===1) initHubSelects(node); });
+    });
+  }).observe(document.body,{childList:true,subtree:true});
+});
+document.addEventListener('pointerdown',function(event){ if(!event.target.closest('.hub-select')) closeHubSelects(); },true);
+document.addEventListener('keydown',function(event){ if(event.key==='Escape') closeHubSelects(); });
+
 // ═══════════════════════════ SUPABASE CONFIG (same keys in every HG tool) ═══════════════════════════
 // Option A: paste your values here (recommended once stable):
 var SUPABASE_URL = '';   // e.g. 'https://abcd1234.supabase.co'
@@ -666,7 +826,7 @@ const App=(function(){
     editingId=r.data.id;
     setVal('f_quoteNo',r.data.quote_no);
     await loadAll();
-    $('editingHint').innerHTML='<span class="chip good">Saved ✓ '+esc(r.data.quote_no)+'</span> editing existing record';
+    $('editingHint').innerHTML='<span class="chip good">Saved '+esc(r.data.quote_no)+'</span> editing existing record';
     toast('Quote saved: '+r.data.quote_no);
   }
   function loadQuote(id){
@@ -688,7 +848,7 @@ const App=(function(){
     calc();go('builder');$('editingHint').innerHTML='<span class="chip warn">Editing '+esc(q.quoteNo)+'</span>';window.scrollTo(0,0);
   }
   function duplicateQuote(id){loadQuote(id);editingId=null;setVal('f_quoteNo',nextQuoteNo());
-    $('f_status').value='Draft';$('editingHint').innerHTML='<span class="chip">Duplicated — new quote no.</span>';toast('Duplicated — Save to store as new');}
+    setVal('f_status','Draft');$('editingHint').innerHTML='<span class="chip">Duplicated — new quote no.</span>';toast('Duplicated — Save to store as new');}
   async function deleteQuote(id){const q=state.quotes.find(x=>x.id===id);if(!q)return;
     if(!confirm('Delete quote '+q.quoteNo+' ('+q.client+')? Logged in audit.'))return;
     busy(true);
@@ -757,7 +917,7 @@ const App=(function(){
       <td class="num"><input class="editable" style="width:64px;text-align:right" type="number" value="${(m.markup*100)}" onchange="App.editMatPrice('${esc(m.code)}','markup',this.value)"></td>
       <td class="num"><b>${num(m.clientRate)}</b></td>
       <td class="muted small">${(m.updatedAt||'').slice(0,10)}</td>
-      <td><button class="btn sec sm" onclick="App.matHistory('${esc(m.code)}')">📜</button> <button class="btn bad sm" onclick="App.delMaterial('${esc(m.code)}')">✕</button></td>
+      <td><button class="btn sec sm" onclick="App.matHistory('${esc(m.code)}')">History</button> <button class="btn bad sm" onclick="App.delMaterial('${esc(m.code)}')">Delete</button></td>
     </tr>`).join('');
   }
   async function editMatPrice(code,field,val){
@@ -827,7 +987,7 @@ const App=(function(){
 
   /* ---------- suppliers ---------- */
   function populateSupplierFilter(){const sel=$('sup_matFilter');const cur=sel.value;
-    sel.innerHTML='<option value="">All materials</option>'+state.materials.map(m=>`<option value="${esc(m.code)}">${esc(m.code)}</option>`).join('');sel.value=cur;}
+    sel.innerHTML='<option value="">All materials</option>'+state.materials.map(m=>`<option value="${esc(m.code)}">${esc(m.code)}</option>`).join('');sel.value=cur;if(sel._hubSelectSync)sel._hubSelectSync();}
   function addSupplierPrice(){
     modal(`<h3 style="color:var(--accent)">Add Supplier Price (comparison only)</h3><div class="grid g2">
       <div><label>Material</label><select id="sp_mat">${state.materials.map(m=>`<option value="${esc(m.code)}">${esc(m.code)} — ${esc(m.type)} ${esc(m.size)}</option>`).join('')}</select></div>
@@ -867,7 +1027,7 @@ const App=(function(){
       return `<tr><td><b>${esc(s.code)}</b></td><td>${esc(s.supplier)} ${low?'<span class="chip good">cheapest</span>':''}</td>
       <td class="num">${num(s.costPrice)}</td><td>${m?esc(m.unit):''}</td><td class="num">${num(cpu)}</td>
       <td class="muted small">${esc(s.note||'')}</td><td class="muted small">${(s.recordedAt||'').slice(0,10)}</td>
-      <td><button class="btn sec sm" onclick="App.applySupplier('${s.id}')">↧ apply</button> <button class="btn bad sm" onclick="App.delSupplierPrice('${s.id}')">✕</button></td></tr>`;
+      <td><button class="btn sec sm" onclick="App.applySupplier('${s.id}')">Apply</button> <button class="btn bad sm" onclick="App.delSupplierPrice('${s.id}')">Delete</button></td></tr>`;
     }).join(''):'<tr><td colspan="8" class="muted">No supplier prices yet.</td></tr>';
   }
 
@@ -881,7 +1041,7 @@ const App=(function(){
       <td>${statusSel(q)}</td>
       <td class="row" style="gap:4px"><button class="btn sec sm" onclick="App.loadQuote('${q.id}')">Open</button>
       <button class="btn sec sm" onclick="App.duplicateQuote('${q.id}')">Dup</button>
-      <button class="btn bad sm" onclick="App.deleteQuote('${q.id}')">✕</button></td></tr>`).join(''):'<tr><td colspan="8" class="muted">No quotes saved yet.</td></tr>';
+      <button class="btn bad sm" onclick="App.deleteQuote('${q.id}')">Delete</button></td></tr>`).join(''):'<tr><td colspan="8" class="muted">No quotes saved yet.</td></tr>';
     const cs=clientSummary();
     $('clientCards').innerHTML=cs.map(c=>`<div class="card" style="margin-bottom:0"><h3 style="color:var(--ink)">${esc(c.name)}</h3>
       <div class="small muted">${c.count} quote(s) · last ${esc(c.last)}</div>
@@ -911,7 +1071,7 @@ const App=(function(){
     const list=state.priceHistory.filter(p=>!term||p.code.toLowerCase().includes(term));
     $('rep_pricehist').innerHTML=list.length?list.map(p=>{const up=p.newVal>p.oldVal;
       return `<tr><td class="small">${esc(p.ts)}</td><td><b>${esc(p.code)}</b></td><td>${esc(p.field)}</td><td class="num">${num(p.oldVal)}</td>
-      <td class="num ${up?'deltaUp':'deltaDown'}">${num(p.newVal)} ${up?'▲':'▼'}</td><td>${esc(p.user)}</td><td class="muted small">${esc(p.reason||'')}</td></tr>`;
+      <td class="num ${up?'deltaUp':'deltaDown'}">${num(p.newVal)}</td><td>${esc(p.user)}</td><td class="muted small">${esc(p.reason||'')}</td></tr>`;
     }).join(''):'<tr><td colspan="7" class="muted">No price changes recorded.</td></tr>';
   }
 
@@ -978,20 +1138,20 @@ const App=(function(){
   }
 
   /* ---------- ui plumbing ---------- */
-  function setVal(id,v){const e=$(id);if(e)e.value=(v==null?'':v);}
+  function setVal(id,v){const e=$(id);if(e){e.value=(v==null?'':v);if(e._hubSelectSync)e._hubSelectSync();}}
   function matCat(m){const t=m.type||'';if(t==='GI Sheet'||t==='Metal Deck')return 'panel';if(t==='MS Base Plate'||t==='Concrete Footing')return 'foundation';return 'structural';}
   function optList(cat){return state.materials.filter(m=>matCat(m)===cat).map(m=>`<option value="${esc(m.code)}">${esc(m.code)} — ${esc(m.type)} ${esc(m.size)} (RM${num(m.clientRate)}/${esc(m.unit)})</option>`).join('');}
   function buildMatSelects(post,horiz,panel,found,xbrace){
     const struct=optList('structural'),pan=optList('panel'),fnd=optList('foundation');
     $('m_post').innerHTML=struct;$('m_horiz').innerHTML=struct;$('m_panel').innerHTML=pan;$('m_found').innerHTML=fnd;$('m_xbrace').innerHTML=struct;
-    $('m_post').value=post||'MS-50x75x1.5';$('m_horiz').value=horiz||'MS-50x50x1.5';
-    $('m_panel').value=panel||'DECK-0.23';$('m_found').value=found||'FOOTING-450x450x750';$('m_xbrace').value=xbrace||'MS-50x50x5';}
+    setVal('m_post',post||'MS-50x75x1.5');setVal('m_horiz',horiz||'MS-50x50x1.5');
+    setVal('m_panel',panel||'DECK-0.23');setVal('m_found',found||'FOOTING-450x450x750');setVal('m_xbrace',xbrace||'MS-50x50x5');}
   function buildClientList(){$('clientList').innerHTML=clientSummary().map(c=>`<option value="${esc(c.name)}">`).join('');}
   function refreshStatus(){const s=state.stats||{};$('sb_mat').textContent=state.materials.length;$('sb_q').textContent=s.quoteCount||0;$('sb_c').textContent=s.clientCount||0;$('sb_a').textContent=state.audit.length;}
   function renderAll(){buildMatSelects($('m_post').value,$('m_horiz').value,$('m_panel').value,$('m_found').value,$('m_xbrace').value);calc();renderMaterials();populateSupplierFilter();renderSuppliers();renderRecords();renderReports();renderAudit();fillSettings();buildClientList();refreshStatus();}
 
   let toastT;function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>t.style.display='none',2200);}
-  let errT;function showErr(m){const e=$('err');e.textContent='⚠ '+m;e.style.display='block';clearTimeout(errT);errT=setTimeout(()=>e.style.display='none',5000);}
+  let errT;function showErr(m){const e=$('err');e.textContent=m;e.style.display='block';clearTimeout(errT);errT=setTimeout(()=>e.style.display='none',5000);}
   function modal(html){$('modalBox').innerHTML=html;$('modal').classList.add('open');}
   function closeModal(){$('modal').classList.remove('open');}
 
