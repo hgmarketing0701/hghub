@@ -3,7 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HG Blog &amp; LinkedIn Posting — Supabase</title>
+<title>HG Hub — LinkedIn Content</title>
+<script>
+  (function(){
+    function preference(){
+      var saved='';
+      try { saved=localStorage.getItem('hg_hub_theme')||''; } catch(e) {}
+      return saved==='light'||saved==='dark'||saved==='system' ? saved : 'system';
+    }
+    function resolved(value){
+      if(value==='light'||value==='dark') return value;
+      return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    function apply(value){ document.documentElement.dataset.theme='ops-'+resolved(value); }
+    apply(preference());
+    window.addEventListener('message',function(event){
+      if(event.origin!==location.origin||!event.data||event.data.type!=='hg-theme-change') return;
+      if(event.data.theme==='light'||event.data.theme==='dark') apply(event.data.theme);
+    });
+    window.addEventListener('storage',function(event){ if(event.key==='hg_hub_theme') apply(preference()); });
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -147,6 +171,123 @@
     .post { grid-template-columns:64px 1fr; } .post img { width:64px; height:64px; }
     .stat { grid-column:1/-1; text-align:left; }
   }
+
+  /* HG Hub unified operational shell */
+  :root {
+    --bg:#ffffff; --surface:#ffffff; --surface-2:#f8f7f4; --surface-3:#f2f0ec;
+    --border:#e4ded6; --border-strong:#cfc8bd; --text:#171717; --text-dim:#817970;
+    --accent:#143d4a; --accent-hover:#0e303b; --accent-soft:#eef6f3;
+    --green:#15945d; --green-soft:#edf8f3; --red:#d84d4f; --red-soft:#fff1ee;
+    --blue:#2f7fa5; --blue-soft:#eef7fb; --radius:8px; --shadow:0 12px 30px rgba(23,23,23,.12);
+  }
+  html { color-scheme:light; }
+  body { background:var(--bg); color:var(--text); font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; }
+  #app { padding:24px 28px 0; }
+  .topbar { align-items:center; padding:0 0 20px; margin:0 0 18px; border-bottom:1px solid var(--border); }
+  body.embedded .topbar { display:none; }
+  .brand-block { gap:9px; }
+  .topbar .brand-logo { width:24px; height:24px; padding:0; background:transparent; border-radius:0; color:var(--accent); }
+  .topbar .brand-logo svg { width:20px; height:20px; stroke-width:2; }
+  .brand-name { display:flex; align-items:center; gap:10px; color:var(--accent); font-size:1.05rem; font-weight:800; letter-spacing:-.02em; }
+  .brand-sub { color:var(--text-dim); font-size:13px; line-height:17px; margin-top:3px; }
+  .tool-live { display:inline-flex; align-items:center; height:21px; padding:0 9px; border-radius:999px; background:var(--green-soft); color:var(--green); font-size:.64rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .user-pill { background:var(--surface); border-color:var(--border); border-radius:999px; padding:8px 12px; color:var(--text-dim); font-size:.78rem; }
+  .user-pill b { color:var(--accent); }
+  .user-pill button { color:#a66b00; }
+  nav { gap:26px; padding:0; margin:0 0 26px; flex-wrap:nowrap; overflow-x:auto; border-bottom:1px solid var(--border); scrollbar-width:none; }
+  nav::-webkit-scrollbar { display:none; }
+  nav button { flex:0 0 auto; padding:0 0 12px; border:0; border-bottom:3px solid transparent; border-radius:0; background:transparent; color:#716b65; font-size:.8rem; font-weight:800; }
+  nav button:hover { color:var(--accent); }
+  nav button.active { background:transparent; color:var(--accent); border-color:var(--accent); }
+  main { max-width:none; padding:0 0 72px; }
+  .tool-intro { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; margin:0 0 18px; }
+  .tool-intro h1 { color:var(--text); font-size:24px; line-height:1.2; font-weight:800; letter-spacing:-.035em; }
+  .tool-intro p { color:var(--text-dim); font-size:14px; margin-top:5px; }
+  .card { background:var(--surface); border-color:var(--border); border-radius:var(--radius); padding:18px; margin-bottom:12px; box-shadow:none; }
+  #tab-records > .card:first-of-type { padding:0 0 18px; border:0; border-bottom:1px solid var(--border); border-radius:0; background:transparent; }
+  h2 { color:var(--text); font-size:1rem; font-weight:800; letter-spacing:-.02em; }
+  .sub,.hint,.muted { color:var(--text-dim); }
+  label { color:#716b65; font-size:.72rem; font-weight:800; margin:10px 0 5px; }
+  input,select,textarea { min-height:42px; background:var(--surface); border-color:#ded8cf; color:var(--text); border-radius:8px; padding:10px 12px; font-size:.88rem; }
+  select { appearance:none; -webkit-appearance:none; padding-right:42px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23143d4a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 16px center; background-size:14px; }
+  input:focus,select:focus,textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  button.primary,button.ghost { min-height:40px; border-radius:8px; padding:9px 12px; font-size:.82rem; font-weight:700; }
+  button.primary,button.ghost,.edit,.del { display:inline-flex; align-items:center; justify-content:center; gap:7px; }
+  button.primary svg,button.ghost svg { width:16px; height:16px; stroke-width:2; }
+  button.primary { background:var(--accent); color:#fff; }
+  button.primary:hover { background:var(--accent-hover); }
+  button.ghost { background:var(--surface); color:var(--accent); border-color:var(--border); }
+  button.ghost:hover { background:var(--surface-2); border-color:var(--border-strong); }
+  #drop { min-height:142px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:26px; border:1px dashed var(--border-strong); border-radius:8px; background:var(--surface); color:var(--text-dim); }
+  #drop.over { border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
+  #drop .drop-icon { width:22px; height:22px; margin-bottom:5px; color:var(--accent); }
+  #drop b { color:var(--text); }
+  .scopebox { padding:12px; border-color:#ded8cf; border-radius:8px; background:var(--surface); }
+  .scopebox .gh { color:var(--accent); }
+  .sck input,.useck input { min-height:0; accent-color:var(--accent); }
+  .pcard { border-color:var(--border); border-radius:8px; background:var(--surface); }
+  .pstage { background:var(--surface-2); border-radius:7px; }
+  .chip { background:var(--surface); border-color:var(--border); color:var(--text-dim); }
+  .chip.on { background:var(--accent-soft); color:var(--accent); border-color:#b8d3cc; }
+  .post { grid-template-columns:88px minmax(0,1fr) auto; margin:0; padding:14px 0; border:0; border-bottom:1px solid var(--border); border-radius:0; background:transparent; }
+  .post:first-child { border-top:1px solid var(--border); }
+  .post img { background:var(--surface-2); border:1px solid var(--border); }
+  .tag { background:var(--surface-2); border:0; color:var(--text-dim); }
+  .b-Pending { background:#fff6df; color:#a66b00; }
+  .b-Drafted { background:var(--blue-soft); color:var(--blue); }
+  .b-Posted { background:var(--green-soft); color:var(--green); }
+  .b-NA { background:var(--surface-2); color:var(--text-dim); border:0; }
+  .edit,.del { min-height:32px; border-radius:7px; }
+  .edit { border-color:var(--border); color:var(--accent); }
+  .del { border-color:#f1c8c5; color:var(--red); }
+  .del:hover { background:var(--red-soft); color:var(--red); }
+  .editform { border:1px solid var(--border); border-radius:8px; background:var(--surface); }
+  .empty { min-height:150px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border); border-radius:8px; background:var(--surface); color:var(--text-dim); }
+  .toast { background:var(--surface); border-color:var(--border-strong); color:var(--text); border-radius:8px; box-shadow:var(--shadow); }
+
+  .hub-select { position:relative; width:100%; }
+  .hub-select-native { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+  button.hub-select-trigger { position:relative; display:flex; align-items:center; width:100%; min-height:42px; padding:10px 42px 10px 12px; background:var(--surface); border:1px solid #ded8cf; border-radius:8px; color:var(--text); font:inherit; font-size:.88rem; font-weight:500; text-align:left; }
+  button.hub-select-trigger:hover { border-color:var(--border-strong); }
+  button.hub-select-trigger:focus-visible,.hub-select.open .hub-select-trigger { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(20,61,74,.08); }
+  button.hub-select-trigger::after { content:""; position:absolute; right:16px; top:50%; width:7px; height:7px; border-right:1.7px solid var(--accent); border-bottom:1.7px solid var(--accent); transform:translateY(-68%) rotate(45deg); }
+  .hub-select-menu { position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:120; display:none; max-height:260px; overflow-y:auto; padding:5px; background:var(--surface); border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow); }
+  .hub-select.open .hub-select-menu { display:block; }
+  .hub-select.open-up .hub-select-menu { top:auto; bottom:calc(100% + 4px); }
+  button.hub-select-option { display:block; width:100%; min-height:40px; padding:9px 10px; border:0; border-radius:6px; background:transparent; color:var(--text); font:inherit; font-size:.86rem; line-height:1.35; text-align:left; cursor:pointer; }
+  button.hub-select-option:hover,button.hub-select-option:focus-visible,button.hub-select-option.selected { outline:none; background:var(--surface-2); color:var(--accent); }
+
+  html[data-theme="ops-dark"] {
+    color-scheme:dark; --bg:#1b2527; --surface:#202b2d; --surface-2:#253133; --surface-3:#2b383a;
+    --border:#394749; --border-strong:#506063; --text:#f3f6f4; --text-dim:#b3bebb;
+    --accent:#78b8cd; --accent-hover:#91c7d7; --accent-soft:#263b40;
+    --green:#48c78e; --green-soft:#17372b; --red:#ff7b7f; --red-soft:#3b2225;
+    --blue:#75bfe1; --blue-soft:#17313d; --shadow:0 14px 34px rgba(0,0,0,.28);
+  }
+  html[data-theme="ops-dark"] .user-pill,html[data-theme="ops-dark"] input,html[data-theme="ops-dark"] select,html[data-theme="ops-dark"] textarea,
+  html[data-theme="ops-dark"] button.ghost,html[data-theme="ops-dark"] button.hub-select-trigger,html[data-theme="ops-dark"] .hub-select-menu { background:var(--surface); border-color:var(--border); color:var(--text); }
+  html[data-theme="ops-dark"] select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2378b8cd' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
+  html[data-theme="ops-dark"] .pcard,html[data-theme="ops-dark"] .editform,html[data-theme="ops-dark"] .empty { background:var(--surface); border-color:var(--border); }
+  html[data-theme="ops-dark"] .post img { border-color:var(--border); }
+  html[data-theme="ops-dark"] .b-Pending { background:#3b311d; color:#f5bf55; }
+  html[data-theme="ops-dark"] .b-NA { background:var(--surface-2); }
+
+  @media(max-width:760px){
+    #app { padding:18px 16px 0; }
+    nav { gap:22px; margin:0 -16px 22px; padding:0 16px; }
+    .tool-intro { align-items:flex-start; flex-direction:column; }
+    .tool-intro h1 { font-size:22px; }
+    .filters { grid-template-columns:1fr; }
+    .filters .full { grid-column:span 1; }
+    .filters > div:empty { display:none; }
+    .post { grid-template-columns:64px minmax(0,1fr); gap:12px; }
+    .post img { width:64px; height:64px; }
+    .stat { grid-column:1/-1; display:flex; align-items:flex-end; justify-content:space-between; gap:12px; text-align:left; white-space:normal; }
+    .act { flex-direction:row; }
+    .row > div { flex-basis:100%; }
+    button.hub-select-option { min-height:44px; }
+    .hub-select-menu { max-height:min(260px,45vh); }
+  }
 </style>
 </head>
 <body>
@@ -184,7 +325,7 @@
 <!-- ══════════ GATE 2 · NOT ON ALLOWLIST ══════════ -->
 <div class="gate" id="gateDenied" style="display:none;">
   <div class="card">
-    <div class="brand-logo">🔒</div>
+    <div class="brand-logo"><i data-lucide="lock"></i></div>
     <h2>Not authorised</h2>
     <div class="sub" style="margin-top:6px;"><span id="deniedEmail"></span> is not on the access list.<br>
       Ask your admin to add you under <b>Settings → Team access</b>.</div>
@@ -194,32 +335,36 @@
 
 <!-- ══════════ THE APP ══════════ -->
 <div id="app" style="display:none;">
-  <div class="topbar">
+  <header class="topbar">
     <div class="brand-block">
-      <div class="brand-logo">HG</div>
+      <div class="brand-logo"><i data-lucide="pen-line"></i></div>
       <div>
-        <div class="brand-name">Blog &amp; LinkedIn Posting</div>
-        <div class="brand-sub">Supabase edition · capture · straighten · queue</div>
+        <div class="brand-name">LinkedIn Content Hub <span class="tool-live">Live</span></div>
+        <div class="brand-sub">Capture completed work · Prepare content · Track Wix and LinkedIn publishing state</div>
       </div>
     </div>
     <div class="user-pill"><b id="userPill">…</b><button onclick="signOut()">Sign out</button></div>
-  </div>
+  </header>
 
   <nav>
-    <button class="active" data-tab="create" onclick="showTab('create')">＋ New Post</button>
-    <button data-tab="records" onclick="showTab('records')">📁 Records</button>
+    <button class="active" data-tab="create" onclick="showTab('create')">New Post</button>
+    <button data-tab="records" onclick="showTab('records')">Records</button>
   </nav>
 
   <main>
     <!-- ════ CREATE ════ -->
     <section id="tab-create">
+      <div class="tool-intro">
+        <div><h1>Create content post</h1><p>Prepare job photos and source details before adding the post to the publishing queue.</p></div>
+      </div>
       <div class="card">
         <div class="row" style="justify-content:space-between; align-items:center;">
           <div style="flex:1;"><h2>1 · Upload Photos</h2></div>
-          <div style="flex:0 0 auto;"><button class="ghost sm" onclick="el('file').click()">＋ Add Photos</button></div>
+          <div style="flex:0 0 auto;"><button class="ghost sm" onclick="el('file').click()"><i data-lucide="plus"></i>Add photos</button></div>
         </div>
         <div id="drop" style="margin-top:10px;">
-          <div>📷 <b>Drag &amp; drop photos here</b> or click to browse</div>
+          <i class="drop-icon" data-lucide="image-up"></i>
+          <div><b>Drop job photos here</b> or click to browse</div>
           <div class="hint">JPG / PNG · multiple at a time · first used photo = cover</div>
         </div>
         <input id="file" type="file" accept="image/*" multiple class="hide">
@@ -242,21 +387,24 @@
           <div><label>Job Date</label><input id="jobDate" type="date" oninput="autoCaption()"></div>
           <div><label>Post To</label><select id="target"><option>Both</option><option>Wix</option><option>LinkedIn</option></select></div>
         </div>
-        <label>Caption / Notes <button class="ghost sm" style="float:right; margin-top:-6px;" onclick="autoCaption(true)">⚡ Auto-fill</button></label>
+        <label>Caption / Notes <button class="ghost sm" style="float:right; margin-top:-6px;" onclick="autoCaption(true)"><i data-lucide="sparkles"></i>Auto-fill</button></label>
         <textarea id="caption" placeholder="Auto-fills from job scope + mall + brand + date. Type to override." oninput="captionTouched=true"></textarea>
         <div style="margin-top:14px;">
-          <button class="primary" id="saveBtn" onclick="savePost()">💾 Save to queue (Pending)</button>
+          <button class="primary" id="saveBtn" onclick="savePost()"><i data-lucide="save"></i>Save to queue</button>
         </div>
-        <div class="hint">Saved as <b>Pending</b>. In Claude, say “push the pending ones” to create the Wix &amp; LinkedIn drafts.</div>
+        <div class="hint">New posts enter the queue as <b>Pending</b> until the selected publishing channels are prepared.</div>
       </div>
     </section>
 
     <!-- ════ RECORDS ════ -->
     <section id="tab-records" class="hide">
+      <div class="tool-intro">
+        <div><h1>Content records</h1><p>Review publishing status, filter completed work, and open the associated channel links.</p></div>
+      </div>
       <div class="card">
         <div class="row" style="justify-content:space-between; align-items:center;">
-          <div style="flex:1;"><h2>Filters</h2></div>
-          <div style="flex:0 0 auto;"><button class="ghost sm" onclick="exportPostsExcel()">⬇ Export Excel</button></div>
+          <div style="flex:1;"><h2>Filter records</h2></div>
+          <div style="flex:0 0 auto;"><button class="ghost sm" onclick="exportPostsExcel()"><i data-lucide="download"></i>Export Excel</button></div>
         </div>
         <div class="filters" style="margin-top:10px;">
           <div class="full"><label>Search mall / brand</label><input id="fText" oninput="renderPosts()" placeholder="type to filter..."></div>
@@ -268,7 +416,7 @@
           <div><label>Job date to</label><input id="fTo" type="date" onchange="renderPosts()"></div>
           <div class="full" style="display:flex; align-items:flex-end; gap:8px;">
             <button class="ghost sm" onclick="clearFilters()">Clear</button>
-            <button class="ghost sm" onclick="loadPosts()">⟳ Refresh</button>
+            <button class="ghost sm" onclick="loadPosts()"><i data-lucide="refresh-cw"></i>Refresh</button>
             <span id="count" class="hint" style="margin:0 0 6px auto;"></span>
           </div>
         </div>
@@ -304,6 +452,62 @@ function fail(e){ toast('Error: '+(e && e.message ? e.message : String(e))); }
 function pad(n){ return (n<10?'0':'')+n; }
 function fmtDT(ts){ if(!ts) return ''; var d=new Date(ts); if(isNaN(d)) return String(ts);
   return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes()); }
+function refreshIcons(){ if(window.lucide) window.lucide.createIcons({attrs:{'aria-hidden':'true'}}); }
+
+// Shared HG Hub dropdown treatment. The native select remains the source of
+// truth for form values, existing change handlers, and Supabase payloads.
+function closeHubSelects(except){
+  document.querySelectorAll('.hub-select.open').forEach(function(wrap){
+    if(wrap!==except){
+      wrap.classList.remove('open','open-up');
+      var trigger=wrap.querySelector('.hub-select-trigger');
+      if(trigger) trigger.setAttribute('aria-expanded','false');
+    }
+  });
+}
+function initHubSelects(root){
+  (root||document).querySelectorAll('select:not([data-hub-select])').forEach(function(select){
+    var wrap=document.createElement('div'); wrap.className='hub-select';
+    select.parentNode.insertBefore(wrap,select); wrap.appendChild(select);
+    select.dataset.hubSelect='true'; select.classList.add('hub-select-native');
+    select.tabIndex=-1; select.setAttribute('aria-hidden','true');
+    var trigger=document.createElement('button');
+    trigger.type='button'; trigger.className='hub-select-trigger';
+    trigger.setAttribute('aria-haspopup','listbox'); trigger.setAttribute('aria-expanded','false');
+    var label=wrap.parentElement&&wrap.parentElement.querySelector('label');
+    if(label) trigger.setAttribute('aria-label',label.textContent.trim());
+    var menu=document.createElement('div'); menu.className='hub-select-menu'; menu.setAttribute('role','listbox');
+    wrap.appendChild(trigger); wrap.appendChild(menu);
+    function sync(){
+      var selected=select.options[select.selectedIndex];
+      trigger.textContent=selected?selected.textContent:'Select'; trigger.disabled=select.disabled;
+      menu.innerHTML='';
+      Array.from(select.options).forEach(function(option){
+        var item=document.createElement('button');
+        item.type='button'; item.className='hub-select-option'+(option.selected?' selected':'');
+        item.textContent=option.textContent; item.disabled=option.disabled;
+        item.setAttribute('role','option'); item.setAttribute('aria-selected',option.selected?'true':'false');
+        item.addEventListener('click',function(){
+          select.value=option.value; select.dispatchEvent(new Event('change',{bubbles:true})); closeHubSelects();
+        });
+        menu.appendChild(item);
+      });
+    }
+    select._hubSelectSync=sync; select.addEventListener('change',sync);
+    new MutationObserver(sync).observe(select,{childList:true,subtree:true,attributes:true});
+    trigger.addEventListener('click',function(){
+      var open=!wrap.classList.contains('open'); closeHubSelects(wrap); sync();
+      if(open){
+        var rect=trigger.getBoundingClientRect(), estimated=Math.min(260,menu.children.length*44+10);
+        wrap.classList.toggle('open-up',window.innerHeight-rect.bottom-16<estimated&&rect.top>window.innerHeight-rect.bottom);
+      } else wrap.classList.remove('open-up');
+      wrap.classList.toggle('open',open); trigger.setAttribute('aria-expanded',open?'true':'false');
+    });
+    sync();
+  });
+}
+document.addEventListener('pointerdown',function(e){ if(!e.target.closest('.hub-select')) closeHubSelects(); },true);
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeHubSelects(); });
 
 // ═══════════════════════════ BOOT / AUTH FLOW ═══════════════════════════
 function saveConfig(){
@@ -338,6 +542,8 @@ async function route(){
   IS_ADMIN = !!r.data.is_admin;
   el('app').style.display='block';
   el('userPill').textContent = email;
+  initHubSelects(el('app'));
+  refreshIcons();
 }
 
 function signIn(){
@@ -464,16 +670,16 @@ function cardHTML(it,i){
     '<div class="prow"><label>Straighten <span class="val" id="rv'+i+'">'+it.rot.toFixed(1)+'°</span></label>'+
       '<input type="range" min="-15" max="15" step="0.5" value="'+it.rot+'" oninput="onRot('+i+',this.value)"></div>'+
     '<div class="pbtns">'+
-      '<button class="chip" onclick="card90('+i+',-1)" title="Rotate left">⟲ 90</button>'+
-      '<button class="chip" onclick="card90('+i+',1)" title="Rotate right">⟳ 90</button>'+
-      '<button class="chip" onclick="cardFlip('+i+',\'h\')">⇄</button>'+
-      '<button class="chip" onclick="cardFlip('+i+',\'v\')">⇅</button>'+
-      '<button class="chip" onclick="cardReset('+i+')">↺</button>'+
+      '<button class="chip" onclick="card90('+i+',-1)" title="Rotate left">Left 90</button>'+
+      '<button class="chip" onclick="card90('+i+',1)" title="Rotate right">Right 90</button>'+
+      '<button class="chip" onclick="cardFlip('+i+',\'h\')">Flip H</button>'+
+      '<button class="chip" onclick="cardFlip('+i+',\'v\')">Flip V</button>'+
+      '<button class="chip" onclick="cardReset('+i+')">Reset</button>'+
     '</div>'+
     '<div class="pbtns">'+asp+'</div>'+
     '<div class="pfoot">'+
       '<label class="useck"><input type="checkbox" '+(it.use?'checked':'')+' onchange="onUse('+i+',this.checked)"> Use</label>'+
-      '<button class="del" onclick="removeImg('+i+')">✕ Remove</button>'+
+      '<button class="del" onclick="removeImg('+i+')">Remove</button>'+
     '</div>'+
   '</div>';
 }
@@ -607,7 +813,7 @@ async function savePost(){
     if(r.error) throw r.error;
     await sb.rpc('log_audit',{p_action:'SAVE POST', p_details:ref+' · '+row.mall+' · '+row.brand+' · '+paths.length+' image(s)'});
 
-    toast('Saved ✓  '+ref+' ('+paths.length+' image'+(paths.length>1?'s':'')+')');
+    toast('Saved '+ref+' ('+paths.length+' image'+(paths.length>1?'s':'')+')');
     imgs=[];captionTouched=false;
     el('photoGrid').innerHTML='';
     el('editorCard').classList.add('hide');
@@ -616,7 +822,7 @@ async function savePost(){
     el('mall').value='';el('brand').value='';
     el('jobDate').value='';el('caption').value='';
   }catch(e){ fail(e); }
-  btn.disabled=false;btn.textContent='💾 Save to queue (Pending)';
+  btn.disabled=false;btn.innerHTML='<i data-lucide="save"></i>Save to queue';refreshIcons();
 }
 
 // ═══════════════════════════ RECORDS (was getPosts / updatePost / deletePost) ═
@@ -675,7 +881,7 @@ async function openImage(id){
 function postHTML(p){
   var paths=p.image_paths||[];
   var thumb=paths.length?(SIGNED[paths[0]]||''):'';
-  var multi=paths.length>1?'<span class="tag">🖼 '+paths.length+'</span>':'';
+  var multi=paths.length>1?'<span class="tag">'+paths.length+' photos</span>':'';
   return '<div class="post" id="r_'+esc(p.id)+'">'+
     '<img src="'+esc(thumb)+'" onclick="openImage(\''+esc(p.id)+'\')" onerror="this.style.visibility=\'hidden\'" title="Open image(s)">'+
     '<div class="meta"><b>'+esc(p.mall||'—')+'</b> · '+esc(p.brand||'—')+' '+multi+
@@ -683,10 +889,10 @@ function postHTML(p){
       '<div class="line">Wix '+badge(p.wix_status)+' &nbsp; LinkedIn '+badge(p.linkedin_status)+'</div>'+
     '</div>'+
     '<div class="stat">'+esc(p.ref)+'<br>'+esc(fmtDT(p.created_at))+
-      (p.wix_link?'<br><a href="'+esc(p.wix_link)+'" target="_blank">Wix ↗</a>':'')+
-      (p.linkedin_link?' <a href="'+esc(p.linkedin_link)+'" target="_blank">LinkedIn ↗</a>':'')+
-      '<div class="act"><button class="edit" onclick="editPost(\''+esc(p.id)+'\')">✎ Edit</button>'+
-      '<button class="del" onclick="delPost(\''+esc(p.id)+'\')">🗑 Delete</button></div>'+
+      (p.wix_link?'<br><a href="'+esc(p.wix_link)+'" target="_blank">Wix link</a>':'')+
+      (p.linkedin_link?' <a href="'+esc(p.linkedin_link)+'" target="_blank">LinkedIn link</a>':'')+
+      '<div class="act"><button class="edit" onclick="editPost(\''+esc(p.id)+'\')">Edit</button>'+
+      '<button class="del" onclick="delPost(\''+esc(p.id)+'\')">Delete</button></div>'+
     '</div></div>';
 }
 
@@ -707,6 +913,7 @@ function editPost(id){
     '<button class="primary sm" onclick="saveEdit(\''+esc(id)+'\')">Save changes</button> '+
     '<button class="ghost sm" onclick="renderPosts()">Cancel</button></div>'+
     '</div>';
+  initHubSelects(el('r_'+id));
 }
 async function saveEdit(id){
   var p=findPost(id);if(!p)return;
@@ -758,6 +965,9 @@ function exportPostsExcel(){
   XLSX.writeFile(wb, 'HG-BlogPosts-'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
+if(window.self!==window.top) document.body.classList.add('embedded');
+initHubSelects(document);
+refreshIcons();
 start();
 </script>
 </body>

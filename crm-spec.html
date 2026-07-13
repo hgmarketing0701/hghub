@@ -3,7 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Black Lee — CRM Spec</title>
+<title>HG Hub — CRM Spec</title>
+<script>
+  (function(){function preference(){var saved='';try{saved=localStorage.getItem('hg_hub_theme')||'';}catch(e){}return saved==='light'||saved==='dark'||saved==='system'?saved:'system';}function resolved(value){if(value==='light'||value==='dark')return value;return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}function apply(value){document.documentElement.dataset.theme='ops-'+resolved(value);}apply(preference());window.addEventListener('message',function(event){if(event.origin!==location.origin||!event.data||event.data.type!=='hg-theme-change')return;if(event.data.theme==='light'||event.data.theme==='dark')apply(event.data.theme);});window.addEventListener('storage',function(event){if(event.key==='hg_hub_theme')apply(preference());});})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <style>
   :root {
     --bg:#0a0e1a; --surface:#141926; --surface-2:#1c2335; --surface-3:#232c42;
@@ -87,10 +94,31 @@
   .qbox li { font-size:0.88rem; color:var(--text-dim); margin-bottom:8px; }
   .qbox li b { color:var(--text); }
   @media (max-width:820px){ .io{grid-template-columns:1fr;} .io .mid{transform:rotate(90deg);} .build{grid-template-columns:1fr;} }
+
+  /* HG Hub unified reference-tool treatment */
+  :root{--bg:#fff;--surface:#fff;--surface-2:#f7f5f2;--surface-3:#f0ede8;--border:#e2d9cf;--text:#172f3a;--text-dim:#746f6b;--text-dim2:#8f8984;--accent:#114453;--accent-soft:#e8f2f0}
+  html[data-theme="ops-dark"]{--bg:#101719;--surface:#172124;--surface-2:#1d292c;--surface-3:#263337;--border:#344347;--text:#f3f6f5;--text-dim:#aeb9b7;--text-dim2:#83918f;--accent:#83d4c8;--accent-soft:#193a38}
+  body{font-family:"Manrope",sans-serif;background:var(--bg);color:var(--text)}.container{max-width:none;padding:0 28px 72px}
+  .tool-header{min-height:76px;display:flex;align-items:center;border-bottom:1px solid var(--border)}.tool-identity{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:800}.tool-identity svg{width:19px;height:19px;color:var(--accent);stroke-width:1.9}.reference-badge{padding:4px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:10px;letter-spacing:.08em;text-transform:uppercase}.tool-subtitle{margin:2px 0 0 31px;color:var(--text-dim);font-size:13px}body.embedded .tool-header{display:none}
+  .reference-overview{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:28px 0 22px}.reference-overview h1{font-size:28px;line-height:1.2;letter-spacing:-.03em}.reference-overview p{margin-top:6px;color:var(--text-dim);font-size:14px}.meta-pills{justify-content:flex-end}.pill{background:var(--surface-2);border:0;color:var(--text-dim)}.pill svg{width:15px;height:15px;color:var(--c-blue)}
+  .reference-nav{display:flex;gap:28px;overflow-x:auto;border-bottom:1px solid var(--border);margin-bottom:28px;scrollbar-width:none}.reference-nav a{color:var(--text-dim);text-decoration:none;white-space:nowrap;padding:12px 0 11px;border-bottom:3px solid transparent;font-size:14px;font-weight:700}.reference-nav a:first-child{color:var(--text);border-bottom-color:var(--accent)}
+  .topbar{display:none}section{margin-bottom:38px;scroll-margin-top:24px}h2.section-title{font-size:21px;color:var(--text)}.section-sub{color:var(--text-dim);margin-bottom:18px}.bigidea{background:var(--surface-2);border:0;border-left:3px solid var(--c-blue);border-radius:0 10px 10px 0;padding:18px 20px;margin-bottom:34px}.bigidea h3{color:var(--text)}.bigidea p{color:var(--text-dim)}
+  .iocard,.bcard{background:var(--surface);border-color:var(--border)}.iocard h4,.iocard p b,.bcard h4,.qbox li b{color:var(--text)}.iocard.core{border-color:var(--c-blue);box-shadow:none}.io .mid svg{width:24px;height:24px}
+  .tbl-wrap{border:0;border-radius:0;overflow-x:auto}.tbl-wrap table{border:1px solid var(--border);border-radius:10px;border-spacing:0;border-collapse:separate;overflow:hidden;min-width:720px}thead th{background:var(--surface-2)}tbody tr{background:var(--surface)}tbody td{border-color:var(--border)}.grp{background:var(--surface-2)!important}.fcode{background:var(--surface-2);color:var(--c-blue)}
+  .lstage{background:var(--surface);border-color:var(--border)}.life .sep{display:flex}.life .sep svg{width:16px;height:16px}.build{gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden}.bcard{border:0;border-radius:0}.bcard+.bcard{border-left:1px solid var(--border)}
+  .qbox{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 22px}
+  @media(max-width:720px){.container{padding:0 18px 56px}.tool-header{min-height:70px}.reference-overview{align-items:flex-start;flex-direction:column;padding-top:22px}.reference-overview h1{font-size:24px}.meta-pills{justify-content:flex-start}.reference-nav{gap:22px}.pill{padding:8px 10px}.io{grid-template-columns:1fr!important}.io .mid{transform:none}.build{grid-template-columns:1fr}.bcard+.bcard{border-left:0;border-top:1px solid var(--border)}.tbl-wrap{margin-right:-18px;padding-right:18px}}
 </style>
 </head>
 <body>
 <div class="container">
+
+  <header class="tool-header"><div><div class="tool-identity"><i data-lucide="database"></i><span>CRM Spec</span><span class="reference-badge">Reference</span></div><p class="tool-subtitle">Client records · Data ownership · Downstream handoff</p></div></header>
+  <div class="reference-overview">
+    <div><h1>CRM Data Structure</h1><p>The clean client record and handoff contract that downstream HG tools depend on.</p></div>
+    <div class="meta-pills"><div class="pill"><i data-lucide="database"></i>Owns BLUE</div><div class="pill"><i data-lucide="calendar-days"></i>v1 · 23 Jun 2026</div></div>
+  </div>
+  <nav class="reference-nav" aria-label="CRM spec sections"><a href="#position">Position</a><a href="#data-model">Data model</a><a href="#lifecycle">Lifecycle</a><a href="#build">Build plan</a><a href="#decisions">Decisions</a></nav>
 
   <div class="topbar">
     <div class="brand-block">
@@ -107,14 +135,14 @@
   </div>
 
   <div class="bigidea">
-    <h3>🎯 What this system is for — one job</h3>
+    <h3>What this system is for — one job</h3>
     <p>Turn a messy WhatsApp lead into <b>one clean client record</b> with a permanent <b>Client ID</b>.<br>
     It does not quote, it does not schedule. It <b>captures the client once</b> and hands a clean BLUE bundle to Smart Quotation.<br>
     Everything else in the platform fails if this record is dirty — so keep it small and strict.</p>
   </div>
 
   <!-- IN / OUT -->
-  <section>
+  <section id="position">
     <h2 class="section-title">1 · Where it sits</h2>
     <p class="section-sub">One input, one output. Resist the urge to make it do more.</p>
     <div class="io">
@@ -146,7 +174,7 @@
   </section>
 
   <!-- DATA MODEL -->
-  <section>
+  <section id="data-model">
     <h2 class="section-title">2 · Data model — the BLUE record</h2>
     <p class="section-sub">These are the only fields. If a field isn't used by a downstream system, it doesn't belong here.</p>
     <div class="tbl-wrap">
@@ -175,7 +203,7 @@
   </section>
 
   <!-- LIFECYCLE -->
-  <section>
+  <section id="lifecycle">
     <h2 class="section-title">3 · Lead lifecycle</h2>
     <p class="section-sub">Status lives in the CRM but is fed by what happens downstream — so you see the funnel without opening five systems.</p>
     <div class="life">
@@ -195,12 +223,12 @@
   </section>
 
   <!-- BUILD -->
-  <section>
+  <section id="build">
     <h2 class="section-title">4 · How to build it — your stack</h2>
     <p class="section-sub">Same pattern as your other tools: Google Sheet as the store, Apps Script web app as the brain, single-file HTML front-end.</p>
     <div class="build">
       <div class="bcard">
-        <h4>🟢 Phase 1 <span class="phase-tag p-mvp">MVP — build now</span></h4>
+        <h4>Phase 1 <span class="phase-tag p-mvp">MVP — build now</span></h4>
         <ul>
           <li>One Sheet tab <span class="fcode">CRM</span> with the columns above</li>
           <li>HTML form to add / edit a client (manual entry first)</li>
@@ -210,7 +238,7 @@
         </ul>
       </div>
       <div class="bcard">
-        <h4>🟡 Phase 2 <span class="phase-tag p-next">connect</span></h4>
+        <h4>Phase 2 <span class="phase-tag p-next">connect</span></h4>
         <ul>
           <li>WATI webhook → <span class="fcode">doPost</span> auto-creates leads</li>
           <li>"Create quote" button → opens Smart Quotation pre-filled by Client ID</li>
@@ -222,7 +250,7 @@
   </section>
 
   <!-- OPEN QUESTIONS -->
-  <section>
+  <section id="decisions">
     <h2 class="section-title">5 · Decisions I need from you</h2>
     <div class="qbox">
       <ol>
@@ -236,5 +264,11 @@
   </section>
 
 </div>
+<script>
+  document.querySelectorAll('.io .mid').forEach(function(el){el.innerHTML='<i data-lucide="arrow-right"></i>';});
+  document.querySelectorAll('.life .sep').forEach(function(el){if(el.textContent.trim()==='→')el.innerHTML='<i data-lucide="chevron-right"></i>';});
+  if(window.self!==window.top)document.body.classList.add('embedded');
+  if(window.lucide)lucide.createIcons({attrs:{'aria-hidden':'true'}});
+</script>
 </body>
 </html>

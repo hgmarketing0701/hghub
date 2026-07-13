@@ -3,7 +3,21 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Black Lee — Master System Blueprint</title>
+<title>HG Hub — System Blueprint</title>
+<script>
+  (function(){
+    function preference(){var saved='';try{saved=localStorage.getItem('hg_hub_theme')||'';}catch(e){}return saved==='light'||saved==='dark'||saved==='system'?saved:'system';}
+    function resolved(value){if(value==='light'||value==='dark')return value;return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
+    function apply(value){document.documentElement.dataset.theme='ops-'+resolved(value);}
+    apply(preference());
+    window.addEventListener('message',function(event){if(event.origin!==location.origin||!event.data||event.data.type!=='hg-theme-change')return;if(event.data.theme==='light'||event.data.theme==='dark')apply(event.data.theme);});
+    window.addEventListener('storage',function(event){if(event.key==='hg_hub_theme')apply(preference());});
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <style>
   :root {
     --bg: #0a0e1a;
@@ -187,10 +201,75 @@
     .branch { grid-template-columns: 1fr; }
     .stage-side { align-items: flex-start; }
   }
+
+  /* HG Hub unified reference-tool treatment */
+  :root {
+    --bg:#fff; --surface:#fff; --surface-2:#f7f5f2; --surface-3:#f0ede8;
+    --border:#e2d9cf; --text:#172f3a; --text-dim:#746f6b; --text-dim2:#8f8984;
+    --accent:#114453; --accent-soft:#e8f2f0; --shadow:0 10px 28px rgba(29,43,49,.08);
+  }
+  html[data-theme="ops-dark"] {
+    --bg:#101719; --surface:#172124; --surface-2:#1d292c; --surface-3:#263337;
+    --border:#344347; --text:#f3f6f5; --text-dim:#aeb9b7; --text-dim2:#83918f;
+    --accent:#83d4c8; --accent-soft:#193a38; --shadow:0 14px 34px rgba(0,0,0,.26);
+  }
+  body { font-family:"Manrope",sans-serif; background:var(--bg); color:var(--text); }
+  .container { max-width:none; padding:0 28px 72px; }
+  .tool-header { min-height:76px; display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--border); }
+  .tool-header svg { width:19px; height:19px; color:var(--accent); stroke-width:1.9; }
+  .tool-identity { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:800; }
+  .reference-badge { padding:4px 9px; border-radius:999px; background:var(--accent-soft); color:var(--accent); font-size:10px; letter-spacing:.08em; text-transform:uppercase; }
+  .tool-subtitle { margin:2px 0 0 31px; color:var(--text-dim); font-size:13px; }
+  body.embedded .tool-header { display:none; }
+  .reference-overview { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; padding:28px 0 22px; }
+  .reference-overview h1 { font-size:28px; line-height:1.2; letter-spacing:-.03em; }
+  .reference-overview p { margin-top:6px; color:var(--text-dim); font-size:14px; }
+  .meta-pills { justify-content:flex-end; }
+  .pill { background:var(--surface-2); border:0; color:var(--text-dim); }
+  .pill svg { width:15px; height:15px; color:var(--accent); }
+  .reference-nav { display:flex; gap:28px; overflow-x:auto; border-bottom:1px solid var(--border); margin-bottom:28px; scrollbar-width:none; }
+  .reference-nav a { color:var(--text-dim); text-decoration:none; white-space:nowrap; padding:12px 0 11px; border-bottom:3px solid transparent; font-size:14px; font-weight:700; }
+  .reference-nav a:first-child { color:var(--text); border-bottom-color:var(--accent); }
+  .topbar { display:none; }
+  section { margin-bottom:38px; scroll-margin-top:24px; }
+  h2.section-title { font-size:21px; color:var(--text); }
+  .section-sub { margin-bottom:18px; color:var(--text-dim); }
+  .bigidea { background:var(--surface-2); border:0; border-left:3px solid var(--accent); border-radius:0 10px 10px 0; padding:18px 20px; margin-bottom:34px; }
+  .bigidea h3 { color:var(--text); }
+  .bigidea p { color:var(--text-dim); }
+  .layer-card,.stage { background:var(--surface); border-color:var(--border); box-shadow:none; }
+  .layer-card::before { width:3px; }
+  .layer-name,.stage-title,.stage-desc b,.owner b { color:var(--text); }
+  .stage-no { background:var(--surface-2); border-color:var(--border); color:var(--text); }
+  .chips-row { border-top:1px solid var(--border); }
+  .stage-side svg { width:14px; height:14px; }
+  .cycle { background:var(--surface-2); border:0; border-left:3px solid var(--accent); border-radius:0 10px 10px 0; }
+  .cycle .ico svg { width:22px; height:22px; color:var(--accent); }
+  .cycle b { color:var(--text); }
+  @media(max-width:720px){
+    .container{padding:0 18px 56px}.tool-header{min-height:70px}.reference-overview{align-items:flex-start;flex-direction:column;padding-top:22px}.reference-overview h1{font-size:24px}.meta-pills{justify-content:flex-start}.reference-nav{gap:22px}.legend-grid{grid-template-columns:1fr}.stage{padding:16px}.stage-side{min-width:0}.pill{padding:8px 10px}
+  }
 </style>
 </head>
 <body>
 <div class="container">
+
+  <header class="tool-header">
+    <div>
+      <div class="tool-identity"><i data-lucide="brain"></i><span>System Blueprint</span><span class="reference-badge">Reference</span></div>
+      <p class="tool-subtitle">HG Hub architecture · Data layers and end-to-end job flow</p>
+    </div>
+  </header>
+
+  <div class="reference-overview">
+    <div><h1>Master System Blueprint</h1><p>One job, from demand and qualification through delivery, reporting, and payroll.</p></div>
+    <div class="meta-pills">
+      <div class="pill"><i data-lucide="layers-3"></i><strong>8</strong> data layers</div>
+      <div class="pill"><i data-lucide="route"></i><strong>10</strong> stages</div>
+      <div class="pill"><i data-lucide="calendar-days"></i>v1 · 23 Jun 2026</div>
+    </div>
+  </div>
+  <nav class="reference-nav" aria-label="Blueprint sections"><a href="#data-layers">Data layers</a><a href="#pipeline">Job pipeline</a></nav>
 
   <!-- HEADER -->
   <div class="topbar">
@@ -210,14 +289,14 @@
 
   <!-- BIG IDEA -->
   <div class="bigidea">
-    <h3>🧠 The one rule that runs the whole platform</h3>
+    <h3>The one rule that runs the whole platform</h3>
     <p>The colours are <b>not status</b>. They are <b>data layers</b>.<br>
     Each stage <b>inherits every colour from upstream</b>, adds its own colour, and passes the bigger bundle to the next stage.<br>
     Build every system to <b>read the incoming colours and write only its own</b> — that is the integration.</p>
   </div>
 
   <!-- LEGEND -->
-  <section>
+  <section id="data-layers">
     <h2 class="section-title">1 · The 8 data layers</h2>
     <p class="section-sub">This is the shared language between every system. When two systems "talk", they are passing these colour bundles.</p>
     <div class="legend-grid">
@@ -274,7 +353,7 @@
   </section>
 
   <!-- PIPELINE -->
-  <section>
+  <section id="pipeline">
     <h2 class="section-title">2 · The pipeline — one job, top to bottom</h2>
     <p class="section-sub">Read each card: what it does, who owns it, which tool runs it, what colours it receives, and the one colour it adds.</p>
 
@@ -382,7 +461,7 @@
           </div>
           <div class="stage-side">
             <span class="badge b-enhance">Enhance: auto-fill</span>
-            <div class="owner">👤 <b>Imrah</b></div>
+            <div class="owner"><i data-lucide="user-round"></i><b>Imrah</b></div>
             <div class="tool">Permit system</div>
           </div>
         </div>
@@ -407,7 +486,7 @@
           </div>
           <div class="stage-side">
             <span class="badge b-live">Live</span>
-            <div class="owner">👤 <b>Eason</b></div>
+            <div class="owner"><i data-lucide="user-round"></i><b>Eason</b></div>
           </div>
           <div class="chips-row">
             <div class="chips-block"><span class="chips-label">Reads</span><span class="dchip d-blue"><i></i></span><span class="dchip d-yellow"><i></i></span><span class="dchip d-green"><i></i></span></div>
@@ -426,7 +505,7 @@
           </div>
           <div class="stage-side">
             <span class="badge b-live">Live</span>
-            <div class="owner">👤 <b>Sohel</b></div>
+            <div class="owner"><i data-lucide="user-round"></i><b>Sohel</b></div>
           </div>
           <div class="chips-row">
             <div class="chips-block"><span class="chips-label">Reads</span><span class="dchip d-green"><i></i></span><span class="dchip d-turq"><i></i></span></div>
@@ -447,7 +526,7 @@
           </div>
           <div class="stage-side">
             <span class="badge b-live">Live</span>
-            <div class="owner">👤 <b>Eason</b></div>
+            <div class="owner"><i data-lucide="user-round"></i><b>Eason</b></div>
             <div class="tool">Onsite system (mobile)</div>
           </div>
         </div>
@@ -472,7 +551,7 @@
           </div>
           <div class="stage-side">
             <span class="badge b-live">Live</span>
-            <div class="owner">👤 <b>Katm</b></div>
+            <div class="owner"><i data-lucide="user-round"></i><b>Katm</b></div>
             <div class="tool">JCR system → Wix · LinkedIn</div>
           </div>
           <div class="chips-row">
@@ -491,7 +570,7 @@
           </div>
           <div class="stage-side">
             <span class="badge b-live">Live</span>
-            <div class="owner">👤 <b>Afiqah / Ainaa</b></div>
+            <div class="owner"><i data-lucide="user-round"></i><b>Afiqah / Ainaa</b></div>
             <div class="tool">Backend system → CIMS (manual)</div>
           </div>
           <div class="chips-row">
@@ -504,7 +583,7 @@
 
       <!-- CYCLE -->
       <div class="cycle">
-        <div class="ico">🔁</div>
+        <div class="ico"><i data-lucide="refresh-cw"></i></div>
         <p><b>The whole cycle repeats per job.</b> Backend P&amp;L + completion proof feed the next quote and the next marketing post — the loop closes back to Stage 0.</p>
       </div>
 
@@ -515,5 +594,9 @@
   </section>
 
 </div>
+<script>
+  if(window.self!==window.top)document.body.classList.add('embedded');
+  if(window.lucide)lucide.createIcons({attrs:{'aria-hidden':'true'}});
+</script>
 </body>
 </html>
