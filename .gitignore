@@ -13,3 +13,16 @@ supabase/.temp/
 # OS junk
 Thumbs.db
 .DS_Store
+
+# ============ cPanel migration — NEVER commit these ============
+# API secrets
+server/.env
+server/.env.*
+# generated data dumps (contain production data incl. worker bank details)
+import/out/
+mysql/data-*.sql
+mysql/*-data.sql
+# raw production exports must never live inside the repo
+migration-package/
+sheets-data/
+*.xlsx
