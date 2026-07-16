@@ -450,7 +450,7 @@ CREATE TABLE IF NOT EXISTS pl_audit_log (
   user_email  VARCHAR(255) DEFAULT '',
   action      VARCHAR(255) NOT NULL,
   record_type VARCHAR(64)  DEFAULT '',
-  record_id   VARCHAR(64)  DEFAULT '',
+  record_id   VARCHAR(512) DEFAULT '',
   details     TEXT,
   PRIMARY KEY (id),
   INDEX idx_pl_audit_record (record_id)

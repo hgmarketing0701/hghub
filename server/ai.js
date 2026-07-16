@@ -56,10 +56,11 @@ router.use(requireAuth);
 // Daily briefing: summarize last ~28h of audit_log; cache one per day in ai_briefings.
 router.post("/briefing", async (req, res) => {
   try {
-    const today = new Date().toISOString().slice(0, 10);
+    // KL day (fixed UTC+8)
+    const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
     if (!req.body?.force) {
-      const [hit] = await pool.query("SELECT briefing FROM ai_briefings WHERE day = ? LIMIT 1", [today]);
-      if (hit[0]) return res.json({ data: { briefing: hit[0].briefing, cached: true } });
+      const [hit] = await pool.query("SELECT summary FROM ai_briefings WHERE brief_date = ? LIMIT 1", [today]);
+      if (hit[0]) return res.json({ data: { briefing: hit[0].summary, cached: true } });
     }
     const [logs] = await pool.query(
       "SELECT at, user_email, action, details FROM audit_log WHERE at >= NOW() - INTERVAL 28 HOUR ORDER BY at DESC LIMIT 400"
@@ -77,8 +78,9 @@ router.post("/briefing", async (req, res) => {
       );
     }
     await pool.query(
-      "INSERT INTO ai_briefings (day, briefing) VALUES (?, ?) ON DUPLICATE KEY UPDATE briefing = VALUES(briefing), created_at = NOW()",
-      [today, briefing]
+      "INSERT INTO ai_briefings (brief_date, summary, activity_n, created_by) VALUES (?, ?, ?, ?) " +
+      "ON DUPLICATE KEY UPDATE summary = VALUES(summary), activity_n = VALUES(activity_n), created_at = NOW()",
+      [today, briefing, logs.length, req.user.email]
     );
     res.json({ data: { briefing, cached: false } });
   } catch (e) {

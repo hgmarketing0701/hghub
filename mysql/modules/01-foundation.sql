@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS app_settings (
 CREATE TABLE IF NOT EXISTS quotes (
   id          CHAR(36) NOT NULL DEFAULT (uuid()),
   quote_no    VARCHAR(64) NOT NULL,
-  quote_date  DATE NOT NULL DEFAULT (CURRENT_DATE),
+  quote_date  DATE NULL,  -- production has blank dates
   mall        VARCHAR(255) NOT NULL,
   client_id   CHAR(36),
   client_name VARCHAR(255) NOT NULL,
@@ -140,8 +140,10 @@ CREATE TABLE IF NOT EXISTS audit_log (
   id         BIGINT AUTO_INCREMENT,
   at         DATETIME DEFAULT CURRENT_TIMESTAMP,
   user_email VARCHAR(255) DEFAULT '',
-  action     VARCHAR(255) NOT NULL,
-  details    TEXT,
+  action      VARCHAR(255) NOT NULL,
+  record_type VARCHAR(64)  DEFAULT '',
+  record_id   VARCHAR(255) DEFAULT '',
+  details     TEXT,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

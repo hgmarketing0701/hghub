@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS scf_invoices (
   created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_scf_invoices_inv_no (inv_no),      -- system-generated HG-INV####
+  INDEX idx_scf_invoices_inv_no (inv_no),          -- production has duplicate inv_nos; app-level dup check in scf_invoice_from_charges
   INDEX idx_scf_invoices_eng (engagement_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

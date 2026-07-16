@@ -22,11 +22,11 @@ CREATE TABLE IF NOT EXISTS hlib_records (
   length_m      DECIMAL(10,2) DEFAULT NULL,         -- xlsx: Length (m)
   height_m      DECIMAL(10,2) DEFAULT NULL,         -- xlsx: Height (m)
   area_m2       DECIMAL(12,2) DEFAULT NULL,         -- xlsx: Area (m2)
-  panels        INT DEFAULT NULL,                   -- panel count
+  panels        VARCHAR(64) DEFAULT NULL,           -- panel count (free text in production)
   door_type     VARCHAR(64) DEFAULT '',
   door_qty      INT DEFAULT NULL,
   door_size     VARCHAR(64) DEFAULT '',             -- free text (e.g. "1.2m x 2.4m")
-  drawing_no    VARCHAR(64) DEFAULT '',
+  drawing_no    VARCHAR(512) DEFAULT '',
   `date`        DATE DEFAULT NULL,
   notes         TEXT,
   drive_file_id VARCHAR(512) DEFAULT '',            -- Drive ID, files not migrating yet

@@ -251,7 +251,7 @@ CREATE TABLE IF NOT EXISTS wkr_swms_steps (             -- XLSX-ADDED
 CREATE TABLE IF NOT EXISTS wkr_swms_equipment (         -- XLSX-ADDED
   id         VARCHAR(64) NOT NULL,                      -- XLSX-ADDED
   service    VARCHAR(255) DEFAULT '',                   -- XLSX-ADDED
-  equipment  VARCHAR(255) DEFAULT '',                   -- XLSX-ADDED
+  equipment  TEXT,                                      -- XLSX-ADDED (long production strings)
   purpose    TEXT,                                      -- XLSX-ADDED
   sort_order INT DEFAULT 0,                             -- XLSX-ADDED
   PRIMARY KEY (id),

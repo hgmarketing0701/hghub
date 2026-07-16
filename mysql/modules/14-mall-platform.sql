@@ -238,7 +238,7 @@ CREATE TABLE IF NOT EXISTS mp_measure_types (
 -- (Date → req_date, Updated On → updated_at; column names kept from Supabase)
 CREATE TABLE IF NOT EXISTS mp_measure_requests (
   id            CHAR(36) NOT NULL DEFAULT (uuid()),
-  req_date      DATE NOT NULL DEFAULT (CURRENT_DATE),
+  req_date      DATE NULL,  -- production has blank dates
   requestor     VARCHAR(255) DEFAULT '',
   mall          VARCHAR(255) NOT NULL,
   lot_no        VARCHAR(255) NOT NULL,

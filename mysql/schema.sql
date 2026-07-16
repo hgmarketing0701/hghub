@@ -1,10 +1,6 @@
--- ============================================================
--- HG hub — FULL MySQL schema (assembled 2026-07-16)
--- Import this file into the empty database via phpMyAdmin.
--- Idempotent: safe to re-run.
--- ============================================================
+-- HG hub — FULL MySQL schema (assembled 2026-07-16) — idempotent, phpMyAdmin-ready
 
--- ####### modules/01-foundation.sql #######
+-- ####### mysql/modules/01-foundation.sql #######
 -- ============================================================
 -- HG hub — foundation + assistant + blog (MySQL 8)
 -- Translated from supabase/schema.sql, schema-assistant.sql, schema-blog.sql
@@ -106,7 +102,7 @@ CREATE TABLE IF NOT EXISTS app_settings (
 CREATE TABLE IF NOT EXISTS quotes (
   id          CHAR(36) NOT NULL DEFAULT (uuid()),
   quote_no    VARCHAR(64) NOT NULL,
-  quote_date  DATE NOT NULL DEFAULT (CURRENT_DATE),
+  quote_date  DATE NULL,  -- production has blank dates
   mall        VARCHAR(255) NOT NULL,
   client_id   CHAR(36),
   client_name VARCHAR(255) NOT NULL,
@@ -147,8 +143,10 @@ CREATE TABLE IF NOT EXISTS audit_log (
   id         BIGINT AUTO_INCREMENT,
   at         DATETIME DEFAULT CURRENT_TIMESTAMP,
   user_email VARCHAR(255) DEFAULT '',
-  action     VARCHAR(255) NOT NULL,
-  details    TEXT,
+  action      VARCHAR(255) NOT NULL,
+  record_type VARCHAR(64)  DEFAULT '',
+  record_id   VARCHAR(255) DEFAULT '',
+  details     TEXT,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -211,7 +209,7 @@ WHERE wix_status = 'Pending' OR linkedin_status = 'Pending';
 -- BUCKET: blog-images
 
 
--- ####### modules/02-hoarding.sql #######
+-- ####### mysql/modules/02-hoarding.sql #######
 -- ============================================================
 -- HG hub — hoarding pricing (MySQL 8) — translated from supabase/schema-hoarding.sql
 -- Reconciled against 03-hoarding-pricing.xlsx (2026-07-16)
@@ -381,7 +379,7 @@ INSERT IGNORE INTO hrd_materials (code, type, size, thickness, bar_qty, unit, co
 -- BUCKET: (none — the tool stores no files)
 
 
--- ####### modules/03-visual.sql #######
+-- ####### mysql/modules/03-visual.sql #######
 -- ============================================================
 -- HG hub — visual works control (MySQL 8) — translated from supabase/schema-visual.sql
 -- Reconciled against 20-visual-works.xlsx (2026-07-16)
@@ -636,7 +634,7 @@ WHERE LOWER(COALESCE(w.status,'')) <> 'inactive' AND w.doc_expiry IS NOT NULL
 -- BUCKET: visual
 
 
--- ####### modules/04-dispatch.sql #######
+-- ####### mysql/modules/04-dispatch.sql #######
 -- ============================================================
 -- HG hub — dispatch (MySQL 8) — translated from supabase/schema-dispatch.sql
 -- Reconciled against 13-dispatch-db.xlsx (2026-07-16)
@@ -830,7 +828,7 @@ WHERE g.missing <> ''
 -- BUCKET: (none — dispatch tool uploads nothing to storage; sketch_url/visual_url/permit_url are Google Drive links kept as text)
 
 
--- ####### modules/05-inventory.sql #######
+-- ####### mysql/modules/05-inventory.sql #######
 -- ============================================================
 -- HG hub — inventory (MySQL 8) — translated from supabase/schema-inventory.sql
 -- Reconciled against 01-inventory-v5-LIVE.xlsx (2026-07-16)
@@ -1106,7 +1104,7 @@ CREATE TABLE IF NOT EXISTS inv_payment_allocations (
 -- BUCKET: inventory-files
 
 
--- ####### modules/06-subcon-invoice.sql #######
+-- ####### mysql/modules/06-subcon-invoice.sql #######
 -- ============================================================
 -- HG hub — subcon-invoice (MySQL 8) — translated from supabase/schema-subcon-invoice.sql
 -- Reconciled against 21-subcon-invoice.xlsx (2026-07-16)
@@ -1186,7 +1184,7 @@ INSERT IGNORE INTO app_settings (`key`, `value`) VALUES
 -- BUCKET: subcon-invoices
 
 
--- ####### modules/07-project-pl.sql #######
+-- ####### mysql/modules/07-project-pl.sql #######
 -- ============================================================
 -- HG hub — Project P&L (MySQL 8) — translated from supabase/schema-project-pl.sql
 -- Reconciled against 09-project-pl.xlsx (2026-07-16) — all 22 tabs
@@ -1639,7 +1637,7 @@ CREATE TABLE IF NOT EXISTS pl_audit_log (
   user_email  VARCHAR(255) DEFAULT '',
   action      VARCHAR(255) NOT NULL,
   record_type VARCHAR(64)  DEFAULT '',
-  record_id   VARCHAR(64)  DEFAULT '',
+  record_id   VARCHAR(512) DEFAULT '',
   details     TEXT,
   PRIMARY KEY (id),
   INDEX idx_pl_audit_record (record_id)
@@ -1713,7 +1711,7 @@ WHERE NOT EXISTS (SELECT 1 FROM pl_lookups LIMIT 1);
 -- BUCKET: pl-files
 
 
--- ####### modules/08-claims-expenses.sql #######
+-- ####### mysql/modules/08-claims-expenses.sql #######
 -- ============================================================
 -- HG hub — claims + expenses (MySQL 8) — translated from
 -- supabase/schema-claims.sql + supabase/schema-expenses.sql
@@ -1839,7 +1837,7 @@ CREATE TABLE IF NOT EXISTS exp_expenses (
 -- BUCKET: expense-receipts
 
 
--- ####### modules/09-lorry-fleet.sql #######
+-- ####### mysql/modules/09-lorry-fleet.sql #######
 -- ============================================================
 -- HG hub — lorry + fleet (MySQL 8) — translated from supabase/schema-lorry.sql
 -- Reconciled against 24-lorry.xlsx (master fleet dataset: lorry-era + fleet-v2 tabs)
@@ -2447,7 +2445,7 @@ WHERE s.status IN ('outstanding', 'partially-paid')
 -- BUCKET: lorry-files
 
 
--- ####### modules/10-scaffold.sql #######
+-- ####### mysql/modules/10-scaffold.sql #######
 -- ============================================================
 -- HG hub — scaffold & green tag (MySQL 8) — translated from supabase/schema-scaffold.sql
 -- Reconciled against 11-scaffold-greentag.xlsx (2026-07-16)
@@ -2581,7 +2579,7 @@ CREATE TABLE IF NOT EXISTS scf_invoices (
   created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_scf_invoices_inv_no (inv_no),      -- system-generated HG-INV####
+  INDEX idx_scf_invoices_inv_no (inv_no),          -- production has duplicate inv_nos; app-level dup check in scf_invoice_from_charges
   INDEX idx_scf_invoices_eng (engagement_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2680,7 +2678,7 @@ INSERT IGNORE INTO scf_settings (`key`, `value`) VALUES
 -- BUCKET: scaffold
 
 
--- ####### modules/11-storage-rental.sql #######
+-- ####### mysql/modules/11-storage-rental.sql #######
 -- ============================================================
 -- HG hub — storage-rental (MySQL 8) — translated from supabase/schema-storage-rental.sql
 -- Reconciled against 10-storage-rental.xlsx (2026-07-16)
@@ -2925,7 +2923,7 @@ ORDER BY due_date;
 -- BUCKET: storage-items
 
 
--- ####### modules/12-transport.sql #######
+-- ####### mysql/modules/12-transport.sql #######
 -- ============================================================
 -- HG hub — transport / mover / rorobin (MySQL 8) — translated from supabase/schema-transport.sql
 -- Reconciled against 12-transport.xlsx (2026-07-16)
@@ -3240,7 +3238,7 @@ WHERE COALESCE(i.status, '') <> 'Void'
 -- BUCKET: transport-photos
 
 
--- ####### modules/13-workers.sql #######
+-- ####### mysql/modules/13-workers.sql #######
 -- ============================================================
 -- HG hub — workers (MySQL 8) — translated from supabase/schema-workers.sql
 -- Reconciled against 07-workers.xlsx (2026-07-16)
@@ -3494,7 +3492,7 @@ CREATE TABLE IF NOT EXISTS wkr_swms_steps (             -- XLSX-ADDED
 CREATE TABLE IF NOT EXISTS wkr_swms_equipment (         -- XLSX-ADDED
   id         VARCHAR(64) NOT NULL,                      -- XLSX-ADDED
   service    VARCHAR(255) DEFAULT '',                   -- XLSX-ADDED
-  equipment  VARCHAR(255) DEFAULT '',                   -- XLSX-ADDED
+  equipment  TEXT,                                      -- XLSX-ADDED (long production strings)
   purpose    TEXT,                                      -- XLSX-ADDED
   sort_order INT DEFAULT 0,                             -- XLSX-ADDED
   PRIMARY KEY (id),
@@ -3556,7 +3554,7 @@ WHERE COALESCE(p.status,'active') = 'active'
 -- BUCKET: worker-docs
 
 
--- ####### modules/14-mall-platform.sql #######
+-- ####### mysql/modules/14-mall-platform.sql #######
 -- ============================================================
 -- HG hub — mall-platform (MySQL 8) — translated from supabase/schema-mall-platform.sql
 -- Reconciled against 17-mall-platform.xlsx (2026-07-16), 20 tabs.
@@ -3797,7 +3795,7 @@ CREATE TABLE IF NOT EXISTS mp_measure_types (
 -- (Date → req_date, Updated On → updated_at; column names kept from Supabase)
 CREATE TABLE IF NOT EXISTS mp_measure_requests (
   id            CHAR(36) NOT NULL DEFAULT (uuid()),
-  req_date      DATE NOT NULL DEFAULT (CURRENT_DATE),
+  req_date      DATE NULL,  -- production has blank dates
   requestor     VARCHAR(255) DEFAULT '',
   mall          VARCHAR(255) NOT NULL,
   lot_no        VARCHAR(255) NOT NULL,
@@ -3856,7 +3854,7 @@ CREATE TABLE IF NOT EXISTS mp_hoarding_lines (
 -- BUCKET: mall-sketches
 
 
--- ####### modules/15-hub-home.sql #######
+-- ####### mysql/modules/15-hub-home.sql #######
 -- ============================================================
 -- HG hub — hub home (Executive + Finance dashboards) (MySQL 8)
 -- Translated from supabase/schema-executive-home.sql + supabase/schema-finance-home.sql
@@ -3925,7 +3923,7 @@ ON DUPLICATE KEY UPDATE
 -- RPC-PORT: hub_finance_home_v1(p_as_of date, p_attention_limit int) — protected Finance Home JSON summary (requires pl_role() in Admin/Manager): portfolio snapshot (client/subcontractor/supplier outstanding, net revenue, project profit, average margin from hub_pl_project_financials_v1, excluding cancelled), attention items (loss-making active projects critical, estimated-cost projects warning, plus invoice due-date alarms from scf_alarms [type invoice], str_alarms [INVOICE_OVERDUE/INVOICE_DUE], trn_alarms [INVOICE_OVERDUE]; severity+due-date+amount ranked, capped at p_attention_limit 1..100), work queues (receivables: project outstanding + overdue operational invoice balances from scf_invoices/scf_payments, str_invoices/str_payments, trn_invoices/trn_payments; payables: subcon/supplier outstanding; claims_expenses: clm_claims submitted + exp_expenses business MTD; invoice_production: sci_invoices MTD + open quotes), last-20 finance-filtered activity feed from audit_log. Reads: pl_user_roles (via pl_role), hub_pl_project_financials_v1 (i.e. all pl_* tables above), scf_alarms, str_alarms, trn_alarms, scf_invoices, scf_payments, str_invoices, str_payments, trn_invoices, trn_payments, clm_claims, exp_expenses, sci_invoices, quotes, audit_log.
 
 
--- ####### modules/16-new-finance.sql #######
+-- ####### mysql/modules/16-new-finance.sql #######
 -- ============================================================
 -- HG hub — new finance tools (MySQL 8) — NEW tables (never on Supabase)
 -- 05 Accounts Payable, 06 Payments Received, 14 Attendance Evidence,
@@ -4153,7 +4151,7 @@ CREATE TABLE IF NOT EXISTS jcr_reports (
 -- Files (attachments, photos, PDFs, thumbs) stay on Google Drive for now.
 
 
--- ####### modules/17-job-arrangement.sql #######
+-- ####### mysql/modules/17-job-arrangement.sql #######
 -- ============================================================
 -- HG hub — Daily Job Arrangement (MySQL 8) — prefix ja_
 -- NEW tables — this tool never had a Supabase schema.
@@ -4466,7 +4464,7 @@ CREATE TABLE IF NOT EXISTS ja_audit_log (
 -- ============================================================
 
 
--- ####### modules/18-library-team-4d.sql #######
+-- ####### mysql/modules/18-library-team-4d.sql #######
 -- ============================================================
 -- HG hub — hoarding-library + team-command + 4d-tracker (MySQL 8)
 -- NEW tables — these three tools never had a Supabase schema.
@@ -4491,11 +4489,11 @@ CREATE TABLE IF NOT EXISTS hlib_records (
   length_m      DECIMAL(10,2) DEFAULT NULL,         -- xlsx: Length (m)
   height_m      DECIMAL(10,2) DEFAULT NULL,         -- xlsx: Height (m)
   area_m2       DECIMAL(12,2) DEFAULT NULL,         -- xlsx: Area (m2)
-  panels        INT DEFAULT NULL,                   -- panel count
+  panels        VARCHAR(64) DEFAULT NULL,           -- panel count (free text in production)
   door_type     VARCHAR(64) DEFAULT '',
   door_qty      INT DEFAULT NULL,
   door_size     VARCHAR(64) DEFAULT '',             -- free text (e.g. "1.2m x 2.4m")
-  drawing_no    VARCHAR(64) DEFAULT '',
+  drawing_no    VARCHAR(512) DEFAULT '',
   `date`        DATE DEFAULT NULL,
   notes         TEXT,
   drive_file_id VARCHAR(512) DEFAULT '',            -- Drive ID, files not migrating yet
