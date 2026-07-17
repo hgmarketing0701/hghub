@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HG — Team Command — Supabase</title>
+<script>
+  (function(){
+    var key='hg_hub_theme',media=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');
+    function preference(){try{var saved=localStorage.getItem(key);if(saved==='light'||saved==='dark'||saved==='system')return saved;}catch(e){}return 'system';}
+    function resolved(value){return value==='light'||value==='dark'?value:(media&&media.matches?'dark':'light');}
+    function apply(value){var theme=resolved(value);document.documentElement.dataset.theme=theme;document.documentElement.style.colorScheme=theme;}
+    apply(preference());window.addEventListener('message',function(event){if(!event.data||event.data.type!=='hg-theme-change')return;if(event.data.theme==='light'||event.data.theme==='dark')apply(event.data.theme);});window.addEventListener('storage',function(event){if(event.key===key)apply(preference());});
+    if(media){var sync=function(){if(preference()==='system')apply('system');};if(media.addEventListener)media.addEventListener('change',sync);else if(media.addListener)media.addListener(sync);}
+  })();
+</script>
+<script src="hg-client.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e1a; --panel:#141926; --panel2:#1c2335; --line:#2a3245;
+    --ink:#ffffff; --mut:#a0a8b8; --acc:#f59e0b; --acc2:#d97706;
+    --acc-soft:rgba(245,158,11,0.12);
+    --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --blue:#3b82f6; --chip:#1c2335;
+    --radius:14px; --shadow:0 10px 40px rgba(0,0,0,0.4);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh}
+  a{color:var(--acc);cursor:pointer}
+  header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:16px;padding:14px 22px;flex-wrap:wrap}
+  .brand-block{display:flex;align-items:center;gap:14px}
+  .brand-logo{width:46px;height:46px;background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:12px;
+    display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:#0a0e1a;font-weight:900;letter-spacing:.02em}
+  .brand-name{font-size:1.15rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1}
+  .brand-sub{font-size:.8rem;color:var(--mut);margin-top:2px}
+  header .meta-pills{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  header .mpill{background:var(--bg);border:1px solid var(--line);padding:8px 14px;border-radius:999px;
+    font-size:.82rem;color:var(--mut);display:flex;align-items:center;gap:7px}
+  header .mpill strong{color:var(--ink);font-weight:700}
+  header .mpill button{background:none;border:none;color:var(--acc);cursor:pointer;font-size:.78rem;font-weight:700;font-family:inherit}
+  nav{display:flex;gap:6px;flex-wrap:wrap;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);
+    position:sticky;top:75px;z-index:19}
+  nav button{background:transparent;border:1px solid transparent;color:var(--mut);padding:8px 15px;border-radius:10px;
+    cursor:pointer;font-size:13px;font-weight:600;font-family:inherit}
+  nav button.active{background:var(--acc);color:#0a0e1a}
+  nav button:hover:not(.active){background:var(--panel2);color:var(--ink);border-color:var(--line)}
+  main{padding:24px;max-width:1320px;margin:0 auto}
+  .view{display:none}.view.active{display:block}
+  h2{font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;margin:0 0 16px}
+  h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:var(--acc);margin:18px 0 8px;font-weight:700}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+  .row{display:flex;gap:14px;flex-wrap:wrap}.row>*{flex:1;min-width:150px}
+  label{display:block;font-size:.82rem;color:var(--mut);margin:0 0 6px;font-weight:600}
+  input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);
+    border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
+  textarea{resize:vertical;min-height:54px}
+  button.btn{display:inline-flex;align-items:center;gap:8px;background:var(--acc);color:#0a0e1a;border:none;border-radius:10px;
+    padding:11px 18px;font-weight:700;cursor:pointer;font-size:14px;font-family:inherit;transition:transform .1s,background .2s}
+  button.btn:hover{background:var(--acc2)}button.btn:active{transform:translateY(1px)}
+  button.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+  button.ghost:hover{background:var(--panel2);border-color:var(--acc)}
+  button.sm{padding:6px 11px;font-size:12px;border-radius:8px}
+  button.danger{background:transparent;border:1px solid var(--bad);color:#fca5a5}
+  button.danger:hover{background:rgba(239,68,68,.12)}
+  button.okbtn{background:var(--ok);color:#04240f}button.okbtn:hover{filter:brightness(1.1)}
+  .muted{color:var(--mut)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:8px;border-bottom:1px solid var(--line)}
+  td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:hover td{background:var(--panel2)}
+  .right{text-align:right}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+  .p-Completed,.p-Paid,.p-Available{background:#14432a;color:#86efac}
+  .p-Scheduled,.p-Open,.p-Planned{background:#1e3a5f;color:#93c5fd}
+  .p-InProgress,.p-Partial,.p-Dispatched{background:#4a3a12;color:#fcd34d}
+  .p-Cancelled,.p-Void{background:var(--line);color:var(--mut)}
+  .p-Unpaid{background:#374151;color:#d1d5db}
+  .p-Overdue,.p-Deployed{background:#4c1d24;color:#fca5a5}
+  .p-Maintenance{background:#3a2a4a;color:#d8b4fe}
+  .sv{display:inline-block;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700}
+  .sv-Lorry{background:#13344a;color:#7dd3fc}.sv-Mover{background:#143a2a;color:#86efac}.sv-Rorobin{background:#4a3413;color:#fcd34d}
+  .tag{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:11px;color:var(--mut)}
+  .alert{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:9px;margin-bottom:6px;font-size:13px;cursor:pointer}
+  .alert.expired{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4)}
+  .alert.expiring{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4)}
+  .stat{flex:1;min-width:130px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px;transition:border-color .2s}
+  .stat:hover{border-color:var(--acc)}
+  .stat .n{font-size:1.6rem;font-weight:800;color:var(--acc)}
+  .stat .n.bad{color:var(--bad)}.stat .n.ok{color:var(--ok)}
+  .stat .l{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .toolbar input,.toolbar select{width:auto;flex:0 0 auto}
+  .hint{font-size:12px;color:var(--mut);margin-top:3px}
+  .bins{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+  .bin{display:grid;grid-template-rows:auto auto 1fr;gap:7px;min-height:116px;border:1px solid var(--line);border-radius:10px;padding:14px;cursor:pointer;background:var(--panel2);position:relative;transition:.15s}
+  .bin:hover{border-color:var(--acc)}
+  .bin.dep,.bin.avail,.bin.maint{border-left:1px solid var(--line)}
+  .bin.over{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad) inset}
+  .bin-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .bin .id{font-weight:800;font-size:15px}
+  .bin .meta{font-size:11px;color:var(--mut)}
+  .bin .context{align-self:end;font-size:12px;line-height:1.35;color:var(--mut)}
+  .btag{flex:0 0 auto;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;position:static;letter-spacing:.02em}
+  .btag.avail{background:var(--ok-soft);color:var(--ok)}.btag.dep{background:var(--bad-soft);color:var(--bad)}.btag.maint{background:var(--warn-soft);color:var(--warn)}
+  .photos{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .photos a img,.thumb img{height:74px;border-radius:6px;border:1px solid var(--line);object-fit:cover}
+  .thumb{display:inline-block;text-align:center}
+  .kv{width:100%}.kv td{padding:6px 8px;border-bottom:1px solid var(--line)}.kv td.k{color:var(--mut);width:180px}
+  .stage{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--panel2)}
+  .stage.req{border-color:rgba(245,158,11,.5)}
+  .stage-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .stage-h b{font-size:13px}
+  .miss{color:#fca5a5;font-size:11px;font-weight:700}
+  .done{color:#86efac;font-size:11px;font-weight:700}
+  dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);padding:0;max-width:900px;width:95%;box-shadow:var(--shadow)}
+  dialog::backdrop{background:rgba(0,0,0,.75);backdrop-filter:blur(6px)}
+  .modal-h{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .modal-h h2{margin:0;font-size:1.15rem}
+  .modal-h .x{margin-left:auto;background:none;border:none;color:var(--mut);font-size:22px;cursor:pointer}
+  .modal-b{padding:18px;max-height:76vh;overflow:auto}
+  .modal-f{display:flex;gap:8px;justify-content:flex-end;padding:14px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000;border:1px solid var(--line);
+    padding:11px 18px;border-radius:10px;z-index:100;display:none;max-width:90%}
+  #toast.bad{border-color:var(--bad)}#toast.ok{border-color:var(--ok)}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--mut);border-top-color:var(--acc);border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .dz{border:1.5px dashed var(--line);border-radius:9px;padding:12px;text-align:center;cursor:pointer;background:var(--panel2);transition:.15s}
+  .dz:hover,.dz.over{border-color:var(--acc);background:var(--acc-soft)}
+  .dz-files{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;justify-content:center}
+  .dz-chip{background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:11px}
+  .dz-chip b{color:var(--bad);cursor:pointer;margin-left:4px;font-weight:700}
+  .totbar{display:flex;gap:18px;justify-content:flex-end;align-items:baseline;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+  .totbar .big{font-size:20px;font-weight:800;color:var(--acc)}
+  .svc-block{display:none}
+  /* gates */
+  .gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .gate .card{max-width:430px;width:100%;text-align:center;padding:36px 30px}
+  .gate .brand-logo{margin:0 auto 16px;width:60px;height:60px;font-size:1.4rem}
+  .gate h2{margin:0}
+  .gate .sub{color:var(--mut);font-size:.85rem;margin-top:6px}
+  .gate input{text-align:left;margin-bottom:8px}
+  .gate label{text-align:left}
+  .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:18px;
+    background:#fff;color:#1a1a1a;border:none;border-radius:10px;padding:13px;font-weight:700;font-size:.95rem;cursor:pointer;font-family:inherit}
+  .msg{font-size:.86rem;margin-top:10px;min-height:20px;opacity:0;transition:opacity .2s}
+  .msg.show{opacity:1}.msg.ok{color:var(--ok)}.msg.err{color:#fca5a5}
+
+  /* HG Hub operational tool system */
+  :root{--bg:#fff;--panel:#fff;--panel2:#f8f7f4;--line:#e4ded6;--ink:#171717;--mut:#817970;--acc:#143d4a;--acc2:#0e303b;--acc-soft:#eef6f3;--ok:#15945d;--ok-soft:#edf8f3;--warn:#a66b00;--warn-soft:#fff6e2;--bad:#d84d4f;--bad-soft:#fff1ee;--blue:#2f7fa5;--chip:#f8f7f4;--radius:8px;--shadow:0 12px 30px rgba(23,23,23,.12)}
+  body{font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}#app{padding:26px 28px 0}
+  header{position:static;padding:0 0 20px;margin:0 0 18px;background:transparent;border-bottom:1px solid var(--line);gap:14px}body.embedded header{display:none}.brand-block{gap:9px}.brand-logo{width:24px;height:24px;padding:0;background:transparent;border-radius:0;color:var(--acc);font-size:0}.brand-logo svg{width:20px;height:20px;stroke-width:2.1}.brand-name{display:flex;align-items:center;gap:10px;color:var(--ink);font-size:1.05rem;font-weight:800}.brand-sub{font-size:13px;line-height:17px;color:var(--mut);margin-top:3px}.tool-live{display:inline-flex;align-items:center;height:21px;padding:0 9px;border-radius:999px;background:#edf8f3;color:var(--ok);font-size:.64rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}header .mpill{background:var(--panel);border-color:var(--line);border-radius:999px;color:var(--mut);padding:8px 12px}header .mpill strong{color:var(--acc)}header .mpill button{color:var(--warn)}
+  nav{position:static;top:auto;gap:26px;flex-wrap:nowrap;overflow-x:auto;padding:0;margin:0 0 26px;background:transparent;border-bottom:1px solid var(--line);scrollbar-width:none}nav::-webkit-scrollbar{display:none}nav button{flex:0 0 auto;padding:0 0 12px;border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;color:#716b65;font-size:.78rem;font-weight:800;white-space:nowrap}nav button:hover:not(.active){background:transparent;border-color:transparent;color:var(--acc)}nav button.active{background:transparent;color:var(--acc);border-color:var(--acc)}
+  main{max-width:none;margin:0;padding:0 0 72px}.view>h2{font-size:1.45rem;letter-spacing:-.03em;margin:0 0 16px}.view>h2::after{display:block;margin-top:4px;color:#716b65;font-size:.9rem;font-weight:500;letter-spacing:0}#v-dash>h2::after{content:"Monitor transport demand, shared runs, billing, photos, and asset action."}#v-eng>h2::after{content:"Keep client requests, service jobs, and billing grouped by engagement."}#v-jobs>h2::after{content:"Review every lorry, mover, and Rorobin service job in one register."}#v-trips>h2::after{content:"Plan shared lorry runs and track crew, cost, stops, and savings."}#v-inv>h2::after{content:"Monitor transport invoices, balances, and payment status."}#v-reports>h2::after{content:"Review revenue, utilisation, ESG tipping, and photo compliance."}#v-clients>h2::after{content:"Maintain client details used across transport engagements."}#v-workers>h2::after{content:"Maintain mover and driver pay rates for planning shared runs."}#v-fleet>h2::after{content:"Maintain the transport tool's own selectable lorry register."}#v-rates>h2::after{content:"Maintain service rates used to calculate transport charges."}#v-audit>h2::after{content:"Review recent transport changes, most recent first."}
+  h3{color:var(--ink);font-size:.9rem;text-transform:none;letter-spacing:-.01em;font-weight:800;margin:18px 0 8px}.card{background:var(--panel);border-color:var(--line);border-radius:var(--radius);padding:18px;margin-bottom:12px;box-shadow:none}.card:has(>table){padding:0;overflow-x:auto}.card:has(>h3+table)>h3{margin:0;padding:16px;border-bottom:1px solid var(--line)}.card:has(>.toolbar>h3):has(>table)>.toolbar{padding:16px 16px 12px;margin:0;border-bottom:1px solid var(--line)}
+  .row.tool-snapshot{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;margin:0 0 12px!important;padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}.row.tool-snapshot .stat{min-width:0;min-height:78px;padding:6px 16px;border:0;border-right:1px solid var(--line);border-radius:0;background:transparent}.row.tool-snapshot .stat:last-child{border-right:0}.stat:hover{border-color:var(--line)}.stat .l{min-height:18px;line-height:18px;color:#716b65;font-size:.66rem;font-weight:800;white-space:nowrap}.stat .n{font-size:1.35rem;line-height:36px;color:var(--acc);font-variant-numeric:tabular-nums;white-space:nowrap}
+  label{color:#716b65;font-size:.72rem;font-weight:800;margin:10px 0 5px}input,select,textarea{min-height:42px;background:var(--panel);border-color:#ded8cf;color:var(--ink);border-radius:8px;font-size:.88rem}input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(20,61,74,.08)}select{appearance:none;-webkit-appearance:none;padding-right:42px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23143d4a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:14px}
+  .hub-select{position:relative;width:100%}.hub-select-native{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}.toolbar .hub-select{width:auto;min-width:170px;flex:0 0 auto}
+  button.hub-select-trigger{position:relative;display:flex;align-items:center;width:100%;min-height:42px;padding:10px 42px 10px 12px;background:var(--panel);border:1px solid #ded8cf;border-radius:8px;color:var(--ink);font:inherit;font-size:.88rem;font-weight:500;text-align:left;cursor:pointer}button.hub-select-trigger::after{content:"";position:absolute;right:16px;top:50%;width:7px;height:7px;border-right:1.7px solid var(--acc);border-bottom:1.7px solid var(--acc);transform:translateY(-68%) rotate(45deg)}button.hub-select-trigger:hover{border-color:#cfc8bd}button.hub-select-trigger:focus-visible,.hub-select.open .hub-select-trigger{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(20,61,74,.08)}.hub-select-menu{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:140;display:none;max-height:260px;overflow-y:auto;padding:5px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}.hub-select.open .hub-select-menu{display:block}.hub-select.open-up .hub-select-menu{top:auto;bottom:calc(100% + 4px)}button.hub-select-option{display:block;width:100%;min-height:40px;padding:9px 10px;border:0;border-radius:6px;background:transparent;color:var(--ink);font:inherit;font-size:.86rem;text-align:left;cursor:pointer}button.hub-select-option:hover,button.hub-select-option:focus-visible,button.hub-select-option.selected{outline:none;background:var(--panel2);color:var(--acc)}
+  button.btn,button.ghost,button.danger,button.okbtn{border-radius:8px;padding:9px 12px;font-size:.82rem;font-weight:700}button.btn{background:var(--acc);color:#fff}button.btn:hover{background:var(--acc2)}button.ghost{background:var(--panel);color:var(--acc);border-color:var(--line)}button.ghost:hover{background:var(--panel2);border-color:#cfc8bd}button.danger{background:var(--panel);color:var(--bad);border-color:#f1c8c5}button.okbtn{background:var(--ok);color:#fff}
+  .toolbar{gap:8px;margin-bottom:14px}.toolbar input{min-width:260px;flex:1 1 320px}.toolbar .btn,.toolbar .ghost{flex:0 0 auto}table{min-width:760px;font-size:.84rem}th{padding:11px 14px;background:var(--panel2);color:#716b65;font-size:.68rem;font-weight:800}td{padding:11px 14px;border-bottom-color:var(--line)}tbody tr:last-child td{border-bottom:0}tr:hover td{background:var(--panel2)}
+  .empty-state{display:flex;align-items:center;justify-content:center;gap:12px;padding:28px 20px;color:var(--mut);text-align:left}.empty-state svg{width:22px;height:22px;color:var(--ok)}.empty-state strong{display:block;color:var(--ink);font-size:.88rem}.empty-state span{display:block;margin-top:2px;font-size:.8rem}.alert{border:0!important;border-radius:0;margin:0;padding:10px 0;border-bottom:1px solid var(--line)!important}.alert:last-child{border-bottom:0!important}.alert.expired,.alert.expiring{background:transparent}.bin{background:var(--panel);border-color:var(--line);border-radius:var(--radius);box-shadow:none}.bin.over{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad) inset}.stage{background:var(--panel2);border-color:var(--line);border-radius:var(--radius)}
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px}.section-head h2{margin:0 0 4px;font-size:1.45rem;letter-spacing:-.03em}.section-head .sub{color:#716b65;font-size:.9rem}.availability-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap}.availability-filters{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.availability-filter{display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:7px 10px;background:var(--panel);border:1px solid var(--line);border-radius:999px;color:var(--mut);cursor:pointer;font:inherit;font-size:.76rem;font-weight:700}.availability-filter:hover{border-color:#cfc8bd;color:var(--acc)}.availability-filter.active{background:var(--acc-soft);border-color:transparent;color:var(--acc)}.availability-filter span{min-width:19px;padding:1px 6px;background:var(--panel2);border-radius:999px;color:inherit;font-size:.66rem;text-align:center}.availability-help{color:var(--mut);font-size:.78rem}.availability-board{border:0;background:transparent}.availability-empty{grid-column:1/-1;padding:28px 20px;color:var(--mut);text-align:center}.availability-empty strong{display:block;margin-bottom:3px;color:var(--ink)}
+  .ui-icon{display:inline-block;width:1em;height:1em;vertical-align:-.14em;stroke-width:2}.brand-logo .ui-icon{width:20px;height:20px}.mpill>.ui-icon{margin-right:6px}.btn .ui-icon,.ghost .ui-icon,.danger .ui-icon,.okbtn .ui-icon,.hint .ui-icon,.svc-block h3 .ui-icon,.card h3 .ui-icon{margin-right:6px}.card-error{display:flex;align-items:center;gap:9px;padding:16px;color:var(--bad)}
+  dialog{background:var(--panel);color:var(--ink);border-color:var(--line);border-radius:12px}dialog::backdrop{background:rgba(12,18,20,.58);backdrop-filter:blur(2px)}.modal-h{padding:18px 20px}.modal-b{padding:20px}.modal-f{position:sticky;bottom:0;background:var(--panel);padding:14px 20px}
+  html[data-theme="dark"]{--bg:#1b2527;--panel:#202b2d;--panel2:#253133;--line:#394749;--ink:#f3f6f4;--mut:#b3bebb;--acc:#73aeba;--acc2:#8bc0c9;--acc-soft:#293d40;--ok:#65c99a;--ok-soft:#1d352b;--warn:#e2ae5b;--warn-soft:#382f1e;--bad:#ef8587;--bad-soft:#3a2528;--blue:#79b2ce;--chip:#253133;--shadow:0 14px 34px rgba(0,0,0,.38)}html[data-theme="dark"] header .mpill,html[data-theme="dark"] .card,html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea,html[data-theme="dark"] button.hub-select-trigger,html[data-theme="dark"] .hub-select-menu,html[data-theme="dark"] dialog,html[data-theme="dark"] .bin{background:var(--panel);border-color:var(--line);color:var(--ink)}html[data-theme="dark"] .bin.over{border-color:var(--bad)}html[data-theme="dark"] select{background-image:none}html[data-theme="dark"] .brand-sub,html[data-theme="dark"] nav button,html[data-theme="dark"] label,html[data-theme="dark"] .stat .l,html[data-theme="dark"] th{color:var(--mut)}html[data-theme="dark"] button.ghost{background:var(--panel);color:#c5dde1}html[data-theme="dark"] button.danger{background:var(--panel)}html[data-theme="dark"] button.hub-select-option:hover,html[data-theme="dark"] button.hub-select-option.selected{background:var(--acc-soft);color:#c8e4e8}
+  @media(max-width:760px){#app{padding:20px 16px 84px}header{flex-wrap:nowrap}.brand-sub{display:none}.meta-pills #dateNow{display:none}nav{gap:24px;margin-left:-16px;margin-right:-16px;padding:0 16px}.view>h2{font-size:1.35rem}.row.tool-snapshot{grid-template-columns:repeat(2,minmax(0,1fr));padding:0}.row.tool-snapshot .stat{padding:16px 18px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.row.tool-snapshot .stat:nth-child(2n){border-right:0}.row.tool-snapshot .stat:last-child{border-bottom:0}.toolbar{align-items:stretch}.toolbar input,.toolbar .hub-select,.toolbar button{width:100%;min-width:0;flex:1 1 100%}table{min-width:760px}.card:has(>table){overflow-x:auto}.modal-f>*{flex:1 1 auto;min-height:44px}.hub-select-menu{max-height:min(260px,45vh)}button.hub-select-option{min-height:44px}.section-head{align-items:flex-start;flex-direction:column}.section-head button{width:100%}.availability-toolbar{align-items:flex-start;flex-direction:column}.availability-filters,.availability-help{width:100%}.bins{grid-template-columns:1fr 1fr}.bin{min-height:124px;padding:12px}}
+  @media print{nav,header .meta-pills,.noprint{display:none}}
+</style>
+</head>
+<body>
+<script>if(window.self!==window.top)document.body.classList.add('embedded');</script>
+<style>
+  /* Override transport-specific ::after subtitles that ship in the shared style block
+     for the two view IDs Team Command reuses (v-jobs, v-clients). */
+  #v-jobs>h2::after{content:"Every lorry, scaffold, rorobin, storage, hoarding and mover job in one shared register."}
+  #v-clients>h2::after{content:"Maintain client details shared across every Team Command job."}
+</style>
+
+<!-- GATE 1 · LOGIN -->
+<div class="gate" id="gateLogin" style="display:none;">
+  <div class="card">
+    <div class="brand-logo">HG</div>
+    <h2>Team Command</h2>
+    <div class="sub">Sign in with your HG email and password.</div>
+    <input id="loginEmail" type="email" placeholder="you@hggroup.com.my" autocomplete="username" style="width:100%;margin-bottom:8px;">
+      <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;" onkeydown="if(event.key==='Enter'){signIn();}">
+      <button class="btn" style="width:100%;margin-top:14px;justify-content:center;" onclick="signIn()">Sign in</button>
+    <div id="loginMsg" class="msg"></div>
+  </div>
+</div>
+
+<!-- GATE 2 · NOT ON ALLOWLIST -->
+<div class="gate" id="gateDenied" style="display:none;">
+  <div class="card">
+    <div class="brand-logo" aria-hidden="true"><i class="ui-icon" data-lucide="lock-keyhole"></i></div>
+    <h2>Not authorised</h2>
+    <div class="sub"><span id="deniedEmail"></span> is not on the access list.<br>
+      Ask your admin to add you under <b>Settings &rarr; Team access</b>.</div>
+    <button class="ghost" style="width:100%;margin-top:10px;" onclick="signOut()">Use a different account</button>
+  </div>
+</div>
+
+<!-- THE APP -->
+<div id="app" style="display:none;">
+<header>
+  <div class="brand-block">
+    <div class="brand-logo" aria-hidden="true"><i data-lucide="clipboard-list"></i></div>
+    <div>
+      <div class="brand-name">Team Command <span class="tool-live">Live</span></div>
+      <div class="brand-sub">Shared register for jobs, clients, sites, team, lorries &amp; expenses.</div>
+    </div>
+  </div>
+  <div class="meta-pills">
+    <div class="mpill" id="dateNow">&mdash;</div>
+    <div class="mpill"><i class="ui-icon" data-lucide="user-round" aria-hidden="true"></i><strong id="who">&hellip;</strong><button onclick="signOut()">Sign out</button></div>
+  </div>
+</header>
+<nav id="nav"></nav>
+<main>
+  <div class="view active" id="v-jobs"></div>
+  <div class="view" id="v-clients"></div>
+  <div class="view" id="v-sites"></div>
+  <div class="view" id="v-team"></div>
+  <div class="view" id="v-lorries"></div>
+  <div class="view" id="v-expenses"></div>
+  <div class="view" id="v-records"></div>
+  <div class="view" id="v-sync"></div>
+</main>
+</div>
+
+<dialog id="modal">
+  <div class="modal-h"><h2 id="m-title">&hellip;</h2><button class="x" aria-label="Close" onclick="closeModal()"><i class="ui-icon" data-lucide="x"></i></button></div>
+  <div class="modal-b" id="m-body"></div>
+  <div class="modal-f" id="m-foot"></div>
+</dialog>
+<div id="toast"></div>
+
+<script>
+/* ===================== AUTH (copied from transport-supabase.html) ===================== */
+var sb=null, SESSION=null, IS_ADMIN=false;
+
+function gel(id){return document.getElementById(id);}
+function showMsg(id,t,ok){var m=gel(id);m.textContent=t;m.className='msg show '+(ok?'ok':'err');setTimeout(function(){m.classList.remove('show');},4500);}
+
+async function start(){
+  /* connect gate removed — same-origin hg-api */
+  sb=window.hg.createClient();
+  var s=await sb.auth.getSession();SESSION=s.data.session;
+  sb.auth.onAuthStateChange(function(_e,session){if(!!session!==!!SESSION){SESSION=session;route();}});
+  route();
+}
+async function route(){
+  ['gateLogin','gateDenied'].forEach(function(g){gel(g).style.display='none';});
+  gel('app').style.display='none';
+  if(!SESSION){gel('gateLogin').style.display='flex';return;}
+  var email=(SESSION.user.email||'').toLowerCase();
+  var r={ data:{ email:email, is_admin:(SESSION.user.role==='admin') }, error:null };
+  if(r.error){showMsg('loginMsg',r.error.message,false);gel('gateLogin').style.display='flex';return;}
+  if(!r.data){gel('deniedEmail').textContent=email;gel('gateDenied').style.display='flex';return;}
+  IS_ADMIN=!!r.data.is_admin;
+  gel('app').style.display='block';
+  DB.currentUser=email;
+  gel('who').textContent=email;
+  boot();
+}
+function signIn(){
+  var email=((document.getElementById('loginEmail')||{}).value||'').trim();
+  var pass=(document.getElementById('loginPass')||{}).value||'';
+  if(!email||!pass){ showMsg('loginMsg','Enter email and password.', false); return; }
+  sb.auth.signInWithPassword({email:email,password:pass}).then(function(r){
+    if(r.error){ showMsg('loginMsg', r.error.message, false); return; }
+    SESSION = r.data.session; route();
+  });
+}
+function signOut(){sb.auth.signOut().then(function(){location.reload();});}
+function ico(name){return '<i class="ui-icon" data-lucide="'+name+'" aria-hidden="true"></i>';}
+
+/* ===================== GENERIC UI HELPERS (copied from transport-supabase.html) ===================== */
+function toast(msg,kind){var t=gel('toast');t.textContent=msg;t.className=kind||'';t.style.display='block';clearTimeout(t._t);t._t=setTimeout(function(){t.style.display='none';},kind==='bad'?5500:2600);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function rm(n){return 'RM '+(Number(n)||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function field(lbl,inner){return '<div><label>'+lbl+'</label>'+inner+'</div>';}
+function stat(n,l,cls){return '<div class="stat"><div class="n '+(cls||'')+'">'+n+'</div><div class="l">'+l+'</div></div>';}
+function val(id){var e=gel(id);return e?String(e.value).trim():'';}
+function chk(id){var e=gel(id);return e?e.checked:false;}
+function byId(arr,id){return arr.filter(function(x){return x.id===id;})[0];}
+function busy(btn){if(btn){btn.disabled=true;btn.dataset.html=btn.innerHTML;btn.innerHTML='<span class="spin"></span> working&hellip;';}}
+function unbusy(btn){if(btn&&btn.dataset.html){btn.disabled=false;btn.innerHTML=btn.dataset.html;}}
+function openModal(t,b,f){gel('m-title').innerHTML=t;gel('m-body').innerHTML=b;gel('m-foot').innerHTML=f||'';gel('modal').showModal();initHubSelects(gel('modal'));syncHubSelects(gel('modal'));if(window.lucide)window.lucide.createIcons();}
+function closeModal(){gel('modal').close();}
+
+/* Shared HG Hub dropdown treatment (copied from transport-supabase.html). Native selects remain the source of truth. */
+function closeHubSelects(except){document.querySelectorAll('.hub-select.open').forEach(function(wrap){if(wrap!==except){wrap.classList.remove('open','open-up');var trigger=wrap.querySelector('.hub-select-trigger');if(trigger)trigger.setAttribute('aria-expanded','false');}});}
+function syncHubSelects(root){(root||document).querySelectorAll('select[data-hub-select]').forEach(function(select){if(select._hubSelectSync)select._hubSelectSync();});}
+function initHubSelects(root){
+  (root||document).querySelectorAll('select:not([data-hub-select]):not([multiple])').forEach(function(select){
+    var wrap=document.createElement('div');wrap.className='hub-select';select.parentNode.insertBefore(wrap,select);wrap.appendChild(select);select.dataset.hubSelect='true';select.classList.add('hub-select-native');select.tabIndex=-1;select.setAttribute('aria-hidden','true');
+    var trigger=document.createElement('button');trigger.type='button';trigger.className='hub-select-trigger';trigger.setAttribute('aria-haspopup','listbox');trigger.setAttribute('aria-expanded','false');var menu=document.createElement('div');menu.className='hub-select-menu';menu.setAttribute('role','listbox');wrap.appendChild(trigger);wrap.appendChild(menu);
+    function sync(){var selected=select.options[select.selectedIndex];trigger.textContent=selected?selected.textContent:'Select';trigger.disabled=select.disabled;menu.innerHTML='';Array.prototype.forEach.call(select.options,function(option){var item=document.createElement('button');item.type='button';item.className='hub-select-option'+(option.selected?' selected':'');item.textContent=option.textContent;item.disabled=option.disabled;item.setAttribute('role','option');item.setAttribute('aria-selected',option.selected?'true':'false');item.addEventListener('click',function(event){event.stopPropagation();select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));closeHubSelects();});menu.appendChild(item);});}
+    select._hubSelectSync=sync;select.addEventListener('change',sync);new MutationObserver(sync).observe(select,{childList:true,subtree:true,attributes:true});trigger.addEventListener('click',function(event){event.stopPropagation();var open=!wrap.classList.contains('open');closeHubSelects(wrap);sync();if(open){var rect=trigger.getBoundingClientRect(),estimated=Math.min(260,menu.children.length*44+10);wrap.classList.toggle('open-up',window.innerHeight-rect.bottom-16<estimated&&rect.top>window.innerHeight-rect.bottom);}else wrap.classList.remove('open-up');wrap.classList.toggle('open',open);trigger.setAttribute('aria-expanded',open?'true':'false');});sync();
+  });
+}
+document.addEventListener('pointerdown',function(event){if(!event.target.closest('.hub-select'))closeHubSelects();},true);
+document.addEventListener('keydown',function(event){if(event.key==='Escape')closeHubSelects();});
+document.addEventListener('DOMContentLoaded',function(){initHubSelects(document);if(window.lucide)window.lucide.createIcons();new MutationObserver(function(records){records.forEach(function(record){record.addedNodes.forEach(function(node){if(node.nodeType===1)initHubSelects(node);});});}).observe(document.body,{childList:true,subtree:true});});
+
+/* ===================== STATE / CONSTANTS ===================== */
+var DB={currentUser:'',jobs:[],clients:[],sites:[],team:[],lorries:[],expenses:[],syncLog:[],settings:{},records:{}};
+var TABS=[['jobs','Jobs'],['clients','Clients'],['sites','Sites'],['team','Team'],['lorries','Lorries'],['expenses','Expenses'],['records','Custom Records'],['sync','Sync Log']];
+var SERVICES={scaffold:{label:'Scaffold',icon:'🏗️',color:'amber'},rorobin:{label:'Rorobin',icon:'♻️',color:'green'},storage:{label:'Storage',icon:'📦',color:'blue'},hoarding:{label:'Metal Hoarding',icon:'🧱',color:'purple'},lorry:{label:'Lorry Transport',icon:'🚛',color:'teal'},mover:{label:'Mover Service',icon:'💪',color:'pink'}};
+var JOB_STATUSES=['quoted','active','completed','invoiced','paid'];
+var STATUS_PILL={quoted:'Scheduled',active:'InProgress',completed:'Completed',invoiced:'Planned',paid:'Paid'};
+var CLIENT_TYPES=['External','Internal (HGMR Team)','Hoarding'];
+var CATEGORIES=['in-house','outsource'];
+var JSON_TABLES=[['tc_scaffold_materials','Scaffold Materials','SM'],['tc_green_tag_logs','Green Tag Logs','GT'],['tc_rorobin_events','Rorobin Events','RE'],['tc_storage_reminders','Storage Reminders','SR'],['tc_hoarding_quotes','Hoarding Quotes','HQ']];
+var recCurrent='tc_scaffold_materials';
+var jobFilter={q:'',service:'',status:''};
+var clientFilter='';
+
+/* ===================== HELPERS ===================== */
+function nowStr(){var d=new Date();function p(n){return('0'+n).slice(-2);}return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());}
+function today(){return new Date().toISOString().slice(0,10);}
+function fmtDate(s){if(!s)return'—';return String(s).slice(0,10);}
+/* hg-api returns the _json column already deserialized to an object; older/raw rows
+   may still be a JSON string. Handle both so nested serviceData/payments survive edits. */
+function pj(row){if(!row||row._json==null)return {};var j=row._json;if(typeof j==='object')return j;try{return JSON.parse(j)||{};}catch(e){return {};}}
+function newId(p){return p+Date.now()+Math.floor(Math.random()*1000);}
+function pill(s){return '<span class="pill p-'+String(s).replace(/[^A-Za-z]/g,'')+'">'+esc(s)+'</span>';}
+function opts(list,sel){return list.map(function(o){return '<option'+(String(o)===String(sel)?' selected':'')+'>'+esc(o)+'</option>';}).join('');}
+function optsKV(list,sel){return list.map(function(o){return '<option value="'+esc(o[0])+'"'+(String(o[0])===String(sel)?' selected':'')+'>'+esc(o[1])+'</option>';}).join('');}
+function svcLabel(k){return SERVICES[k]?SERVICES[k].label:(k||'—');}
+function xlsx(rows,name){if(!window.XLSX){toast('XLSX library not loaded','bad');return;}if(!rows.length){toast('Nothing to export','bad');return;}var ws=XLSX.utils.json_to_sheet(rows);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,name.slice(0,31));XLSX.writeFile(wb,'team-command-'+name.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+today()+'.xlsx');}
+function toolbar(html){return '<div class="toolbar">'+html+'</div>';}
+
+/* ===================== BOOTSTRAP ===================== */
+function boot(){
+  buildNav();
+  try{
+    gel('dateNow').textContent=new Date().toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'});
+    loadBootstrap().then(renderAll).catch(function(e){gel('v-jobs').innerHTML='<div class="card card-error">'+ico('triangle-alert')+'<span>'+esc(e.message||e)+'</span></div>';if(window.lucide)window.lucide.createIcons();});
+  }catch(e){gel('v-jobs').innerHTML='<div class="card card-error">'+ico('triangle-alert')+'<span>'+esc(e.message||e)+'</span></div>';}
+}
+function buildNav(){var n=gel('nav');n.innerHTML=TABS.map(function(t,i){return '<button data-t="'+t[0]+'"'+(i===0?' class="active"':'')+'>'+t[1]+'</button>';}).join('');
+  n.querySelectorAll('button').forEach(function(b){b.onclick=function(){show(b.dataset.t);};});}
+function show(t){document.querySelectorAll('nav button').forEach(function(b){b.classList.toggle('active',b.dataset.t===t);});
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});gel('v-'+t).classList.add('active');window.scrollTo(0,0);}
+
+async function loadBootstrap(){
+  var res=await Promise.all([
+    sb.from('tc_jobs').select('*'),
+    sb.from('tc_clients').select('*'),
+    sb.from('tc_sites').select('*'),
+    sb.from('tc_team').select('*'),
+    sb.from('tc_lorries').select('*'),
+    sb.from('tc_expenses').select('*'),
+    sb.from('tc_sync_log').select('*'),
+    sb.from('tc_settings').select('*'),
+    sb.from('tc_scaffold_materials').select('*'),
+    sb.from('tc_green_tag_logs').select('*'),
+    sb.from('tc_rorobin_events').select('*'),
+    sb.from('tc_storage_reminders').select('*'),
+    sb.from('tc_hoarding_quotes').select('*')
+  ]);
+  res.forEach(function(r){if(r.error)throw new Error(r.error.message);});
+  DB.jobs=(res[0].data||[]).slice().sort(function(a,b){return (Number(b.no)||0)-(Number(a.no)||0);});
+  DB.clients=(res[1].data||[]).slice().sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''));});
+  DB.sites=res[2].data||[];
+  DB.team=res[3].data||[];
+  DB.lorries=res[4].data||[];
+  DB.expenses=(res[5].data||[]).slice().sort(function(a,b){return String(b.date||'').localeCompare(String(a.date||''));});
+  DB.syncLog=(res[6].data||[]).slice().sort(function(a,b){return String(b.timestamp||'').localeCompare(String(a.timestamp||''));});
+  DB.settings={};var sr=(res[7].data||[]).filter(function(x){return x.key==='_settings';})[0];if(sr){try{DB.settings=JSON.parse(sr.value);}catch(e){}}
+  DB.records={tc_scaffold_materials:res[8].data||[],tc_green_tag_logs:res[9].data||[],tc_rorobin_events:res[10].data||[],tc_storage_reminders:res[11].data||[],tc_hoarding_quotes:res[12].data||[]};
+}
+async function reload(){await loadBootstrap();renderAll();}
+function renderAll(){renderJobs();renderClients();renderSites();renderTeam();renderLorries();renderExpenses();renderRecords();renderSync();initHubSelects(document);syncHubSelects(document);if(window.lucide)window.lucide.createIcons();}
+
+/* Generic write: keep promoted columns + refresh _json with full record; stamp user.
+   Only tc_jobs actually has created_by/updated_by/updated_at columns — for every
+   other table the acting user is preserved inside _json so nothing is lost, but we
+   must NOT send those columns or the insert/update 400s (Unknown column). */
+function saveRow(table,id,promoted,fullRecord,cb){
+  var HAS_AUDIT=(table==='tc_jobs');
+  fullRecord.updatedBy=DB.currentUser;
+  if(!id&&!fullRecord.createdBy)fullRecord.createdBy=DB.currentUser;
+  var row={};Object.keys(promoted).forEach(function(k){row[k]=promoted[k];});
+  row._json=JSON.stringify(fullRecord);
+  if(HAS_AUDIT){row.updated_by=DB.currentUser;row.updated_at=nowStr();}
+  var q;
+  if(id){q=sb.from(table).update(row).eq('id',id);}
+  else{if(HAS_AUDIT){row.created_by=DB.currentUser;row.created_at=nowStr();}q=sb.from(table).insert(row);}
+  q.then(function(r){cb(r);});
+}
+function delRow(table,id,cb){sb.from(table).delete().eq('id',id).then(cb);}
+
+/* ===================== JOBS ===================== */
+function filteredJobs(){
+  return DB.jobs.filter(function(j){
+    if(jobFilter.service&&j.service!==jobFilter.service)return false;
+    if(jobFilter.status&&j.status!==jobFilter.status)return false;
+    if(jobFilter.q){var s=(String(j.no||'')+' '+(j.client_name||'')+' '+(j.invoice_no||'')+' '+svcLabel(j.service)).toLowerCase();if(s.indexOf(jobFilter.q.toLowerCase())<0)return false;}
+    return true;
+  });
+}
+function renderJobs(){
+  var list=filteredJobs();
+  var tb=list.map(function(j){
+    var s=SERVICES[j.service]||{icon:'',label:j.service};
+    var jn=Number(j.no);jn=isNaN(jn)?(j.no||''):(jn%1===0?jn:jn);
+    return '<tr>'+
+      '<td><strong>'+esc(jn)+'</strong></td>'+
+      '<td><span class="sv">'+esc((s.icon||'')+' '+s.label)+'</span></td>'+
+      '<td><strong>'+esc(j.client_name||'—')+'</strong>'+(Number(j.b2b_exempt)?' <span class="tag">B2B</span>':'')+'</td>'+
+      '<td class="right">'+rm(j.value)+'</td>'+
+      '<td>'+pill(STATUS_PILL[j.status]||j.status||'—')+'</td>'+
+      '<td>'+esc(j.invoice_no||'—')+'<div class="muted" style="font-size:11px">'+fmtDate(j.invoice_date)+'</div></td>'+
+      '<td class="muted" style="font-size:11px">'+esc(j.created_by||'—')+'</td>'+
+      '<td class="right"><button class="ghost sm" onclick="jobForm(\''+j.id+'\')">Edit</button> <button class="danger sm" onclick="jobDelete(\''+j.id+'\')">Del</button></td>'+
+    '</tr>';
+  }).join('');
+  var total=list.reduce(function(a,j){return a+(Number(j.value)||0);},0);
+  gel('v-jobs').innerHTML='<h2>Jobs</h2>'+
+    toolbar('<input id="jf-q" placeholder="Search no, client, invoice&hellip;" value="'+esc(jobFilter.q)+'" oninput="jobFilter.q=this.value;renderJobs()">'+
+      '<select id="jf-svc" onchange="jobFilter.service=this.value;renderJobs()"><option value="">All services</option>'+optsKV(Object.keys(SERVICES).map(function(k){return[k,SERVICES[k].label];}),jobFilter.service)+'</select>'+
+      '<select id="jf-st" onchange="jobFilter.status=this.value;renderJobs()"><option value="">All statuses</option>'+opts(JOB_STATUSES,jobFilter.status)+'</select>'+
+      '<button class="btn" onclick="jobForm()">'+ico('plus')+'New Job</button>'+
+      '<button class="ghost" onclick="exportJobs()">'+ico('sheet')+'Excel</button>'+
+      '<button class="ghost" onclick="window.print()">'+ico('printer')+'Print</button>')+
+    '<div class="card">'+(list.length?'<table><thead><tr><th>No</th><th>Service</th><th>Client</th><th class="right">Value</th><th>Status</th><th>Invoice</th><th>Created by</th><th></th></tr></thead><tbody>'+tb+'</tbody></table>':'<div class="empty-state"><div><strong>No jobs</strong><span>Add the first job with New Job.</span></div></div>')+'</div>'+
+    (list.length?'<div class="totbar"><span class="muted">'+list.length+' jobs</span><span>Total value</span><span class="big">'+rm(total)+'</span></div>':'');
+}
+function nextJobNo(){var mx=0;DB.jobs.forEach(function(j){var n=Number(j.no)||0;if(n>mx)mx=n;});var st=Number((DB.settings||{}).nextJobNo)||0;return Math.max(mx+1,st);}
+function jobForm(id){
+  var j=id?byId(DB.jobs,id):null;var ex=j?pj(j):{};var d=j||{status:'quoted',service:'scaffold',client_type:'External'};
+  var clientOpts='<option value="">— pick client (auto-fills below) —</option>'+DB.clients.map(function(c){return '<option value="'+esc(c.name)+'">'+esc(c.name)+'</option>';}).join('');
+  var siteId=ex.siteId||'';
+  var siteOpts='<option value="">— none —</option>'+DB.sites.map(function(s){return '<option value="'+esc(s.id)+'"'+(s.id===siteId?' selected':'')+'>'+esc(s.name)+'</option>';}).join('');
+  openModal(id?'Edit Job':'New Job',
+    '<div class="row">'+field('Job No','<input id="j-no" type="number" value="'+esc(j?j.no:nextJobNo())+'">')+
+      field('Service','<select id="j-service">'+optsKV(Object.keys(SERVICES).map(function(k){return[k,SERVICES[k].label];}),d.service)+'</select>')+
+      field('Status','<select id="j-status">'+opts(JOB_STATUSES,d.status)+'</select>')+'</div>'+
+    '<div class="row">'+field('Pick existing client','<select id="j-clientpick" onchange="jobPickClient()">'+clientOpts+'</select>')+
+      field('Client name','<input id="j-client" value="'+esc(d.client_name||'')+'">')+'</div>'+
+    '<div class="row">'+field('Client type','<select id="j-ctype">'+opts(CLIENT_TYPES,d.client_type||'External')+'</select>')+
+      field('Linked site','<select id="j-site">'+siteOpts+'</select>')+'</div>'+
+    '<div class="row">'+field('Value (RM)','<input id="j-value" type="number" step="0.01" value="'+esc(Number(d.value)||0)+'">')+
+      field('Invoice No','<input id="j-invno" value="'+esc(d.invoice_no||'')+'">')+
+      field('Invoice date','<input id="j-invdate" type="date" value="'+esc((d.invoice_date||'').slice(0,10))+'">')+'</div>'+
+    '<div style="margin-top:10px"><label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="j-b2b" style="width:auto" '+(Number(d.b2b_exempt)?'checked':'')+'> B2B SST exempt (per Malaysia Kastam)</label></div>'+
+    (Object.keys(ex).filter(function(k){return k==='serviceData'||k==='payments';}).length?'<div class="hint" style="margin-top:10px">'+ico('info')+' Original service data &amp; payment history are preserved in this record.</div>':''),
+    '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="jobSave(\''+(id||'')+'\',this)">Save job</button>');
+}
+function jobPickClient(){
+  var name=val('j-clientpick');if(!name)return;var c=DB.clients.filter(function(x){return x.name===name;})[0];if(!c)return;
+  gel('j-client').value=c.name;
+  var ct=gel('j-ctype');ct.value=c.type||'External';ct.dispatchEvent(new Event('change',{bubbles:true}));
+  gel('j-b2b').checked=!!Number(c.b2b_exempt);
+}
+function jobSave(id,btn){
+  var name=val('j-client');if(!name){toast('Client name required','bad');return;}
+  var j=id?byId(DB.jobs,id):null;var ex=j?pj(j):{};
+  var siteId=val('j-site');var site=DB.sites.filter(function(s){return s.id===siteId;})[0];
+  var no=Number(val('j-no'))||nextJobNo();
+  var service=val('j-service'),status=val('j-status'),ctype=val('j-ctype');
+  var invno=val('j-invno'),invdate=val('j-invdate');var value=Number(val('j-value'))||0;var b2b=chk('j-b2b')?1:0;
+  var full=Object.assign({},ex,{id:id||newId('J'),no:no,service:service,invoiceNo:invno,invoiceDate:invdate,status:status,clientName:name,value:value,b2bExempt:!!b2b,clientType:ctype,siteId:siteId||'',siteName:site?site.name:''});
+  var promoted={id:full.id,no:no,service:service,invoice_no:invno,invoice_date:invdate||null,status:status,client_name:name,value:value,b2b_exempt:b2b,client_type:ctype};
+  busy(btn);
+  saveRow('tc_jobs',id,promoted,full,function(r){if(r.error){unbusy(btn);toast(r.error.message,'bad');return;}reload().then(function(){closeModal();toast('Job saved.','ok');});});
+}
+function jobDelete(id){var j=byId(DB.jobs,id);if(!j)return;if(!confirm('Delete job #'+j.no+' for "'+(j.client_name||'')+'"?'))return;delRow('tc_jobs',id,function(r){if(r.error){toast(r.error.message,'bad');return;}reload().then(function(){toast('Job deleted.','ok');});});}
+function exportJobs(){xlsx(filteredJobs().map(function(j){return {No:j.no,Service:svcLabel(j.service),Client:j.client_name,'Client Type':j.client_type,'Value (RM)':Number(j.value)||0,'B2B Exempt':Number(j.b2b_exempt)?'Yes':'No',Status:j.status,'Invoice No':j.invoice_no,'Invoice Date':fmtDate(j.invoice_date),'Created By':j.created_by,'Updated By':j.updated_by};}),'Jobs');}
+
+/* ===================== CLIENTS ===================== */
+function renderClients(){
+  var q=clientFilter.toLowerCase();
+  var list=DB.clients.filter(function(c){return !q||((c.name||'')+' '+(c.contact_name||'')+' '+(c.contact_tel||'')).toLowerCase().indexOf(q)>=0;});
+  var tb=list.map(function(c){
+    var jc=DB.jobs.filter(function(j){return j.client_name===c.name;}).length;
+    return '<tr><td><strong>'+esc(c.name)+'</strong>'+(Number(c.b2b_exempt)?' <span class="tag">B2B</span>':'')+'</td>'+
+      '<td>'+esc(c.type||'—')+'</td><td>'+esc(c.contact_name||'—')+'</td><td>'+esc(c.contact_tel||'—')+'</td>'+
+      '<td>'+esc(c.contact_email||'—')+'</td><td>'+jc+'</td>'+
+      '<td class="right"><button class="ghost sm" onclick="clientForm(\''+c.id+'\')">Edit</button> <button class="danger sm" onclick="clientDelete(\''+c.id+'\')">Del</button></td></tr>';
+  }).join('');
+  gel('v-clients').innerHTML='<h2>Clients</h2>'+
+    toolbar('<input id="cf-q" placeholder="Search name, contact, tel&hellip;" value="'+esc(clientFilter)+'" oninput="clientFilter=this.value;renderClients()">'+
+      '<button class="btn" onclick="clientForm()">'+ico('plus')+'New Client</button>'+
+      '<button class="ghost" onclick="exportClients()">'+ico('sheet')+'Excel</button>'+
+      '<button class="ghost" onclick="window.print()">'+ico('printer')+'Print</button>')+
+    '<div class="card">'+(list.length?'<table><thead><tr><th>Name</th><th>Type</th><th>Contact</th><th>Tel</th><th>Email</th><th>Jobs</th><th></th></tr></thead><tbody>'+tb+'</tbody></table>':'<div class="empty-state"><div><strong>No clients</strong><span>Add one with New Client.</span></div></div>')+'</div>';
+}
+function clientForm(id){
+  var c=id?byId(DB.clients,id):null;var ex=c?pj(c):{};var d=c||{type:'External'};
+  openModal(id?'Edit Client':'New Client',
+    '<div class="row">'+field('Name','<input id="c-name" value="'+esc(d.name||'')+'">')+
+      field('Type','<select id="c-type">'+opts(CLIENT_TYPES,d.type)+'</select>')+'</div>'+
+    '<div class="row">'+field('Contact name','<input id="c-cname" value="'+esc(d.contact_name||'')+'">')+
+      field('Contact tel','<input id="c-ctel" value="'+esc(d.contact_tel||'')+'">')+'</div>'+
+    '<div class="row">'+field('Contact email','<input id="c-cemail" type="email" value="'+esc(d.contact_email||'')+'">')+'</div>'+
+    '<div style="margin:10px 0"><label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="c-b2b" style="width:auto" '+(Number(d.b2b_exempt)?'checked':'')+'> B2B SST exempt (per Malaysia Kastam)</label></div>'+
+    field('Notes','<textarea id="c-notes" rows="2">'+esc(d.notes||'')+'</textarea>'),
+    '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="clientSave(\''+(id||'')+'\',this)">Save client</button>');
+}
+function clientSave(id,btn){
+  var name=val('c-name');if(!name){toast('Name required','bad');return;}
+  var c=id?byId(DB.clients,id):null;var ex=c?pj(c):{};
+  var b2b=chk('c-b2b')?1:0;
+  var full=Object.assign({},ex,{id:id||newId('C'),name:name,type:val('c-type'),contactName:val('c-cname'),contactTel:val('c-ctel'),contactEmail:val('c-cemail'),b2bExempt:!!b2b,notes:val('c-notes')});
+  var promoted={id:full.id,name:name,type:val('c-type'),contact_name:val('c-cname'),contact_tel:val('c-ctel'),contact_email:val('c-cemail'),b2b_exempt:b2b,notes:val('c-notes')};
+  busy(btn);saveRow('tc_clients',id,promoted,full,function(r){if(r.error){unbusy(btn);toast(r.error.message,'bad');return;}reload().then(function(){closeModal();toast('Client saved.','ok');});});
+}
+function clientDelete(id){var c=byId(DB.clients,id);if(!c)return;if(!confirm('Delete client "'+c.name+'"?'))return;delRow('tc_clients',id,function(r){if(r.error){toast(r.error.message,'bad');return;}reload().then(function(){toast('Client deleted.','ok');});});}
+function exportClients(){xlsx(DB.clients.map(function(c){return {Name:c.name,Type:c.type,'Contact Name':c.contact_name,'Contact Tel':c.contact_tel,'Contact Email':c.contact_email,'B2B Exempt':Number(c.b2b_exempt)?'Yes':'No',Notes:c.notes};}),'Clients');}
+
+/* ===================== SITES ===================== */
+function renderSites(){
+  var tb=DB.sites.map(function(s){return '<tr><td><strong>'+esc(s.name||'—')+'</strong></td><td>'+esc(s.address||'—')+'</td>'+
+    '<td class="right"><button class="ghost sm" onclick="siteForm(\''+s.id+'\')">Edit</button> <button class="danger sm" onclick="siteDelete(\''+s.id+'\')">Del</button></td></tr>';}).join('');
+  gel('v-sites').innerHTML='<h2>Sites</h2>'+
+    toolbar('<button class="btn" onclick="siteForm()">'+ico('plus')+'New Site</button><button class="ghost" onclick="exportSites()">'+ico('sheet')+'Excel</button><button class="ghost" onclick="window.print()">'+ico('printer')+'Print</button>')+
+    '<div class="card">'+(DB.sites.length?'<table><thead><tr><th>Name</th><th>Address</th><th></th></tr></thead><tbody>'+tb+'</tbody></table>':'<div class="empty-state"><div><strong>No sites</strong><span>Add one with New Site.</span></div></div>')+'</div>';
+}
+function siteForm(id){
+  var s=id?byId(DB.sites,id):null;var ex=s?pj(s):{};var d=s||{};
+  openModal(id?'Edit Site':'New Site',
+    field('Name','<input id="s-name" value="'+esc(d.name||'')+'">')+
+    field('Address','<textarea id="s-address" rows="2">'+esc(d.address||'')+'</textarea>'),
+    '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="siteSave(\''+(id||'')+'\',this)">Save site</button>');
+}
+function siteSave(id,btn){
+  var name=val('s-name');if(!name){toast('Name required','bad');return;}
+  var s=id?byId(DB.sites,id):null;var ex=s?pj(s):{};
+  var full=Object.assign({},ex,{id:id||newId('S'),name:name,address:val('s-address')});
+  var promoted={id:full.id,name:name,address:val('s-address')};
+  busy(btn);saveRow('tc_sites',id,promoted,full,function(r){if(r.error){unbusy(btn);toast(r.error.message,'bad');return;}reload().then(function(){closeModal();toast('Site saved.','ok');});});
+}
+function siteDelete(id){var s=byId(DB.sites,id);if(!s)return;if(!confirm('Delete site "'+s.name+'"?'))return;delRow('tc_sites',id,function(r){if(r.error){toast(r.error.message,'bad');return;}reload().then(function(){toast('Site deleted.','ok');});});}
+function exportSites(){xlsx(DB.sites.map(function(s){return {Name:s.name,Address:s.address};}),'Sites');}
+
+/* ===================== TEAM ===================== */
+function renderTeam(){
+  var tb=DB.team.map(function(p){return '<tr><td><strong>'+esc(p.name||'—')+'</strong></td><td>'+esc(p.role||'—')+'</td>'+
+    '<td><span class="tag">'+esc(p.category||'—')+'</span></td><td>'+esc(p.tel||'—')+'</td>'+
+    '<td class="right"><button class="ghost sm" onclick="teamForm(\''+p.id+'\')">Edit</button> <button class="danger sm" onclick="teamDelete(\''+p.id+'\')">Del</button></td></tr>';}).join('');
+  gel('v-team').innerHTML='<h2>Team</h2>'+
+    toolbar('<button class="btn" onclick="teamForm()">'+ico('plus')+'New Member</button><button class="ghost" onclick="exportTeam()">'+ico('sheet')+'Excel</button><button class="ghost" onclick="window.print()">'+ico('printer')+'Print</button>')+
+    '<div class="card">'+(DB.team.length?'<table><thead><tr><th>Name</th><th>Role</th><th>Category</th><th>Tel</th><th></th></tr></thead><tbody>'+tb+'</tbody></table>':'<div class="empty-state"><div><strong>No team members</strong><span>Add one with New Member.</span></div></div>')+'</div>';
+}
+function teamForm(id){
+  var p=id?byId(DB.team,id):null;var ex=p?pj(p):{};var d=p||{category:'in-house'};
+  openModal(id?'Edit Team Member':'New Team Member',
+    '<div class="row">'+field('Name','<input id="t-name" value="'+esc(d.name||'')+'">')+
+      field('Role','<input id="t-role" value="'+esc(d.role||'')+'" placeholder="e.g. Scaffold Team Lead, Lorry Driver">')+'</div>'+
+    '<div class="row">'+field('Category','<select id="t-category">'+opts(CATEGORIES,d.category)+'</select>')+
+      field('Tel','<input id="t-tel" value="'+esc(d.tel||'')+'">')+'</div>',
+    '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="teamSave(\''+(id||'')+'\',this)">Save member</button>');
+}
+function teamSave(id,btn){
+  var name=val('t-name');if(!name){toast('Name required','bad');return;}
+  var p=id?byId(DB.team,id):null;var ex=p?pj(p):{};
+  var full=Object.assign({},ex,{id:id||newId('T'),name:name,role:val('t-role'),category:val('t-category'),tel:val('t-tel')});
+  var promoted={id:full.id,name:name,role:val('t-role'),category:val('t-category'),tel:val('t-tel')};
+  busy(btn);saveRow('tc_team',id,promoted,full,function(r){if(r.error){unbusy(btn);toast(r.error.message,'bad');return;}reload().then(function(){closeModal();toast('Member saved.','ok');});});
+}
+function teamDelete(id){var p=byId(DB.team,id);if(!p)return;if(!confirm('Delete "'+p.name+'"?'))return;delRow('tc_team',id,function(r){if(r.error){toast(r.error.message,'bad');return;}reload().then(function(){toast('Member deleted.','ok');});});}
+function exportTeam(){xlsx(DB.team.map(function(p){return {Name:p.name,Role:p.role,Category:p.category,Tel:p.tel};}),'Team');}
+
+/* ===================== LORRIES ===================== */
+function renderLorries(){
+  var tb=DB.lorries.map(function(l){return '<tr><td><strong>'+esc(l.plate_no||'—')+'</strong></td><td>'+esc(l.code||'—')+'</td>'+
+    '<td>'+esc(l.type||'—')+'</td><td><span class="tag">'+esc(l.category||'—')+'</span></td><td>'+esc(l.capacity||'—')+'</td><td>'+esc(l.notes||'—')+'</td>'+
+    '<td class="right"><button class="ghost sm" onclick="lorryForm(\''+l.id+'\')">Edit</button> <button class="danger sm" onclick="lorryDelete(\''+l.id+'\')">Del</button></td></tr>';}).join('');
+  gel('v-lorries').innerHTML='<h2>Lorries</h2>'+
+    toolbar('<button class="btn" onclick="lorryForm()">'+ico('plus')+'New Lorry</button><button class="ghost" onclick="exportLorries()">'+ico('sheet')+'Excel</button><button class="ghost" onclick="window.print()">'+ico('printer')+'Print</button>')+
+    '<div class="card">'+(DB.lorries.length?'<table><thead><tr><th>Plate No</th><th>Code</th><th>Type</th><th>Category</th><th>Capacity</th><th>Notes</th><th></th></tr></thead><tbody>'+tb+'</tbody></table>':'<div class="empty-state"><div><strong>No lorries</strong><span>Add one with New Lorry.</span></div></div>')+'</div>';
+}
+function lorryForm(id){
+  var l=id?byId(DB.lorries,id):null;var ex=l?pj(l):{};var d=l||{category:'in-house'};
+  openModal(id?'Edit Lorry':'New Lorry',
+    '<div class="row">'+field('Plate No','<input id="l-plate" value="'+esc(d.plate_no||'')+'" placeholder="e.g. VBA 1234">')+
+      field('Internal Code','<input id="l-code" value="'+esc(d.code||'')+'" placeholder="e.g. HG-01">')+'</div>'+
+    '<div class="row">'+field('Type','<input id="l-type" value="'+esc(d.type||'')+'" placeholder="e.g. 3-Ton Lorry, Hook-Lift">')+
+      field('Capacity','<input id="l-cap" value="'+esc(d.capacity||'')+'" placeholder="e.g. 3 ton">')+'</div>'+
+    '<div class="row">'+field('Category','<select id="l-category">'+opts(CATEGORIES,d.category)+'</select>')+'</div>'+
+    field('Notes','<input id="l-notes" value="'+esc(d.notes||'')+'">'),
+    '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="lorrySave(\''+(id||'')+'\',this)">Save lorry</button>');
+}
+function lorrySave(id,btn){
+  var plate=val('l-plate');if(!plate){toast('Plate No required','bad');return;}
+  var l=id?byId(DB.lorries,id):null;var ex=l?pj(l):{};
+  var full=Object.assign({},ex,{id:id||newId('L'),plateNo:plate,code:val('l-code'),type:val('l-type'),capacity:val('l-cap'),category:val('l-category'),notes:val('l-notes')});
+  var promoted={id:full.id,plate_no:plate,code:val('l-code'),type:val('l-type'),capacity:val('l-cap'),category:val('l-category'),notes:val('l-notes')};
+  busy(btn);saveRow('tc_lorries',id,promoted,full,function(r){if(r.error){unbusy(btn);toast(r.error.message,'bad');return;}reload().then(function(){closeModal();toast('Lorry saved.','ok');});});
+}
+function lorryDelete(id){var l=byId(DB.lorries,id);if(!l)return;if(!confirm('Delete lorry "'+l.plate_no+'"?'))return;delRow('tc_lorries',id,function(r){if(r.error){toast(r.error.message,'bad');return;}reload().then(function(){toast('Lorry deleted.','ok');});});}
+function exportLorries(){xlsx(DB.lorries.map(function(l){return {'Plate No':l.plate_no,Code:l.code,Type:l.type,Category:l.category,Capacity:l.capacity,Notes:l.notes};}),'Lorries');}
+
+/* ===================== EXPENSES ===================== */
+function renderExpenses(){
+  var tb=DB.expenses.map(function(e){
+    var lj=e.linked_job_id?byId(DB.jobs,e.linked_job_id):null;
+    return '<tr><td>'+fmtDate(e.date)+'</td><td class="right"><strong>'+rm(e.amount)+'</strong></td>'+
+      '<td>'+esc(e.category||'—')+'</td><td>'+esc(e.description||'—')+'</td><td>'+esc(e.paid_via||'—')+'</td>'+
+      '<td>'+(lj?'#'+esc(lj.no)+' '+esc(lj.client_name||''):(e.linked_job_id?esc(e.linked_job_id):'—'))+'</td>'+
+      '<td class="right"><button class="ghost sm" onclick="expenseForm(\''+e.id+'\')">Edit</button> <button class="danger sm" onclick="expenseDelete(\''+e.id+'\')">Del</button></td></tr>';
+  }).join('');
+  var total=DB.expenses.reduce(function(a,e){return a+(Number(e.amount)||0);},0);
+  gel('v-expenses').innerHTML='<h2>Expenses</h2>'+
+    toolbar('<button class="btn" onclick="expenseForm()">'+ico('plus')+'New Expense</button><button class="ghost" onclick="exportExpenses()">'+ico('sheet')+'Excel</button><button class="ghost" onclick="window.print()">'+ico('printer')+'Print</button>')+
+    '<div class="card">'+(DB.expenses.length?'<table><thead><tr><th>Date</th><th class="right">Amount</th><th>Category</th><th>Description</th><th>Paid via</th><th>Linked job</th><th></th></tr></thead><tbody>'+tb+'</tbody></table>':'<div class="empty-state"><div><strong>No expenses</strong><span>Add one with New Expense.</span></div></div>')+'</div>'+
+    (DB.expenses.length?'<div class="totbar"><span class="muted">'+DB.expenses.length+' expenses</span><span>Total</span><span class="big">'+rm(total)+'</span></div>':'');
+}
+function expenseForm(id){
+  var e=id?byId(DB.expenses,id):null;var ex=e?pj(e):{};var d=e||{date:today(),paid_via:'Cash'};
+  var cats=(DB.settings.expenseCategories||['Tipping fees','Diesel','Outsource driver','Material purchase','Repair & maintenance','Salary','Rent','Utilities','Other']);
+  var pv=(DB.settings.paidViaOptions||['Cash','Bank transfer','Company card','Cheque','E-wallet','Other']);
+  var jobOpts='<option value="">— none —</option>'+DB.jobs.map(function(j){return '<option value="'+esc(j.id)+'"'+(j.id===d.linked_job_id?' selected':'')+'>#'+esc(j.no)+' '+esc(j.client_name||'')+' — '+esc(svcLabel(j.service))+'</option>';}).join('');
+  openModal(id?'Edit Expense':'New Expense',
+    '<div class="row">'+field('Date','<input id="e-date" type="date" value="'+esc((d.date||today()).slice(0,10))+'">')+
+      field('Amount (RM)','<input id="e-amount" type="number" step="0.01" value="'+esc(Number(d.amount)||0)+'">')+'</div>'+
+    '<div class="row">'+field('Category','<select id="e-cat">'+opts(cats,d.category)+'</select>')+
+      field('Paid via','<select id="e-pv">'+opts(pv,d.paid_via)+'</select>')+'</div>'+
+    field('Description','<input id="e-desc" value="'+esc(d.description||'')+'" placeholder="What was this for?">')+
+    field('Linked job (optional)','<select id="e-job">'+jobOpts+'</select>'),
+    '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="expenseSave(\''+(id||'')+'\',this)">Save expense</button>');
+}
+function expenseSave(id,btn){
+  var desc=val('e-desc');if(!desc){toast('Description required','bad');return;}
+  var e=id?byId(DB.expenses,id):null;var ex=e?pj(e):{};
+  var amount=Number(val('e-amount'))||0;var linked=val('e-job');
+  var full=Object.assign({},ex,{id:id||newId('E'),date:val('e-date'),amount:amount,category:val('e-cat'),description:desc,paidVia:val('e-pv'),linkedJobId:linked||''});
+  var promoted={id:full.id,date:val('e-date')||null,amount:amount,category:val('e-cat'),description:desc,paid_via:val('e-pv'),linked_job_id:linked||null};
+  busy(btn);saveRow('tc_expenses',id,promoted,full,function(r){if(r.error){unbusy(btn);toast(r.error.message,'bad');return;}reload().then(function(){closeModal();toast('Expense saved.','ok');});});
+}
+function expenseDelete(id){var e=byId(DB.expenses,id);if(!e)return;if(!confirm('Delete this expense?'))return;delRow('tc_expenses',id,function(r){if(r.error){toast(r.error.message,'bad');return;}reload().then(function(){toast('Expense deleted.','ok');});});}
+function exportExpenses(){xlsx(DB.expenses.map(function(e){var lj=e.linked_job_id?byId(DB.jobs,e.linked_job_id):null;return {Date:fmtDate(e.date),'Amount (RM)':Number(e.amount)||0,Category:e.category,Description:e.description,'Paid Via':e.paid_via,'Linked Job':lj?('#'+lj.no+' '+(lj.client_name||'')):e.linked_job_id};}),'Expenses');}
+
+/* ===================== CUSTOM RECORDS (JSON tables) ===================== */
+function renderRecords(){
+  var rows=DB.records[recCurrent]||[];
+  var label=(JSON_TABLES.filter(function(t){return t[0]===recCurrent;})[0]||[,recCurrent])[1];
+  var tb=rows.map(function(r){
+    var preview=esc(String(r._json||'').slice(0,120));
+    return '<tr><td><code>'+esc(r.id)+'</code></td><td class="muted" style="font-size:11px">'+esc((r.created_at||'').slice(0,19))+'</td><td style="font-family:monospace;font-size:11px">'+preview+(String(r._json||'').length>120?'&hellip;':'')+'</td>'+
+      '<td class="right"><button class="ghost sm" onclick="recordForm(\''+esc(r.id)+'\')">Edit</button> <button class="danger sm" onclick="recordDelete(\''+esc(r.id)+'\')">Del</button></td></tr>';
+  }).join('');
+  gel('v-records').innerHTML='<h2>Custom Records</h2>'+
+    '<div class="hint" style="margin-bottom:12px">'+ico('info')+' These tables store free-form records as JSON (id + _json). Edit the raw record below; new rows will render here automatically.</div>'+
+    toolbar('<select id="rec-table" onchange="recCurrent=this.value;renderRecords()">'+optsKV(JSON_TABLES.map(function(t){return[t[0],t[1]];}),recCurrent)+'</select>'+
+      '<button class="btn" onclick="recordForm()">'+ico('plus')+'New Record</button>')+
+    '<div class="card">'+(rows.length?'<table><thead><tr><th>ID</th><th>Created</th><th>_json preview</th><th></th></tr></thead><tbody>'+tb+'</tbody></table>':'<div class="empty-state"><div><strong>No '+esc(label)+' yet</strong><span>Add one with New Record.</span></div></div>')+'</div>';
+}
+function recordForm(id){
+  var rows=DB.records[recCurrent]||[];var r=id?byId(rows,id):null;
+  var jsonStr='{\n  \n}';
+  if(r){var o=pj(r);delete o.id;try{jsonStr=JSON.stringify(o,null,2);}catch(e){jsonStr=r._json||'{}';}}
+  openModal(id?'Edit Record':'New Record',
+    field('ID',id?'<input id="rec-id" value="'+esc(id)+'" disabled>':'<input id="rec-id" value="" placeholder="auto-generated if blank">')+
+    field('Record (JSON)','<textarea id="rec-json" rows="12" style="font-family:monospace">'+esc(jsonStr)+'</textarea>')+
+    '<div class="hint">'+ico('info')+' Enter a valid JSON object. It is stored in the _json column.</div>',
+    '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="recordSave(\''+(id||'')+'\',this)">Save record</button>');
+}
+function recordSave(id,btn){
+  var raw=val('rec-json');var obj;
+  try{obj=JSON.parse(raw);}catch(e){toast('Invalid JSON: '+e.message,'bad');return;}
+  if(typeof obj!=='object'||Array.isArray(obj)||obj===null){toast('Record must be a JSON object','bad');return;}
+  var pfx=(JSON_TABLES.filter(function(t){return t[0]===recCurrent;})[0]||[,,'R'])[2];
+  var rid=id||val('rec-id')||(pfx+Date.now()+Math.floor(Math.random()*1000));
+  obj.id=rid;
+  var promoted={id:rid};
+  busy(btn);saveRow(recCurrent,id,promoted,obj,function(r){if(r.error){unbusy(btn);toast(r.error.message,'bad');return;}reload().then(function(){closeModal();toast('Record saved.','ok');});});
+}
+function recordDelete(id){if(!confirm('Delete record '+id+'?'))return;delRow(recCurrent,id,function(r){if(r.error){toast(r.error.message,'bad');return;}reload().then(function(){toast('Record deleted.','ok');});});}
+
+/* ===================== SYNC LOG (read-only) ===================== */
+function renderSync(){
+  var tb=DB.syncLog.map(function(l){return '<tr><td>'+esc((l.timestamp||'').replace('T',' ').slice(0,19))+'</td><td>'+esc(l.user||'—')+'</td>'+
+    '<td>'+pill(l.action||'—')+'</td><td class="right">'+esc(l.job_count!=null?l.job_count:'—')+'</td><td class="right">'+esc(l.total_records!=null?l.total_records:'—')+'</td></tr>';}).join('');
+  gel('v-sync').innerHTML='<h2>Sync Log</h2>'+
+    '<div class="hint" style="margin-bottom:12px">'+ico('history')+' Read-only history from the original Team Command tool (newest first).</div>'+
+    toolbar('<button class="ghost" onclick="exportSync()">'+ico('sheet')+'Excel</button><button class="ghost" onclick="window.print()">'+ico('printer')+'Print</button>')+
+    '<div class="card">'+(DB.syncLog.length?'<table><thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th class="right">Jobs</th><th class="right">Total records</th></tr></thead><tbody>'+tb+'</tbody></table>':'<div class="empty-state"><div><strong>No sync history</strong></div></div>')+'</div>';
+}
+function exportSync(){xlsx(DB.syncLog.map(function(l){return {Timestamp:l.timestamp,User:l.user,Action:l.action,Jobs:l.job_count,'Total Records':l.total_records};}),'Sync Log');}
+
+start();
+</script>
+</body>
+</html>

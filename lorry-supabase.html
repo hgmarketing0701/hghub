@@ -79,8 +79,13 @@
   .btn-sm { min-height:34px !important; padding:7px 10px !important; font-size:.78rem !important; }
   .msg { min-height:20px; margin-top:10px; opacity:0; color:var(--text-dim); font-size:.86rem; transition:opacity .2s; }
   .msg.show { opacity:1; } .msg.ok { color:var(--green); } .msg.err { color:var(--red); }
-  #lorriesList,#complianceList,#fuelList,#tollList,#maintList,#incidentsList,#driversList,#summonsList,#alarmsList,#auditList { margin-top:14px !important; overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); }
-  #lorriesList:has(> table.grid),#complianceList:has(> table.grid),#fuelList:has(> table.grid),#tollList:has(> table.grid),#maintList:has(> table.grid),#incidentsList:has(> table.grid),#driversList:has(> table.grid),#summonsList:has(> table.grid),#alarmsList:has(> table.grid),#auditList:has(> table.grid) { padding:0; color:var(--text); text-align:left; }
+  #lorriesList,#complianceList,#fuelList,#tollList,#maintList,#incidentsList,#driversList,#summonsList,#alarmsList,#auditList,#fltVehiclesList,#fltDriversList,#fltExpiriesList,#fltExpensesList,#fltTripsList { margin-top:14px !important; overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); }
+  #lorriesList:has(> table.grid),#complianceList:has(> table.grid),#fuelList:has(> table.grid),#tollList:has(> table.grid),#maintList:has(> table.grid),#incidentsList:has(> table.grid),#driversList:has(> table.grid),#summonsList:has(> table.grid),#alarmsList:has(> table.grid),#auditList:has(> table.grid),#fltVehiclesList:has(> table.grid),#fltDriversList:has(> table.grid),#fltExpiriesList:has(> table.grid),#fltExpensesList:has(> table.grid),#fltTripsList:has(> table.grid) { padding:0; color:var(--text); text-align:left; }
+  .fleet-subnav { display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 16px; }
+  .fleet-subnav button { min-height:34px; padding:7px 14px; background:var(--surface); border:1px solid var(--border); border-radius:999px; color:var(--text-dim); cursor:pointer; font:inherit; font-size:.78rem; font-weight:700; }
+  .fleet-subnav button:hover { border-color:var(--border-strong); color:var(--accent); }
+  .fleet-subnav button.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+  .flt-note { margin-bottom:4px; padding:10px 14px; background:var(--amber-soft); border:1px solid var(--border); border-radius:var(--radius); color:var(--amber); font-size:.82rem; }
   table.grid { width:100%; min-width:760px; border-collapse:collapse; font-size:.82rem; }
   table.grid th { padding:10px 12px; background:var(--surface-2); border-bottom:1px solid var(--border); color:#716b65; font-size:.66rem; font-weight:800; letter-spacing:.05em; text-align:left; text-transform:uppercase; white-space:nowrap; }
   table.grid td { padding:11px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
@@ -216,6 +221,7 @@
     <button data-tab="incidents" onclick="showTab('incidents')">Incidents</button>
     <button data-tab="drivers" onclick="showTab('drivers')">Drivers</button>
     <button data-tab="summons" onclick="showTab('summons')">Summons</button>
+    <button data-tab="fleet" onclick="showTab('fleet')">Fleet (imported)</button>
     <button data-tab="settings" onclick="showTab('settings')">Settings</button>
   </nav>
 
@@ -312,6 +318,35 @@
       </div>
     </section>
 
+    <section id="tab-fleet" class="hide">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div style="flex:1;"><h2>Fleet (imported)</h2><div class="sub" style="margin:0;">Older fleet records imported from the 15-Fleet Command Center sheet. Read-only reference.</div></div>
+          <div style="flex:0 0 auto; display:flex; gap:8px;"><button class="ghost" onclick="exportFleetExcel()">Export Excel</button></div>
+        </div>
+        <div class="flt-note" style="margin-top:14px;">Read-only. This data is not merged with the live fleet above — it is the raw 15-Fleet Command Center import kept for reference.</div>
+        <div class="fleet-subnav" id="fleetSubnav">
+          <button class="active" data-sub="vehicles" onclick="showFleetSub('vehicles')">Vehicles</button>
+          <button data-sub="drivers" onclick="showFleetSub('drivers')">Drivers</button>
+          <button data-sub="expiries" onclick="showFleetSub('expiries')">Expiries</button>
+          <button data-sub="expenses" onclick="showFleetSub('expenses')">Expenses</button>
+          <button data-sub="trips" onclick="showFleetSub('trips')">Trips</button>
+        </div>
+        <div id="flt-vehicles"><h3>Vehicles</h3><div class="sub" style="margin:0;">Imported vehicle register.</div>
+          <div id="fltVehiclesList" class="loading"><span class="spin"></span> Loading…</div></div>
+        <div id="flt-drivers" class="hide"><h3>Drivers</h3><div class="sub" style="margin:0;">Imported driver list with licence / GDL expiry.</div>
+          <div id="fltDriversList" class="loading"><span class="spin"></span> Loading…</div></div>
+        <div id="flt-expiries" class="hide"><h3>Expiries</h3><div class="sub" style="margin:0;">Road tax · insurance · inspection due dates.</div>
+          <div id="fltExpiriesList" class="loading"><span class="spin"></span> Loading…</div></div>
+        <div id="flt-expenses" class="hide"><h3>Expenses</h3><div class="sub" style="margin:0;">Imported expense ledger.</div>
+          <div class="sub" id="fltExpensesTotal" style="margin-top:10px;"></div>
+          <div id="fltExpensesList" class="loading"><span class="spin"></span> Loading…</div>
+          <div id="fltExpensesMore" style="margin-top:12px;"></div></div>
+        <div id="flt-trips" class="hide"><h3>Trips</h3><div class="sub" style="margin:0;">Imported per-period trip / driving-behaviour summary.</div>
+          <div id="fltTripsList" class="loading"><span class="spin"></span> Loading…</div></div>
+      </div>
+    </section>
+
     <section id="tab-settings" class="hide">
       <div class="card">
         <div class="row" style="justify-content:space-between; align-items:center;">
@@ -381,7 +416,10 @@ var sb = null, SESSION = null, IS_ADMIN = false;
 var BUCKET = 'lorry-files';
 
 // in-memory data
-var state = { lorries:[], fuel:[], toll:[], maint:[], compliance:[], incidents:[], drivers:[], summons:[], settings:{} };
+var state = { lorries:[], fuel:[], toll:[], maint:[], compliance:[], incidents:[], drivers:[], summons:[], settings:{},
+  flt:{ vehicles:[], drivers:[], expiries:[], expenses:[], trips:[] } };
+// Fleet (imported) — lazy-loaded flt_* reference data
+var FLT_LOADED=false, FLT_EXP_PAGE=200, FLT_EXP_COUNT=0, FLT_EXP_TOTAL=0;
 
 // ═══════════════════════════ HELPERS ═══════════════════════════
 function el(id){ return document.getElementById(id); }
@@ -478,7 +516,7 @@ function renderCurrentTab(){
 }
 function showTab(t, keep){
   document.querySelectorAll('nav button').forEach(function(b){ b.classList.toggle('active', b.dataset.tab===t); });
-  ['dashboard','lorries','compliance','fuel','tollpark','maint','incidents','drivers','summons','settings'].forEach(function(x){ el('tab-'+x).classList.toggle('hide', x!==t); });
+  ['dashboard','lorries','compliance','fuel','tollpark','maint','incidents','drivers','summons','fleet','settings'].forEach(function(x){ el('tab-'+x).classList.toggle('hide', x!==t); });
   if(t==='dashboard') renderDashboard();
   if(t==='lorries') renderLorries();
   if(t==='compliance') renderCompliance();
@@ -488,6 +526,7 @@ function showTab(t, keep){
   if(t==='incidents') renderIncidents();
   if(t==='drivers') renderDrivers();
   if(t==='summons') renderSummons();
+  if(t==='fleet') loadFleet();
   if(t==='settings'){ el('setCompanyEmail').value = state.settings.COMPANY_EMAIL||''; loadAlarms(); loadAudit(); if(IS_ADMIN) loadAllowed(); }
 }
 
@@ -1349,6 +1388,95 @@ function exportExcel(which){
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(m[1].map(m[2])), m[0]);
   XLSX.writeFile(wb, 'HG-Lorry-'+m[0]+'-'+todayISO()+'.xlsx');
+}
+
+// ═══════════════════════════ FLEET (IMPORTED · flt_* read-only) ═══════════════════════════
+function showFleetSub(s){
+  Array.prototype.forEach.call(document.querySelectorAll('#fleetSubnav button'), function(b){ b.classList.toggle('active', b.dataset.sub===s); });
+  ['vehicles','drivers','expiries','expenses','trips'].forEach(function(x){ el('flt-'+x).classList.toggle('hide', x!==s); });
+}
+async function loadFleet(){
+  if(FLT_LOADED) return;
+  FLT_LOADED = true;
+  try {
+    var q = await Promise.all([
+      sb.from('flt_vehicles').select('*').order('plate'),
+      sb.from('flt_drivers').select('*').order('name'),
+      sb.from('flt_expiries').select('*').order('due_date',{ascending:false}),
+      sb.from('flt_expenses').select('*').order('date',{ascending:false}).limit(FLT_EXP_PAGE),
+      sb.from('flt_trips').select('*').order('period',{ascending:false}),
+      sb.from('flt_expenses').select('amount')   // all rows, amount only → accurate total + count
+    ]);
+    var errored = q.find(function(x){ return x.error; });
+    if(errored){
+      ['fltVehiclesList','fltDriversList','fltExpiriesList','fltExpensesList','fltTripsList'].forEach(function(id){ el(id).innerHTML='<div class="empty">'+esc(errored.error.message)+'</div>'; });
+      FLT_LOADED = false; return;
+    }
+    state.flt.vehicles=q[0].data||[]; state.flt.drivers=q[1].data||[]; state.flt.expiries=q[2].data||[];
+    state.flt.expenses=q[3].data||[]; state.flt.trips=q[4].data||[];
+    var amts = q[5].data||[];
+    FLT_EXP_COUNT = amts.length;
+    FLT_EXP_TOTAL = amts.reduce(function(s,r){ return s+(Number(r.amount)||0); },0);
+    renderFltVehicles(); renderFltDrivers(); renderFltExpiries(); renderFltExpenses(); renderFltTrips();
+  } catch(e){ FLT_LOADED=false; fail(e); }
+}
+function renderFltVehicles(){
+  el('fltVehiclesList').innerHTML = tbl(['Plate','Lorry code','Model','Type','Year','Notes'], state.flt.vehicles.map(function(v){
+    return '<tr><td><b>'+esc(v.plate)+'</b></td><td>'+esc(v.lorry_code)+'</td><td>'+esc(v.model)+'</td>'+
+      '<td>'+esc(v.type)+'</td><td>'+esc(v.year||'')+'</td><td class="muted">'+esc(v.notes)+'</td></tr>';
+  }));
+}
+function renderFltDrivers(){
+  el('fltDriversList').innerHTML = tbl(['Name','IC','Phone','Licence class','Licence exp','GDL exp','Assigned vehicle','Notes'], state.flt.drivers.map(function(d){
+    return '<tr><td><b>'+esc(d.name)+'</b></td><td>'+esc(d.ic)+'</td><td>'+esc(d.phone)+'</td>'+
+      '<td>'+esc(d.license_class)+'</td><td>'+fmtDate(d.license_expiry)+'</td><td>'+fmtDate(d.gdl_expiry)+'</td>'+
+      '<td>'+esc(d.assigned_vehicle)+'</td><td class="muted">'+esc(d.notes)+'</td></tr>';
+  }));
+}
+function renderFltExpiries(){
+  el('fltExpiriesList').innerHTML = tbl(['Subject','Type','Due date','Notes'], state.flt.expiries.map(function(x){
+    return '<tr><td><b>'+esc(x.subject)+'</b></td><td>'+esc(x.type)+'</td><td>'+fmtDate(x.due_date)+'</td><td class="muted">'+esc(x.notes)+'</td></tr>';
+  }));
+}
+function renderFltExpenses(){
+  var rows = state.flt.expenses;
+  el('fltExpensesList').innerHTML = tbl(['Date','Vehicle','Category','Amount','Qty','Vendor','Ref','Description'], rows.map(function(e){
+    return '<tr><td>'+fmtDate(e.date)+'</td><td><b>'+esc(e.vehicle)+'</b></td><td>'+esc(e.category)+'</td>'+
+      '<td>'+rm(e.amount)+'</td><td>'+(e.qty!=null&&e.qty!==''?esc(e.qty):'—')+'</td>'+
+      '<td>'+esc(e.vendor)+'</td><td>'+esc(e.ref)+'</td><td class="muted">'+esc(e.notes)+'</td></tr>';
+  }));
+  el('fltExpensesTotal').innerHTML = 'Total (all '+FLT_EXP_COUNT+' rows): <b>'+rm(FLT_EXP_TOTAL)+'</b> · showing latest '+rows.length;
+  var more = el('fltExpensesMore');
+  more.innerHTML = (rows.length < FLT_EXP_COUNT)
+    ? '<button class="ghost" onclick="loadMoreFltExpenses()">Load more ('+(FLT_EXP_COUNT-rows.length)+' more)</button>' : '';
+}
+async function loadMoreFltExpenses(){
+  var from = state.flt.expenses.length, to = from + FLT_EXP_PAGE - 1;
+  el('fltExpensesMore').innerHTML = '<button class="ghost" disabled><span class="spin"></span> Loading…</button>';
+  var r = await sb.from('flt_expenses').select('*').order('date',{ascending:false}).range(from, to);
+  if(r.error){ showToast(r.error.message,'err'); renderFltExpenses(); return; }
+  state.flt.expenses = state.flt.expenses.concat(r.data||[]);
+  renderFltExpenses();
+}
+function renderFltTrips(){
+  el('fltTripsList').innerHTML = tbl(['Period','Vehicle','Km','Trips','Speeding','Braking','Accel','Cornering','Idling'], state.flt.trips.map(function(t){
+    return '<tr><td>'+esc(t.period)+'</td><td><b>'+esc(t.vehicle)+'</b></td><td>'+esc(t.km)+'</td><td>'+esc(t.trips)+'</td>'+
+      '<td>'+esc(t.speeding)+'</td><td>'+esc(t.braking)+'</td><td>'+esc(t.accel)+'</td><td>'+esc(t.cornering)+'</td><td>'+esc(t.idling)+'</td></tr>';
+  }));
+}
+async function exportFleetExcel(){
+  if(!FLT_LOADED) await loadFleet();
+  showLoading('Preparing Fleet import…');
+  var allExp = await sb.from('flt_expenses').select('*').order('date',{ascending:false});
+  hideLoading();
+  var exp = (allExp && allExp.data) || state.flt.expenses;
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(state.flt.vehicles.map(function(v){ return { Plate:v.plate, 'Lorry Code':v.lorry_code, Model:v.model, Type:v.type, Year:v.year, Notes:v.notes }; })), 'Fleet Vehicles');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(state.flt.drivers.map(function(d){ return { Name:d.name, IC:d.ic, Phone:d.phone, 'Licence Class':d.license_class, 'Licence Exp':d.license_expiry, 'GDL Exp':d.gdl_expiry, 'Assigned Vehicle':d.assigned_vehicle, Notes:d.notes }; })), 'Fleet Drivers');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(state.flt.expiries.map(function(x){ return { Subject:x.subject, Type:x.type, 'Due Date':x.due_date, Notes:x.notes }; })), 'Fleet Expiries');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(exp.map(function(e){ return { Date:e.date, Vehicle:e.vehicle, Category:e.category, 'Amount RM':Number(e.amount), Qty:e.qty, Vendor:e.vendor, Ref:e.ref, Description:e.notes }; })), 'Fleet Expenses');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(state.flt.trips.map(function(t){ return { Period:t.period, Vehicle:t.vehicle, Km:t.km, Trips:t.trips, Speeding:t.speeding, Braking:t.braking, Accel:t.accel, Cornering:t.cornering, Idling:t.idling }; })), 'Fleet Trips');
+  XLSX.writeFile(wb, 'HG-Fleet-Import-'+todayISO()+'.xlsx');
 }
 
 // Shared HG Hub dropdown treatment. Native selects remain the value source for
