@@ -35,13 +35,13 @@ production data + secrets):
 5. Click **Restart** (or Start).
 
 ## 4 · First admin login
-Run once to create the boss account (cPanel → **Terminal**, or ask me to hand you a tiny
-one-time HTML seeder). In Terminal, inside the app's Node environment:
+On the **Setup Node.js App** page, copy the "Enter to the virtual environment" command
+(looks like `source /home/hggrouph/nodevenv/hghub/18/bin/activate && cd …/hghub`).
+cPanel → **Terminal**, paste it, then run (pick your own password):
 ```bash
-cd ~/hghub
-node -e "const b=require('bcryptjs'),m=require('mysql2/promise');(async()=>{const c=await m.createConnection({host:'localhost',user:'hggrouph_marketing',password:process.env.DB_PASSWORD,database:'hggrouph_hghub'});const h=b.hashSync('CHANGE-THIS-PASSWORD',10);await c.query(\"REPLACE INTO users(id,email,password_hash,name,role,active) VALUES(UUID(),?,?,?,'admin',1)\",['lee@hggroup.com.my',h,'Black Lee']);console.log('admin created');process.exit()})()"
+node seed-admin.js lee@hggroup.com.my "YourStrongPassword" "Black Lee"
 ```
-(Replace `CHANGE-THIS-PASSWORD`. This is the login you'll use.)
+That email + password is your login. Re-run anytime to reset the password.
 
 ## 5 · Verify
 Open **https://hggrouphub.com** → email + password login → hub with tools + live data.
