@@ -9,7 +9,7 @@ const { pool, roPool } = require("./db");
 const { requireAuth, requireAdmin } = require("./auth");
 
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";  // stable alias — won't deprecate
 const ROW_CAP = 200;
 
 async function gemini(prompt, system) {
