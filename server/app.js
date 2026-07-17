@@ -45,7 +45,14 @@ app.use("/uploads", express.static(UPLOADS_DIR, { maxAge: "7d" }));
 // thing is one origin — no CORS, no Apache/Passenger path juggling).
 // prepare-public.js copies the safe frontend files into server/public.
 const FRONTEND_DIR = process.env.FRONTEND_DIR || path.join(__dirname, "public");
-app.use(express.static(FRONTEND_DIR, { extensions: ["html"], dotfiles: "deny", maxAge: "1h" }));
+app.use(express.static(FRONTEND_DIR, {
+  extensions: ["html"], dotfiles: "deny",
+  // HTML must always revalidate (tools update); static assets can cache a bit
+  setHeaders(res, p) {
+    if (p.endsWith(".html")) res.setHeader("Cache-Control", "no-cache");
+    else res.setHeader("Cache-Control", "public, max-age=3600");
+  }
+}));
 
 // error safety net — never leak stack traces
 app.use((err, req, res, next) => {

@@ -200,7 +200,7 @@ CREATE TABLE IF NOT EXISTS jcr_reports (
   skirting          VARCHAR(255),
   photo_count       INT,
   remarks           TEXT,
-  drive_folder      VARCHAR(512),
+  drive_folder  TEXT,
   pdf_report        VARCHAR(512),
   submitted_by      VARCHAR(255),
   other_workers     TEXT,

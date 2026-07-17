@@ -15,7 +15,9 @@ const BUCKETS = new Set([
   // one per storage.from('<bucket>') across the tools + module BUCKET manifests
   "quotation-files", "subcon-invoices", "inventory-files", "claim-receipts",
   "expense-receipts", "visual", "scaffold", "worker-docs", "mall-sketches",
-  "pl-files", "blog-images", "storage-rental", "lorry", "transport", "misc"
+  "pl-files", "blog-images", "storage-rental", "lorry", "transport", "misc",
+  // the 6 newly-built tools
+  "jcr", "attendance", "hoarding-library", "payable", "receivable"
 ]);
 
 const upload = multer({

@@ -1,4 +1,4 @@
--- HG hub — FULL MySQL schema (assembled 2026-07-16) — idempotent, phpMyAdmin-ready
+-- HG hub — FULL MySQL schema (assembled 2026-07-17) — idempotent, phpMyAdmin-ready
 
 -- ####### mysql/modules/01-foundation.sql #######
 -- ============================================================
@@ -4126,7 +4126,7 @@ CREATE TABLE IF NOT EXISTS jcr_reports (
   skirting          VARCHAR(255),
   photo_count       INT,
   remarks           TEXT,
-  drive_folder      VARCHAR(512),
+  drive_folder  TEXT,
   pdf_report        VARCHAR(512),
   submitted_by      VARCHAR(255),
   other_workers     TEXT,
