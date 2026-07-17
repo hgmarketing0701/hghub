@@ -26,3 +26,9 @@ mysql/*-data.sql
 migration-package/
 sheets-data/
 *.xlsx
+
+# generated frontend bundle (run prepare-public.js on deploy)
+server/public/
+# deploy bundle DB (production data)
+deploy/*.sql
+deploy/

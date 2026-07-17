@@ -38,9 +38,14 @@ app.use("/api/rpc", rpcRouter);
 app.use("/api/ai", aiRouter);
 app.use("/api/cron", cronRouter);
 
-// uploaded files (same-origin static). On cPanel, prefer pointing UPLOADS_DIR
-// at a folder inside public_html so Apache serves these without hitting Node.
+// uploaded files (same-origin static).
 app.use("/uploads", express.static(UPLOADS_DIR, { maxAge: "7d" }));
+
+// frontend (all-in-one: this Node app serves the hub + tools too, so the whole
+// thing is one origin — no CORS, no Apache/Passenger path juggling).
+// prepare-public.js copies the safe frontend files into server/public.
+const FRONTEND_DIR = process.env.FRONTEND_DIR || path.join(__dirname, "public");
+app.use(express.static(FRONTEND_DIR, { extensions: ["html"], dotfiles: "deny", maxAge: "1h" }));
 
 // error safety net — never leak stack traces
 app.use((err, req, res, next) => {
