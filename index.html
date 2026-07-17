@@ -15,7 +15,7 @@
       : (prefersDark ? "ops-dark" : "ops-light");
   })();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="hg-client.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3159,11 +3159,15 @@
       <h2>Welcome back</h2>
       <p>Sign in to open your HG Hub command center.</p>
     </div>
-    <button class="gate-btn google" onclick="hubSignIn()">
-      <img class="gate-provider-logo" src="hub/screen-contracts/assets/logos/google-g-logo.png" alt="" />
-      Continue with Google
-    </button>
-    <div class="gate-helper">Authorized HG account required</div>
+    <div class="gate-fields">
+      <label class="sr-only" for="loginEmail">Email</label>
+      <input id="loginEmail" type="email" placeholder="you@hggroup.com.my" autocomplete="username" />
+      <label class="sr-only" for="loginPass">Password</label>
+      <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter'){hubSignIn();}" />
+    </div>
+    <button class="gate-btn primary" onclick="hubSignIn()">Sign in</button>
+    <div class="gate-helper">HG account — ask an admin if you need access</div>
     <div id="loginMsg" class="gate-msg"></div>
   </div>
 </div>
@@ -4958,9 +4962,13 @@
   }
 
   function hubSignIn() {
-    const here = window.location.href.split("#")[0];
-    SB.auth.signInWithOAuth({ provider: "google", options: { redirectTo: here } })
-      .then(r => { if (r.error) gateMsg("loginMsg", r.error.message, false); });
+    const email = ((document.getElementById("loginEmail") || {}).value || "").trim();
+    const pass = (document.getElementById("loginPass") || {}).value || "";
+    if (!email || !pass) { gateMsg("loginMsg", "Enter email and password.", false); return; }
+    SB.auth.signInWithPassword({ email: email, password: pass }).then(r => {
+      if (r.error) { gateMsg("loginMsg", r.error.message, false); return; }
+      SESSION = r.data.session; route();
+    });
   }
   function hubSignOut() {
     try { sessionStorage.removeItem(homeModeStorageKey()); } catch (e) {}
@@ -6282,29 +6290,17 @@
 	  }
 
   async function route() {
-    const url = localStorage.getItem("hg_supabase_url");
-    const key = localStorage.getItem("hg_supabase_key");
-    if (!url || !key) { showGate("gateConfig"); return; }
-    if (!window.supabase) { showGate("gateConfig"); gateMsg("cfgMsg", "Loading… refresh if this persists.", false); return; }
-    if (!SB) SB = window.supabase.createClient(url, key);   // auto-consumes any #access_token in the URL
+    if (!SB) SB = window.hg.createClient();   // same-origin hg-api (email+password, cookie session)
 
     let session = null;
     try { session = (await SB.auth.getSession()).data.session; } catch (e) {}
-    if (location.hash.indexOf("access_token") > -1) {       // just returned from Google
-      await new Promise(r => setTimeout(r, 500));
-      try { session = (await SB.auth.getSession()).data.session; } catch (e) {}
-      history.replaceState(null, "", location.pathname + location.search);
-    }
 	    SESSION = session;
 	    if (!session) { showGate("gateLogin"); return; }
 
     const email = (session.user.email || "").toLowerCase();
     try { localStorage.setItem("hg_last_email", email); } catch (e) {}
-    let allowed = null;
-    try { allowed = (await SB.from("allowed_users").select("email, full_name, is_admin").ilike("email", email).maybeSingle()).data; } catch (e) {}
-    IS_ADMIN = !!(allowed && allowed.is_admin);
-    if (!allowed) { document.getElementById("deniedEmail").textContent = email; showGate("gateDenied"); return; }
-    USER_PROFILE = { email: email, full_name: allowed.full_name || "", is_admin: IS_ADMIN, finance_role: "Viewer", home_roles: [] };
+    IS_ADMIN = (session.user.role === "admin");
+    USER_PROFILE = { email: email, full_name: (session.user.user_metadata && session.user.user_metadata.full_name) || "", is_admin: IS_ADMIN, finance_role: "Viewer", home_roles: [] };
     try {
       const financeRoleResult = await SB.rpc("pl_my_role");
       if (!financeRoleResult.error && ["Admin", "Manager", "Editor", "Viewer"].includes(financeRoleResult.data)) {

@@ -16,11 +16,11 @@
 (function () {
   "use strict";
 
-  const API = (window.HG_API_BASE || "") + "/api";
+  const apiBase = () => (window.HG_API_BASE || "") + "/api";
 
   async function call(method, path, body) {
     try {
-      const res = await fetch(API + path, {
+      const res = await fetch(apiBase() + path, {
         method,
         credentials: "include",
         headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
@@ -136,7 +136,7 @@
           fd.append("path", path);
           fd.append("file", file);
           try {
-            const res = await fetch(API + "/files/" + bucket, { method: "POST", credentials: "include", body: fd });
+            const res = await fetch(apiBase() + "/files/" + bucket, { method: "POST", credentials: "include", body: fd });
             const j = await res.json().catch(() => null);
             if (!res.ok) return { data: null, error: (j && j.error) || { message: "HTTP " + res.status } };
             return { data: { path: j.data.path, fullPath: j.data.fullPath }, error: null };
