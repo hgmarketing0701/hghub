@@ -156,7 +156,7 @@
   body{font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}#app{padding:26px 28px 0}
   header{position:static;padding:0 0 20px;margin:0 0 18px;background:transparent;border-bottom:1px solid var(--line);gap:14px}body.embedded header{display:none}.brand-block{gap:9px}.brand-logo{width:24px;height:24px;padding:0;background:transparent;border-radius:0;color:var(--acc);font-size:0}.brand-logo svg{width:20px;height:20px;stroke-width:2.1}.brand-name{display:flex;align-items:center;gap:10px;color:var(--ink);font-size:1.05rem;font-weight:800}.brand-sub{font-size:13px;line-height:17px;color:var(--mut);margin-top:3px}.tool-live{display:inline-flex;align-items:center;height:21px;padding:0 9px;border-radius:999px;background:#edf8f3;color:var(--ok);font-size:.64rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}header .mpill{background:var(--panel);border-color:var(--line);border-radius:999px;color:var(--mut);padding:8px 12px}header .mpill strong{color:var(--acc)}header .mpill button{color:var(--warn)}
   nav{position:static;top:auto;gap:26px;flex-wrap:nowrap;overflow-x:auto;padding:0;margin:0 0 26px;background:transparent;border-bottom:1px solid var(--line);scrollbar-width:none}nav::-webkit-scrollbar{display:none}nav button{flex:0 0 auto;padding:0 0 12px;border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;color:#716b65;font-size:.78rem;font-weight:800;white-space:nowrap}nav button:hover:not(.active){background:transparent;border-color:transparent;color:var(--acc)}nav button.active{background:transparent;color:var(--acc);border-color:var(--acc)}
-  main{max-width:none;margin:0;padding:0 0 72px}.view>h2{font-size:1.45rem;letter-spacing:-.03em;margin:0 0 16px}.view>h2::after{display:block;margin-top:4px;color:#716b65;font-size:.9rem;font-weight:500;letter-spacing:0}#v-sched>h2::after{content:"Pick a date, review the day's jobs by shift, and open any job to edit."}#v-workers>h2::after{content:"Maintain workers, supervisors, and lorries used to staff every job."}#v-wages>h2::after{content:"Compute daily worker wages from attendance, states, and adjustments."}#v-reviews>h2::after{content:"Clear attendance disputes, shift conflicts, and review vehicle logs."}
+  main{max-width:none;margin:0;padding:0 0 72px}.view>h2{font-size:1.45rem;letter-spacing:-.03em;margin:0 0 16px}.view>h2::after{display:block;margin-top:4px;color:#716b65;font-size:.9rem;font-weight:500;letter-spacing:0}#v-sched>h2::after{content:"Weekly roster board. Insert jobs on the left, click any saved card to edit it."}#v-workers>h2::after{content:"Maintain workers, supervisors, and lorries used to staff every job."}#v-wages>h2::after{content:"Compute daily worker wages from attendance, states, and adjustments."}#v-reviews>h2::after{content:"Clear attendance disputes, shift conflicts, and review vehicle logs."}
   h3{color:var(--ink);font-size:.9rem;text-transform:none;letter-spacing:-.01em;font-weight:800;margin:18px 0 8px}.card{background:var(--panel);border-color:var(--line);border-radius:var(--radius);padding:18px;margin-bottom:12px;box-shadow:none}.card:has(>table){padding:0;overflow-x:auto}.card:has(>h3+table)>h3{margin:0;padding:16px;border-bottom:1px solid var(--line)}.card:has(>.toolbar>h3):has(>table)>.toolbar{padding:16px 16px 12px;margin:0;border-bottom:1px solid var(--line)}
   .row.tool-snapshot{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;margin:0 0 12px!important;padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}.row.tool-snapshot .stat{min-width:0;min-height:78px;padding:6px 16px;border:0;border-right:1px solid var(--line);border-radius:0;background:transparent}.row.tool-snapshot .stat:last-child{border-right:0}.stat:hover{border-color:var(--line)}.stat .l{min-height:18px;line-height:18px;color:#716b65;font-size:.66rem;font-weight:800;white-space:nowrap}.stat .n{font-size:1.35rem;line-height:36px;color:var(--acc);font-variant-numeric:tabular-nums;white-space:nowrap}
   label{color:#716b65;font-size:.72rem;font-weight:800;margin:10px 0 5px}input,select,textarea{min-height:42px;background:var(--panel);border-color:#ded8cf;color:var(--ink);border-radius:8px;font-size:.88rem}input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(20,61,74,.08)}select{appearance:none;-webkit-appearance:none;padding-right:42px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23143d4a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:14px}
@@ -206,6 +206,57 @@
   .li-x{background:transparent;border:1px solid var(--line);color:var(--bad);border-radius:8px;cursor:pointer;height:38px;font-weight:800}
   .datebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
   .datebar input[type=date]{min-width:170px}
+
+  /* ===== Weekly board + insert-job sidebar ===== */
+  :root{--night:#8b5cf6;--night-soft:rgba(139,92,246,.16);--day-soft:rgba(245,158,11,.16)}
+  .sched-layout{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
+  .sched-side{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto;padding:16px}
+  .sched-main{min-width:0}
+  .side-sub{font-size:.76rem;color:var(--mut);margin:4px 0 10px;line-height:1.45}
+  .side-row{display:flex;gap:6px;align-items:center}
+  .side-row>input{flex:1;min-width:0}
+  .side-row>.hub-select{flex:1;min-width:0}
+  .side-row>button{flex:0 0 auto}
+  .side-mini{display:flex;gap:6px;justify-content:flex-end;margin:0 0 6px}
+  .chipwrap{display:flex;flex-wrap:wrap;gap:6px}
+  .chipwrap.scrolly{max-height:160px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--panel2);align-content:flex-start}
+  button.mchip{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:4px 11px;font-size:.74rem;font-weight:600;cursor:pointer;font-family:inherit;transition:.12s}
+  button.mchip:hover{border-color:var(--acc)}
+  button.mchip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+  html[data-theme="dark"] button.mchip.on{color:#10282c}
+  .selcount{color:var(--warn);font-size:.72rem;font-weight:700;margin-top:5px}
+  .state-hint{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:7px 10px;font-size:.73rem;line-height:1.45;margin-top:6px}
+  .side-actions{display:flex;gap:8px;margin-top:16px}
+  .wk-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .wk-range{font-weight:800;font-size:.98rem;min-width:172px;text-align:center;letter-spacing:-.01em}
+  button.wk-wa{margin-left:auto;background:#1faa55;color:#fff}
+  button.wk-wa:hover{background:#178a45}
+  .wk-notice{display:flex;gap:10px;align-items:flex-start;background:var(--warn-soft);color:var(--warn);border:1px solid rgba(245,158,11,.35);border-radius:8px;padding:9px 12px;font-size:.78rem;line-height:1.45;margin-bottom:10px}
+  .wk-notice button{margin-left:auto;background:none;border:none;color:inherit;font-weight:800;font-size:16px;cursor:pointer;line-height:1}
+  .wk-scroll{overflow-x:auto;padding-bottom:6px}
+  .wk-grid{display:grid;grid-template-columns:repeat(7,minmax(200px,1fr));gap:10px;min-width:1480px}
+  .wk-col{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px;min-height:130px}
+  .wk-col.today{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn) inset}
+  .wk-colhead{display:flex;align-items:baseline;gap:7px;margin-bottom:8px}
+  .wk-dow{font-size:.66rem;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+  .wk-dnum{font-size:1.25rem;font-weight:800;line-height:1}
+  .wk-cnt{margin-left:auto;background:var(--day-soft);color:var(--warn);border-radius:999px;padding:2px 8px;font-size:.64rem;font-weight:800;white-space:nowrap}
+  .wk-shiftpill{display:block;border-radius:7px;padding:3px 9px;font-size:.66rem;font-weight:800;letter-spacing:.04em;margin-bottom:6px}
+  .wk-shiftpill.day{background:var(--day-soft);color:var(--warn)}
+  .wk-shiftpill.night{background:var(--night-soft);color:var(--night)}
+  .wk-card{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:8px;padding:9px 10px;margin-bottom:7px;cursor:pointer;transition:.12s}
+  .wk-card:hover{box-shadow:var(--shadow)}
+  .wk-card.night{border-left-color:var(--night)}
+  .wk-lbl{font-size:.6rem;font-weight:800;color:var(--mut);letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wk-title{font-weight:800;font-size:.82rem;margin:2px 0;line-height:1.3;letter-spacing:-.01em}
+  .wk-line{font-size:.72rem;color:var(--mut);line-height:1.4}
+  .wk-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+  .wk-chip{border-radius:999px;padding:1px 7px;font-size:.62rem;font-weight:700;white-space:nowrap}
+  .wk-chip.sv{background:rgba(59,130,246,.14);color:var(--blue)}
+  .wk-chip.ly{background:rgba(20,184,166,.16);color:#0f9d8f}
+  .wk-chip.wk{background:var(--chip);border:1px solid var(--line);color:var(--mut)}
+  html[data-theme="dark"] .wk-chip.ly{color:#2dd4bf}
+  @media(max-width:980px){.sched-layout{grid-template-columns:1fr}.sched-side{position:static;max-height:none}}
 </style>
 </head>
 <body>
@@ -372,7 +423,8 @@ var PAY_STATUS=['Pending','Paid'];
 var INV_STATUS=['Pending','Invoiced','Paid','Void'];
 var CIDB_STATUS=['Pending','Submitted','Approved'];
 var SV_TYPES=[{v:'sv_inhouse',l:'Supervisor (in-house)'},{v:'driver_inhouse',l:'Driver (in-house)'},{v:'driver_outsource',l:'Driver (outsource)'}];
-var SHIFTS=[{v:'day',l:'Day'},{v:'day-addon',l:'Day (Add-On)'},{v:'day-inst',l:'Day (Installation)'},{v:'day-out',l:'Day (Outstation)'},{v:'day-oth',l:'Day (Others)'},{v:'night-factory',l:'Night (Factory)'},{v:'night-inst',l:'Night (Installation)'},{v:'night-oth',l:'Night (Others)'}];
+var SHIFTS=[{v:'day',l:'Day'},{v:'day-addon',l:'Day (Add-On)'},{v:'day-inst',l:'Day (Installation)'},{v:'day-out',l:'Day (Outstation)'},{v:'day-oth',l:'Day (Others)'},{v:'day-factory',l:'Day (Factory)'},{v:'night-factory',l:'Night (Factory)'},{v:'night-inst',l:'Night (Installation)'},{v:'night-oth',l:'Night (Others)'},{v:'others',l:'Others'}];
+var SIDE_SHIFTS=[{v:'day-inst',l:'Day'},{v:'night-inst',l:'Night'},{v:'day-factory',l:'Day (Factory)'},{v:'others',l:'Others'}];
 var CHARGE_FIELDS=[['charge_hoarding','Hoarding'],['charge_visual','Visual'],['charge_dismantling','Dismantling'],['charge_preliminaries','Preliminaries'],['charge_insurance','Insurance'],['charge_outstation','Outstation'],['charge_scaffold','Scaffold'],['charge_door','Door'],['charge_counterweight','Counterweight'],['charge_fabric','Fabric'],['charge_peeping_hole','Peeping Hole'],['charge_skirting','Skirting'],['charge_others','Others']];
 
 function shiftLabel(s){var f=SHIFTS.filter(function(x){return x.v===s;})[0];return f?f.l:(s||'—');}
@@ -417,7 +469,8 @@ async function loadMasters(){
   M.scopeOnsite=lk.filter(function(x){return x.type==='scope_onsite';}).map(function(x){return x.value;});
   M.states=res[4].data||[];
   M.stateMap={};M.states.forEach(function(s){M.stateMap[s.state]=s;});
-  M.mallStates={};(res[5].data||[]).forEach(function(m){M.mallStates[String(m.mall).toLowerCase()]=m.state;});
+  M.mallStateRows=res[5].data||[];
+  M.mallStates={};M.mallStateRows.forEach(function(m){M.mallStates[String(m.mall).toLowerCase()]=m.state;});
 }
 
 /* name lookups (mirror GAS nameMap) */
@@ -427,60 +480,344 @@ function lyDetail(id){var l=byId(M.lorries,id);return l?(l.id+' - '+l.plate):id;
 function namesFrom(ids,fn){return (ids||[]).map(fn).join(', ');}
 
 /* ============================================================
-   TAB 1 · SCHEDULE
+   TAB 1 · SCHEDULE — weekly board + insert-job sidebar
    ============================================================ */
+var WEEK_START=null, WEEK_JOBS=[], SMART_CHECKED=false;
+var SIDE_JOB=null, SIDE_SEL={sup:{},wk:{},ly:{}};
+var DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+var MON3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function mondayOf(iso){var d=new Date(iso+'T00:00:00');var dow=(d.getDay()+6)%7;return addDays(iso,-dow);}
+function fmtNice(iso){return Number(iso.slice(8,10))+' '+MON3[Number(iso.slice(5,7))-1]+' '+iso.slice(0,4);}
+function rangeLabel(a,b){return Number(a.slice(8,10))+' '+MON3[Number(a.slice(5,7))-1]+' – '+fmtNice(b);}
+function sumWorkers(list){
+  // DISTINCT workers across the shift's jobs — night crews run several jobs per
+  // night; counting per-job would inflate the pill (orig board counts people, not slots)
+  var seen={};
+  list.forEach(function(j){(parseJSON_(j.worker_ids,[])||[]).forEach(function(id){seen[id]=1;});});
+  return Object.keys(seen).length;
+}
+function isNightShift(j){return shiftGroup(j.shift)==='Night';}
+
 async function renderSchedule(){
   var v=gel('v-sched');
-  v.innerHTML='<h2>Schedule</h2>'+
-    '<div class="datebar">'+
-      '<button class="ghost sm" onclick="stepDay(-1)">'+ico('chevron-left')+' Prev</button>'+
-      '<input type="date" id="schedDate" value="'+esc(CUR_DATE)+'" onchange="CUR_DATE=this.value;renderSchedule();">'+
-      '<button class="ghost sm" onclick="stepDay(1)">Next '+ico('chevron-right')+'</button>'+
-      '<button class="ghost sm" onclick="CUR_DATE=todayISO();renderSchedule();">Today</button>'+
-      '<div style="flex:1"></div>'+
-      '<button class="btn" onclick="jobForm(null)">'+ico('plus')+' New job</button>'+
-    '</div>'+
-    '<div id="schedBody"><div class="card"><span class="spin"></span> Loading jobs…</div></div>';
-  if(window.lucide)window.lucide.createIcons();
-  var r=await sb.from('ja_jobs').select('*').eq('date',CUR_DATE).order('shift').limit(300);
-  var body=gel('schedBody');
-  if(r.error){body.innerHTML='<div class="card card-error">'+ico('triangle-alert')+'<span>'+esc(r.error.message)+'</span></div>';if(window.lucide)window.lucide.createIcons();return;}
-  var jobs=r.data||[];
-  var day=jobs.filter(function(j){return shiftGroup(j.shift)==='Day';});
-  var night=jobs.filter(function(j){return shiftGroup(j.shift)==='Night';});
-  var invoiced=jobs.filter(function(j){return j.invoice_status==='Invoiced'||j.invoice_status==='Paid';}).length;
-  var snap='<div class="row tool-snapshot">'+
-    stat(jobs.length,'Jobs this day')+stat(day.length,'Day shift')+stat(night.length,'Night shift')+
-    stat(invoiced,'Invoiced')+
-    stat(jobs.filter(function(j){return j.wage_status==='Paid';}).length,'Wages paid')+
-    stat(new Set(jobs.map(function(j){return j.mall;}).filter(Boolean)).size,'Malls')+'</div>';
-  body.innerHTML=snap+shiftBlock('Day shift',day)+shiftBlock('Night shift',night)+
-    (jobs.length===0?'<div class="card"><div class="empty-state">'+ico('calendar-x')+'<div><strong>No jobs on '+esc(CUR_DATE)+'</strong><span>Use “New job” to add one, or jump to another day.</span></div></div></div>':'');
+  if(!v.dataset.built){
+    v.dataset.built='1';
+    v.innerHTML='<h2>Schedule</h2><div class="sched-layout">'+
+      '<aside class="sched-side card" id="sideForm"></aside>'+
+      '<div class="sched-main">'+
+        '<div class="wk-bar">'+
+          '<button class="ghost sm" onclick="stepWeek(-1)" aria-label="Previous week">'+ico('chevron-left')+'</button>'+
+          '<div class="wk-range" id="wkRange">—</div>'+
+          '<button class="ghost sm" onclick="stepWeek(1)" aria-label="Next week">'+ico('chevron-right')+'</button>'+
+          '<button class="ghost sm" onclick="goThisWeek()">Today</button>'+
+          '<button class="btn sm wk-wa" onclick="waRoster(this)">📱 Today&#39;s Roster · WhatsApp</button>'+
+        '</div>'+
+        '<div id="wkNotice"></div>'+
+        '<div class="wk-scroll"><div class="wk-grid" id="wkGrid"></div></div>'+
+      '</div></div>';
+    buildSideForm();
+    if(window.lucide)window.lucide.createIcons();
+  }
+  WEEK_START=mondayOf(CUR_DATE||todayISO());
+  await loadWeek();
+}
+function stepWeek(n){WEEK_START=addDays(WEEK_START,n*7);loadWeek();}
+function goThisWeek(){WEEK_START=mondayOf(todayISO());loadWeek();}
+
+async function loadWeek(){
+  var end=addDays(WEEK_START,6);
+  gel('wkRange').textContent=rangeLabel(WEEK_START,end);
+  gel('wkGrid').innerHTML='<div class="card" style="grid-column:1/-1"><span class="spin"></span> Loading week…</div>';
+  var r=await sb.from('ja_jobs').select('*').gte('date',WEEK_START).lte('date',end).order('date').limit(500);
+  if(r.error){gel('wkGrid').innerHTML='<div class="card card-error" style="grid-column:1/-1">'+ico('triangle-alert')+'<span>'+esc(r.error.message)+'</span></div>';if(window.lucide)window.lucide.createIcons();return;}
+  WEEK_JOBS=(r.data||[]).map(function(j){j.date=String(j.date||'').slice(0,10);return j;});
+  if(!WEEK_JOBS.length&&!SMART_CHECKED){
+    SMART_CHECKED=true;
+    var last=await sb.from('ja_jobs').select('date').order('date',{ascending:false}).limit(1);
+    var latest=last.data&&last.data[0]&&String(last.data[0].date||'').slice(0,10);
+    if(latest&&mondayOf(latest)!==WEEK_START){
+      WEEK_START=mondayOf(latest);
+      gel('wkNotice').innerHTML='<div class="wk-notice">'+ico('info')+'<span>No jobs this week yet — showing latest scheduled week (data imported up to '+esc(fmtNice(latest))+'). New jobs you insert here are saved to the new database.</span><button onclick="this.parentNode.remove()" aria-label="Dismiss">×</button></div>';
+      if(window.lucide)window.lucide.createIcons();
+      return loadWeek();
+    }
+  }
+  SMART_CHECKED=true;
+  renderWeekGrid();
+}
+function renderWeekGrid(){
+  var html='',today=todayISO();
+  for(var i=0;i<7;i++){
+    var iso=addDays(WEEK_START,i);
+    var jobs=WEEK_JOBS.filter(function(j){return j.date===iso;});
+    var day=jobs.filter(function(j){return !isNightShift(j);});
+    var night=jobs.filter(isNightShift);
+    var dW=sumWorkers(day),nW=sumWorkers(night);
+    html+='<div class="wk-col'+(iso===today?' today':'')+'">'+
+      '<div class="wk-colhead"><span class="wk-dow">'+DOW[i]+'</span><span class="wk-dnum">'+Number(iso.slice(8,10))+'</span><span class="wk-cnt">'+jobs.length+' job'+(jobs.length===1?'':'s')+'</span></div>'+
+      (dW?'<div class="wk-shiftpill day">DAY · '+dW+' worker'+(dW===1?'':'s')+'</div>':'')+
+      (nW?'<div class="wk-shiftpill night">NIGHT · '+nW+' worker'+(nW===1?'':'s')+'</div>':'')+
+      day.map(wkCard).join('')+night.map(wkCard).join('')+
+    '</div>';
+  }
+  gel('wkGrid').innerHTML=html;
   if(window.lucide)window.lucide.createIcons();
 }
-function stepDay(n){CUR_DATE=addDays(CUR_DATE,n);renderSchedule();}
-function shiftBlock(title,list){
-  if(!list.length)return '';
-  return '<div class="shift-group"><div class="shift-head">'+esc(title)+'<span class="cnt">'+list.length+'</span></div><div class="jgrid">'+list.map(jobCard).join('')+'</div></div>';
-}
-function jobCard(j){
-  var loc=[j.mall,j.lot].filter(Boolean).join(' · ');
-  var chips=chip('Invoice',j.invoice_status)+chip('Wage',j.wage_status)+chip('Incentive',j.incentive_status)+chip('Allow',j.allow_status);
-  var assign='';
-  if(j.supervisor_names)assign+='<span class="tag">'+ico('hard-hat')+' '+esc(j.supervisor_names)+'</span>';
-  if(j.worker_names)assign+='<span class="tag">'+ico('users')+' '+esc(String(j.worker_names).split(',').length)+' worker(s)</span>';
-  if(j.lorry_details)assign+='<span class="tag">'+ico('truck')+' '+esc(j.lorry_details)+'</span>';
-  return '<div class="jcard" onclick="jobForm(\''+esc(j.id)+'\')">'+
-    '<div class="jtitle">'+esc(j.title||j.scope||'Job')+'</div>'+
-    '<div class="jmeta">'+
-      (j.client?'<b>'+esc(j.client)+'</b><br>':'')+
-      (loc?esc(loc)+'<br>':'')+
-      (j.scope?esc(j.scope)+' · ':'')+esc(shiftLabel(j.shift))+(j.time?' · '+esc(j.time):'')+'<br>'+
-      (j.state?'<span class="tag">'+ico('map-pin')+' '+esc(j.state)+'</span>':'')+
-    '</div>'+
-    (assign?'<div class="jassign">'+assign+'</div>':'')+
-    (chips?'<div class="jchips">'+chips+'</div>':'')+
+function wkCard(j){
+  var night=isNightShift(j);
+  var trim=function(s){return String(s).trim();};
+  var sup=String(j.supervisor_names||'').split(',').map(trim).filter(Boolean);
+  var lys=String(j.lorry_details||'').split(',').map(trim).filter(Boolean);
+  var wn=(parseJSON_(j.worker_ids,[])||[]).length;
+  var chips=sup.map(function(s){return '<span class="wk-chip sv">'+esc(s)+'</span>';}).join('')+
+    lys.map(function(l){return '<span class="wk-chip ly">'+esc(l)+'</span>';}).join('')+
+    (wn?'<span class="wk-chip wk">+'+wn+' worker'+(wn===1?'':'s')+'</span>':'');
+  return '<div class="wk-card'+(night?' night':'')+'" onclick="sideLoad(\''+esc(j.id)+'\')">'+
+    '<div class="wk-lbl">'+esc(shiftLabel(j.shift)).toUpperCase()+'</div>'+
+    '<div class="wk-title">'+esc(j.scope||j.title||'Job')+'</div>'+
+    (j.mall?'<div class="wk-line">Mall: '+esc(j.mall)+'</div>':'')+
+    (j.lot?'<div class="wk-line">Lot: '+esc(j.lot)+'</div>':'')+
+    (j.time?'<div class="wk-line">'+esc(j.time)+'</div>':'')+
+    (chips?'<div class="wk-chips">'+chips+'</div>':'')+
   '</div>';
+}
+
+/* ---------- WhatsApp roster ---------- */
+async function waRoster(btn){
+  busy(btn);
+  var r=await sb.from('ja_jobs').select('*').eq('date',todayISO()).order('shift').limit(200);
+  unbusy(btn);
+  if(r.error){toast(r.error.message,'bad');return;}
+  var jobs=r.data||[];
+  if(!jobs.length){toast('No jobs scheduled today.','bad');return;}
+  var d=new Date();
+  var lines=['*HG Job Arrangement — '+d.toLocaleDateString('en-MY',{weekday:'short',day:'numeric',month:'short',year:'numeric'})+'*'];
+  [['Day','DAY SHIFT'],['Night','NIGHT SHIFT']].forEach(function(g){
+    var list=jobs.filter(function(j){return shiftGroup(j.shift)===g[0];});
+    if(!list.length)return;
+    lines.push('','*'+g[1]+'*');
+    list.forEach(function(j,i){
+      var wn=(parseJSON_(j.worker_ids,[])||[]).length;
+      lines.push((i+1)+'. '+[j.time,j.scope||j.title,j.mall,j.lot?'Lot '+j.lot:''].filter(Boolean).join(' · '));
+      lines.push('   SV: '+(j.supervisor_names||'—')+' · '+wn+' worker'+(wn===1?'':'s'));
+    });
+  });
+  window.open('https://wa.me/?text='+encodeURIComponent(lines.join('\n')),'_blank');
+}
+
+/* ---------- Insert-job sidebar ---------- */
+function buildSideForm(){
+  var el=gel('sideForm');
+  el.innerHTML=
+    '<datalist id="dl-side-client"></datalist><datalist id="dl-side-mall"></datalist>'+
+    '<h3 style="margin:0" id="sideTitle">'+ico('plus')+' Insert Job</h3>'+
+    '<div class="side-sub">Shift drives which job scope list appears. Click any saved job to edit it.</div>'+
+    '<label>Client</label><div class="side-row"><input id="if-client" list="dl-side-client" placeholder="e.g. ABC Sdn Bhd"><button class="ghost sm" onclick="editLookupList(\'client\',\'client list\')">Edit list</button></div>'+
+    '<label>Shift category</label><select id="if-shift" onchange="updateScopeOptions(\'\')">'+selOpts(SIDE_SHIFTS,'day-inst')+'</select>'+
+    '<label>Job scope</label><select id="if-scope"></select>'+
+    '<label>State / Outstation</label><div class="side-row"><select id="if-state" onchange="updateStateHint()"></select><button class="ghost sm" onclick="ratesPop()">Rates</button><button class="ghost sm" onclick="mallStatePop()">Mall→State</button></div>'+
+    '<div class="state-hint" id="if-stateHint"></div>'+
+    '<label>Mall</label><input id="if-mall" list="dl-side-mall" oninput="sideAutoState()" placeholder="Picking a mall auto-sets the state">'+
+    '<label>Lot</label><input id="if-lot" placeholder="e.g. G-23">'+
+    '<div class="grid2"><div><label>Date</label><input type="date" id="if-date" value="'+esc(todayISO())+'"></div><div><label>Time</label><input type="time" id="if-time" value="09:00"></div></div>'+
+    '<label>Supervisor / Driver</label><div class="side-mini"><button class="ghost sm" onclick="show(\'workers\')">Edit list</button><button class="ghost sm" onclick="clearSel(\'sup\')">Clear</button></div>'+
+    '<div class="chipwrap" id="if-supChips"></div><div class="selcount" id="if-supCount"></div>'+
+    '<label>Workers</label><input id="if-wkFilter" placeholder="Filter workers…" oninput="renderWkChips()" style="margin-bottom:6px"><div class="side-mini"><button class="ghost sm" onclick="show(\'workers\')">Edit list</button><button class="ghost sm" onclick="clearSel(\'wk\')">Clear</button></div>'+
+    '<div class="chipwrap scrolly" id="if-wkChips"></div><div class="selcount" id="if-wkCount"></div>'+
+    '<label>Lorries</label><div class="side-mini"><button class="ghost sm" onclick="show(\'workers\')">Edit list</button><button class="ghost sm" onclick="clearSel(\'ly\')">Clear</button></div>'+
+    '<div class="chipwrap" id="if-lyChips"></div><div class="selcount" id="if-lyCount"></div>'+
+    '<div class="side-actions">'+
+      '<button class="btn" id="if-saveBtn" style="flex:1;justify-content:center" onclick="sideSave(this)">'+ico('plus')+' Insert Job</button>'+
+      '<button class="ghost" id="if-detailsBtn" style="display:none" onclick="if(SIDE_JOB)jobForm(SIDE_JOB.id)">Details ▸</button>'+
+      '<button class="ghost" id="if-newBtn" style="display:none" onclick="sideReset()">New</button>'+
+    '</div>';
+  refreshSideMasters();
+  updateStateHint();
+}
+function refreshSideMasters(){
+  if(!gel('sideForm'))return;
+  gel('dl-side-client').innerHTML=dataOpts(M.clients);
+  gel('dl-side-mall').innerHTML=dataOpts(M.malls);
+  var st=gel('if-state'),cur=st.value;
+  st.innerHTML=selOpts(M.states.map(function(s){return s.state;}),cur,'— select state —');
+  updateScopeOptions();
+  renderSupChips();renderWkChips();renderLyChips();
+  syncHubSelects(gel('sideForm'));
+}
+function updateScopeOptions(desired){
+  var sel=gel('if-scope');if(!sel)return;
+  if(desired===undefined)desired=sel.value;
+  var shift=(gel('if-shift')||{}).value||'';
+  var list=(shift.indexOf('factory')>=0?M.scopeFactory:M.scopeOnsite).slice();
+  if(desired&&list.indexOf(desired)<0)list.unshift(desired);
+  sel.innerHTML=selOpts(list,desired,'— select scope —');
+}
+function updateStateHint(){
+  var el=gel('if-stateHint');if(!el)return;
+  var s=val('if-state');
+  if(!s){el.textContent='Pick a state to see worker multipliers and incentive rates.';return;}
+  var r=M.stateMap[s]||{};
+  el.innerHTML='<b>'+esc(s)+'</b>: Worker = base ×'+num_(r.wk_mult||1)+' + RM'+num_(r.wk_allow||0)+
+    ' · In-house incentive RM'+num_(r.inhouse_inc||0)+'/shift · Outsource RM'+num_(r.outsource_rate||0)+'/shift';
+}
+function sideAutoState(){
+  var st=M.mallStates[val('if-mall').toLowerCase()];
+  if(st){setSelectValue(gel('if-state'),st);syncHubSelects(gel('sideForm'));updateStateHint();}
+}
+function setSelectValue(sel,value,label){
+  if(!sel)return;
+  if(value&&!Array.prototype.some.call(sel.options,function(o){return o.value===String(value);})){
+    var o=document.createElement('option');o.value=value;o.textContent=label||value;sel.appendChild(o);
+  }
+  sel.value=value||'';
+}
+
+/* chip multi-selects */
+function chipBtn(kind,id,label){return '<button type="button" class="mchip'+(SIDE_SEL[kind][id]?' on':'')+'" onclick="toggleChip(\''+kind+'\',\''+esc(id)+'\',this)">'+esc(label)+'</button>';}
+function renderSupChips(){var el=gel('if-supChips');if(!el)return;el.innerHTML=M.supervisors.map(function(s){return chipBtn('sup',s.id,s.name);}).join('')||'<span class="hint">None on file.</span>';updCounts();}
+function renderWkChips(){var el=gel('if-wkChips');if(!el)return;var f=val('if-wkFilter').toLowerCase();
+  var list=M.workers.filter(function(w){return !f||String(w.name).toLowerCase().indexOf(f)>=0||String(w.team||'').toLowerCase().indexOf(f)>=0;});
+  el.innerHTML=list.map(function(w){return chipBtn('wk',w.id,w.name);}).join('')||'<span class="hint">No match.</span>';updCounts();}
+function renderLyChips(){var el=gel('if-lyChips');if(!el)return;el.innerHTML=M.lorries.map(function(l){return chipBtn('ly',l.id,l.plate);}).join('')||'<span class="hint">None on file.</span>';updCounts();}
+function toggleChip(kind,id,btn){
+  if(SIDE_SEL[kind][id])delete SIDE_SEL[kind][id];else SIDE_SEL[kind][id]=1;
+  if(btn)btn.classList.toggle('on',!!SIDE_SEL[kind][id]);
+  updCounts();
+}
+function clearSel(kind){SIDE_SEL[kind]={};if(kind==='sup')renderSupChips();else if(kind==='wk')renderWkChips();else renderLyChips();}
+function updCounts(){
+  if(!gel('if-supCount'))return;
+  gel('if-supCount').textContent=Object.keys(SIDE_SEL.sup).length+' selected';
+  gel('if-wkCount').textContent=Object.keys(SIDE_SEL.wk).length+' / '+M.workers.length+' selected';
+  gel('if-lyCount').textContent=Object.keys(SIDE_SEL.ly).length+' selected';
+}
+function selIds(kind,arr){return arr.filter(function(x){return SIDE_SEL[kind][x.id];}).map(function(x){return x.id;});}
+
+/* load a board card into the sidebar */
+function sideLoad(id){
+  var j=null;
+  for(var i=0;i<WEEK_JOBS.length;i++)if(String(WEEK_JOBS[i].id)===String(id)){j=WEEK_JOBS[i];break;}
+  if(!j)return;
+  SIDE_JOB=j;
+  gel('if-client').value=j.client||'';
+  setSelectValue(gel('if-shift'),j.shift||'day-inst',shiftLabel(j.shift));
+  updateScopeOptions(j.scope||'');
+  setSelectValue(gel('if-state'),j.state||'');
+  gel('if-mall').value=j.mall||'';
+  gel('if-lot').value=j.lot||'';
+  gel('if-date').value=String(j.date||todayISO()).slice(0,10);
+  gel('if-time').value='';
+  try{gel('if-time').value=String(j.time||'').slice(0,5);}catch(e){}
+  SIDE_SEL={sup:{},wk:{},ly:{}};
+  (parseJSON_(j.supervisor_ids,[])||[]).forEach(function(x){SIDE_SEL.sup[x]=1;});
+  (parseJSON_(j.worker_ids,[])||[]).forEach(function(x){SIDE_SEL.wk[x]=1;});
+  (parseJSON_(j.lorry_ids,[])||[]).forEach(function(x){SIDE_SEL.ly[x]=1;});
+  renderSupChips();renderWkChips();renderLyChips();
+  updateStateHint();
+  syncHubSelects(gel('sideForm'));
+  setSideMode(true);
+  if(window.innerWidth<980)gel('sideForm').scrollIntoView({behavior:'smooth'});
+}
+function setSideMode(editing){
+  gel('sideTitle').innerHTML=(editing?ico('pencil')+' Edit Job':ico('plus')+' Insert Job');
+  gel('if-saveBtn').innerHTML=(editing?ico('save')+' Update Job':ico('plus')+' Insert Job');
+  gel('if-detailsBtn').style.display=editing?'':'none';
+  gel('if-newBtn').style.display=editing?'':'none';
+  if(window.lucide)window.lucide.createIcons();
+}
+function sideReset(){
+  SIDE_JOB=null;SIDE_SEL={sup:{},wk:{},ly:{}};
+  ['if-client','if-mall','if-lot','if-wkFilter'].forEach(function(id){var e=gel(id);if(e)e.value='';});
+  gel('if-date').value=todayISO();gel('if-time').value='09:00';
+  gel('if-shift').value='day-inst';
+  updateScopeOptions('');
+  gel('if-state').value='';
+  renderSupChips();renderWkChips();renderLyChips();
+  updateStateHint();
+  syncHubSelects(gel('sideForm'));
+  setSideMode(false);
+}
+/* save basic fields; on update all other columns are preserved (partial update) */
+async function sideSave(btn){
+  var date=val('if-date');
+  if(!date){toast('Date is required.','bad');return;}
+  var supIds=selIds('sup',M.supervisors),wkIds=selIds('wk',M.workers),lyIds=selIds('ly',M.lorries);
+  var time=val('if-time');
+  if(!time&&SIDE_JOB&&SIDE_JOB.time)time=SIDE_JOB.time; /* keep odd formats like 2200-0600 */
+  var rec={client:val('if-client'),shift:val('if-shift'),scope:val('if-scope'),state:val('if-state'),
+    mall:val('if-mall'),lot:val('if-lot'),date:date,time:time,
+    supervisor_ids:supIds,worker_ids:wkIds,lorry_ids:lyIds,
+    supervisor_names:namesFrom(supIds,svName),worker_names:namesFrom(wkIds,wkName),lorry_details:namesFrom(lyIds,lyDetail),
+    updated_at:esNow()};
+  busy(btn);var res,isNew=!SIDE_JOB;
+  if(SIDE_JOB){
+    res=await sb.from('ja_jobs').update(rec).eq('id',SIDE_JOB.id);
+  }else{
+    rec.id='job_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    rec.created_at=esNow();
+    rec.worker_times={};rec.line_items=[];rec.has_tax=0;
+    rec.invoice_status='Pending';rec.wage_status='Pending';rec.incentive_status='Pending';rec.allow_status='Pending';rec.cidb_status='Pending';
+    res=await sb.from('ja_jobs').insert(rec);
+  }
+  unbusy(btn);
+  if(res.error){toast(res.error.message,'bad');return;}
+  audit(isNew?'Job inserted':'Job edited',date+' · '+(rec.scope||'Job')+(rec.mall?' @ '+rec.mall:''));
+  toast(isNew?'Job inserted.':'Job updated.','ok');
+  if(isNew)SIDE_JOB=rec;else for(var k in rec)SIDE_JOB[k]=rec[k];
+  CUR_DATE=date;WEEK_START=mondayOf(date);
+  gel('wkNotice').innerHTML='';
+  await loadWeek();
+  for(var i=0;i<WEEK_JOBS.length;i++)if(String(WEEK_JOBS[i].id)===String(SIDE_JOB.id))SIDE_JOB=WEEK_JOBS[i];
+  setSideMode(true);
+}
+
+/* ---------- popovers: state rates + mall→state ---------- */
+function ratesPop(){
+  var rows=M.states.map(function(s){return '<tr><td><b>'+esc(s.state)+'</b></td><td class="right">×'+num_(s.wk_mult||1)+'</td><td class="right">'+money_(s.wk_allow||0)+'</td><td class="right">'+money_(s.inhouse_inc||0)+'</td><td class="right">'+money_(s.outsource_rate||0)+'</td></tr>';}).join('');
+  openModal2('State rates',
+    '<table style="min-width:0"><thead><tr><th>State</th><th class="right">Worker mult</th><th class="right">Allowance</th><th class="right">In-house inc</th><th class="right">Outsource</th></tr></thead><tbody>'+(rows||'<tr><td colspan="5" class="muted">No states on file.</td></tr>')+'</tbody></table>',
+    '<button class="ghost" onclick="closeModal2()">Close</button>');
+}
+function mallStatePop(){
+  var rows=(M.mallStateRows||[]).map(function(m){return '<tr><td>'+esc(m.mall)+'</td><td><b>'+esc(m.state)+'</b></td></tr>';}).join('');
+  openModal2('Mall → State mappings',
+    '<table style="min-width:0"><thead><tr><th>Mall</th><th>State</th></tr></thead><tbody>'+(rows||'<tr><td colspan="2" class="muted">No mappings on file.</td></tr>')+'</tbody></table>',
+    '<button class="ghost" onclick="closeModal2()">Close</button>');
+}
+
+/* ---------- lookup list editor (ja_lookups) ---------- */
+var LK={type:'',title:'',list:[]};
+function editLookupList(type,title){
+  LK.type=type;LK.title=title;
+  LK.list=(type==='client'?M.clients:M.malls).slice();
+  var rows=LK.list.map(function(v,i){return '<tr><td>'+esc(v)+'</td><td class="right"><button class="danger sm" onclick="delLookup('+i+',this)">Remove</button></td></tr>';}).join('');
+  openModal2('Edit '+esc(title),
+    '<div class="side-row" style="margin-bottom:10px"><input id="lk-new" placeholder="Add new value…" onkeydown="if(event.key===\'Enter\')addLookup(this)"><button class="btn sm" onclick="addLookup(this)">Add</button></div>'+
+    '<table style="min-width:0"><thead><tr><th>Value</th><th></th></tr></thead><tbody>'+(rows||'<tr><td colspan="2" class="muted">None yet.</td></tr>')+'</tbody></table>',
+    '<button class="ghost" onclick="closeModal2()">Done</button>');
+}
+async function addLookup(btn){
+  var v=val('lk-new');
+  if(!v){toast('Enter a value.','bad');return;}
+  busy(btn);
+  var r=await sb.from('ja_lookups').insert({type:LK.type,value:v});
+  unbusy(btn);
+  if(r.error){toast(r.error.message,'bad');return;}
+  audit('Lookup added',LK.type+' · '+v);
+  await loadMasters();refreshSideMasters();
+  editLookupList(LK.type,LK.title);toast('Added.','ok');
+}
+async function delLookup(i,btn){
+  var v=LK.list[i];
+  if(!confirm('Remove "'+v+'" from the '+LK.title+'?'))return;
+  busy(btn);
+  var r=await sb.from('ja_lookups').delete().eq('type',LK.type).eq('value',v);
+  unbusy(btn);
+  if(r.error){toast(r.error.message,'bad');return;}
+  audit('Lookup removed',LK.type+' · '+v);
+  await loadMasters();refreshSideMasters();
+  editLookupList(LK.type,LK.title);toast('Removed.','ok');
 }
 
 /* ============================================================
@@ -673,6 +1010,7 @@ async function delJob(id){
   var r=await sb.from('ja_jobs').delete().eq('id',id);
   if(r.error){toast(r.error.message,'bad');return;}
   audit('Job deleted',String(id));
+  if(SIDE_JOB&&String(SIDE_JOB.id)===String(id)&&gel('sideForm'))sideReset();
   closeModal();renderSchedule();toast('Job deleted.','ok');
 }
 
@@ -704,6 +1042,7 @@ function renderWorkers(){
       '<table><thead><tr><th>Name</th><th>ID</th><th>Type</th><th></th></tr></thead><tbody>'+(srows||'<tr><td colspan="4" class="muted">None.</td></tr>')+'</tbody></table></div>'+
     '<div class="card"><div class="toolbar"><h3 style="margin:0">Lorries ('+M.lorries.length+')</h3><div style="flex:1"></div><button class="btn sm" onclick="lorryForm(null)">'+ico('plus')+' Add</button></div>'+
       '<table><thead><tr><th>Code</th><th>Plate</th><th></th></tr></thead><tbody>'+(lrows||'<tr><td colspan="3" class="muted">None.</td></tr>')+'</tbody></table></div>';
+  refreshSideMasters(); /* keep Schedule sidebar chips/datalists in sync with masters */
   if(window.lucide)window.lucide.createIcons();
 }
 
