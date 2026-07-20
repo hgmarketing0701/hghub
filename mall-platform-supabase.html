@@ -900,10 +900,33 @@ function loadShopTypes(){
 }
 
 // ═══════════════════════════ DOOR 1 — Site Drawing Vault ═══════════════════════════
+/* canonical backbone malls (GET /api/masters/malls) — [] if unreachable so the tool keeps working on mp_malls alone */
+async function fetchMasterMalls(){
+  try{
+    var res = await fetch((window.HG_API_BASE||'')+'/api/masters/malls',{credentials:'include'});
+    if(!res.ok) return [];
+    var j = await res.json();
+    return (j&&j.data)||[];
+  }catch(e){ return []; }
+}
 async function getMalls(){
-  var r = await sb.from('mp_malls').select('*').order('name');
+  /* mp_sketches / mp_requirements / mp_measure_requests all store mall as NAME string,
+     so the selector list can safely be canonical hg_malls UNION local mp_malls (case-insensitive by name). */
+  var both = await Promise.all([ fetchMasterMalls(), sb.from('mp_malls').select('*').order('name') ]);
+  var canon = both[0], r = both[1];
   if(r.error) throw r.error;
-  return r.data.map(function(m){ return { id:m.id, name:m.name, code:m.code||'', location:m.location||'', notes:m.notes||'' }; });
+  var local = r.data.map(function(m){ return { id:m.id, name:m.name, code:m.code||'', location:m.location||'', notes:m.notes||'' }; });
+  var localBy = {}; local.forEach(function(m){ localBy[String(m.name).toLowerCase()] = m; });
+  var seen = {}, out = [];
+  canon.forEach(function(m){
+    if(!m || !m.name) return;
+    var k = String(m.name).toLowerCase(); if(seen[k]) return; seen[k] = 1;
+    var loc = localBy[k] || {};
+    out.push({ id:loc.id||m.id, name:m.name, code:m.code||loc.code||'', location:m.location||loc.location||'', notes:loc.notes||'' });
+  });
+  local.forEach(function(m){ var k = String(m.name).toLowerCase(); if(!seen[k]){ seen[k] = 1; out.push(m); } });
+  out.sort(function(a,b){ return String(a.name).toLowerCase().localeCompare(String(b.name).toLowerCase()); });
+  return out;
 }
 
 function loadMalls(){

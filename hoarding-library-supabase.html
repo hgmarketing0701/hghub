@@ -230,6 +230,7 @@
   <div class="modal-f" id="m-foot"></div>
 </dialog>
 <div id="toast"></div>
+<datalist id="mallDatalist"></datalist>
 
 <script>
 /* ===================== CONFIG / AUTH (copied from transport-supabase template) ===================== */
@@ -379,6 +380,7 @@ var RATES=[];
 var REC_ROWS=[], REC_LIMIT=200, REC_HASMORE=false, REC_SEARCH='', REC_MALL='';
 var REC_SORT={k:'date',dir:-1};
 var KNOWN_MALLS={};
+var MASTER_MALLS=[]; /* canonical mall names from /api/masters/malls; unioned with malls seen in loaded records */
 var MB_ROWS=[], MB_LIMIT=200, MB_HASMORE=false, MB_LOADED=false;
 
 /* ===================== BOOTSTRAP ===================== */
@@ -386,6 +388,7 @@ async function boot(){
   buildNav();
   gel('dateNow').textContent=new Date().toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'});
   try{
+    await loadMasterMalls();
     await loadRates();
     await loadRecords();
     renderRecords();
@@ -407,6 +410,31 @@ function show(t){
 }
 
 /* ===================== LOADERS ===================== */
+/* Canonical mall names from the Master Data backbone (records store mall as text).
+   Non-fatal: if unavailable, the filter/form fall back to malls seen in loaded records. */
+async function loadMasterMalls(){
+  try{
+    var res=await fetch((window.HG_API_BASE||'')+'/api/masters/malls',{credentials:'include'});
+    var j=null;try{j=await res.json();}catch(e){}
+    if(!res.ok)throw new Error((j&&j.error&&j.error.message)||('HTTP '+res.status));
+    MASTER_MALLS=((j&&j.data)||[]).map(function(m){return String(m.name||'').trim();}).filter(Boolean);
+  }catch(e){MASTER_MALLS=[];}
+}
+/* Union of canonical malls + malls present in loaded records (dedup, case-insensitive)
+   so old free-text values remain filterable. */
+function unionMalls(){
+  var seen={},out=[];
+  MASTER_MALLS.concat(Object.keys(KNOWN_MALLS)).forEach(function(m){
+    var k=String(m||'').trim();if(!k)return;
+    var lk=k.toLowerCase();if(seen[lk])return;seen[lk]=1;out.push(k);
+  });
+  out.sort(function(a,b){return a.localeCompare(b);});
+  return out;
+}
+function fillMallDatalist(){
+  var d=gel('mallDatalist');if(!d)return;
+  d.innerHTML=unionMalls().map(function(m){return '<option value="'+esc(m)+'">';}).join('');
+}
 async function loadRates(){
   var r=await sb.from('hlib_rates').select('*').order('mall');
   if(r.error)throw r.error;
@@ -464,10 +492,11 @@ function sortedRecords(){
   return rows;
 }
 function mallOptions(sel){
-  var malls=Object.keys(KNOWN_MALLS).sort();
-  return '<option value="">All malls (loaded)</option>'+malls.map(function(m){return '<option'+(m===sel?' selected':'')+'>'+esc(m)+'</option>';}).join('');
+  var malls=unionMalls();
+  return '<option value="">All malls</option>'+malls.map(function(m){return '<option'+(m===sel?' selected':'')+'>'+esc(m)+'</option>';}).join('');
 }
 function renderRecords(){
+  fillMallDatalist();
   var rows=sortedRecords();
   var totArea=rows.reduce(function(a,r){return a+(r.areaM2||0);},0);
   var totDoors=rows.reduce(function(a,r){return a+(r.doorQty||0);},0);
@@ -600,7 +629,7 @@ function openRecordForm(id){
   var body=
     '<div class="row"><div><label>Lot No *</label><input id="f-lot" value="'+esc(r.lot)+'"></div>'+
       '<div><label>Run / Area</label><input id="f-run" value="'+esc(r.run)+'" placeholder="e.g. Run A"></div></div>'+
-    '<div class="row"><div><label>Mall</label><input id="f-mall" value="'+esc(r.mall)+'"></div>'+
+    '<div class="row"><div><label>Mall</label><input id="f-mall" list="mallDatalist" value="'+esc(r.mall)+'"></div>'+
       '<div><label>Tenant / Shop</label><input id="f-tenant" value="'+esc(r.tenant)+'"></div></div>'+
     '<div class="row"><div><label>Length (m)</label><input id="f-lengthM" type="number" step="0.01" value="'+(r.lengthM||'')+'" oninput="autoArea()"></div>'+
       '<div><label>Height (m)</label><input id="f-heightM" type="number" step="0.01" value="'+(r.heightM||'')+'" oninput="autoArea()"></div>'+

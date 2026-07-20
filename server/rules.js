@@ -27,6 +27,14 @@ const tableRules = {
   // wage/payment data — admin only
   ja_wage_adjustments: { read: "admin", write: "admin" },
 
+  // canonical masters — managed via /api/masters (normalize + pending workflow);
+  // generic CRUD on them is admin-only so the workflow can't be bypassed
+  hg_clients: { read: "admin", write: "admin" },
+  hg_workers: { read: "admin", write: "admin", hideCols: ["rate", "monthly_pay", "bank_name", "account_name", "account_no"] },
+  hg_vehicles: { read: "admin", write: "admin" },
+  hg_malls: { read: "admin", write: "admin" },
+  hg_master_map: { read: "admin", write: "admin" },
+
   // finance tools (payable/receivable) — admin only until UIs ship with role design
   ap_payment_requests: { read: "admin", write: "admin" },
   ap_audit_log: { read: "admin", write: "admin" },

@@ -414,7 +414,7 @@ document.addEventListener('pointerdown',function(event){if(!event.target.closest
 document.addEventListener('keydown',function(event){if(event.key==='Escape')closeHubSelects();});
 
 /* ===================== STATE (masters cache) ===================== */
-var M={workers:[],supervisors:[],lorries:[],malls:[],clients:[],scopeFactory:[],scopeOnsite:[],states:[],mallStates:{},stateMap:{}};
+var M={workers:[],supervisors:[],lorries:[],malls:[],clients:[],masterMalls:[],masterClients:[],scopeFactory:[],scopeOnsite:[],states:[],mallStates:{},stateMap:{}};
 var CUR_DATE=todayISO();
 var TABS=[['sched','Schedule'],['workers','Workers &amp; Masters'],['wages','Wages'],['reviews','Reviews']];
 
@@ -449,6 +449,35 @@ function show(t){document.querySelectorAll('nav button').forEach(function(b){b.c
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});gel('v-'+t).classList.add('active');
   if(t==='wages')renderWages();if(t==='reviews')renderReviews();window.scrollTo(0,0);}
 
+/* ---- canonical backbone masters (same-origin /api/masters, cookie auth) ---- */
+function mastersUrl(type){return (window.HG_API_BASE||'')+'/api/masters/'+type;}
+async function mastersGet(type){
+  try{
+    var res=await fetch(mastersUrl(type),{credentials:'include'});
+    if(!res.ok)return [];
+    var j=await res.json();
+    return (j&&j.data)||[];
+  }catch(e){return [];}
+}
+async function mastersPost(type,body){
+  try{
+    var res=await fetch(mastersUrl(type),{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var j=null;try{j=await res.json();}catch(e2){}
+    if(!res.ok)return {data:null,error:(j&&j.error)||{message:'HTTP '+res.status}};
+    return {data:j?j.data:null,error:null};
+  }catch(e){return {data:null,error:{message:e.message||'Network error'}};}
+}
+/* case-insensitive union — canonical names first, legacy values kept so nothing typed before disappears */
+function unionNames(primary,extra){
+  var seen={},out=[];
+  (primary||[]).concat(extra||[]).forEach(function(v){
+    v=String(v==null?'':v).trim();if(!v)return;
+    var k=v.toLowerCase();if(seen[k])return;seen[k]=1;out.push(v);
+  });
+  out.sort(function(a,b){a=a.toLowerCase();b=b.toLowerCase();return a<b?-1:(a>b?1:0);});
+  return out;
+}
+
 async function loadMasters(){
   var res=await Promise.all([
     sb.from('ja_workers').select('*').order('name'),
@@ -456,21 +485,28 @@ async function loadMasters(){
     sb.from('ja_lorries').select('*').order('id'),
     sb.from('ja_lookups').select('*').limit(2000),
     sb.from('ja_states').select('*'),
-    sb.from('ja_mall_states').select('*').limit(1000)
+    sb.from('ja_mall_states').select('*').limit(1000),
+    mastersGet('malls'),   /* canonical hg_malls  — [] if backbone unreachable */
+    mastersGet('clients')  /* canonical hg_clients — [] if backbone unreachable */
   ]);
-  res.forEach(function(r){if(r.error)throw r.error;});
+  res.forEach(function(r){if(r&&r.error)throw r.error;});
   M.workers=res[0].data||[];
   M.supervisors=res[1].data||[];
   M.lorries=res[2].data||[];
   var lk=res[3].data||[];
-  M.malls=lk.filter(function(x){return x.type==='mall';}).map(function(x){return x.value;}).sort();
-  M.clients=lk.filter(function(x){return x.type==='client';}).map(function(x){return x.value;}).sort();
+  M.masterMalls=res[6]||[];
+  M.masterClients=res[7]||[];
+  /* ja_jobs stores client + mall as NAME strings → canonical names UNION legacy ja_lookups values */
+  M.malls=unionNames(M.masterMalls.map(function(m){return m.name;}),lk.filter(function(x){return x.type==='mall';}).map(function(x){return x.value;}));
+  M.clients=unionNames(M.masterClients.map(function(c){return c.name;}),lk.filter(function(x){return x.type==='client';}).map(function(x){return x.value;}));
   M.scopeFactory=lk.filter(function(x){return x.type==='scope_factory';}).map(function(x){return x.value;});
   M.scopeOnsite=lk.filter(function(x){return x.type==='scope_onsite';}).map(function(x){return x.value;});
   M.states=res[4].data||[];
   M.stateMap={};M.states.forEach(function(s){M.stateMap[s.state]=s;});
   M.mallStateRows=res[5].data||[];
   M.mallStates={};M.mallStateRows.forEach(function(m){M.mallStates[String(m.mall).toLowerCase()]=m.state;});
+  /* canonical hg_malls.state wins; ja_mall_states stays as fallback when the canonical row has no state */
+  M.masterMalls.forEach(function(m){if(m&&m.name&&m.state)M.mallStates[String(m.name).toLowerCase()]=m.state;});
 }
 
 /* name lookups (mirror GAS nameMap) */
@@ -618,7 +654,7 @@ function buildSideForm(){
     '<label>Job scope</label><select id="if-scope"></select>'+
     '<label>State / Outstation</label><div class="side-row"><select id="if-state" onchange="updateStateHint()"></select><button class="ghost sm" onclick="ratesPop()">Rates</button><button class="ghost sm" onclick="mallStatePop()">Mall→State</button></div>'+
     '<div class="state-hint" id="if-stateHint"></div>'+
-    '<label>Mall</label><input id="if-mall" list="dl-side-mall" oninput="sideAutoState()" placeholder="Picking a mall auto-sets the state">'+
+    '<label>Mall</label><div class="side-row"><input id="if-mall" list="dl-side-mall" oninput="sideAutoState()" placeholder="Picking a mall auto-sets the state"><button class="ghost sm" onclick="editLookupList(\'mall\',\'mall list\')">Edit list</button></div>'+
     '<label>Lot</label><input id="if-lot" placeholder="e.g. G-23">'+
     '<div class="grid2"><div><label>Date</label><input type="date" id="if-date" value="'+esc(todayISO())+'"></div><div><label>Time</label><input type="time" id="if-time" value="09:00"></div></div>'+
     '<label>Supervisor / Driver</label><div class="side-mini"><button class="ghost sm" onclick="show(\'workers\')">Edit list</button><button class="ghost sm" onclick="clearSel(\'sup\')">Clear</button></div>'+
@@ -786,38 +822,36 @@ function mallStatePop(){
     '<button class="ghost" onclick="closeModal2()">Close</button>');
 }
 
-/* ---------- lookup list editor (ja_lookups) ---------- */
+/* ---------- lookup list editor (canonical /api/masters — adds only; removal lives in Master Data) ---------- */
 var LK={type:'',title:'',list:[]};
 function editLookupList(type,title){
   LK.type=type;LK.title=title;
   LK.list=(type==='client'?M.clients:M.malls).slice();
-  var rows=LK.list.map(function(v,i){return '<tr><td>'+esc(v)+'</td><td class="right"><button class="danger sm" onclick="delLookup('+i+',this)">Remove</button></td></tr>';}).join('');
+  var rows=LK.list.map(function(v){return '<tr><td>'+esc(v)+'</td></tr>';}).join('');
   openModal2('Edit '+esc(title),
     '<div class="side-row" style="margin-bottom:10px"><input id="lk-new" placeholder="Add new value…" onkeydown="if(event.key===\'Enter\')addLookup(this)"><button class="btn sm" onclick="addLookup(this)">Add</button></div>'+
-    '<table style="min-width:0"><thead><tr><th>Value</th><th></th></tr></thead><tbody>'+(rows||'<tr><td colspan="2" class="muted">None yet.</td></tr>')+'</tbody></table>',
+    '<div class="hint" style="margin-bottom:8px">Full management: Master Data tool.</div>'+
+    '<table style="min-width:0"><thead><tr><th>Value</th></tr></thead><tbody>'+(rows||'<tr><td class="muted">None yet.</td></tr>')+'</tbody></table>',
     '<button class="ghost" onclick="closeModal2()">Done</button>');
 }
 async function addLookup(btn){
   var v=val('lk-new');
   if(!v){toast('Enter a value.','bad');return;}
+  var type=LK.type==='client'?'clients':'malls';
   busy(btn);
-  var r=await sb.from('ja_lookups').insert({type:LK.type,value:v});
+  var r=await mastersPost(type,{name:v});
+  if(!r.error&&r.data&&r.data.duplicateOf){
+    unbusy(btn);
+    if(!confirm('"'+r.data.duplicateOf.name+'" already exists in master data. Add "'+v+'" anyway?'))return;
+    busy(btn);
+    r=await mastersPost(type,{name:v,force:true});
+  }
   unbusy(btn);
   if(r.error){toast(r.error.message,'bad');return;}
-  audit('Lookup added',LK.type+' · '+v);
+  audit('Master '+LK.type+' added',v);
   await loadMasters();refreshSideMasters();
-  editLookupList(LK.type,LK.title);toast('Added.','ok');
-}
-async function delLookup(i,btn){
-  var v=LK.list[i];
-  if(!confirm('Remove "'+v+'" from the '+LK.title+'?'))return;
-  busy(btn);
-  var r=await sb.from('ja_lookups').delete().eq('type',LK.type).eq('value',v);
-  unbusy(btn);
-  if(r.error){toast(r.error.message,'bad');return;}
-  audit('Lookup removed',LK.type+' · '+v);
-  await loadMasters();refreshSideMasters();
-  editLookupList(LK.type,LK.title);toast('Removed.','ok');
+  editLookupList(LK.type,LK.title);
+  toast(r.data&&r.data.status==='pending'?'Sent for admin approval.':'Added.','ok');
 }
 
 /* ============================================================

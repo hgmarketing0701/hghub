@@ -313,6 +313,7 @@ document.addEventListener('DOMContentLoaded',function(){initHubSelects(document)
 
 /* ===================== STATE / CONSTANTS ===================== */
 var DB={currentUser:'',jobs:[],clients:[],sites:[],team:[],lorries:[],expenses:[],syncLog:[],settings:{},records:{}};
+var MASTER_CLIENTS=null; /* canonical /api/masters/clients list; null = unavailable, fall back to tc_clients */
 var TABS=[['jobs','Jobs'],['clients','Clients'],['sites','Sites'],['team','Team'],['lorries','Lorries'],['expenses','Expenses'],['records','Custom Records'],['sync','Sync Log']];
 var SERVICES={scaffold:{label:'Scaffold',icon:'🏗️',color:'amber'},rorobin:{label:'Rorobin',icon:'♻️',color:'green'},storage:{label:'Storage',icon:'📦',color:'blue'},hoarding:{label:'Metal Hoarding',icon:'🧱',color:'purple'},lorry:{label:'Lorry Transport',icon:'🚛',color:'teal'},mover:{label:'Mover Service',icon:'💪',color:'pink'}};
 var JOB_STATUSES=['quoted','active','completed','invoiced','paid'];
@@ -378,6 +379,14 @@ async function loadBootstrap(){
   DB.syncLog=(res[6].data||[]).slice().sort(function(a,b){return String(b.timestamp||'').localeCompare(String(a.timestamp||''));});
   DB.settings={};var sr=(res[7].data||[]).filter(function(x){return x.key==='_settings';})[0];if(sr){try{DB.settings=JSON.parse(sr.value);}catch(e){}}
   DB.records={tc_scaffold_materials:res[8].data||[],tc_green_tag_logs:res[9].data||[],tc_rorobin_events:res[10].data||[],tc_storage_reminders:res[11].data||[],tc_hoarding_quotes:res[12].data||[]};
+  /* Canonical shared client list from the Master Data backbone (tc_jobs stores the client NAME).
+     Non-fatal: if unavailable, the job form falls back to this tool's local tc_clients list. */
+  try{
+    var mres=await fetch((window.HG_API_BASE||'')+'/api/masters/clients',{credentials:'include'});
+    var mj=null;try{mj=await mres.json();}catch(e){}
+    if(!mres.ok)throw new Error((mj&&mj.error&&mj.error.message)||('HTTP '+mres.status));
+    MASTER_CLIENTS=((mj&&mj.data)||[]).slice().sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''));});
+  }catch(e){MASTER_CLIENTS=null;}
 }
 async function reload(){await loadBootstrap();renderAll();}
 function renderAll(){renderJobs();renderClients();renderSites();renderTeam();renderLorries();renderExpenses();renderRecords();renderSync();initHubSelects(document);syncHubSelects(document);if(window.lucide)window.lucide.createIcons();}
@@ -439,7 +448,7 @@ function renderJobs(){
 function nextJobNo(){var mx=0;DB.jobs.forEach(function(j){var n=Number(j.no)||0;if(n>mx)mx=n;});var st=Number((DB.settings||{}).nextJobNo)||0;return Math.max(mx+1,st);}
 function jobForm(id){
   var j=id?byId(DB.jobs,id):null;var ex=j?pj(j):{};var d=j||{status:'quoted',service:'scaffold',client_type:'External'};
-  var clientOpts='<option value="">— pick client (auto-fills below) —</option>'+DB.clients.map(function(c){return '<option value="'+esc(c.name)+'">'+esc(c.name)+'</option>';}).join('');
+  var clientOpts='<option value="">— pick client (auto-fills below) —</option>'+(MASTER_CLIENTS||DB.clients).map(function(c){return '<option value="'+esc(c.name)+'">'+esc(c.name)+'</option>';}).join('');
   var siteId=ex.siteId||'';
   var siteOpts='<option value="">— none —</option>'+DB.sites.map(function(s){return '<option value="'+esc(s.id)+'"'+(s.id===siteId?' selected':'')+'>'+esc(s.name)+'</option>';}).join('');
   openModal(id?'Edit Job':'New Job',
@@ -458,10 +467,10 @@ function jobForm(id){
     '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="jobSave(\''+(id||'')+'\',this)">Save job</button>');
 }
 function jobPickClient(){
-  var name=val('j-clientpick');if(!name)return;var c=DB.clients.filter(function(x){return x.name===name;})[0];if(!c)return;
+  var name=val('j-clientpick');if(!name)return;var c=(MASTER_CLIENTS||DB.clients).filter(function(x){return x.name===name;})[0];if(!c)return;
   gel('j-client').value=c.name;
-  var ct=gel('j-ctype');ct.value=c.type||'External';ct.dispatchEvent(new Event('change',{bubbles:true}));
-  gel('j-b2b').checked=!!Number(c.b2b_exempt);
+  var ct=gel('j-ctype');ct.value=(c.type&&CLIENT_TYPES.indexOf(c.type)>=0)?c.type:'External';ct.dispatchEvent(new Event('change',{bubbles:true}));
+  gel('j-b2b').checked=!!Number(c.b2b_exempt||0); /* default false when master row has no b2b flag */
 }
 function jobSave(id,btn){
   var name=val('j-client');if(!name){toast('Client name required','bad');return;}
@@ -490,6 +499,7 @@ function renderClients(){
       '<td class="right"><button class="ghost sm" onclick="clientForm(\''+c.id+'\')">Edit</button> <button class="danger sm" onclick="clientDelete(\''+c.id+'\')">Del</button></td></tr>';
   }).join('');
   gel('v-clients').innerHTML='<h2>Clients</h2>'+
+    '<div class="hint" style="margin:-8px 0 12px">Shared master list lives in Master Data — entries here are local to Team Command.</div>'+
     toolbar('<input id="cf-q" placeholder="Search name, contact, tel&hellip;" value="'+esc(clientFilter)+'" oninput="clientFilter=this.value;renderClients()">'+
       '<button class="btn" onclick="clientForm()">'+ico('plus')+'New Client</button>'+
       '<button class="ghost" onclick="exportClients()">'+ico('sheet')+'Excel</button>'+

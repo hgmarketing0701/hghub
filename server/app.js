@@ -10,6 +10,7 @@ const { router: filesRouter, UPLOADS_DIR } = require("./files");
 const { router: rpcRouter } = require("./rpc");
 const { router: aiRouter } = require("./ai");
 const { router: cronRouter } = require("./cron");
+const { router: mastersRouter } = require("./masters");
 
 const app = express();
 app.disable("x-powered-by");
@@ -37,6 +38,7 @@ app.use("/api/files", filesRouter);
 app.use("/api/rpc", rpcRouter);
 app.use("/api/ai", aiRouter);
 app.use("/api/cron", cronRouter);
+app.use("/api/masters", mastersRouter);
 
 // uploaded files (same-origin static).
 app.use("/uploads", express.static(UPLOADS_DIR, { maxAge: "7d" }));

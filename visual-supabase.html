@@ -305,7 +305,7 @@ var TABS = [
 ];
 
 /* ═══════════════════════════ STATE ═══════════════════════════ */
-var DB = { jobs:[], rates:[], permits:[], workers:[], invoices:[], malls:[], materials:[], alarms:[], currentUser:'' };
+var DB = { jobs:[], rates:[], permits:[], workers:[], invoices:[], malls:[], masterMalls:[], materials:[], alarms:[], currentUser:'' };
 
 /* ═══════════════════════════ HELPERS ═══════════════════════════ */
 function el(id){ return document.getElementById(id); }
@@ -475,9 +475,31 @@ function dzFiles(id){return (DROPS[id]&&DROPS[id].files)||[];}
 /* ═══════════════════════════ MANAGED MALL / MATERIAL LISTS ═══════════════════════════ */
 function listFor(kind){return kind==='mall'?DB.malls:DB.materials;}
 function tableFor(kind){return kind==='mall'?'vis_malls':'vis_materials';}
+/* canonical backbone malls (GET /api/masters/malls) — [] if unreachable so the tool keeps working on vis_malls alone */
+async function fetchMasterMalls(){
+  try{
+    var res=await fetch((window.HG_API_BASE||'')+'/api/masters/malls',{credentials:'include'});
+    if(!res.ok)return [];
+    var j=await res.json();
+    return (j&&j.data)||[];
+  }catch(e){return [];}
+}
+/* vis_jobs / vis_permits store mall as NAME string → canonical names UNION local vis_malls, case-insensitive */
+function mallNames(){
+  var seen={},out=[];
+  (DB.masterMalls||[]).map(function(m){return m&&m.name;})
+    .concat((DB.malls||[]).map(function(m){return m&&m.name;}))
+    .forEach(function(v){
+      v=String(v==null?'':v).trim();if(!v)return;
+      var k=v.toLowerCase();if(seen[k])return;seen[k]=1;out.push(v);
+    });
+  out.sort(function(a,b){a=a.toLowerCase();b=b.toLowerCase();return a<b?-1:(a>b?1:0);});
+  return out;
+}
 function optionsFor(kind,current){
+  var names = kind==='mall' ? mallNames() : listFor(kind).map(function(m){return m.name;});
   return '<option value="">— select '+(kind==='mall'?'mall':'material')+' —</option>'+
-    listFor(kind).map(function(m){return '<option'+(m.name===current?' selected':'')+'>'+esc(m.name)+'</option>';}).join('');
+    names.map(function(n){return '<option'+(n===current?' selected':'')+'>'+esc(n)+'</option>';}).join('');
 }
 function managedSelect(kind,id,current){
   return '<div class="selrow"><select id="'+id+'" onchange="liveQuote&&liveQuote()">'+optionsFor(kind,current)+'</select>'+
@@ -498,6 +520,7 @@ function manageList(kind, selId){
   }).join('');
   openModal2((kind==='mall'?'Manage malls':'Manage materials'),
     '<div class="mng-row"><input id="mng-new" placeholder="New '+(kind==='mall'?'mall':'material')+' name"><button class="btn sm" onclick="mngAdd(\''+kind+'\',\''+selId+'\')">+ Add</button></div>'+
+    (kind==='mall'?'<div class="muted" style="margin-top:8px;font-size:12px">Canonical malls come from the Master Data tool — this list only holds local extras.</div>':'')+
     '<div style="margin-top:10px">'+(rows||'<div class="muted">None yet.</div>')+'</div>',
     '<button class="ghost" onclick="closeModal2()">Done</button>');
 }
@@ -561,9 +584,10 @@ async function refresh(){
     sb.from('vis_invoices').select('*').order('created_at',{ascending:false}).limit(80),
     sb.from('vis_malls').select('*').order('name'),
     sb.from('vis_materials').select('*').order('name'),
-    sb.from('vis_alarms').select('*')
+    sb.from('vis_alarms').select('*'),
+    fetchMasterMalls()
   ]);
-  var err = q.map(function(r){return r.error;}).filter(Boolean)[0];
+  var err = q.map(function(r){return r&&r.error;}).filter(Boolean)[0];
   if(err){ el('v-dash').innerHTML='<div class="card card-error">'+ico('triangle-alert')+'<span>'+esc(err.message)+'</span></div>'; if(window.lucide)window.lucide.createIcons(); toast(err.message,'bad'); return; }
   DB.jobs = q[0].data.map(jobView);
   DB.rates = q[1].data.map(rateView);
@@ -573,6 +597,7 @@ async function refresh(){
   DB.malls = q[5].data;
   DB.materials = q[6].data;
   DB.alarms = q[7].data;
+  DB.masterMalls = q[8]||[];
   renderAll();
 }
 function renderAll(){ renderDash(); renderJobs(); renderRates(); renderPermits(); renderWorkers(); renderInvoices(); initHubSelects(document); syncHubSelects(document); if(window.lucide)window.lucide.createIcons(); }
@@ -663,7 +688,7 @@ function stat(n,l){return '<div class="stat"><div class="n">'+n+'</div><div clas
 /* ═══════════════════════════ JOBS ═══════════════════════════ */
 function renderJobs(){
   var statusOpts='<option value="">All status</option>'+STATUSES.map(function(s){return '<option value="'+s+'">'+STATUS_LABEL[s]+'</option>';}).join('');
-  var mallOpts='<option value="">All malls</option>'+DB.malls.map(function(m){return '<option>'+esc(m.name)+'</option>';}).join('');
+  var mallOpts='<option value="">All malls</option>'+mallNames().map(function(n){return '<option>'+esc(n)+'</option>';}).join('');
   el('v-jobs').innerHTML=
     '<h2>Jobs</h2>'+
     '<div class="toolbar">'+

@@ -412,7 +412,7 @@
             <label>Mall <a href="#" class="addlink" onclick="openModalEl('mallModal');return false;">+ new mall</a></label>
             <select id="mall" onchange="onMallChange()"></select>
           </div>
-          <div><label>Client name</label><input id="client" placeholder="e.g. ABC Sdn Bhd"></div>
+          <div><label>Client name</label><input id="client" list="clientDatalist" placeholder="e.g. ABC Sdn Bhd"></div>
         </div>
         <div class="row">
           <div><label>Attention (PIC)</label><input id="attention" placeholder="e.g. Mr. Tan"></div>
@@ -559,6 +559,7 @@
   </div>
 </div>
 <datalist id="svcDatalist"></datalist>
+<datalist id="clientDatalist"></datalist>
 
 <!-- add mall modal -->
 <div class="modal-bg" id="mallModal">
@@ -898,13 +899,52 @@ function signIn(){
 }
 function signOut(){ if(LOCAL_MOCK) return; sb.auth.signOut().then(function(){ location.reload(); }); }
 
+// ═══════════════════════════ MASTER DATA BACKBONE (/api/masters) ═══════════════════════════
+function mastersUrl(type){ return (window.HG_API_BASE||'') + '/api/masters/' + type; }
+async function fetchMasters(type){
+  var res = await fetch(mastersUrl(type), { credentials:'include' });
+  var j = null; try { j = await res.json(); } catch(e){}
+  if(!res.ok) throw new Error((j && j.error && j.error.message) || ('HTTP ' + res.status));
+  return (j && j.data) || [];
+}
+async function postMaster(type, body){
+  try {
+    var res = await fetch(mastersUrl(type), {
+      method:'POST', credentials:'include',
+      headers:{ 'Content-Type':'application/json' }, body:JSON.stringify(body)
+    });
+    var j = null; try { j = await res.json(); } catch(e){}
+    if(!res.ok) return { data:null, error:(j && j.error) || { message:'HTTP ' + res.status } };
+    return { data:j ? j.data : null, error:null };
+  } catch(e){ return { data:null, error:{ message:e.message || 'Network error' } }; }
+}
+
 // ═══════════════════════════ BOOTSTRAP DATA ═══════════════════════════
 async function loadBootstrap(){
-  var mallsQ = await sb.from('malls').select('*').order('name');
+  var mallsQ;
+  try { mallsQ = { data: await fetchMasters('malls'), error:null }; }
+  catch(e){ mallsQ = { data:null, error:{ message:e.message } }; }
   var svcQ   = await sb.from('services').select('*').order('sort');
   var setQ   = await sb.from('app_settings').select('*');
   if(mallsQ.error||svcQ.error||setQ.error){ fail((mallsQ.error||svcQ.error||setQ.error)); return; }
-  BOOT.malls = mallsQ.data;
+  // Union canonical malls with any mall names still present in price_book, so
+  // name-matched pricing keeps working even if a mall is missing from Master Data.
+  var malls = mallsQ.data.slice();
+  var have = {};
+  malls.forEach(function(m){ have[String(m.name||'').trim().toLowerCase()] = 1; });
+  var pbQ = await sb.from('price_book').select('mall');
+  if(!pbQ.error && pbQ.data){
+    pbQ.data.forEach(function(r){
+      var name = String(r.mall||'').trim();
+      if(!name || name==='(All Malls)') return;
+      var k = name.toLowerCase();
+      if(!have[k]){ have[k] = 1; malls.push({ name:name }); }
+    });
+  }
+  malls.sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||'')); });
+  BOOT.malls = malls;
+  // Canonical client names feed the client-name suggestions (non-fatal if unavailable).
+  try { BOOT.clients = await fetchMasters('clients'); } catch(e){ BOOT.clients = []; }
   BOOT.services = svcQ.data;
   BOOT.settings = {};
   setQ.data.forEach(function(r){ BOOT.settings[r.key] = r.value; });
@@ -918,6 +958,7 @@ function onBoot(){
     return '<button class="'+(t===CLIENT_TYPE?'on':'')+'" onclick="setClientType(\''+t+'\')">'+t+'</button>'; }).join('');
   el('sstPctLbl').textContent = '('+(BOOT.settings.SST_PERCENT||6)+'%)';
   el('svcDatalist').innerHTML = BOOT.services.map(function(s){ return '<option value="'+esc(s.name)+'">'; }).join('');
+  el('clientDatalist').innerHTML = (BOOT.clients||[]).map(function(c){ return '<option value="'+esc(c.name)+'">'; }).join('');
   onMallChange(); renderScopes();
 }
 
@@ -1400,7 +1441,18 @@ async function saveMall(){
     closeModal('mallModal'); onBoot(); el('mall').value=name; await onMallChange();
     localMockNotice('Mall added to this local preview only — no data was saved.'); return;
   }
-  var r = await sb.from('malls').insert({ name:name, code:el('m_code').value.trim(), location:el('m_loc').value.trim() });
+  var body = { name:name, code:el('m_code').value.trim(), location:el('m_loc').value.trim() };
+  var r = await postMaster('malls', body);
+  if(!r.error && r.data && r.data.duplicateOf){
+    var dup = r.data.duplicateOf;
+    if(!confirm('Master Data already has "'+dup.name+'".\n\nOK — add "'+name+'" anyway as a separate mall.\nCancel — use the existing "'+dup.name+'".')){
+      closeModal('mallModal'); el('m_name').value=''; el('m_code').value=''; el('m_loc').value='';
+      await loadBootstrap(); el('mall').value = dup.name; onMallChange();
+      return;
+    }
+    body.force = true;
+    r = await postMaster('malls', body);
+  }
   if(r.error){ showMsg('mallMsg', r.error.message, false); return; }
   await sb.rpc('log_audit', { p_action:'ADD Malls', p_details:name });
   closeModal('mallModal'); el('m_name').value=''; el('m_code').value=''; el('m_loc').value='';
