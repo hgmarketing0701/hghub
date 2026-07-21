@@ -15,6 +15,7 @@
   })();
 </script>
 <script src="hg-client.js"></script>
+<script src="hg-readiness.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -255,6 +256,9 @@
   .wk-chip.sv{background:rgba(59,130,246,.14);color:var(--blue)}
   .wk-chip.ly{background:rgba(20,184,166,.16);color:#0f9d8f}
   .wk-chip.wk{background:var(--chip);border:1px solid var(--line);color:var(--mut)}
+  .wk-chip.rd-ready{background:rgba(34,197,94,.14);color:var(--ok)}
+  .wk-chip.rd-risk{background:rgba(245,158,11,.16);color:var(--warn)}
+  .wk-chip.rd-blocked{background:rgba(239,68,68,.14);color:var(--bad)}
   html[data-theme="dark"] .wk-chip.ly{color:#2dd4bf}
   @media(max-width:980px){.sched-layout{grid-template-columns:1fr}.sched-side{position:static;max-height:none}}
 </style>
@@ -367,7 +371,7 @@ function signOut(){sb.auth.signOut().then(function(){location.reload();});}
 
 /* ja_audit_log: id(auto)/ts/user_email/action/details — insert only */
 async function audit(action,details){
-  try{await sb.from('ja_audit_log').insert({ts:new Date().toISOString(),user_email:CUR_EMAIL,action:action,details:details||''});}catch(e){}
+  try{await sb.from('ja_audit_log').insert({ts:esNow(),user_email:CUR_EMAIL,action:action,details:details||''});}catch(e){}
 }
 
 /* ===================== HELPERS ===================== */
@@ -387,7 +391,11 @@ function busy(btn){if(btn){btn.disabled=true;btn.dataset.html=btn.innerHTML;btn.
 function unbusy(btn){if(btn&&btn.dataset.html){btn.disabled=false;btn.innerHTML=btn.dataset.html;}}
 function ico(name){return '<i class="ui-icon" data-lucide="'+name+'" aria-hidden="true"></i>';}
 function byId(arr,id){return arr.filter(function(x){return x.id===id;})[0];}
-function esNow(){return new Date().toISOString();}
+function esNow(){
+  // MySQL DATETIME rejects ISO '...T...Z' strings in strict mode — use 'YYYY-MM-DD HH:MM:SS'
+  var d=new Date(), p=function(n){return String(n).padStart(2,'0');};
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+}
 function todayISO(){var d=new Date();var p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
 function addDays(iso,n){var d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);var p=function(x){return('0'+x).slice(-2);};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
 function monthStart(iso){return iso.slice(0,8)+'01';}
@@ -518,7 +526,7 @@ function namesFrom(ids,fn){return (ids||[]).map(fn).join(', ');}
 /* ============================================================
    TAB 1 · SCHEDULE — weekly board + insert-job sidebar
    ============================================================ */
-var WEEK_START=null, WEEK_JOBS=[], SMART_CHECKED=false;
+var WEEK_START=null, WEEK_JOBS=[], SMART_CHECKED=false, WEEK_READY={};
 var SIDE_JOB=null, SIDE_SEL={sup:{},wk:{},ly:{}};
 var DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 var MON3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -580,6 +588,12 @@ async function loadWeek(){
     }
   }
   SMART_CHECKED=true;
+  WEEK_READY={};
+  var ids=WEEK_JOBS.map(function(j){return j.id;});
+  if(ids.length){
+    var rr=await sb.from('ja_job_readiness').select('*').in('job_id',ids);
+    (rr&&rr.data||[]).forEach(function(row){WEEK_READY[row.job_id]=row;});
+  }
   renderWeekGrid();
 }
 function renderWeekGrid(){
@@ -606,7 +620,17 @@ function wkCard(j){
   var sup=String(j.supervisor_names||'').split(',').map(trim).filter(Boolean);
   var lys=String(j.lorry_details||'').split(',').map(trim).filter(Boolean);
   var wn=(parseJSON_(j.worker_ids,[])||[]).length;
-  var chips=sup.map(function(s){return '<span class="wk-chip sv">'+esc(s)+'</span>';}).join('')+
+  var rdChip='';
+  if(window.hgReadiness){
+    var rd=hgReadiness.of(j,WEEK_READY[j.id]||null);
+    if(rd.status!=='none'){
+      var rdMap={ready:['rd-ready','🟢 Ready'],at_risk:['rd-risk','🟡 At risk'],blocked:['rd-blocked','🔴 Blocked']};
+      var rm2=rdMap[rd.status];
+      if(rm2)rdChip='<span class="wk-chip '+rm2[0]+'" title="'+esc(rd.missing.length?'Missing: '+rd.missing.join(', '):'All gates cleared')+'">'+rm2[1]+'</span>';
+    }
+  }
+  var chips=rdChip+
+    sup.map(function(s){return '<span class="wk-chip sv">'+esc(s)+'</span>';}).join('')+
     lys.map(function(l){return '<span class="wk-chip ly">'+esc(l)+'</span>';}).join('')+
     (wn?'<span class="wk-chip wk">+'+wn+' worker'+(wn===1?'':'s')+'</span>':'');
   return '<div class="wk-card'+(night?' night':'')+'" onclick="sideLoad(\''+esc(j.id)+'\')">'+
@@ -873,6 +897,20 @@ async function jobForm(id){
     if(r.error){toast(r.error.message,'bad');return;}
     j=r.data||{};
   }
+  var rdRow=null;
+  if(id&&window.hgReadiness){
+    var rres=await sb.from('ja_job_readiness').select('*').eq('job_id',id).limit(1);
+    rdRow=(rres&&rres.data&&rres.data[0])||null;
+  }
+  var rdHtml='';
+  if(id&&window.hgReadiness){
+    var rd=hgReadiness.of(j,rdRow);
+    var rdLbl=rd.status==='ready'?'🟢 Ready':rd.status==='at_risk'?'🟡 At risk':rd.status==='blocked'?'🔴 Blocked':'No gates started';
+    rdHtml='<fieldset class="fieldset"><legend>Readiness</legend>'+
+      '<div><b>'+rdLbl+'</b>'+(rd.status!=='none'&&rd.missing.length?' — missing: '+esc(rd.missing.join(', ')):'')+'</div>'+
+      '<div class="hint" style="margin-top:6px">Manage gates in Readiness &amp; Dispatch.</div>'+
+    '</fieldset>';
+  }
   var supIds=parseJSON_(j.supervisor_ids,[]);
   var wkIds=parseJSON_(j.worker_ids,[]);
   var lyIds=parseJSON_(j.lorry_ids,[]);
@@ -906,6 +944,7 @@ async function jobForm(id){
     '</div>'+
     field('Client address','<textarea id="jf-caddr">'+esc(j.client_address||'')+'</textarea>')+
   '</fieldset>'+
+  rdHtml+
 
   '<fieldset class="fieldset"><legend>Crew</legend>'+
     '<div class="grid3">'+

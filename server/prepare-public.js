@@ -8,7 +8,7 @@ const REPO = path.join(__dirname, "..");           // frontend lives at the repo
 const OUT = path.join(__dirname, "public");
 
 const FILES = fs.readdirSync(REPO).filter(f =>
-  f.endsWith(".html") || f === "hg-client.js" || f === "hg-logo.png" ||
+  f.endsWith(".html") || f === "hg-client.js" || f === "hg-readiness.js" || f === "hg-logo.png" ||
   f === "hg-logo-light.png" || f === "favicon.ico"
 );
 const DIRS = ["hub"];                              // design assets referenced by index.html

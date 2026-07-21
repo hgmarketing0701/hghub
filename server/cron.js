@@ -6,7 +6,7 @@
 const express = require("express");
 const { pool } = require("./db");
 
-const ALARM_VIEWS = ["dsp_alarms", "wkr_alarms", "str_alarms", "trn_alarms", "vis_alarms"];
+const ALARM_VIEWS = ["jjr_alarms", "wkr_alarms", "str_alarms", "trn_alarms", "vis_alarms"]; // jjr = ja_jobs readiness (replaced dsp_alarms)
 // scf_alarms is an RPC (complex view) — included via registry when ported.
 
 const router = express.Router();

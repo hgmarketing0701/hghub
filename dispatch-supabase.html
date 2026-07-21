@@ -37,6 +37,7 @@
   })();
 </script>
 <script src="hg-client.js"></script>
+<script src="hg-readiness.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -127,6 +128,7 @@
   .status-badge.ready { background: var(--green-soft); color: var(--green); }
   .status-badge.at_risk { background: var(--amber-soft); color: var(--amber); }
   .status-badge.blocked { background: var(--red-soft); color: var(--red); }
+  .status-badge.none { background: var(--surface-2); color: var(--text-dim); }
   .countdown { font-size: 0.8rem; font-weight: 700; padding: 3px 9px; border-radius: 7px; background: var(--surface-2); border: 1px solid var(--border); white-space: nowrap; }
   .countdown.urgent { color: var(--red); border-color: var(--red); }
   .countdown.soon { color: var(--amber); border-color: var(--amber); }
@@ -844,7 +846,7 @@
       <div class="panel-head">
         <div>
           <div class="panel-title">Job Readiness Board</div>
-          <div class="panel-sub">Confirm readiness gates before jobs move into dispatch. Permit alarms and blocked jobs stay first.</div>
+          <div class="panel-sub">Real jobs from the Job Arrangement schedule. Confirm readiness gates before jobs move into dispatch — permit alarms and blocked jobs stay first.</div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button class="btn btn-ghost" onclick="exportExcel()">Export Excel</button>
@@ -856,19 +858,16 @@
       <div id="alarmBanner"></div>
 
       <div class="filter-bar">
-        <input type="search" id="rSearch" placeholder="Search client, mall, lot, job code…" oninput="renderReadiness()">
+        <input type="search" id="rSearch" placeholder="Search client, mall, lot, scope, supervisor…" oninput="renderReadiness()">
         <select id="rStatus" onchange="renderReadiness()">
           <option value="">All statuses</option>
           <option value="blocked">Blocked</option>
           <option value="at_risk">At risk</option>
           <option value="ready">Ready</option>
+          <option value="none">No gates yet</option>
         </select>
-        <select id="rWindow" onchange="renderReadiness()">
-          <option value="open">Active (not done/cancelled)</option>
-          <option value="7">Next 7 days</option>
-          <option value="overdue">Overdue / today</option>
-          <option value="all">Everything</option>
-        </select>
+        <div class="form-field" style="margin:0;"><label style="margin-bottom:3px;">From</label><input type="date" id="rFrom" onchange="reloadWindow()"></div>
+        <div class="form-field" style="margin:0;"><label style="margin-bottom:3px;">To</label><input type="date" id="rTo" onchange="reloadWindow()"></div>
       </div>
 
       <div class="job-grid" id="jobGrid"></div>
@@ -879,19 +878,15 @@
       <div class="panel-head">
         <div>
           <div class="panel-title">Tonight's Dispatch</div>
-          <div class="panel-sub">Pick the night, drop READY jobs into teams, set each crew, then generate the WhatsApp message for the HG Operation group.</div>
+          <div class="panel-sub">Pick the date, load that day's scheduled jobs (night shifts first), drop them into teams with a running order, then generate the WhatsApp message for the HG Operation group.</div>
         </div>
       </div>
 
       <div class="disp-bar">
         <div class="form-field" style="margin:0;">
-          <label style="margin-bottom:3px;">Install night</label>
+          <label style="margin-bottom:3px;">Dispatch date</label>
           <input type="date" id="dispDate" onchange="onDispDate()">
         </div>
-        <label class="check-control">
-          <input type="checkbox" id="dispAllDates" onchange="renderDispatch()"> Show ready jobs from all dates
-        </label>
-        <button class="btn btn-ghost" onclick="openTeamModal(null)">+ Set up team crew</button>
         <button class="btn btn-primary" onclick="openDispatchMsg()">Generate WhatsApp message</button>
       </div>
 
@@ -904,48 +899,45 @@
           <div id="teamsWrap"></div>
         </div>
         <div>
-          <h3 style="font-size:0.95rem;margin-bottom:10px;">Ready to assign</h3>
+          <h3 style="font-size:0.95rem;margin-bottom:10px;">Unassigned pool</h3>
           <div class="pool-box" id="poolBox"></div>
         </div>
       </div>
     </div>
 
-    <!-- ALARMS (dsp_alarms view — same list the daily-alarms email contains) -->
+    <!-- ALARMS (computed client-side from the joined ja_jobs + ja_job_readiness set) -->
     <div class="tab-panel" id="panel-alarms">
       <div class="panel-head">
         <div>
           <div class="panel-title">Daily Alarms</div>
-          <div class="panel-sub">Review permit alarms, at-risk jobs, and blocked jobs before dispatch.</div>
+          <div class="panel-sub">Review permit alarms, at-risk jobs, and blocked jobs before dispatch — computed live from the schedule window.</div>
         </div>
         <button class="btn btn-ghost" onclick="refreshAlarms()">Refresh</button>
       </div>
       <div class="tool-snapshot" id="alarmSummary"></div>
       <div class="table-wrap"><table class="grid"><thead><tr>
-        <th>Type</th><th>Job</th><th>Detail</th><th>Install date</th><th>Recipients</th>
+        <th>Type</th><th>Job</th><th>Detail</th><th>Install date</th><th>Supervisors</th>
       </tr></thead><tbody id="alarmBody"></tbody></table></div>
     </div>
 
-    <!-- CREW -->
+    <!-- CREW (read-only mirrors of ja_supervisors + ja_lorries) -->
     <div class="tab-panel" id="panel-crew">
       <div class="panel-head">
         <div>
           <div class="panel-title">Crew &amp; Lorries</div>
-          <div class="panel-sub">Manage drivers, supervisors, workers, and lorries used in dispatch.</div>
+          <div class="panel-sub">Supervisors / drivers and lorries from the Job Arrangement masters. Manage them in <b>Job Arrangement → Workers &amp; Masters</b>.</div>
         </div>
       </div>
-      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="openStaffModal(null)">+ Add staff</button>
-        <button class="btn btn-ghost" onclick="openLorryModal(null)">+ Add lorry</button>
-      </div>
       <div class="tool-snapshot" id="crewSummary"></div>
-      <h3 style="font-size:0.9rem;margin:10px 0;">Staff</h3>
+      <h3 style="font-size:0.9rem;margin:10px 0;">Supervisors / Drivers</h3>
       <div class="table-wrap" style="margin-bottom:24px;"><table class="grid"><thead><tr>
-        <th>Name</th><th>Role</th><th>Phone</th><th>Status</th><th style="text-align:right;">Actions</th>
+        <th>ID</th><th>Name</th><th>Type</th>
       </tr></thead><tbody id="staffBody"></tbody></table></div>
       <h3 style="font-size:0.9rem;margin:10px 0;">Lorries</h3>
       <div class="table-wrap"><table class="grid"><thead><tr>
-        <th>Plate</th><th>Label</th><th>Status</th><th style="text-align:right;">Actions</th>
+        <th>ID</th><th>Plate</th>
       </tr></thead><tbody id="lorryBody"></tbody></table></div>
+      <p class="help" style="margin-top:14px;">Read-only here — add, edit, or retire crew and lorries in Job Arrangement → Workers &amp; Masters.</p>
     </div>
 
     <!-- SETTINGS -->
@@ -992,67 +984,10 @@
   <div class="modal-head"><h2 id="jobModalTitle">Add Job</h2><button class="x-btn" onclick="closeModal('mJob')">&times;</button></div>
   <div class="modal-body"><div class="form-grid" id="jobFormBody"></div></div>
   <div class="modal-foot">
-    <button class="btn btn-danger" id="jobDeleteBtn" onclick="deleteJobFromForm()" style="display:none;">Delete</button>
+    <button class="btn btn-danger" id="jobDeleteBtn" onclick="deleteReadinessFromForm()" style="display:none;">Clear gates</button>
     <div style="display:flex;gap:10px;margin-left:auto;">
       <button class="btn btn-ghost" onclick="closeModal('mJob')">Cancel</button>
       <button class="btn btn-primary" id="jobSaveBtn" onclick="saveJobFromForm()">Save</button>
-    </div>
-  </div>
-</div></div>
-
-<!-- TEAM MODAL -->
-<div class="modal" id="mTeam"><div class="modal-card" style="max-width:560px;">
-  <div class="modal-head"><h2>Team crew</h2><button class="x-btn" onclick="closeModal('mTeam')">&times;</button></div>
-  <div class="modal-body">
-    <div class="form-grid">
-      <div class="form-field"><label>Team number</label><select id="teTeamNo"></select></div>
-      <div class="form-field"><label>Driver cum supervisor</label><input list="driversList" id="teDriver" placeholder="Name"></div>
-      <div class="form-field"><label>Lorry</label><input list="lorriesList" id="teLorry" placeholder="Plate"></div>
-      <div class="form-field full"><label>Workers</label><input type="text" id="teWorkers" placeholder="Ali, Bala, Chong">
-        <div class="chips" id="teWorkerChips"></div></div>
-      <div class="form-field full"><label>Notes</label><input type="text" id="teNotes" placeholder="Route / area note (optional)"></div>
-    </div>
-  </div>
-  <div class="modal-foot">
-    <button class="btn btn-danger" id="teDeleteBtn" onclick="deleteTeamFromForm()" style="display:none;">Delete team</button>
-    <div style="display:flex;gap:10px;margin-left:auto;">
-      <button class="btn btn-ghost" onclick="closeModal('mTeam')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveTeamFromForm()">Save crew</button>
-    </div>
-  </div>
-</div></div>
-
-<!-- STAFF MODAL -->
-<div class="modal" id="mStaff"><div class="modal-card" style="max-width:480px;">
-  <div class="modal-head"><h2 id="staffModalTitle">Add staff</h2><button class="x-btn" onclick="closeModal('mStaff')">&times;</button></div>
-  <div class="modal-body"><div class="form-grid">
-    <div class="form-field full"><label>Name</label><input type="text" id="stName"></div>
-    <div class="form-field"><label>Role</label><select id="stRole"><option value="driver">Driver cum supervisor</option><option value="worker">Worker</option></select></div>
-    <div class="form-field"><label>Phone</label><input type="text" id="stPhone"></div>
-    <div class="form-field full"><label><input type="checkbox" id="stActive" style="width:auto;" checked> Active</label></div>
-  </div></div>
-  <div class="modal-foot">
-    <button class="btn btn-danger" id="stDeleteBtn" onclick="deleteStaffFromForm()" style="display:none;">Delete</button>
-    <div style="display:flex;gap:10px;margin-left:auto;">
-      <button class="btn btn-ghost" onclick="closeModal('mStaff')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveStaffFromForm()">Save</button>
-    </div>
-  </div>
-</div></div>
-
-<!-- LORRY MODAL -->
-<div class="modal" id="mLorry"><div class="modal-card" style="max-width:480px;">
-  <div class="modal-head"><h2 id="lorryModalTitle">Add lorry</h2><button class="x-btn" onclick="closeModal('mLorry')">&times;</button></div>
-  <div class="modal-body"><div class="form-grid">
-    <div class="form-field"><label>Plate</label><input type="text" id="loPlate"></div>
-    <div class="form-field"><label>Label</label><input type="text" id="loLabel" placeholder="3-tonne / 1-tonne"></div>
-    <div class="form-field full"><label><input type="checkbox" id="loActive" style="width:auto;" checked> Active</label></div>
-  </div></div>
-  <div class="modal-foot">
-    <button class="btn btn-danger" id="loDeleteBtn" onclick="deleteLorryFromForm()" style="display:none;">Delete</button>
-    <div style="display:flex;gap:10px;margin-left:auto;">
-      <button class="btn btn-ghost" onclick="closeModal('mLorry')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveLorryFromForm()">Save</button>
     </div>
   </div>
 </div></div>
@@ -1067,40 +1002,22 @@
   </div></div>
 </div></div>
 
-<datalist id="driversList"></datalist>
-<datalist id="lorriesList"></datalist>
+<datalist id="clientsList"></datalist>
+<datalist id="mallsList"></datalist>
 
 <div id="toast"></div>
 
 <script>
-  // ═══════════════════════ SUPABASE CONFIG (pattern: quotation-supabase.html) ═══════════════════════
-  // Option A: paste your values here (recommended once stable):
-  var SUPABASE_URL = '';   // e.g. 'https://abcd1234.supabase.co'
-  var SUPABASE_KEY = '';   // the anon/public key
-  // Option B: leave blank — the app shows a one-time connect screen and
-  // stores them in this browser (localStorage). SAME keys as every HG tool.
-  if (!SUPABASE_URL) SUPABASE_URL = localStorage.getItem('hg_supabase_url') || '';
-  if (!SUPABASE_KEY) SUPABASE_KEY = localStorage.getItem('hg_supabase_key') || '';
-
-  var sb = null;        // supabase client
+  // ═══════════════════════ SAME-ORIGIN API (hg-client.js, cookie auth) ═══════════════════════
+  var sb = null;        // hg client (supabase-shaped)
   var SESSION = null;   // auth session
   var IS_ADMIN = false;
 
   function gateMsg(id, t, ok) { var m = document.getElementById(id); m.textContent = t; m.className = 'msg show ' + (ok ? 'ok' : 'err'); setTimeout(function(){ m.classList.remove('show'); }, 4500); }
 
-  function saveSupabaseConfig() {
-    var u = document.getElementById('cfgUrl').value.trim().replace(/\/+$/, '');
-    var k = document.getElementById('cfgKey').value.trim();
-    if (!/^https:\/\/.+\.supabase\.co$/.test(u)) { gateMsg('cfgMsg', 'URL must look like https://xxxx.supabase.co', false); return; }
-    if (!(k.indexOf('eyJ') === 0 || k.indexOf('sb_publishable_') === 0) || k.length < 30) {
-      gateMsg('cfgMsg', 'That does not look like the anon/public key (starts with eyJ… or sb_publishable_…).', false); return; }
-    localStorage.setItem('hg_supabase_url', u);
-    localStorage.setItem('hg_supabase_key', k);
-    location.reload();
-  }
+  function saveSupabaseConfig() { /* legacy connect gate — same-origin hg-api needs no keys */ location.reload(); }
 
   async function start() {
-    /* connect gate removed — same-origin hg-api */
     sb = window.hg.createClient();
     var s = await sb.auth.getSession();
     SESSION = s.data.session;
@@ -1113,11 +1030,7 @@
     document.getElementById('appWrap').style.display = 'none';
     if (!SESSION) { document.getElementById('gateLogin').style.display = 'flex'; return; }
     var email = (SESSION.user.email || '').toLowerCase();
-    // allowlist check
-    var r = { data:{ email:email, is_admin:(SESSION.user.role==='admin') }, error:null };
-    if (r.error) { gateMsg('loginMsg', r.error.message, false); document.getElementById('gateLogin').style.display = 'flex'; return; }
-    if (!r.data) { document.getElementById('deniedEmail').textContent = email; document.getElementById('gateDenied').style.display = 'flex'; return; }
-    IS_ADMIN = !!r.data.is_admin;
+    IS_ADMIN = (SESSION.user.role === 'admin');
     document.getElementById('appWrap').style.display = 'block';
     document.getElementById('userPill').textContent = email;
     loadAll();
@@ -1132,26 +1045,32 @@
       SESSION = r.data.session; route();
     });
   }
-    function signOut() { sb.auth.signOut().then(function() { location.reload(); }); }
+  function signOut() { sb.auth.signOut().then(function() { location.reload(); }); }
 
   // ═══════════════════════ APP STATE ═══════════════════════
-  let DATA = null;
-  let currentJob = null, currentStaff = null, currentLorry = null, currentTeamNo = null;
+  // One job record, two views: the office schedules in ja_jobs (Job Arrangement),
+  // this tool tracks the readiness gates in the ja_job_readiness satellite table.
+  let DATA = null;                       // { config, supervisors, lorries, audit }
+  let JOBS = [];                         // ja_jobs rows inside the readiness window (raw snake_case)
+  let READY = {};                        // job_id -> ja_job_readiness row
+  let DISP = { date: '', jobs: [], ready: {} }; // dispatch-tab working set (own fetch — any date)
+  let MASTERS = { clients: [], malls: [] };
+  let currentJob = null;                 // ja_jobs row open in the modal
+  let MODAL_MODE = 'gates';              // 'gates' (edit readiness) | 'add' (new ja_jobs row)
   let currentDispatchDate = '';
 
   const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  // Enums — same lists Code.gs shipped to the frontend so dropdowns stay in sync.
+  // Shift values are the real ja_jobs.shift enum (same list as Job Arrangement).
+  const SHIFTS = [
+    { key: 'day-inst',    label: 'Day' },
+    { key: 'night-inst',  label: 'Night' },
+    { key: 'day-factory', label: 'Day (Factory)' },
+    { key: 'others',      label: 'Others' },
+  ];
+  // Gate enums — the ja_job_readiness column vocabularies (mysql/modules/20-readiness.sql).
   const ENUMS = {
-    jobTypes: [
-      { key: 'install',   label: 'Installation' },
-      { key: 'dismantle', label: 'Dismantling' },
-      { key: 'rectify',   label: 'Rectification' },
-      { key: 'modify',    label: 'Modification' },
-      { key: 'other',     label: 'Other' },
-    ],
-    doorTypes: ['None', 'Swing door', 'Sliding door', 'Double door', 'Roller shutter', 'Other'],
     measureStatus: [
       { key: 'pending',      label: 'Pending site measurement' },
       { key: 'sketch_done',  label: 'Sketch done ✔' },
@@ -1164,9 +1083,9 @@
       { key: 'not_required', label: 'Not required' },
     ],
     visualStatus: [
-      { key: 'na',       label: 'N/A' },
-      { key: 'pending',  label: 'Pending approval' },
-      { key: 'approved', label: 'Approved ✔' },
+      { key: 'pending',     label: 'Pending' },
+      { key: 'in_progress', label: 'In progress' },
+      { key: 'approved',    label: 'Approved ✔' },
     ],
     permitBy: [
       { key: 'us',           label: 'We apply (Imrah)' },
@@ -1175,91 +1094,63 @@
       { key: 'not_required', label: 'Not required' },
     ],
     permitStatus: [
-      { key: 'not_required', label: 'Not required' },
       { key: 'pending',      label: 'Pending' },
-      { key: 'submitted',    label: 'Submitted, awaiting approval' },
+      { key: 'applied',      label: 'Applied, awaiting approval' },
       { key: 'approved',     label: 'Approved ✔' },
-    ],
-    jobStatus: [
-      { key: 'open',      label: 'Open' },
-      { key: 'assigned',  label: 'Assigned to team' },
-      { key: 'done',      label: 'Done' },
-      { key: 'cancelled', label: 'Cancelled' },
+      { key: 'not_required', label: 'Not required' },
     ],
   };
 
   function todayKL() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }).format(new Date()); }
   function nowIso() { return new Date().toISOString(); }
   function myEmail() { return SESSION ? (SESSION.user.email || '').toLowerCase() : ''; }
+  function addDays(iso, n) { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); const p = x => ('0' + x).slice(-2); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
 
-  // ═══════════════════════ DATA LAYER (replaces google.script.run) ═══════════════════════
-  // snake_case rows → the camelCase objects the original UI code uses, near-verbatim.
-  function mapJob(r) {
-    return {
-      id: r.id, jobCode: r.job_code || '', client: r.client || '', clientGroup: r.client_group || '',
-      mall: r.mall || '', lotNo: r.lot_no || '', jobType: r.job_type || 'install', scope: r.scope || '',
-      doorType: r.door_type || '', installDate: r.install_date || '',
-      measureStatus: r.measure_status || 'pending', sketchUrl: r.sketch_url || '',
-      quoteStatus: r.quote_status || 'pending', quoteRef: r.quote_ref || '',
-      needsVisual: r.needs_visual || 'no', visualStatus: r.visual_status || 'na', visualUrl: r.visual_url || '',
-      permitBy: r.permit_by || 'us', permitStatus: r.permit_status || 'pending', permitUrl: r.permit_url || '',
-      permitApprovedAt: r.permit_approved_at || '', materialReady: r.material_ready || 'no',
-      materialNotes: r.material_notes || '', jobStatus: r.job_status || 'open',
-      dispatchDate: r.dispatch_date || '', teamNo: r.team_no || '', seq: r.seq || '', notes: r.notes || '',
-      createdAt: r.created_at || '', createdBy: r.created_by || '', updatedAt: r.updated_at || '', updatedBy: r.updated_by || '',
-    };
-  }
-  function mapTeam(r) {
-    return { id: r.id, dispatchDate: r.dispatch_date || '', teamNo: r.team_no || '', driver: r.driver || '',
-      workers: r.workers || '', lorry: r.lorry || '', notes: r.notes || '',
-      createdAt: r.created_at || '', createdBy: r.created_by || '' };
-  }
-  function mapStaff(r) { return { id: r.id, name: r.name || '', role: r.role || 'worker', phone: r.phone || '', active: r.active !== false }; }
-  function mapLorry(r) { return { id: r.id, plate: r.plate || '', label: r.label || '', active: r.active !== false }; }
-
+  // ═══════════════════════ DATA LAYER (ja_jobs + ja_job_readiness join) ═══════════════════════
   async function fetchAll() {
-    const [jobsQ, teamsQ, staffQ, lorriesQ, cfgQ, alarmsQ, auditQ] = await Promise.all([
-      sb.from('dsp_jobs').select('*').order('install_date', { ascending: true, nullsFirst: false }),
-      sb.from('dsp_teams').select('*').order('dispatch_date').order('team_no'),
-      sb.from('dsp_staff').select('*').order('name'),
-      sb.from('dsp_lorries').select('*').order('plate'),
+    const from = (document.getElementById('rFrom').value || addDays(todayKL(), -7));
+    const to   = (document.getElementById('rTo').value   || addDays(todayKL(), 21));
+    const [jobsQ, cfgQ, supQ, lorQ, audQ] = await Promise.all([
+      sb.from('ja_jobs').select('*').gte('date', from).lte('date', to).order('date').limit(500),
       sb.from('dsp_config').select('*'),
-      sb.from('dsp_alarms').select('*'),
-      sb.from('audit_log').select('*')
-        .or('action.ilike.*Job*,action.ilike.*Team*,action.ilike.*Staff*,action.ilike.*Lorry*,action.ilike.*Dispatch*')
-        .order('at', { ascending: false }).limit(60),
+      sb.from('ja_supervisors').select('*').order('name'),
+      sb.from('ja_lorries').select('*').order('id'),
+      sb.from('ja_audit_log').select('*').order('ts', { ascending: false }).limit(60),
     ]);
-    const err = jobsQ.error || teamsQ.error || staffQ.error || lorriesQ.error || cfgQ.error || alarmsQ.error || auditQ.error;
+    const err = jobsQ.error || cfgQ.error || supQ.error || lorQ.error || audQ.error;
     if (err) throw err;
     const config = {};
-    cfgQ.data.forEach(r => { if (r.key) config[String(r.key).trim()] = String(r.value == null ? '' : r.value); });
-    const d = {
-      currentUser: myEmail(),
-      today: todayKL(),
-      config: config,
-      jobs: jobsQ.data.map(mapJob),
-      teams: teamsQ.data.map(mapTeam),
-      staff: staffQ.data.map(mapStaff),
-      lorries: lorriesQ.data.map(mapLorry),
-      alarms: alarmsQ.data,
-      audit: auditQ.data,
-      enums: ENUMS,
+    (cfgQ.data || []).forEach(r => { if (r.key) config[String(r.key).trim()] = String(r.value == null ? '' : r.value); });
+    JOBS = (jobsQ.data || []).map(j => { j.date = String(j.date || '').slice(0, 10); return j; });
+    READY = {};
+    const ids = JOBS.map(j => j.id);
+    if (ids.length) {
+      const rq = await sb.from('ja_job_readiness').select('*').in('job_id', ids);
+      if (rq.error) throw rq.error;
+      (rq.data || []).forEach(r => { READY[r.job_id] = r; });
+    }
+    return {
+      currentUser: myEmail(), today: todayKL(), config: config,
+      supervisors: supQ.data || [], lorries: lorQ.data || [], audit: audQ.data || [],
     };
-    d.jobs.forEach(j => decorate(j, config));   // readiness engine (was decorateJobs_ server-side)
-    return d;
   }
 
   async function reload(okMsg, after) {
     try {
       DATA = await fetchAll();
       renderAll();
+      if (currentDispatchDate) loadDispatch();
       if (okMsg) toast(okMsg);
       if (after) after(DATA);
     } catch (e) { toast(e.message || String(e), true); }
   }
+  function reloadWindow() { reload(); }
 
   async function loadAll() {
     try {
+      const t = todayKL();
+      if (!document.getElementById('rFrom').value) document.getElementById('rFrom').value = addDays(t, -7);
+      if (!document.getElementById('rTo').value)   document.getElementById('rTo').value   = addDays(t, 21);
       DATA = await fetchAll();
       currentDispatchDate = DATA.today;
       document.getElementById('dispDate').value = DATA.today;
@@ -1267,11 +1158,34 @@
       document.getElementById('app').style.display = 'block';
       fillSettings();
       renderAll();
+      loadMasters();     // datalists for + Add Job (non-blocking)
+      loadDispatch();    // dispatch tab working set (non-blocking)
     } catch (e) { document.getElementById('loader').textContent = 'Error: ' + (e.message || e); }
   }
 
-  async function logAudit(action, details) {
-    try { await sb.rpc('log_audit', { p_action: action, p_details: String(details == null ? '' : details) }); } catch (e) { /* non-fatal */ }
+  /* masters datalists — canonical backbone /api/masters (same pattern as the other tools) */
+  function mastersGet(type) {
+    return fetch((window.HG_API_BASE || '') + '/api/masters/' + type, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : { data: [] })
+      .then(j => (j && j.data) || [])
+      .catch(() => []);
+  }
+  async function loadMasters() {
+    const [cl, ml] = await Promise.all([mastersGet('clients'), mastersGet('malls')]);
+    MASTERS.clients = cl.map(x => x && x.name).filter(Boolean);
+    MASTERS.malls = ml.map(x => x && x.name).filter(Boolean);
+    document.getElementById('clientsList').innerHTML = MASTERS.clients.map(n => '<option value="' + esc(n) + '">').join('');
+    document.getElementById('mallsList').innerHTML = MASTERS.malls.map(n => '<option value="' + esc(n) + '">').join('');
+  }
+
+  /* audit — same append-only ja_audit_log the Job Arrangement tool writes.
+     ts must be MySQL DATETIME format — ISO strings with 'Z' are rejected. */
+  function sqlNow() { return new Date().toISOString().slice(0, 19).replace('T', ' '); }
+  async function audit(action, details) {
+    try {
+      const r = await sb.from('ja_audit_log').insert({ ts: sqlNow(), user_email: myEmail(), action: action, details: String(details == null ? '' : details) });
+      if (r.error) console.warn('audit failed:', r.error.message);
+    } catch (e) { /* non-fatal */ }
   }
 
   /* ---------- utils ---------- */
@@ -1287,6 +1201,11 @@
     return 'in '+days+'d';
   }
   function labelOf(arr, key) { const f = (arr||[]).find(x => x.key === key); return f ? f.label : key; }
+  function shiftLabel(s) { return labelOf(SHIFTS, s || '') || (s || '—'); }
+  function shiftGroup(s) { return String(s || '').toLowerCase().indexOf('night') === 0 ? 'Night' : 'Day'; }
+  function parseJSON_(v, fallback) { if (v == null || v === '') return fallback; if (typeof v !== 'string') return v; try { return JSON.parse(v); } catch (e) { return fallback; } }
+  function workerCount(j) { return (parseJSON_(j.worker_ids, []) || []).length; }
+  function timeShort(t) { const s = String(t == null ? '' : t).trim(); return /^\d{2}:\d{2}/.test(s) ? s.slice(0, 5) : s; }
   function toast(msg, err) { const t = document.getElementById('toast'); t.textContent = msg; t.className = 'show' + (err ? ' err' : ''); setTimeout(() => t.className = '', 2600); }
   function closeHubSelects(except) {
     document.querySelectorAll('.hub-select.open').forEach(wrap => {
@@ -1367,101 +1286,67 @@
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
   }
 
-  /* readiness engine — same rules as GAS computeJobReadiness_ / the dsp_alarms view */
-  function gates(j) {
-    return {
-      sketch:   (j.measureStatus === 'sketch_done' || j.measureStatus === 'not_required'),
-      quote:    (j.quoteStatus === 'confirmed' || j.quoteStatus === 'not_required'),
-      permit:   (j.permitStatus === 'approved' || j.permitBy === 'already_have' || j.permitBy === 'not_required' || j.permitStatus === 'not_required'),
-      visual:   (j.needsVisual !== 'yes' || j.visualStatus === 'approved'),
-      material: (j.materialReady === 'yes'),
-      loc:      !!(j.mall && j.lotNo),
-    };
+  /* readiness verdict — SHARED engine (hg-readiness.js), same rules as Job Arrangement */
+  function cfgObj() {
+    const c = (DATA && DATA.config) || {};
+    return { atRiskDays: Number(c.atRiskDays || 3), permitLeadDays: Number(c.permitLeadDays || 3) };
   }
-  function computeReadinessJS(j, cfg) {
-    cfg = cfg || DATA.config;
-    const g = gates(j), missing = [];
-    if (!g.loc) missing.push('Lot / Mall');
-    if (!g.sketch) missing.push('Measurement sketch');
-    if (!g.quote) missing.push('Quotation');
-    if (!g.permit) missing.push('Permit');
-    if (!g.visual) missing.push('Visual artwork');
-    if (!g.material) missing.push('Material / fab');
-    const days = daysUntil(j.installDate);
-    const ready = missing.length === 0;
-    let readiness = 'ready';
-    if (!ready) readiness = (days !== null && days <= Number(cfg.atRiskDays||3)) ? 'at_risk' : 'blocked';
-    const permitAlarm = !g.permit && days !== null && days <= Number(cfg.permitLeadDays||3);
-    return { readiness, missing, daysToInstall: days, permitAlarm };
-  }
-  function decorate(j, cfg) {
-    const r = computeReadinessJS(j, cfg);
-    j.readiness = r.readiness; j.missing = r.missing; j.daysToInstall = r.daysToInstall; j.permitAlarm = r.permitAlarm;
-    return j;
+  function verdictOf(j, r) {
+    return window.hgReadiness.of(j, (r !== undefined) ? r : (READY[j.id] || null), cfgObj());
   }
 
   /* ---------- render ---------- */
-  function renderAll() { renderReadiness(); renderDispatch(); renderAlarms(); renderCrew(); renderActivity(); fillDatalists(); }
+  function renderAll() { renderReadiness(); renderDispatch(); renderAlarms(); renderCrew(); renderActivity(); }
 
   function renderReadiness() {
     if (!DATA) return;
     const search = (document.getElementById('rSearch').value || '').toLowerCase();
     const fStatus = document.getElementById('rStatus').value;
-    const win = document.getElementById('rWindow').value;
-    let jobs = DATA.jobs.slice();
 
-    // window filter
-    jobs = jobs.filter(j => {
-      if (win === 'all') return true;
-      const activeJob = j.jobStatus !== 'done' && j.jobStatus !== 'cancelled';
-      if (win === 'open') return activeJob;
-      if (!activeJob) return false;
-      const d = j.daysToInstall;
-      if (win === '7') return d !== null && d >= 0 && d <= 7;
-      if (win === 'overdue') return d !== null && d <= 0;
-      return true;
-    });
+    const decorated = JOBS.map(j => ({ j: j, v: verdictOf(j) }));
 
-    // summary (over active jobs)
-    const act = DATA.jobs.filter(j => j.jobStatus !== 'done' && j.jobStatus !== 'cancelled');
-    const counts = { ready:0, at_risk:0, blocked:0, alarm:0 };
-    act.forEach(j => { counts[j.readiness]++; if (j.permitAlarm) counts.alarm++; });
+    // snapshot over the whole window — jobs with no readiness row are Active, never Blocked
+    const counts = { ready: 0, at_risk: 0, blocked: 0, alarm: 0 };
+    decorated.forEach(x => { if (counts[x.v.status] != null) counts[x.v.status]++; if (x.v.permitAlarm) counts.alarm++; });
     document.getElementById('readinessSummary').innerHTML =
-      '<div class="readiness-snapshot-title">Readiness Snapshot</div>' +
+      '<div class="readiness-snapshot-title">Readiness Snapshot · ' + esc(document.getElementById('rFrom').value) + ' → ' + esc(document.getElementById('rTo').value) + '</div>' +
       '<div class="readiness-snapshot-row">' +
         card('warn', 'Permit alarms', counts.alarm) +
         card('warn', 'Blocked', counts.blocked) +
         card('soon', 'At risk', counts.at_risk) +
         card('ok', 'Ready', counts.ready) +
-        card('info', 'Active jobs', act.length) +
+        card('info', 'Active jobs', decorated.length) +
       '</div>';
 
     // alarm banner
-    const alarms = act.filter(j => j.permitAlarm).sort((a,b) => (a.daysToInstall) - (b.daysToInstall));
+    const alarms = decorated.filter(x => x.v.permitAlarm).sort((a, b) => (a.v.daysToInstall) - (b.v.daysToInstall));
     document.getElementById('alarmBanner').innerHTML = alarms.length ? (
       '<div class="alarm-banner"><h3>Permit early-warning</h3>' +
-      alarms.map(j => '<div class="row"><b>' + esc(j.mall) + ' · ' + esc(j.lotNo) + '</b> — install ' + esc(j.installDate||'?') +
-        ' (' + countdownText(j.daysToInstall) + ') — permit: ' + esc(labelOf(DATA.enums.permitBy, j.permitBy)) +
-        ' / ' + esc(labelOf(DATA.enums.permitStatus, j.permitStatus)) + '</div>').join('') + '</div>'
+      alarms.map(x => {
+        const r = READY[x.j.id] || {};
+        return '<div class="row"><b>' + esc(x.j.mall || '?') + ' · ' + esc(x.j.lot || '?') + '</b> — install ' + esc(x.j.date || '?') +
+          ' (' + countdownText(x.v.daysToInstall) + ') — permit: ' + esc(labelOf(ENUMS.permitBy, r.permit_by || 'us')) +
+          ' / ' + esc(labelOf(ENUMS.permitStatus, r.permit_status || 'pending')) + '</div>';
+      }).join('') + '</div>'
     ) : '';
 
     // filtered + sorted list
-    jobs = jobs.filter(j => {
-      if (fStatus && j.readiness !== fStatus) return false;
+    const list = decorated.filter(x => {
+      if (fStatus && x.v.status !== fStatus) return false;
       if (search) {
-        const hay = [j.jobCode, j.client, j.clientGroup, j.mall, j.lotNo].join(' ').toLowerCase();
+        const hay = [x.j.client, x.j.mall, x.j.lot, x.j.scope, x.j.title, x.j.supervisor_names].join(' ').toLowerCase();
         if (hay.indexOf(search) === -1) return false;
       }
       return true;
-    }).sort((a,b) => {
-      const da = a.daysToInstall == null ? 99999 : a.daysToInstall;
-      const db = b.daysToInstall == null ? 99999 : b.daysToInstall;
-      return da - db;
+    }).sort((a, b) => {
+      const da = a.v.daysToInstall == null ? 99999 : a.v.daysToInstall;
+      const db = b.v.daysToInstall == null ? 99999 : b.v.daysToInstall;
+      return da - db || String(timeShort(a.j.time)).localeCompare(String(timeShort(b.j.time)));
     });
 
-    document.getElementById('jobGrid').innerHTML = jobs.length
-      ? jobs.map(jobCardHtml).join('')
-      : '<div class="empty readiness-empty"><strong>No active jobs found</strong><span>Adjust the filters or add a job to start readiness tracking.</span><div class="empty-actions"><button class="btn btn-ghost" onclick="clearReadinessFilters()">Clear filters</button><button class="btn btn-primary" onclick="openJobModal(null)">+ Add Job</button></div></div>';
+    document.getElementById('jobGrid').innerHTML = list.length
+      ? list.map(x => jobCardHtml(x.j, x.v)).join('')
+      : '<div class="empty readiness-empty"><strong>No scheduled jobs in this window</strong><span>Adjust the filters or the date range, or add a job to the schedule.</span><div class="empty-actions"><button class="btn btn-ghost" onclick="clearReadinessFilters()">Clear filters</button><button class="btn btn-primary" onclick="openJobModal(null)">+ Add Job</button></div></div>';
   }
 
   function card(kind, lbl, val) { return '<div class="summary-card ' + kind + '"><div class="lbl">' + lbl + '</div><div class="val">' + val + '</div></div>'; }
@@ -1473,332 +1358,374 @@
   function clearReadinessFilters() {
     document.getElementById('rSearch').value = '';
     document.getElementById('rStatus').value = '';
-    document.getElementById('rWindow').value = 'open';
     syncHubSelects(document);
     renderReadiness();
   }
 
-  function jobCardHtml(j) {
-    const g = gates(j);
-    const days = j.daysToInstall;
-    let cd = 'countdown';
-    if (days !== null && days <= 0) cd += ' urgent'; else if (days !== null && days <= 3) cd += ' soon';
+  function jobCardHtml(j, v) {
+    const r = READY[j.id] || null;
+    const days = v.daysToInstall;
+    let cd = '';
+    if (days !== null && days <= 0) cd = 'urgent'; else if (days !== null && days <= 3) cd = 'soon';
     const chip = (ok, txt) => '<span class="gate-chip ' + (ok ? 'ok' : 'bad') + '">' + txt + '</span>';
-    let chips = chip(g.loc, 'Lot/Mall') + chip(g.sketch, 'Sketch') + chip(g.quote, 'Quote') +
-                chip(g.permit, 'Permit');
-    if (j.needsVisual === 'yes') chips += chip(g.visual, 'Visual');
-    chips += chip(g.material, 'Material');
-
-    const doneTag = (j.jobStatus === 'done') ? ' · <span style="color:var(--green);">DONE</span>'
-                  : (j.jobStatus === 'cancelled') ? ' · <span style="color:var(--red);">CANCELLED</span>'
-                  : (j.jobStatus === 'assigned') ? ' · <span style="color:var(--blue);">Assigned T' + esc(j.teamNo) + '</span>' : '';
-
-    return '<div class="job-card ' + j.readiness + '" onclick="openJobModal(\'' + j.id + '\')">' +
+    let chips;
+    if (v.status === 'none') {
+      chips = '<span class="gate-chip">No gates yet — click to start</span>';
+    } else {
+      const g = v.gates;
+      chips = chip(g.loc, 'Lot/Mall') + chip(g.sketch, 'Sketch') + chip(g.quote, 'Quote') + chip(g.permit, 'Permit');
+      if (r && r.needs_visual === 'yes') chips += chip(g.visual, 'Visual');
+      chips += chip(g.material, 'Material');
+    }
+    const wn = workerCount(j);
+    const teamTag = (r && r.team_no) ? ' · <span style="color:var(--blue);">Team ' + esc(r.team_no) + (r.dispatch_date ? ' · ' + esc(String(r.dispatch_date).slice(0,10)) : '') + '</span>' : '';
+    return '<div class="job-card ' + (v.status === 'none' ? '' : v.status) + '" onclick="openJobModal(\'' + esc(j.id) + '\')">' +
       '<div class="job-top"><div>' +
-        '<div class="job-title">' + esc(j.mall || '(no mall)') + ' · ' + esc(j.lotNo || '(no lot)') + '</div>' +
-        '<div class="job-meta">' + esc(j.jobCode || '') + ' · ' + esc(labelOf(DATA.enums.jobTypes, j.jobType)) +
-          (j.scope ? ' · ' + esc(j.scope) : '') + ' · ' + esc(j.client || '—') + doneTag + '</div>' +
+        '<div class="job-title">' + esc(j.mall || '(no mall)') + ' · ' + esc(j.lot || '(no lot)') + '</div>' +
+        '<div class="job-meta">' + esc(j.client || '—') + ' · ' + esc(shiftLabel(j.shift)) +
+          (j.scope ? ' · ' + esc(j.scope) : '') + (j.time ? ' · ' + esc(timeShort(j.time)) : '') + teamTag + '</div>' +
+        '<div class="job-meta">SV: ' + esc(j.supervisor_names || '—') + ' · ' + wn + ' worker' + (wn === 1 ? '' : 's') + '</div>' +
       '</div><div style="display:flex;gap:8px;align-items:center;">' +
-        '<span class="countdown ' + cd.replace('countdown','').trim() + '">' + esc(j.installDate || 'no date') + ' · ' + countdownText(days) + '</span>' +
-        '<span class="status-badge ' + j.readiness + '">' + j.readiness.replace('_',' ') + '</span>' +
+        '<span class="countdown ' + cd + '">' + esc(j.date || 'no date') + ' · ' + countdownText(days) + '</span>' +
+        '<span class="status-badge ' + v.status + '">' + (v.status === 'none' ? 'no gates' : v.status.replace('_', ' ')) + '</span>' +
       '</div></div>' +
       '<div class="gates">' + chips + '</div>' +
-      (j.permitAlarm ? '<div class="permit-alarm">Permit not approved — ' + countdownText(days) + ' to install</div>' : '') +
-      ((j.missing && j.missing.length) ? '<div class="missing-line">Missing: <b>' + esc(j.missing.join(', ')) + '</b></div>' : '') +
+      (v.permitAlarm ? '<div class="permit-alarm">Permit not approved — ' + countdownText(days) + ' to install</div>' : '') +
+      ((v.missing && v.missing.length) ? '<div class="missing-line">Missing: <b>' + esc(v.missing.join(', ')) + '</b></div>' : '') +
     '</div>';
   }
 
-  /* ---------- JOB MODAL ---------- */
+  /* ---------- JOB MODAL (two modes: gate editor / add real ja_jobs row) ---------- */
   function opt(arr, sel) { return arr.map(o => '<option value="' + o.key + '"' + (o.key === sel ? ' selected' : '') + '>' + esc(o.label) + '</option>').join(''); }
-  function optPlain(arr, sel) { return arr.map(o => '<option value="' + esc(o) + '"' + (o === sel ? ' selected' : '') + '>' + esc(o) + '</option>').join(''); }
-
-  function openJobModal(id) {
-    const j = id ? DATA.jobs.find(x => x.id === id) : null;
-    currentJob = j;
-    const E = DATA.enums;
-    const v = (k, d) => (j && j[k] != null && j[k] !== '') ? j[k] : (d || '');
-    document.getElementById('jobModalTitle').textContent = j ? ('Edit ' + (j.jobCode || 'Job')) : 'Add Job';
-    document.getElementById('jobDeleteBtn').style.display = j ? 'inline-flex' : 'none';
-    document.getElementById('jobFormBody').innerHTML =
-      '<div class="preview-box" id="jfPreview"></div>' +
-      '<div class="form-section-title">Client &amp; location</div>' +
-      field('Client', '<input type="text" id="jf_client" value="' + esc(v('client')) + '">') +
-      field('Client group chat', '<input type="text" id="jf_clientGroup" value="' + esc(v('clientGroup')) + '">') +
-      field('Mall / building', '<input type="text" id="jf_mall" value="' + esc(v('mall')) + '">') +
-      field('Lot number', '<input type="text" id="jf_lotNo" value="' + esc(v('lotNo')) + '">') +
-      field('Job type', '<select id="jf_jobType">' + opt(E.jobTypes, v('jobType','install')) + '</select>') +
-      field('Door type', '<select id="jf_doorType">' + optPlain(E.doorTypes, v('doorType','None')) + '</select>') +
-      field('Scope / quantity', '<input type="text" id="jf_scope" placeholder="e.g. 12m hoarding" value="' + esc(v('scope')) + '">', true) +
-      field('Install night', '<input type="date" id="jf_installDate" value="' + esc(v('installDate')) + '">') +
-      field('Job status', '<select id="jf_jobStatus">' + opt(E.jobStatus, v('jobStatus','open')) + '</select>') +
-
-      '<div class="form-section-title">Readiness gates</div>' +
-      field('Measurement', '<select id="jf_measureStatus">' + opt(E.measureStatus, v('measureStatus','pending')) + '</select>') +
-      field('Sketch link', '<input type="text" id="jf_sketchUrl" value="' + esc(v('sketchUrl')) + '">') +
-      field('Quotation', '<select id="jf_quoteStatus">' + opt(E.quoteStatus, v('quoteStatus','pending')) + '</select>') +
-      field('Quote ref', '<input type="text" id="jf_quoteRef" value="' + esc(v('quoteRef')) + '">') +
-      field('Visual work needed?', '<select id="jf_needsVisual"><option value="no"' + (v('needsVisual','no')==='no'?' selected':'') + '>No</option><option value="yes"' + (v('needsVisual')==='yes'?' selected':'') + '>Yes</option></select>') +
-      field('Visual artwork', '<select id="jf_visualStatus">' + opt(E.visualStatus, v('visualStatus','na')) + '</select>') +
-      field('Visual link', '<input type="text" id="jf_visualUrl" value="' + esc(v('visualUrl')) + '">', true) +
-      field('Permit responsibility', '<select id="jf_permitBy">' + opt(E.permitBy, v('permitBy','us')) + '</select>') +
-      field('Permit status', '<select id="jf_permitStatus">' + opt(E.permitStatus, v('permitStatus','pending')) + '</select>') +
-      field('Permit approved date', '<input type="date" id="jf_permitApprovedAt" value="' + esc(v('permitApprovedAt')) + '">') +
-      field('Permit copy link', '<input type="text" id="jf_permitUrl" value="' + esc(v('permitUrl')) + '">') +
-      field('Material / fab ready?', '<select id="jf_materialReady"><option value="no"' + (v('materialReady','no')==='no'?' selected':'') + '>No</option><option value="yes"' + (v('materialReady')==='yes'?' selected':'') + '>Yes</option></select>') +
-      field('Material notes', '<input type="text" id="jf_materialNotes" value="' + esc(v('materialNotes')) + '">') +
-      field('Notes', '<textarea id="jf_notes" rows="2">' + esc(v('notes')) + '</textarea>', true);
-
-    // live preview
-    document.querySelectorAll('#jobFormBody input, #jobFormBody select, #jobFormBody textarea')
-      .forEach(el => { el.addEventListener('input', updateJobPreview); el.addEventListener('change', updateJobPreview); });
-    updateJobPreview();
-    openModal('mJob');
-  }
   function field(label, inner, full) {
     return '<div class="form-field' + (full ? ' full' : '') + '"><label>' + label + '</label>' + inner + '</div>';
   }
-  function collectJobForm() {
-    const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
-    const p = {
-      client: get('jf_client'), clientGroup: get('jf_clientGroup'), mall: get('jf_mall'), lotNo: get('jf_lotNo'),
-      jobType: get('jf_jobType'), doorType: get('jf_doorType'), scope: get('jf_scope'), installDate: get('jf_installDate'),
-      jobStatus: get('jf_jobStatus'), measureStatus: get('jf_measureStatus'), sketchUrl: get('jf_sketchUrl'),
-      quoteStatus: get('jf_quoteStatus'), quoteRef: get('jf_quoteRef'), needsVisual: get('jf_needsVisual'),
-      visualStatus: get('jf_visualStatus'), visualUrl: get('jf_visualUrl'), permitBy: get('jf_permitBy'),
-      permitStatus: get('jf_permitStatus'), permitApprovedAt: get('jf_permitApprovedAt'), permitUrl: get('jf_permitUrl'),
-      materialReady: get('jf_materialReady'), materialNotes: get('jf_materialNotes'), notes: get('jf_notes'),
-    };
-    if (currentJob) { p.id = currentJob.id; p.jobCode = currentJob.jobCode; p.dispatchDate = currentJob.dispatchDate; p.teamNo = currentJob.teamNo; }
-    return p;
+
+  function openJobModal(id) {
+    if (!id) { openAddJob(); return; }
+    const j = JOBS.find(x => String(x.id) === String(id)) || (DISP.jobs || []).find(x => String(x.id) === String(id));
+    if (!j) { toast('Job not found in the current window.', true); return; }
+    currentJob = j;
+    MODAL_MODE = 'gates';
+    const r = READY[j.id] || DISP.ready[j.id] || null;
+    const E = ENUMS;
+    const v = (k, d) => (r && r[k] != null && r[k] !== '') ? r[k] : (d || '');
+    const wn = workerCount(j);
+    document.getElementById('jobModalTitle').textContent = 'Gates — ' + (j.mall || j.client || 'Job') + (j.lot ? ' · ' + j.lot : '');
+    document.getElementById('jobDeleteBtn').style.display = r ? 'inline-flex' : 'none';
+    document.getElementById('jobFormBody').innerHTML =
+      '<div class="preview-box" id="jfPreview"></div>' +
+      '<div class="preview-box" style="margin-top:0;">' +
+        '<div style="font-weight:700;">' + esc(j.mall || '(no mall)') + ' · ' + esc(j.lot || '(no lot)') + ' — ' + esc(j.client || '—') + '</div>' +
+        '<div class="help" style="margin-top:2px;">' + esc(shiftLabel(j.shift)) + (j.scope ? ' · ' + esc(j.scope) : '') +
+          ' · ' + esc(j.date || 'no date') + (j.time ? ' · ' + esc(timeShort(j.time)) : '') +
+          ' · SV: ' + esc(j.supervisor_names || '—') + ' · ' + wn + ' worker' + (wn === 1 ? '' : 's') +
+          ' — schedule fields are edited in Job Arrangement.</div>' +
+      '</div>' +
+      '<div class="form-section-title">Readiness gates</div>' +
+      field('Measurement', '<select id="gf_measure_status">' + opt(E.measureStatus, v('measure_status', 'pending')) + '</select>') +
+      field('Sketch link', '<input type="text" id="gf_sketch_url" value="' + esc(v('sketch_url')) + '">') +
+      field('Quotation', '<select id="gf_quote_status">' + opt(E.quoteStatus, v('quote_status', 'pending')) + '</select>') +
+      field('Quote ref', '<input type="text" id="gf_quote_ref" value="' + esc(v('quote_ref')) + '">') +
+      field('Visual work needed?', '<select id="gf_needs_visual"><option value="no"' + (v('needs_visual', 'no') === 'no' ? ' selected' : '') + '>No</option><option value="yes"' + (v('needs_visual') === 'yes' ? ' selected' : '') + '>Yes</option></select>') +
+      field('Visual artwork', '<select id="gf_visual_status">' + opt(E.visualStatus, v('visual_status', 'pending')) + '</select>') +
+      field('Visual link', '<input type="text" id="gf_visual_url" value="' + esc(v('visual_url')) + '">', true) +
+      field('Permit responsibility', '<select id="gf_permit_by">' + opt(E.permitBy, v('permit_by', 'us')) + '</select>') +
+      field('Permit status', '<select id="gf_permit_status">' + opt(E.permitStatus, v('permit_status', 'pending')) + '</select>') +
+      field('Permit approved date', '<input type="date" id="gf_permit_approved_at" value="' + esc(String(v('permit_approved_at')).slice(0, 10)) + '">') +
+      field('Permit copy link', '<input type="text" id="gf_permit_url" value="' + esc(v('permit_url')) + '">') +
+      field('Material / fab ready?', '<select id="gf_material_ready"><option value="no"' + (v('material_ready', 'no') === 'no' ? ' selected' : '') + '>No</option><option value="yes"' + (v('material_ready') === 'yes' ? ' selected' : '') + '>Yes</option></select>') +
+      field('Material notes', '<input type="text" id="gf_material_notes" value="' + esc(v('material_notes')) + '">') +
+      field('Notes', '<textarea id="gf_notes" rows="2">' + esc(v('notes')) + '</textarea>', true);
+
+    document.querySelectorAll('#jobFormBody input, #jobFormBody select, #jobFormBody textarea')
+      .forEach(el => { el.addEventListener('input', updateGatePreview); el.addEventListener('change', updateGatePreview); });
+    updateGatePreview();
+    openModal('mJob');
   }
-  function updateJobPreview() {
-    const p = collectJobForm();
-    const r = computeReadinessJS(p);
+
+  function collectGateForm() {
+    const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+    return {
+      measure_status: get('gf_measure_status'), sketch_url: get('gf_sketch_url'),
+      quote_status: get('gf_quote_status'), quote_ref: get('gf_quote_ref'),
+      needs_visual: get('gf_needs_visual'), visual_status: get('gf_visual_status'), visual_url: get('gf_visual_url'),
+      permit_by: get('gf_permit_by'), permit_status: get('gf_permit_status'), permit_url: get('gf_permit_url'),
+      permit_approved_at: get('gf_permit_approved_at') || null,
+      material_ready: get('gf_material_ready'), material_notes: get('gf_material_notes'),
+      notes: get('gf_notes'),
+    };
+  }
+  function updateGatePreview() {
+    if (!currentJob) return;
+    const r = collectGateForm();
+    const v = window.hgReadiness.of(currentJob, r, cfgObj());
     const box = document.getElementById('jfPreview');
-    const badge = '<span class="status-badge ' + r.readiness + '">' + r.readiness.replace('_',' ') + '</span>';
+    if (!box) return;
+    const badge = '<span class="status-badge ' + v.status + '">' + v.status.replace('_', ' ') + '</span>';
     box.innerHTML = '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' + badge +
-      (r.permitAlarm ? '<span class="permit-alarm" style="margin:0;">🚨 Permit alarm</span>' : '') +
+      (v.permitAlarm ? '<span class="permit-alarm" style="margin:0;">🚨 Permit alarm</span>' : '') +
       '<span style="color:var(--text-dim);font-size:0.85rem;">' +
-        (r.missing.length ? 'Missing: <b style="color:var(--red);">' + esc(r.missing.join(', ')) + '</b>' : 'All gates green — ready to dispatch') +
+        (v.missing.length ? 'Missing: <b style="color:var(--red);">' + esc(v.missing.join(', ')) + '</b>' : 'All gates green — ready to dispatch') +
       '</span></div>';
   }
-  async function saveJobFromForm() {
-    const p = collectJobForm();
-    if (!p.mall && !p.lotNo && !p.client) { toast('Add at least a client, mall or lot.', true); return; }
-    // dsp_save_job() mints the J-#### code atomically and writes the audit entry itself.
-    const r = await sb.rpc('dsp_save_job', { payload: p });
-    if (r.error) { toast(r.error.message, true); return; }
-    closeModal('mJob');
-    reload('Job saved.');
-  }
-  async function deleteJobFromForm() {
+
+  async function saveGatesFromForm() {
     if (!currentJob) return;
-    if (!confirm('Delete ' + (currentJob.jobCode || 'this job') + '? This cannot be undone.')) return;
-    const j = currentJob;
-    const r = await sb.from('dsp_jobs').delete().eq('id', j.id);
+    const p = collectGateForm();
+    p.updated_by = myEmail();
+    const exists = !!(READY[currentJob.id] || DISP.ready[currentJob.id]);
+    let r;
+    if (exists) r = await sb.from('ja_job_readiness').update(p).eq('job_id', currentJob.id);
+    else { p.job_id = currentJob.id; r = await sb.from('ja_job_readiness').insert(p); }
     if (r.error) { toast(r.error.message, true); return; }
-    await logAudit('DELETE Job', (j.jobCode || j.id) + ' · ' + [j.mall, j.lotNo, j.jobType].filter(Boolean).join(' · '));
+    await audit('Gate update', (currentJob.date || '') + ' · ' + [currentJob.mall, currentJob.lot].filter(Boolean).join(' · ') + ' · ' + (currentJob.client || ''));
     closeModal('mJob');
-    reload('Job deleted.');
+    reload('Gates saved.');
   }
 
-  /* ---------- DISPATCH ---------- */
-  function onDispDate() { currentDispatchDate = document.getElementById('dispDate').value; renderDispatch(); }
+  async function deleteReadinessFromForm() {
+    if (!currentJob) return;
+    if (!confirm('Clear all readiness gates for ' + (currentJob.mall || currentJob.client || 'this job') + '? The job itself stays in the schedule.')) return;
+    const r = await sb.from('ja_job_readiness').delete().eq('job_id', currentJob.id);
+    if (r.error) { toast(r.error.message, true); return; }
+    await audit('Gates cleared', (currentJob.date || '') + ' · ' + [currentJob.mall, currentJob.lot].filter(Boolean).join(' · '));
+    closeModal('mJob');
+    reload('Gates cleared.');
+  }
+
+  /* + Add Job — creates a REAL ja_jobs row (same id scheme + defaults as Job Arrangement) */
+  function openAddJob() {
+    currentJob = null;
+    MODAL_MODE = 'add';
+    const shiftOpts = SHIFTS.map(s => '<option value="' + s.key + '">' + esc(s.label) + '</option>').join('');
+    document.getElementById('jobModalTitle').textContent = 'Add Job';
+    document.getElementById('jobDeleteBtn').style.display = 'none';
+    document.getElementById('jobFormBody').innerHTML =
+      '<div class="form-section-title" style="margin-top:0;">New scheduled job — lands on the Job Arrangement board too</div>' +
+      field('Client', '<input type="text" id="af_client" list="clientsList" placeholder="e.g. ABC Sdn Bhd">') +
+      field('Mall / building', '<input type="text" id="af_mall" list="mallsList" placeholder="Pick from the master list">') +
+      field('Lot number', '<input type="text" id="af_lot" placeholder="e.g. G-23">') +
+      field('Scope', '<input type="text" id="af_scope" placeholder="e.g. Hoarding installation">') +
+      field('Shift', '<select id="af_shift">' + shiftOpts + '</select>') +
+      field('Date', '<input type="date" id="af_date" value="' + esc(todayKL()) + '">') +
+      field('Time', '<input type="time" id="af_time" value="09:00">') +
+      field('Gates', '<label class="check-control"><input type="checkbox" id="af_seed" checked> Start readiness tracking now</label>');
+    openModal('mJob');
+  }
+
+  function saveJobFromForm() {
+    if (MODAL_MODE === 'add') addJobFromForm();
+    else saveGatesFromForm();
+  }
+
+  async function addJobFromForm() {
+    const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+    const date = get('af_date');
+    if (!date) { toast('Date is required.', true); return; }
+    const client = get('af_client').trim(), mall = get('af_mall').trim();
+    if (!client && !mall) { toast('Add at least a client or a mall.', true); return; }
+    const rec = {
+      id: 'job_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+      client: client, mall: mall, lot: get('af_lot').trim(), scope: get('af_scope').trim(),
+      shift: get('af_shift') || 'day-inst', date: date, time: get('af_time'),
+      supervisor_ids: [], worker_ids: [], lorry_ids: [],
+      supervisor_names: '', worker_names: '', lorry_details: '',
+      worker_times: {}, line_items: [], has_tax: 0,
+      invoice_status: 'Pending', wage_status: 'Pending', incentive_status: 'Pending', allow_status: 'Pending', cidb_status: 'Pending',
+      created_at: sqlNow(), updated_at: sqlNow(),
+    };
+    const r = await sb.from('ja_jobs').insert(rec);
+    if (r.error) { toast(r.error.message, true); return; }
+    const seedEl = document.getElementById('af_seed');
+    if (seedEl && seedEl.checked) {
+      const rs = await sb.from('ja_job_readiness').insert({ job_id: rec.id, updated_by: myEmail() });
+      if (rs.error) toast('Job saved, but gates row failed: ' + rs.error.message, true);
+    }
+    await audit('Job added', date + ' · ' + (rec.scope || 'Job') + (rec.mall ? ' @ ' + rec.mall : '') + (rec.client ? ' · ' + rec.client : ''));
+    closeModal('mJob');
+    // widen the visible window so the new job shows up
+    const fromEl = document.getElementById('rFrom'), toEl = document.getElementById('rTo');
+    if (fromEl.value && date < fromEl.value) fromEl.value = date;
+    if (toEl.value && date > toEl.value) toEl.value = date;
+    reload('Job added — visible in Job Arrangement too.');
+  }
+
+  /* ---------- DISPATCH (night loading keyed to the real ja_jobs schedule) ---------- */
+  function onDispDate() { currentDispatchDate = document.getElementById('dispDate').value; loadDispatch(); }
+
+  async function loadDispatch() {
+    const d = currentDispatchDate;
+    DISP = { date: d, jobs: [], ready: {} };
+    if (!d) { renderDispatch(); return; }
+    const r = await sb.from('ja_jobs').select('*').eq('date', d).order('shift').limit(200);
+    if (r.error) { toast(r.error.message, true); return; }
+    DISP.jobs = (r.data || []).map(j => { j.date = String(j.date || '').slice(0, 10); return j; });
+    const ids = DISP.jobs.map(j => j.id);
+    if (ids.length) {
+      const rq = await sb.from('ja_job_readiness').select('*').in('job_id', ids);
+      if (rq.error) { toast(rq.error.message, true); return; }
+      (rq.data || []).forEach(row => { DISP.ready[row.job_id] = row; });
+    }
+    renderDispatch();
+  }
+
+  function dispSorted() {
+    // night shifts first, then time, then mall
+    return DISP.jobs.slice().sort((a, b) => {
+      const na = shiftGroup(a.shift) === 'Night' ? 0 : 1;
+      const nb = shiftGroup(b.shift) === 'Night' ? 0 : 1;
+      return na - nb || String(timeShort(a.time)).localeCompare(String(timeShort(b.time))) || String(a.mall || '').localeCompare(String(b.mall || ''));
+    });
+  }
 
   function teamSelectHtml(j) {
-    const max = Number(DATA.config.maxTeams || 12);
+    const max = Number((DATA && DATA.config.maxTeams) || 12);
+    const r = DISP.ready[j.id];
+    const cur = r ? String(r.team_no || '') : '';
     let o = '<option value="">Unassigned</option>';
-    for (let i = 1; i <= max; i++) o += '<option value="' + i + '"' + (String(j.teamNo) === String(i) ? ' selected' : '') + '>Team ' + i + '</option>';
-    return '<select class="mini-select" onchange="assignTo(\'' + j.id + '\', this.value)" onclick="event.stopPropagation()">' + o + '</select>';
+    for (let i = 1; i <= max; i++) o += '<option value="' + i + '"' + (cur === String(i) ? ' selected' : '') + '>Team ' + i + '</option>';
+    return '<select class="mini-select" onchange="assignTeam(\'' + esc(j.id) + '\', this.value)" onclick="event.stopPropagation()">' + o + '</select>';
   }
-  async function assignTo(jobId, val) {
-    if (val) {
-      const max = Number(DATA.config.maxJobsPerTeam || 5);
-      const count = DATA.jobs.filter(j => j.dispatchDate === currentDispatchDate && String(j.teamNo) === String(val) && j.id !== jobId).length;
-      if (count >= max && !confirm('Team ' + val + ' already has ' + count + ' job(s) (max ' + max + '). Assign anyway?')) { renderDispatch(); return; }
-    }
-    const j = DATA.jobs.find(x => x.id === jobId);
-    if (!j) { toast('Job not found.', true); return; }
-    // same rules as GAS assignJob(): teamNo set → assigned, cleared → open
+  function seqInputHtml(j) {
+    const r = DISP.ready[j.id] || {};
+    return '<input type="number" min="1" class="mini-select" style="width:64px;" title="Running order" placeholder="#" value="' + esc(r.seq == null ? '' : r.seq) + '" onclick="event.stopPropagation()" onchange="setSeq(\'' + esc(j.id) + '\', this.value)">';
+  }
+
+  async function assignTeam(jobId, val) {
+    const d = DISP.date;
+    if (!d) { toast('Pick a dispatch date first.', true); return; }
+    const j = DISP.jobs.find(x => String(x.id) === String(jobId));
+    const r = DISP.ready[jobId];
     const teamNo = (val === '' || val == null) ? '' : String(val);
-    const dispatchDate = currentDispatchDate || j.installDate || '';
-    const r = await sb.from('dsp_jobs').update({
-      dispatch_date: dispatchDate || null,
+    if (teamNo) {
+      const max = Number(DATA.config.maxJobsPerTeam || 5);
+      const count = DISP.jobs.filter(x => x.id !== jobId && DISP.ready[x.id] && String(DISP.ready[x.id].team_no) === teamNo).length;
+      if (count >= max && !confirm('Team ' + teamNo + ' already has ' + count + ' job(s) (max ' + max + '). Assign anyway?')) { renderDispatch(); return; }
+    }
+    const patch = {
       team_no: teamNo,
-      job_status: teamNo ? 'assigned' : 'open',
-      updated_at: nowIso(),
+      dispatch_date: teamNo ? d : null,
+      seq: teamNo ? ((r && r.seq) || null) : null,
       updated_by: myEmail(),
-    }).eq('id', jobId);
-    if (r.error) { toast(r.error.message, true); return; }
-    await logAudit('ASSIGN Job', (j.jobCode || j.id) + (teamNo ? (' → ' + (dispatchDate || '') + ' Team ' + teamNo) : ' unassigned'));
-    reload();
+    };
+    let res;
+    if (r) res = await sb.from('ja_job_readiness').update(patch).eq('job_id', jobId);
+    else { res = await sb.from('ja_job_readiness').insert(Object.assign({ job_id: jobId }, patch)); }
+    if (res.error) { toast(res.error.message, true); return; }
+    await audit('Dispatch assign', d + ' · ' + [j && j.mall, j && j.lot].filter(Boolean).join(' · ') + (teamNo ? ' → Team ' + teamNo : ' unassigned'));
+    await loadDispatch();
+    if (READY[jobId] || JOBS.some(x => String(x.id) === String(jobId))) {
+      if (DISP.ready[jobId]) READY[jobId] = DISP.ready[jobId]; else delete READY[jobId];
+      renderReadiness();
+    }
+  }
+
+  async function setSeq(jobId, val) {
+    const r = DISP.ready[jobId];
+    if (!r) { toast('Assign a team first.', true); return; }
+    const seq = (val === '' || val == null) ? null : Number(val);
+    const res = await sb.from('ja_job_readiness').update({ seq: seq, updated_by: myEmail() }).eq('job_id', jobId);
+    if (res.error) { toast(res.error.message, true); return; }
+    r.seq = seq;
+    renderDispatch();
   }
 
   function renderDispatch() {
     if (!DATA) return;
-    const date = currentDispatchDate;
+    const date = DISP.date;
     document.getElementById('dispDateLabel').textContent = date ? prettyDate(date) : '—';
-    const active = DATA.jobs.filter(j => j.jobStatus !== 'done' && j.jobStatus !== 'cancelled');
-    const assigned = active.filter(j => j.dispatchDate === date && j.teamNo);
-    const showAll = document.getElementById('dispAllDates').checked;
-    const pool = active.filter(j => j.readiness === 'ready' && !j.teamNo && (showAll || j.installDate === date))
-      .sort((a,b) => (a.mall||'').localeCompare(b.mall||''));
-    const notReady = active.filter(j => j.installDate === date && j.readiness !== 'ready');
-    const teamNos = {};
-    DATA.teams.filter(t => t.dispatchDate === date).forEach(t => teamNos[String(t.teamNo)] = true);
-    assigned.forEach(j => teamNos[String(j.teamNo)] = true);
-    const nums = Object.keys(teamNos).sort((a,b) => Number(a) - Number(b));
+    const jobs = dispSorted();
+    const assigned = jobs.filter(j => DISP.ready[j.id] && DISP.ready[j.id].team_no);
+    const pool = jobs.filter(j => !(DISP.ready[j.id] && DISP.ready[j.id].team_no));
+    const night = jobs.filter(j => shiftGroup(j.shift) === 'Night');
+    const teams = {};
+    assigned.forEach(j => { const n = String(DISP.ready[j.id].team_no); (teams[n] = teams[n] || []).push(j); });
+    const nums = Object.keys(teams).sort((a, b) => Number(a) - Number(b));
 
     document.getElementById('dispSummary').innerHTML = toolSnapshot('Dispatch Snapshot',
-      card('info', 'Assigned jobs', assigned.length) +
-      card('ok', 'Ready pool', pool.length) +
-      card('warn', 'Not ready', notReady.length) +
+      card('info', 'Jobs on date', jobs.length) +
+      card('info', 'Night shift', night.length) +
+      card('ok', 'Assigned', assigned.length) +
+      card('warn', 'Unassigned', pool.length) +
       card('info', 'Teams', nums.length)
     );
 
+    // scheduled but not ready — verdict from the SHARED engine over this date's join
+    const notReady = jobs.map(j => ({ j: j, v: verdictOf(j, DISP.ready[j.id] || null) }))
+      .filter(x => x.v.status === 'blocked' || x.v.status === 'at_risk');
     document.getElementById('dispNotReady').innerHTML = notReady.length ? (
-      '<div class="alarm-banner" style="background:var(--amber-soft);border-color:var(--amber);"><h3 style="color:var(--amber);">Scheduled tonight but not ready</h3>' +
-      notReady.map(j => '<div class="row" style="border-color:rgba(245,158,11,0.25);"><b>' + esc(j.mall) + ' · ' + esc(j.lotNo) + '</b> — missing: ' + esc((j.missing||[]).join(', ')) + '</div>').join('') + '</div>'
+      '<div class="alarm-banner" style="background:var(--amber-soft);border-color:var(--amber);"><h3 style="color:var(--amber);">Scheduled this date but not ready</h3>' +
+      notReady.map(x => '<div class="row" style="border-color:rgba(245,158,11,0.25);"><b>' + esc(x.j.mall || '?') + ' · ' + esc(x.j.lot || '?') + '</b> — missing: ' + esc((x.v.missing || []).join(', ')) + '</div>').join('') + '</div>'
     ) : '';
 
-    // teams to show
     const max = Number(DATA.config.maxJobsPerTeam || 5);
+    const li = (j, i) => {
+      const wn = workerCount(j);
+      return '<li>' + seqInputHtml(j) + '<span class="jtxt">' + (i + 1) + '. ' +
+        [timeShort(j.time), j.scope || j.title, j.mall, j.lot ? 'Lot ' + j.lot : ''].filter(Boolean).map(esc).join(' · ') +
+        '<br><small style="color:var(--text-dim);">SV: ' + esc(j.supervisor_names || '—') + ' · ' + wn + ' worker' + (wn === 1 ? '' : 's') + ' · ' + esc(shiftLabel(j.shift)) + '</small></span>' +
+        teamSelectHtml(j) + '</li>';
+    };
 
     document.getElementById('teamsWrap').innerHTML = nums.length ? nums.map(n => {
-      const crew = DATA.teams.find(t => t.dispatchDate === date && String(t.teamNo) === n) || {};
-      const jobs = assigned.filter(j => String(j.teamNo) === n);
-      const over = jobs.length > max;
-      const wc = crew.workers ? crew.workers.split(',').map(s => s.trim()).filter(Boolean).length : 0;
-      return '<div class="team-card"><h3>Team ' + n +
-        '<button class="btn btn-ghost btn-sm" onclick="openTeamModal(\'' + n + '\')">Edit crew</button></h3>' +
-        '<div class="crew-line">Driver/SV: <b>' + esc(crew.driver || '—') + '</b> · Lorry: <b>' + esc(crew.lorry || '—') + '</b></div>' +
-        '<div class="crew-line">Workers (' + wc + '): <b>' + esc(crew.workers || '—') + '</b></div>' +
-        (jobs.length ? '<ul class="team-jobs">' + jobs.map((j,i) =>
-          '<li><span class="jtxt">' + (i+1) + '. ' + esc(j.mall) + ' — ' + esc(j.lotNo) + ' — ' + esc(labelOf(DATA.enums.jobTypes, j.jobType)) +
-          (j.scope ? ' — ' + esc(j.scope) : '') + '</span>' + teamSelectHtml(j) + '</li>').join('') + '</ul>'
-          : '<div class="crew-line" style="font-style:italic;">No jobs assigned yet.</div>') +
-        '<div class="team-count' + (over ? ' over' : '') + '">' + jobs.length + ' / ' + max + ' jobs</div>' +
+      const list = teams[n].slice().sort((a, b) =>
+        ((Number(DISP.ready[a.id].seq) || 999) - (Number(DISP.ready[b.id].seq) || 999)) ||
+        String(timeShort(a.time)).localeCompare(String(timeShort(b.time))));
+      const over = list.length > max;
+      return '<div class="team-card"><h3>Team ' + n + '</h3>' +
+        '<ul class="team-jobs">' + list.map(li).join('') + '</ul>' +
+        '<div class="team-count' + (over ? ' over' : '') + '">' + list.length + ' / ' + max + ' jobs</div>' +
       '</div>';
-    }).join('') : '<div class="empty">No teams set up for this night yet. Assign a ready job, or click <b>+ Set up team crew</b>.</div>';
+    }).join('') : '<div class="empty">No teams loaded for this date yet. Pick a team on any job in the pool.</div>';
 
     document.getElementById('poolBox').innerHTML = pool.length
-      ? pool.map(j => '<div class="pool-row"><span class="ptxt"><b>' + esc(j.mall) + '</b> · ' + esc(j.lotNo) + '<br><small style="color:var(--text-dim);">' +
-          esc(labelOf(DATA.enums.jobTypes, j.jobType)) + (j.scope ? ' · ' + esc(j.scope) : '') + '</small></span>' + teamSelectHtml(j) + '</div>').join('')
-      : '<div class="empty" style="padding:24px;">No ready &amp; unassigned jobs for this night.<br><small>Select "Show ready jobs from all dates" to include other dates.</small></div>';
+      ? pool.map(j => {
+          const wn = workerCount(j);
+          return '<div class="pool-row"><span class="ptxt"><b>' + esc(j.mall || '?') + '</b> · ' + esc(j.lot || '—') +
+            '<br><small style="color:var(--text-dim);">' + [timeShort(j.time), j.scope || j.title, shiftLabel(j.shift)].filter(Boolean).map(esc).join(' · ') +
+            ' · SV: ' + esc(j.supervisor_names || '—') + ' · ' + wn + ' worker' + (wn === 1 ? '' : 's') + '</small></span>' + teamSelectHtml(j) + '</div>';
+        }).join('')
+      : (jobs.length ? '<div class="empty" style="padding:24px;">Every job on this date is loaded into a team.</div>'
+                     : '<div class="empty" style="padding:24px;">No jobs scheduled on this date.<br><small>Add one via + Add Job or in Job Arrangement.</small></div>');
   }
 
-  /* TEAM MODAL */
-  function openTeamModal(teamNo) {
-    const date = currentDispatchDate;
-    if (!date) { toast('Pick an install night first.', true); return; }
-    const max = Number(DATA.config.maxTeams || 12);
-    let o = '';
-    for (let i = 1; i <= max; i++) o += '<option value="' + i + '">Team ' + i + '</option>';
-    const sel = document.getElementById('teTeamNo'); sel.innerHTML = o;
-    const crew = teamNo ? (DATA.teams.find(t => t.dispatchDate === date && String(t.teamNo) === String(teamNo)) || {}) : {};
-    currentTeamNo = teamNo;
-    sel.value = teamNo || '1';
-    document.getElementById('teDriver').value = crew.driver || '';
-    document.getElementById('teLorry').value = crew.lorry || '';
-    document.getElementById('teWorkers').value = crew.workers || '';
-    document.getElementById('teNotes').value = crew.notes || '';
-    document.getElementById('teDeleteBtn').style.display = (crew && crew.id) ? 'inline-flex' : 'none';
-    // worker quick-add chips
-    const workers = DATA.staff.filter(s => s.role === 'worker' && s.active !== false);
-    document.getElementById('teWorkerChips').innerHTML = workers.map(w =>
-      '<span class="chip" onclick="addWorkerChip(\'' + esc(w.name).replace(/'/g,"\\'") + '\')">+ ' + esc(w.name) + '</span>').join('')
-      || '<span class="help">No workers in Crew tab yet — type names directly.</span>';
-    openModal('mTeam');
-  }
-  function addWorkerChip(name) {
-    const el = document.getElementById('teWorkers');
-    const list = el.value.split(',').map(s => s.trim()).filter(Boolean);
-    if (list.indexOf(name) === -1) list.push(name);
-    el.value = list.join(', ');
-  }
-  async function saveTeamFromForm() {
-    const p = {
-      dispatchDate: currentDispatchDate,
-      teamNo: document.getElementById('teTeamNo').value,
-      driver: document.getElementById('teDriver').value,
-      lorry: document.getElementById('teLorry').value,
-      workers: document.getElementById('teWorkers').value,
-      notes: document.getElementById('teNotes').value,
-    };
-    if (!p.dispatchDate || !p.teamNo) { toast('Team needs a date and a team number.', true); return; }
-    // One row per (dispatchDate, teamNo) — same composite-key rule as the GAS saveTeam().
-    const existing = DATA.teams.find(t => String(t.dispatchDate) === String(p.dispatchDate) && String(t.teamNo) === String(p.teamNo));
-    let r;
-    if (existing) {
-      r = await sb.from('dsp_teams').update({
-        driver: p.driver || '', workers: p.workers || '', lorry: p.lorry || '', notes: p.notes || '',
-        updated_at: nowIso(), updated_by: myEmail(),
-      }).eq('id', existing.id);
-    } else {
-      r = await sb.from('dsp_teams').insert({
-        dispatch_date: p.dispatchDate, team_no: String(p.teamNo),
-        driver: p.driver || '', workers: p.workers || '', lorry: p.lorry || '', notes: p.notes || '',
-        created_by: myEmail(), updated_by: myEmail(),
-      });
-    }
-    if (r.error) { toast(r.error.message, true); return; }
-    await logAudit((existing ? 'UPDATE' : 'CREATE') + ' Team', p.dispatchDate + ' T' + p.teamNo + ' · ' + (p.driver || ''));
-    closeModal('mTeam');
-    reload('Team crew saved.');
-  }
-  async function deleteTeamFromForm() {
-    const date = currentDispatchDate, no = document.getElementById('teTeamNo').value;
-    const crew = DATA.teams.find(t => t.dispatchDate === date && String(t.teamNo) === String(no));
-    if (!crew) { closeModal('mTeam'); return; }
-    if (!confirm('Delete Team ' + no + ' for ' + date + '? Its jobs go back to the pool.')) return;
-    // Unassign any jobs pointing at this team/night (same as GAS deleteTeam)
-    const affected = DATA.jobs.filter(j => String(j.dispatchDate) === String(date) && String(j.teamNo) === String(no));
-    const ru = await sb.from('dsp_jobs').update({
-      team_no: '', job_status: 'open', updated_at: nowIso(), updated_by: myEmail(),
-    }).eq('dispatch_date', date).eq('team_no', String(no));
-    if (ru.error) { toast(ru.error.message, true); return; }
-    const rd = await sb.from('dsp_teams').delete().eq('id', crew.id);
-    if (rd.error) { toast(rd.error.message, true); return; }
-    await logAudit('DELETE Team', date + ' T' + no + ' · ' + affected.length + ' job(s) unassigned');
-    closeModal('mTeam');
-    reload('Team removed.');
-  }
-
-  /* WhatsApp message — kept EXACTLY as the original composes it */
+  /* WhatsApp message — same roster style as the Job Arrangement tool */
   function buildMessage(date) {
-    const active = DATA.jobs.filter(j => j.jobStatus !== 'done' && j.jobStatus !== 'cancelled');
-    const assigned = active.filter(j => j.dispatchDate === date && j.teamNo);
-    const teamNos = {};
-    DATA.teams.filter(t => t.dispatchDate === date).forEach(t => teamNos[String(t.teamNo)] = true);
-    assigned.forEach(j => teamNos[String(j.teamNo)] = true);
-    const nums = Object.keys(teamNos).sort((a,b) => Number(a) - Number(b));
-    let totalJobs = 0;
-    let out = 'HG Hoarding — Night Install\nDate: ' + prettyDate(date) + '\n';
-    nums.forEach(n => {
-      const crew = DATA.teams.find(t => t.dispatchDate === date && String(t.teamNo) === n) || {};
-      const jobs = assigned.filter(j => String(j.teamNo) === n);
-      totalJobs += jobs.length;
-      const wc = crew.workers ? crew.workers.split(',').map(s => s.trim()).filter(Boolean).length : 0;
-      out += '\nTEAM ' + n + '\n';
-      out += 'Driver/SV: ' + (crew.driver || '-') + '\n';
-      out += 'Workers: ' + (crew.workers || '-') + (wc ? ' (' + wc + ')' : '') + '\n';
-      out += 'Lorry: ' + (crew.lorry || '-') + '\n';
-      out += 'Jobs (' + jobs.length + '):\n';
-      jobs.forEach((j, i) => {
-        const g = gates(j);
-        const door = (j.doorType && j.doorType !== 'None') ? ', ' + j.doorType.toLowerCase() : '';
-        out += (i+1) + '. ' + (j.mall || '?') + ' — ' + (j.lotNo || '?') + ' — ' + labelOf(DATA.enums.jobTypes, j.jobType) +
-          (j.scope ? ' — ' + j.scope : '') + door + ' [' + (g.permit ? 'Permit OK' : 'PERMIT PENDING') + ']\n';
-      });
-      if (crew.notes) out += 'Note: ' + crew.notes + '\n';
+    const jobs = dispSorted();
+    const teams = {};
+    const un = [];
+    jobs.forEach(j => {
+      const r = DISP.ready[j.id];
+      if (r && r.team_no) (teams[String(r.team_no)] = teams[String(r.team_no)] || []).push(j);
+      else un.push(j);
     });
-    out += '\nTotal: ' + nums.length + ' team(s), ' + totalJobs + ' job(s)';
-    return { text: out, teams: nums.length, jobs: totalJobs };
+    const nums = Object.keys(teams).sort((a, b) => Number(a) - Number(b));
+    let total = 0;
+    const lines = ['*HG Dispatch — ' + prettyDate(date) + '*'];
+    const jobLines = (j, i) => {
+      const wn = workerCount(j);
+      lines.push((i + 1) + '. ' + [timeShort(j.time), j.scope || j.title, j.mall, j.lot ? 'Lot ' + j.lot : ''].filter(Boolean).join(' · '));
+      lines.push('   SV: ' + (j.supervisor_names || '—') + ' · ' + wn + ' worker' + (wn === 1 ? '' : 's'));
+    };
+    nums.forEach(n => {
+      const list = teams[n].slice().sort((a, b) =>
+        ((Number(DISP.ready[a.id].seq) || 999) - (Number(DISP.ready[b.id].seq) || 999)) ||
+        String(timeShort(a.time)).localeCompare(String(timeShort(b.time))));
+      lines.push('', '*TEAM ' + n + '*');
+      list.forEach((j, i) => { jobLines(j, i); total++; });
+    });
+    if (un.length) {
+      lines.push('', '*UNASSIGNED*');
+      un.forEach((j, i) => jobLines(j, i));
+    }
+    lines.push('', 'Total: ' + nums.length + ' team(s), ' + total + ' assigned job(s)' + (un.length ? ', ' + un.length + ' unassigned' : ''));
+    return { text: lines.join('\n'), teams: nums.length, jobs: total + un.length };
   }
   function openDispatchMsg() {
-    if (!currentDispatchDate) { toast('Pick an install night first.', true); return; }
+    if (!currentDispatchDate) { toast('Pick a dispatch date first.', true); return; }
     const m = buildMessage(currentDispatchDate);
-    if (!m.jobs && !m.teams) { toast('Nothing assigned for this night yet.', true); return; }
+    if (!m.jobs) { toast('No jobs scheduled on this date.', true); return; }
     document.getElementById('msgArea').value = m.text;
     openModal('mMsg');
   }
@@ -1809,7 +1736,7 @@
     catch (e) { navigator.clipboard && navigator.clipboard.writeText(ta.value).then(() => toast('Copied.')); }
   }
 
-  /* ---------- ALARMS (dsp_alarms view, §6.2) ---------- */
+  /* ---------- ALARMS (computed client-side from the joined window set) ---------- */
   const ALARM_LABELS = {
     permit_alarm: 'Permit alarm - chase now',
     at_risk:      'At risk - install soon, not ready',
@@ -1817,144 +1744,60 @@
   };
   function renderAlarms() {
     if (!DATA) return;
-    const rows = DATA.alarms || [];
+    const items = [];
+    JOBS.forEach(j => {
+      const v = verdictOf(j);
+      if (v.permitAlarm) items.push({ type: 'permit_alarm', j: j, v: v });
+      if (v.status === 'blocked') items.push({ type: 'blocked', j: j, v: v });
+      else if (v.status === 'at_risk') items.push({ type: 'at_risk', j: j, v: v });
+    });
     const counts = { permit_alarm: 0, at_risk: 0, blocked: 0 };
-    rows.forEach(a => { if (counts[a.alarm_type] != null) counts[a.alarm_type]++; });
+    items.forEach(a => { if (counts[a.type] != null) counts[a.type]++; });
     document.getElementById('alarmSummary').innerHTML = toolSnapshot('Alarm Snapshot',
       card('warn', 'Permit alarms', counts.permit_alarm) +
       card('soon', 'At risk', counts.at_risk) +
       card('warn', 'Blocked', counts.blocked)
     );
     const order = { permit_alarm: 0, at_risk: 1, blocked: 2 };
-    const sorted = rows.slice().sort((a,b) =>
-      (order[a.alarm_type] ?? 9) - (order[b.alarm_type] ?? 9) ||
-      String(a.due_date || '9999').localeCompare(String(b.due_date || '9999')));
-    document.getElementById('alarmBody').innerHTML = sorted.length ? sorted.map(a =>
-      '<tr><td><span class="pill ' + esc(a.alarm_type) + '">' + esc(ALARM_LABELS[a.alarm_type] || a.alarm_type) + '</span></td>' +
-      '<td>' + esc(a.ref || '') + '</td>' +
-      '<td style="color:var(--text-dim);">' + esc(a.detail || '') + '</td>' +
-      '<td style="white-space:nowrap;">' + esc(a.due_date || '—') + (a.due_date ? ' · ' + countdownText(daysUntil(a.due_date)) : '') + '</td>' +
-      '<td style="color:var(--text-dim);font-size:0.8rem;">' + esc(a.recipient || '') + '</td></tr>'
-    ).join('') : '<tr><td colspan="5" class="table-empty table-empty-success"><div class="clear-state"><i data-lucide="shield-check" aria-hidden="true"></i><div><strong>All clear</strong><span>No permit alarms, at-risk jobs, or blocked jobs.</span></div></div></td></tr>';
+    const sorted = items.slice().sort((a, b) =>
+      (order[a.type] ?? 9) - (order[b.type] ?? 9) ||
+      String(a.j.date || '9999').localeCompare(String(b.j.date || '9999')));
+    document.getElementById('alarmBody').innerHTML = sorted.length ? sorted.map(a => {
+      const r = READY[a.j.id] || {};
+      const detail = a.type === 'permit_alarm'
+        ? 'Permit not ready (' + labelOf(ENUMS.permitStatus, r.permit_status || 'pending') + ' · ' + labelOf(ENUMS.permitBy, r.permit_by || 'us') + ')'
+        : 'Missing: ' + (a.v.missing || []).join(', ');
+      return '<tr><td><span class="pill ' + esc(a.type) + '">' + esc(ALARM_LABELS[a.type] || a.type) + '</span></td>' +
+        '<td>' + esc([a.j.mall, a.j.lot].filter(Boolean).join(' · ') || a.j.client || a.j.id) + '</td>' +
+        '<td style="color:var(--text-dim);">' + esc(detail) + '</td>' +
+        '<td style="white-space:nowrap;">' + esc(a.j.date || '—') + (a.j.date ? ' · ' + countdownText(daysUntil(a.j.date)) : '') + '</td>' +
+        '<td style="color:var(--text-dim);font-size:0.8rem;">' + esc(a.j.supervisor_names || '—') + '</td></tr>';
+    }).join('') : '<tr><td colspan="5" class="table-empty table-empty-success"><div class="clear-state"><i data-lucide="shield-check" aria-hidden="true"></i><div><strong>All clear</strong><span>No permit alarms, at-risk jobs, or blocked jobs in the window.</span></div></div></td></tr>';
     if (window.lucide) lucide.createIcons();
   }
-  async function refreshAlarms() {
-    const r = await sb.from('dsp_alarms').select('*');
-    if (r.error) { toast(r.error.message, true); return; }
-    DATA.alarms = r.data;
-    renderAlarms();
-    toast('Alarms refreshed.');
-  }
+  function refreshAlarms() { reload('Alarms refreshed.'); }
 
-  /* ---------- CREW ---------- */
+  /* ---------- CREW & LORRIES (read-only — ja_supervisors + ja_lorries masters) ---------- */
   function renderCrew() {
     if (!DATA) return;
-    const staff = DATA.staff.slice().sort((a,b) => (a.role+a.name).localeCompare(b.role+b.name));
-    const activeStaff = staff.filter(s => s.active !== false);
-    const drivers = activeStaff.filter(s => s.role === 'driver');
-    const workers = activeStaff.filter(s => s.role === 'worker');
-    const activeLorries = DATA.lorries.filter(l => l.active !== false);
+    const sup = (DATA.supervisors || []).slice();
+    const lorries = (DATA.lorries || []).slice();
     document.getElementById('crewSummary').innerHTML = toolSnapshot('Crew & Fleet Snapshot',
-      card('info', 'Available staff', activeStaff.length) +
-      card('info', 'Drivers', drivers.length) +
-      card('ok', 'Workers', workers.length) +
-      card('info', 'Lorries', activeLorries.length)
+      card('info', 'Supervisors / drivers', sup.length) +
+      card('info', 'Lorries', lorries.length) +
+      card('ok', 'Managed in', 'JA')
     );
-    document.getElementById('staffBody').innerHTML = staff.length ? staff.map(s =>
-      '<tr><td>' + esc(s.name) + '</td><td><span class="pill ' + (s.role === 'driver' ? 'driver' : 'worker') + '">' +
-        (s.role === 'driver' ? 'Driver/SV' : 'Worker') + '</span></td><td>' + esc(s.phone || '—') + '</td>' +
-      '<td>' + (s.active === false ? '<span class="pill off">inactive</span>' : 'active') + '</td>' +
-      '<td style="text-align:right;"><button class="btn btn-ghost btn-sm" onclick="openStaffModal(\'' + s.id + '\')">Edit</button></td></tr>'
-    ).join('') : '<tr><td colspan="5" class="table-empty"><strong>No staff added</strong><span>Add staff to make them available for dispatch.</span></td></tr>';
+    document.getElementById('staffBody').innerHTML = sup.length ? sup.map(s =>
+      '<tr><td style="color:var(--text-dim);font-size:0.8rem;">' + esc(s.id) + '</td><td>' + esc(s.name || '—') + '</td>' +
+      '<td><span class="pill driver">' + esc(s.type || 'supervisor') + '</span></td></tr>'
+    ).join('') : '<tr><td colspan="3" class="table-empty"><strong>No supervisors on file</strong><span>Add them in Job Arrangement → Workers &amp; Masters.</span></td></tr>';
 
-    const lorries = DATA.lorries.slice();
     document.getElementById('lorryBody').innerHTML = lorries.length ? lorries.map(l =>
-      '<tr><td>' + esc(l.plate) + '</td><td>' + esc(l.label || '—') + '</td>' +
-      '<td>' + (l.active === false ? '<span class="pill off">inactive</span>' : 'active') + '</td>' +
-      '<td style="text-align:right;"><button class="btn btn-ghost btn-sm" onclick="openLorryModal(\'' + l.id + '\')">Edit</button></td></tr>'
-    ).join('') : '<tr><td colspan="4" class="table-empty"><strong>No lorries added</strong><span>Add a lorry to make it available for dispatch.</span></td></tr>';
-  }
-  function fillDatalists() {
-    document.getElementById('driversList').innerHTML = DATA.staff.filter(s => s.role === 'driver' && s.active !== false)
-      .map(s => '<option value="' + esc(s.name) + '">').join('');
-    document.getElementById('lorriesList').innerHTML = DATA.lorries.filter(l => l.active !== false)
-      .map(l => '<option value="' + esc(l.plate) + '">' + esc(l.label || '') + '</option>').join('');
-  }
-  function openStaffModal(id) {
-    const s = id ? DATA.staff.find(x => x.id === id) : null;
-    currentStaff = s;
-    document.getElementById('staffModalTitle').textContent = s ? 'Edit staff' : 'Add staff';
-    document.getElementById('stName').value = s ? s.name : '';
-    document.getElementById('stRole').value = s ? s.role : 'worker';
-    document.getElementById('stPhone').value = s ? (s.phone || '') : '';
-    document.getElementById('stActive').checked = s ? (s.active !== false) : true;
-    document.getElementById('stDeleteBtn').style.display = s ? 'inline-flex' : 'none';
-    openModal('mStaff');
-  }
-  async function saveStaffFromForm() {
-    const p = { name: document.getElementById('stName').value.trim(), role: document.getElementById('stRole').value,
-      phone: document.getElementById('stPhone').value, active: document.getElementById('stActive').checked };
-    if (!p.name) { toast('Name required.', true); return; }
-    let r;
-    if (currentStaff) {
-      r = await sb.from('dsp_staff').update({ name: p.name, role: p.role, phone: p.phone, active: p.active,
-        updated_at: nowIso(), updated_by: myEmail() }).eq('id', currentStaff.id);
-    } else {
-      r = await sb.from('dsp_staff').insert({ name: p.name, role: p.role, phone: p.phone, active: p.active,
-        created_by: myEmail(), updated_by: myEmail() });
-    }
-    if (r.error) { toast(r.error.message, true); return; }
-    await logAudit((currentStaff ? 'UPDATE' : 'CREATE') + ' Staff', p.name + ' (' + p.role + ')');
-    closeModal('mStaff');
-    reload('Staff saved.');
-  }
-  async function deleteStaffFromForm() {
-    if (!currentStaff) return;
-    if (!confirm('Delete ' + currentStaff.name + '?')) return;
-    const r = await sb.from('dsp_staff').delete().eq('id', currentStaff.id);
-    if (r.error) { toast(r.error.message, true); return; }
-    await logAudit('DELETE Staff', currentStaff.name || currentStaff.id);
-    closeModal('mStaff');
-    reload('Staff deleted.');
-  }
-  function openLorryModal(id) {
-    const l = id ? DATA.lorries.find(x => x.id === id) : null;
-    currentLorry = l;
-    document.getElementById('lorryModalTitle').textContent = l ? 'Edit lorry' : 'Add lorry';
-    document.getElementById('loPlate').value = l ? l.plate : '';
-    document.getElementById('loLabel').value = l ? (l.label || '') : '';
-    document.getElementById('loActive').checked = l ? (l.active !== false) : true;
-    document.getElementById('loDeleteBtn').style.display = l ? 'inline-flex' : 'none';
-    openModal('mLorry');
-  }
-  async function saveLorryFromForm() {
-    const p = { plate: document.getElementById('loPlate').value.trim(), label: document.getElementById('loLabel').value,
-      active: document.getElementById('loActive').checked };
-    if (!p.plate) { toast('Plate required.', true); return; }
-    let r;
-    if (currentLorry) {
-      r = await sb.from('dsp_lorries').update({ plate: p.plate, label: p.label, active: p.active,
-        updated_at: nowIso(), updated_by: myEmail() }).eq('id', currentLorry.id);
-    } else {
-      r = await sb.from('dsp_lorries').insert({ plate: p.plate, label: p.label, active: p.active,
-        created_by: myEmail(), updated_by: myEmail() });
-    }
-    if (r.error) { toast(r.error.message, true); return; }
-    await logAudit((currentLorry ? 'UPDATE' : 'CREATE') + ' Lorry', p.plate);
-    closeModal('mLorry');
-    reload('Lorry saved.');
-  }
-  async function deleteLorryFromForm() {
-    if (!currentLorry) return;
-    if (!confirm('Delete lorry ' + currentLorry.plate + '?')) return;
-    const r = await sb.from('dsp_lorries').delete().eq('id', currentLorry.id);
-    if (r.error) { toast(r.error.message, true); return; }
-    await logAudit('DELETE Lorry', currentLorry.plate || currentLorry.id);
-    closeModal('mLorry');
-    reload('Lorry deleted.');
+      '<tr><td style="color:var(--text-dim);font-size:0.8rem;">' + esc(l.id) + '</td><td>' + esc(l.plate || '—') + '</td></tr>'
+    ).join('') : '<tr><td colspan="2" class="table-empty"><strong>No lorries on file</strong><span>Add them in Job Arrangement → Workers &amp; Masters.</span></td></tr>';
   }
 
-  /* ---------- SETTINGS ---------- */
+  /* ---------- SETTINGS (dsp_config stays the settings store) ---------- */
   function fillSettings() {
     const c = DATA.config;
     document.getElementById('cfgPermitLeadDays').value = c.permitLeadDays || 3;
@@ -1976,58 +1819,61 @@
     const rows = Object.keys(p).map(k => ({ key: k, value: String(p[k] == null ? '' : p[k]) }));
     const r = await sb.from('dsp_config').upsert(rows, { onConflict: 'key' });
     if (r.error) { toast(r.error.message, true); return; }
-    await logAudit('UPDATE Dispatch Config', Object.keys(p).join(', '));
+    await audit('Dispatch settings updated', Object.keys(p).join(', '));
     reload('Settings saved.', () => fillSettings());
   }
 
-  /* ---------- ACTIVITY ---------- */
+  /* ---------- ACTIVITY (ja_audit_log — same trail Job Arrangement writes) ---------- */
   function renderActivity() {
     if (!DATA) return;
     const rows = DATA.audit || [];
     const dayAgo = Date.now() - 86400000;
     const textOf = r => ((r.action || '') + ' ' + (r.details || '')).toLowerCase();
     const last24 = rows.filter(r => {
-      const t = Date.parse(r.at || '');
+      const t = Date.parse(r.ts || '');
       return !Number.isNaN(t) && t >= dayAgo;
     }).length;
     document.getElementById('activitySummary').innerHTML = toolSnapshot('Activity Snapshot',
       card('info', '24h activity', last24) +
-      card('ok', 'Readiness', rows.filter(r => /job|readiness|gate/.test(textOf(r))).length) +
+      card('ok', 'Readiness', rows.filter(r => /gate|readiness/.test(textOf(r))).length) +
       card('info', 'Dispatch', rows.filter(r => /dispatch|assign|team/.test(textOf(r))).length) +
-      card('soon', 'Crew', rows.filter(r => /staff|lorry|crew|driver|worker/.test(textOf(r))).length) +
+      card('soon', 'Jobs', rows.filter(r => /job/.test(textOf(r))).length) +
       card('info', 'Settings', rows.filter(r => /config|setting/.test(textOf(r))).length)
     );
     document.getElementById('auditBody').innerHTML = rows.length ? rows.map(r =>
-      '<tr><td style="white-space:nowrap;color:var(--text-dim);font-size:0.8rem;">' + esc(String(r.at||'').replace('T',' ').slice(0,16)) + '</td>' +
+      '<tr><td style="white-space:nowrap;color:var(--text-dim);font-size:0.8rem;">' + esc(String(r.ts || '').replace('T', ' ').slice(0, 16)) + '</td>' +
       '<td>' + esc(r.user_email || '') + '</td><td>' + esc(r.action || '') + '</td>' +
       '<td style="color:var(--text-dim);">' + esc(r.details || '') + '</td></tr>'
-    ).join('') : '<tr><td colspan="4" class="table-empty"><strong>No activity yet</strong><span>Readiness, dispatch, crew, and settings updates will appear here.</span></td></tr>';
+    ).join('') : '<tr><td colspan="4" class="table-empty"><strong>No activity yet</strong><span>Gate updates, dispatch assignments, and new jobs will appear here.</span></td></tr>';
   }
 
-  /* ---------- EXPORT EXCEL (SheetJS) ---------- */
+  /* ---------- EXPORT EXCEL (SheetJS) — real schedule + gates ---------- */
   function exportExcel() {
     if (!DATA) return;
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DATA.jobs.map(j => ({
-      'Job code': j.jobCode, 'Client': j.client, 'Client group': j.clientGroup, 'Mall': j.mall, 'Lot': j.lotNo,
-      'Type': labelOf(ENUMS.jobTypes, j.jobType), 'Scope': j.scope, 'Door': j.doorType,
-      'Install date': j.installDate, 'Days to install': j.daysToInstall,
-      'Readiness': j.readiness, 'Missing': (j.missing || []).join(', '), 'Permit alarm': j.permitAlarm ? 'YES' : '',
-      'Measure': j.measureStatus, 'Quote': j.quoteStatus, 'Quote ref': j.quoteRef,
-      'Needs visual': j.needsVisual, 'Visual': j.visualStatus,
-      'Permit by': j.permitBy, 'Permit status': j.permitStatus, 'Permit approved': j.permitApprovedAt,
-      'Material ready': j.materialReady, 'Material notes': j.materialNotes,
-      'Job status': j.jobStatus, 'Dispatch date': j.dispatchDate, 'Team': j.teamNo, 'Notes': j.notes,
-      'Updated by': j.updatedBy,
-    }))), 'Jobs');
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DATA.teams.map(t => ({
-      'Night': t.dispatchDate, 'Team': t.teamNo, 'Driver/SV': t.driver, 'Workers': t.workers, 'Lorry': t.lorry, 'Notes': t.notes,
-    }))), 'Teams');
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DATA.staff.map(s => ({
-      'Name': s.name, 'Role': s.role, 'Phone': s.phone, 'Active': s.active ? 'yes' : 'no',
-    }))), 'Staff');
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DATA.lorries.map(l => ({
-      'Plate': l.plate, 'Label': l.label, 'Active': l.active ? 'yes' : 'no',
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(JOBS.map(j => {
+      const r = READY[j.id] || {};
+      const v = verdictOf(j);
+      return {
+        'Job ID': j.id, 'Client': j.client, 'Mall': j.mall, 'Lot': j.lot,
+        'Shift': shiftLabel(j.shift), 'Scope': j.scope, 'Date': j.date, 'Time': timeShort(j.time),
+        'Supervisors': j.supervisor_names, 'Workers': workerCount(j),
+        'Days to install': v.daysToInstall,
+        'Readiness': v.status, 'Missing': (v.missing || []).join(', '), 'Permit alarm': v.permitAlarm ? 'YES' : '',
+        'Measure': r.measure_status || '', 'Quote': r.quote_status || '', 'Quote ref': r.quote_ref || '',
+        'Needs visual': r.needs_visual || '', 'Visual': r.visual_status || '',
+        'Permit by': r.permit_by || '', 'Permit status': r.permit_status || '',
+        'Permit approved': String(r.permit_approved_at || '').slice(0, 10),
+        'Material ready': r.material_ready || '', 'Material notes': r.material_notes || '',
+        'Dispatch date': String(r.dispatch_date || '').slice(0, 10), 'Team': r.team_no || '', 'Seq': r.seq || '',
+        'Gate notes': r.notes || '', 'Updated by': r.updated_by || '',
+      };
+    })), 'Jobs');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet((DATA.supervisors || []).map(s => ({
+      'ID': s.id, 'Name': s.name, 'Type': s.type,
+    }))), 'Supervisors');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet((DATA.lorries || []).map(l => ({
+      'ID': l.id, 'Plate': l.plate,
     }))), 'Lorries');
     XLSX.writeFile(wb, 'HG-Dispatch-' + todayKL() + '.xlsx');
   }

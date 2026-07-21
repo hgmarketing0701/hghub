@@ -395,34 +395,43 @@ module.exports = {
       unavailable.push({ source: "project_pl", message: "Project P&L Admin or Manager required" });
     }
 
-    // Dispatch execution and attention (dsp_alarms + dsp_jobs are MySQL views/tables)
+    // Dispatch execution and attention — now the REAL schedule: ja_jobs + ja_job_readiness
+    // (dsp_jobs/dsp_alarms retired; same gate rules as the shared hg-readiness.js)
     try {
-      const [[jobs], [alarms]] = await Promise.all([
-        conn.query("SELECT COUNT(*) AS cnt FROM dsp_jobs WHERE job_status NOT IN ('done', 'cancelled')"),
-        conn.query("SELECT alarm_type, ref, detail, due_date FROM dsp_alarms")
-      ]);
-      const active = num(jobs[0].cnt);
-      const refs = new Set(alarms.map((a) => a.ref).filter(Boolean));
-      execution.dispatch = {
-        active,
-        permit_alarms: alarms.filter((a) => a.alarm_type === "permit_alarm").length,
-        at_risk: alarms.filter((a) => a.alarm_type === "at_risk").length,
-        blocked: alarms.filter((a) => a.alarm_type === "blocked").length,
-        ready: Math.max(active - refs.size, 0)
-      };
-      for (const a of alarms) {
-        const due = dateStr(a.due_date);
-        items.push({
-          item_key: "dispatch:" + lower(a.alarm_type) + ":" + (a.ref || "") + ":" + (due || ""),
-          domain: "dispatch",
-          severity: ((a.alarm_type === "permit_alarm" || a.alarm_type === "blocked") && due && due <= asOf)
-            ? "critical" : "warning",
-          type: lower(a.alarm_type), title: a.ref || "Dispatch decision", detail: a.detail,
-          owner: null, due_date: due, amount: null, source: "dsp_alarms",
-          source_ref: a.ref, tool_id: "Daily Readiness & Dispatch", tool_tab: null,
-          action_label: "Open dispatch"
-        });
+      const hgReadiness = require("../public/hg-readiness.js");
+      const [upcoming] = await conn.query(
+        `SELECT j.id, j.mall, j.lot, j.date, j.scope,
+                r.measure_status, r.quote_status, r.needs_visual, r.visual_status,
+                r.permit_by, r.permit_status, r.material_ready, r.job_id AS has_readiness
+           FROM ja_jobs j
+           LEFT JOIN ja_job_readiness r ON r.job_id = j.id
+          WHERE j.date >= CURDATE() AND j.date <= DATE_ADD(CURDATE(), INTERVAL 14 DAY)`);
+      const counts = { active: upcoming.length, permit_alarms: 0, at_risk: 0, blocked: 0, ready: 0 };
+      for (const row of upcoming) {
+        const verdict = hgReadiness.of({ mall: row.mall, lot: row.lot, date: row.date },
+          row.has_readiness ? row : null);
+        if (verdict.permitAlarm) counts.permit_alarms++;
+        if (verdict.status === "at_risk") counts.at_risk++;
+        else if (verdict.status === "blocked") counts.blocked++;
+        else if (verdict.status === "ready") counts.ready++;
+        if (verdict.status === "blocked" || verdict.permitAlarm) {
+          const due = dateStr(row.date);
+          const ref = (row.mall || "Job") + (row.lot ? " — " + row.lot : "");
+          const kind = verdict.permitAlarm ? "permit_alarm" : "blocked";
+          items.push({
+            item_key: "dispatch:" + kind + ":" + row.id,
+            domain: "dispatch",
+            severity: (due && due <= asOf) ? "critical" : "warning",
+            type: kind, title: ref,
+            detail: (verdict.permitAlarm ? "Permit not ready — " : "Not ready — ") +
+                    "missing: " + verdict.missing.join(", "),
+            owner: null, due_date: due, amount: null, source: "ja_job_readiness",
+            source_ref: ref, tool_id: "Daily Readiness & Dispatch", tool_tab: null,
+            action_label: "Open dispatch"
+          });
+        }
       }
+      execution.dispatch = counts;
     } catch (e) {
       unavailable.push({ source: "dispatch", message: e.message });
     }
