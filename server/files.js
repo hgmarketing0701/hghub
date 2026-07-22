@@ -50,6 +50,38 @@ router.post("/:bucket", upload.single("file"), (req, res) => {
   res.json({ data: { path: rel, fullPath: `${bucket}/${rel}`, publicUrl } });
 });
 
+// content-type-corrected serving — legacy files were stored without extensions,
+// so express.static hands them out as octet-stream (browser downloads garbage).
+// GET /api/files-view/<bucket>/<path...>        → inline with sniffed content-type
+// GET /api/files-view/<bucket>/<path...>?dl=1   → attachment with a proper filename+ext
+const SNIFF = [
+  { sig: [0x25, 0x50, 0x44, 0x46], mime: "application/pdf", ext: ".pdf" },   // %PDF
+  { sig: [0x89, 0x50, 0x4e, 0x47], mime: "image/png", ext: ".png" },
+  { sig: [0xff, 0xd8, 0xff], mime: "image/jpeg", ext: ".jpg" },
+  { sig: [0x52, 0x49, 0x46, 0x46], mime: "image/webp", ext: ".webp" }        // RIFF
+];
+router.get(/^\/view\/([^/]+)\/(.+)$/, (req, res) => {
+  try {
+    const bucket = req.params[0];
+    const rel = safeRel(req.params[1]);
+    if (!BUCKETS.has(bucket) || !rel) return res.status(404).end();
+    const abs = path.join(UPLOADS_DIR, bucket, rel);
+    if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) return res.status(404).end();
+    const head = fs.readFileSync(abs).subarray(0, 8);
+    let mime = "application/octet-stream", ext = "";
+    for (const s of SNIFF) if (s.sig.every((b, i) => head[i] === b)) { mime = s.mime; ext = s.ext; break; }
+    res.setHeader("Content-Type", mime);
+    if (req.query.dl) {
+      let name = path.basename(rel);
+      if (ext && !name.toLowerCase().endsWith(ext)) name += ext;   // repair missing extension
+      res.setHeader("Content-Disposition", 'attachment; filename="' + name.replace(/"/g, "") + '"');
+    } else {
+      res.setHeader("Content-Disposition", "inline");
+    }
+    fs.createReadStream(abs).pipe(res);
+  } catch (e) { res.status(500).json({ error: { message: e.message } }); }
+});
+
 // mirrors storage.from(b).getPublicUrl(p) for the shim (no auth needed — URL math only)
 router.get("/:bucket/public-url", (req, res) => {
   const bucket = req.params.bucket;

@@ -161,7 +161,12 @@ router.post("/invoice-read", invUpload.single("file"), async (req, res) => {
           "This is a confirmed customer invoice/PO for HG (Malaysian contractor-support: hoarding, visual print, scaffold, reinstatement, fit-out). " +
           "Extract JSON exactly in this shape: {\"invoice_no\":string,\"client\":string,\"mall\":string,\"amount\":number|null,\"sst\":number|null," +
           "\"jobs\":[{\"lot\":string,\"description\":string,\"suggested_scope\":string}]}. " +
-          "One jobs[] entry per distinct lot/work item (an invoice can contain several). " +
+          "jobs[] = one entry per DISTINCT SITE VISIT / physical work, NOT per invoice line item. " +
+          "Line items that are parts of the same installation — e.g. hoarding panels + swing door + counterweight + skirting — " +
+          "are ONE job: lot = ALL its lot numbers combined exactly as written (e.g. 'G8, G9 & G10'), " +
+          "description = the line items joined with ' + ' (e.g. 'Hoarding white PVC plywood 3mm + single leaf swing door + counterweight system'). " +
+          "Create separate jobs ONLY for genuinely separate works: install vs dismantle, or clearly separate visits/sites. " +
+          "A typical hoarding invoice = 1 job. " +
           "suggested_scope = short work name like 'Hoarding Installation', 'Hoarding Dismantling', 'Visual Print & Install', 'Scaffold', 'Reinstatement'. " +
           "mall = the site/mall/building name. amount = grand total number in RM without currency sign. Use \"\" or null when unreadable. Output ONLY the JSON." }
       ],
