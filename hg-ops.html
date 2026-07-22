@@ -205,6 +205,73 @@
   .backlog-item .bi-t{flex:1;min-width:180px}
   .backlog-item input[type=date]{width:160px;min-height:38px}
   .alarmline{display:flex;gap:8px;align-items:center;background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:9px 12px;font-size:.8rem;font-weight:600;margin-bottom:12px;cursor:pointer}
+
+  /* ===== Left sidebar shell — matches hub index.html aside ===== */
+  #app{padding:0}
+  .ops-shell{display:flex;align-items:flex-start;min-height:100vh}
+  aside.ops-side{width:240px;flex:0 0 240px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;background:#f4f3ee;border-right:1px solid #ddd8d0;z-index:30}
+  .ops-main{flex:1 1 auto;min-width:0;padding:26px 28px 0}
+  .sb-brand{display:flex;align-items:center;gap:12px;min-height:96px;width:calc(100% - 32px);margin:0 auto;padding:24px 0 16px}
+  .sb-wordmark{width:54px;height:40px;flex:0 0 54px;object-fit:contain;opacity:.95}
+  .sb-wordmark.logo-dark{display:none}
+  .sb-identity{min-width:0;display:grid;align-content:center;gap:0}
+  .sb-pname{color:var(--ink);font-size:15px;line-height:21px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sb-prole{color:#8b837b;font-size:12.5px;line-height:18px;font-weight:500}
+  .ops-side nav{position:static;top:auto;display:flex;flex-direction:column;flex:1 1 auto;gap:0;width:calc(100% - 32px);margin:0 auto;padding:6px 0 12px;background:transparent;border-bottom:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+  .ops-side nav button{flex:0 0 auto;display:flex;align-items:center;gap:12px;width:100%;min-height:44px;margin:5px 0;padding:10px;border:1px solid transparent;border-radius:8px;background:transparent;color:#173b48;font-family:inherit;font-size:14px;line-height:20px;font-weight:750;text-align:left;white-space:nowrap;cursor:pointer;overflow:hidden;transition:background .15s,border-color .15s}
+  .ops-side nav button:hover:not(.active){background:rgba(255,255,255,.52);border-color:transparent;color:#173b48}
+  .ops-side nav button.active{background:#ffffff;border-color:#eee9e2;box-shadow:0 2px 9px rgba(23,23,23,.04);color:#173b48}
+  .ops-side nav button .ic{width:22px;height:22px;flex:0 0 22px;display:flex;align-items:center;justify-content:center;color:currentColor}
+  .ops-side nav button .ic svg{width:18px;height:18px}
+  .ops-side nav button .nm{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .sb-foot{width:calc(100% - 32px);margin:auto auto 14px;display:flex;flex-direction:column;gap:2px;padding-top:10px;border-top:1px solid #e2ddd5}
+  .sb-user{display:flex;align-items:center;gap:12px;min-height:36px;padding:4px 10px;color:#173b48}
+  .sb-user .ic,.sb-signout .ic{width:22px;height:22px;flex:0 0 22px;display:flex;align-items:center;justify-content:center;color:currentColor}
+  .sb-user .ic svg,.sb-signout .ic svg{width:18px;height:18px}
+  .sb-user-email{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:600;color:#173b48}
+  .sb-signout{display:flex;align-items:center;gap:12px;width:100%;min-height:36px;padding:4px 10px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--warn);font-family:inherit;font-size:12.5px;font-weight:750;text-align:left;cursor:pointer;transition:background .15s}
+  .sb-signout:hover{background:rgba(255,255,255,.52)}
+  .sb-status{display:flex;align-items:center;gap:11px;min-height:40px;padding:8px 10px 0;color:#173b48}
+  .sb-status-icon{width:22px;height:22px;flex:0 0 22px;display:flex;align-items:center;justify-content:center}
+  .sb-status-icon svg{width:19px;height:19px}
+  .sb-status-title{font-size:13.5px;line-height:18px;font-weight:750}
+  .sb-status-sub{color:#8b837b;font-size:12px;line-height:16px}
+  /* All Tools — the parked old directory (divider + same item look as nav buttons) */
+  .sb-alltools{width:calc(100% - 32px);margin:4px auto 0;padding-top:10px;border-top:1px solid #ddd8d0}
+  .sb-alltools a{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:10px;border:1px solid transparent;border-radius:8px;color:#173b48;font-size:14px;line-height:20px;font-weight:750;text-decoration:none;white-space:nowrap;overflow:hidden;transition:background .15s}
+  .sb-alltools a:hover{background:rgba(0,0,0,0.05)}
+  html[data-theme="dark"] .sb-alltools{border-top-color:var(--line)}
+  html[data-theme="dark"] .sb-alltools a{color:var(--mut)}
+  html[data-theme="dark"] .sb-alltools a:hover{background:rgba(255,255,255,0.06);color:var(--tx)}
+  @media (max-width:900px){ .sb-alltools{width:100%;padding-top:6px} .sb-alltools a{justify-content:center;gap:0} .sb-alltools .nm{display:none} }
+
+  /* dark theme — matches hub ops-dark aside */
+  html[data-theme="dark"] aside.ops-side{background:#151d1f;border-right-color:var(--line)}
+  html[data-theme="dark"] .sb-wordmark.logo-light{display:none}
+  html[data-theme="dark"] .sb-wordmark.logo-dark{display:block}
+  html[data-theme="dark"] .sb-pname,html[data-theme="dark"] .ops-side nav button,html[data-theme="dark"] .sb-user,html[data-theme="dark"] .sb-user-email,html[data-theme="dark"] .sb-status{color:#dce6e8}
+  html[data-theme="dark"] .sb-prole,html[data-theme="dark"] .sb-status-sub{color:#8f9b98}
+  html[data-theme="dark"] .ops-side nav button:hover:not(.active){background:var(--panel2);border-color:transparent;color:#dce6e8}
+  html[data-theme="dark"] .ops-side nav button.active{background:var(--panel2);border-color:var(--line);box-shadow:none;color:#f4f8f8}
+  html[data-theme="dark"] .sb-foot{border-top-color:var(--line)}
+  html[data-theme="dark"] .sb-signout{color:var(--warn)}
+  html[data-theme="dark"] .sb-signout:hover{background:var(--panel2)}
+  /* mobile: slim icon-only rail */
+  @media(max-width:900px){
+    aside.ops-side{width:48px;flex:0 0 48px}
+    .sb-brand{width:100%;min-height:0;justify-content:center;gap:0;padding:16px 0 8px}
+    .sb-wordmark{width:34px;height:26px;flex-basis:34px}
+    .sb-identity{display:none}
+    .ops-side nav{width:100%;padding:4px 5px 10px}
+    .ops-side nav button{width:38px;min-height:38px;margin:4px auto;padding:0;justify-content:center;gap:0}
+    .ops-side nav button .nm{display:none}
+    .sb-foot{width:100%;align-items:center;padding-top:8px;border-top-width:1px}
+    .sb-user,.sb-signout{width:38px;min-height:38px;padding:0;justify-content:center;gap:0}
+    .sb-user .nm,.sb-signout .nm{display:none}
+    .sb-status{justify-content:center;padding:4px 0 0;gap:0}
+    .sb-status-copy{display:none}
+    .ops-main{padding:20px 12px 84px}
+  }
 </style>
 </head>
 <body>
@@ -236,6 +303,42 @@
 
 <!-- THE APP -->
 <div id="app" style="display:none;">
+<div class="ops-shell">
+<aside class="ops-side" id="sidebar">
+  <div class="sb-brand">
+    <img class="sb-wordmark logo-light" src="hg-logo.png" alt="HG">
+    <img class="sb-wordmark logo-dark" src="hg-logo-light.png" alt="HG">
+    <div class="sb-identity">
+      <div class="sb-pname">HG Operations</div>
+      <div class="sb-prole">HG Ops</div>
+    </div>
+  </div>
+  <nav id="nav"></nav>
+  <div class="sb-alltools">
+    <a href="index.html" title="All Tools — the old directory; everything here still waits to be rebuilt into HG Ops">
+      <span class="ic"><i class="ui-icon" data-lucide="layout-grid" aria-hidden="true"></i></span>
+      <span class="nm">All Tools</span>
+    </a>
+  </div>
+  <div class="sb-foot">
+    <div class="sb-user" title="Signed in">
+      <span class="ic"><i class="ui-icon" data-lucide="user-round" aria-hidden="true"></i></span>
+      <span class="nm sb-user-email" id="who">…</span>
+    </div>
+    <button class="sb-signout" onclick="signOut()" title="Sign out">
+      <span class="ic"><i class="ui-icon" data-lucide="log-out" aria-hidden="true"></i></span>
+      <span class="nm">Sign out</span>
+    </button>
+    <div class="sb-status">
+      <span class="sb-status-icon"><i class="ui-icon" data-lucide="badge-check" aria-hidden="true"></i></span>
+      <div class="sb-status-copy">
+        <div class="sb-status-title">System online</div>
+        <div class="sb-status-sub">All services ready</div>
+      </div>
+    </div>
+  </div>
+</aside>
+<div class="ops-main">
 <header>
   <div class="brand-block">
     <div class="brand-logo" aria-hidden="true"><i data-lucide="workflow"></i></div>
@@ -246,16 +349,16 @@
   </div>
   <div class="meta-pills">
     <div class="mpill" id="dateNow">—</div>
-    <div class="mpill"><i class="ui-icon" data-lucide="user-round" aria-hidden="true"></i><strong id="who">…</strong><button onclick="signOut()">Sign out</button></div>
   </div>
 </header>
-<nav id="nav"></nav>
 <main>
   <div class="view active" id="v-home"></div>
   <div class="view" id="v-inv"></div>
   <div class="view" id="v-jobs"></div>
   <div class="view" id="v-wages"></div>
 </main>
+</div>
+</div>
 </div>
 
 <dialog id="modal">
@@ -375,7 +478,8 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
 
 /* ===================== STATE ===================== */
 var M={workers:[],supervisors:[],lorries:[],malls:[],clients:[],scopeFactory:[],scopeOnsite:[],states:[],stateMap:{},mallStates:{},roster:null};
-var TABS=[['home','Home'],['inv','Invoices'],['jobs','Jobs'],['wages','Wages']];
+var TABS=[['home','Home'],['inv','Invoices'],['jobs','Job Arrangement'],['wages','Wages']];
+var TAB_ICONS={home:'house',inv:'receipt-text',jobs:'calendar-clock',wages:'banknote'};
 
 function shiftGroup(s){return String(s||'').toLowerCase().indexOf('night')===0?'night':'day';}
 function jobStatus(j){return (j&&j.job_status)||'confirmed';} /* '' legacy renders as confirmed */
@@ -444,8 +548,9 @@ async function boot(){
     if(window.lucide)window.lucide.createIcons();
   }
 }
-function buildNav(){var n=gel('nav');n.innerHTML=TABS.map(function(t,i){return '<button data-t="'+t[0]+'"'+(i===0?' class="active"':'')+'>'+t[1]+'</button>';}).join('');
-  n.querySelectorAll('button').forEach(function(b){b.onclick=function(){show(b.dataset.t);};});}
+function buildNav(){var n=gel('nav');n.innerHTML=TABS.map(function(t,i){return '<button data-t="'+t[0]+'"'+(i===0?' class="active"':'')+' title="'+t[1]+'"><span class="ic"><i data-lucide="'+(TAB_ICONS[t[0]]||'circle')+'" aria-hidden="true"></i></span><span class="nm">'+t[1]+'</span></button>';}).join('');
+  n.querySelectorAll('button').forEach(function(b){b.onclick=function(){show(b.dataset.t);};});
+  if(window.lucide)window.lucide.createIcons();}
 function show(t){document.querySelectorAll('nav button').forEach(function(b){b.classList.toggle('active',b.dataset.t===t);});
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});gel('v-'+t).classList.add('active');
   if(t==='home')renderHome();
