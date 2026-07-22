@@ -35,6 +35,12 @@ const tableRules = {
   hg_malls: { read: "admin", write: "admin" },
   hg_master_map: { read: "admin", write: "admin" },
 
+  // HG Ops: invoices staff-visible; proof tables are written by the server-side
+  // /proof route only — generic CRUD read-only-ish (no client deletes of evidence)
+  ja_invoices: { read: "staff", write: "staff" },
+  ja_job_completions: { read: "staff", write: "admin" },
+  ja_proof_tokens: { deny: true },
+
   // finance tools (payable/receivable) — admin only until UIs ship with role design
   ap_payment_requests: { read: "admin", write: "admin" },
   ap_audit_log: { read: "admin", write: "admin" },

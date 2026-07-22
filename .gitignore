@@ -32,3 +32,7 @@ server/public/
 # deploy bundle DB (production data)
 deploy/*.sql
 deploy/
+# backbone merge outputs (contain production names)
+backbone/merge-*.csv
+backbone/merge-state.json
+backbone/apply-backbone.sql

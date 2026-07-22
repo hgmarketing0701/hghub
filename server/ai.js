@@ -31,6 +31,26 @@ async function gemini(prompt, system) {
   return (j.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("").trim();
 }
 
+// vision variant — parts may mix {text} and {inlineData:{mimeType,data}}
+async function geminiVision(parts, system) {
+  if (!GEMINI_KEY) throw new Error("GEMINI_API_KEY not set");
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_KEY}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: system ? { parts: [{ text: system }] } : undefined,
+        contents: [{ role: "user", parts }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 2048, responseMimeType: "application/json" }
+      })
+    }
+  );
+  if (!res.ok) throw new Error("Gemini " + res.status + ": " + (await res.text()).slice(0, 300));
+  const j = await res.json();
+  return (j.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("").trim();
+}
+
 // ---- SELECT-only guard (same rules as ai_run_select) ----------------------
 const FORBIDDEN = /\b(insert|update|delete|drop|alter|create|truncate|grant|revoke|replace|call|handler|load|outfile|infile|lock|unlock|set|use|show|describe|explain)\b/i;
 
@@ -117,6 +137,41 @@ router.post("/chat", requireAdmin, async (req, res) => {
         "black-and-white tone, no fluff. If the result is empty say so plainly."
     );
     res.json({ data: { answer, sql } });
+  } catch (e) {
+    res.status(500).json({ error: { message: e.message } });
+  }
+});
+
+// ---- invoice reader (HG Ops v1) -------------------------------------------
+// POST /api/ai/invoice-read  (multipart "file": pdf/jpg/png)
+// → { data: { invoice_no, client, mall, amount, sst, jobs:[{lot, description, suggested_scope}] } }
+// Draft only — the office reviews/edits before anything is saved.
+const multer = require("multer");
+const invUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
+
+router.post("/invoice-read", invUpload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: { message: "No file" } });
+    const mime = req.file.mimetype || "application/pdf";
+    if (!/pdf|jpe?g|png|webp/i.test(mime)) return res.status(400).json({ error: { message: "PDF or image only" } });
+    const raw = await geminiVision(
+      [
+        { inlineData: { mimeType: mime, data: req.file.buffer.toString("base64") } },
+        { text:
+          "This is a confirmed customer invoice/PO for HG (Malaysian contractor-support: hoarding, visual print, scaffold, reinstatement, fit-out). " +
+          "Extract JSON exactly in this shape: {\"invoice_no\":string,\"client\":string,\"mall\":string,\"amount\":number|null,\"sst\":number|null," +
+          "\"jobs\":[{\"lot\":string,\"description\":string,\"suggested_scope\":string}]}. " +
+          "One jobs[] entry per distinct lot/work item (an invoice can contain several). " +
+          "suggested_scope = short work name like 'Hoarding Installation', 'Hoarding Dismantling', 'Visual Print & Install', 'Scaffold', 'Reinstatement'. " +
+          "mall = the site/mall/building name. amount = grand total number in RM without currency sign. Use \"\" or null when unreadable. Output ONLY the JSON." }
+      ],
+      "You extract structured data from Malaysian construction invoices. Output strict JSON only."
+    );
+    let parsed;
+    try { parsed = JSON.parse(raw.replace(/^```(json)?|```$/g, "").trim()); }
+    catch { throw new Error("AI returned unreadable extraction — enter details manually"); }
+    parsed.jobs = Array.isArray(parsed.jobs) && parsed.jobs.length ? parsed.jobs : [{ lot: "", description: "", suggested_scope: "" }];
+    res.json({ data: parsed });
   } catch (e) {
     res.status(500).json({ error: { message: e.message } });
   }

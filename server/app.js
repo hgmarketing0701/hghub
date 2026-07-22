@@ -11,6 +11,7 @@ const { router: rpcRouter } = require("./rpc");
 const { router: aiRouter } = require("./ai");
 const { router: cronRouter } = require("./cron");
 const { router: mastersRouter } = require("./masters");
+const { router: proofRouter, mintRouter: proofMintRouter } = require("./proof");
 
 const app = express();
 app.disable("x-powered-by");
@@ -39,6 +40,8 @@ app.use("/api/rpc", rpcRouter);
 app.use("/api/ai", aiRouter);
 app.use("/api/cron", cronRouter);
 app.use("/api/masters", mastersRouter);
+app.use("/api/proof-mint", proofMintRouter);   // auth'd: mint a completion link
+app.use("/proof", proofRouter);                 // NO auth: token-gated site uploads
 
 // uploaded files (same-origin static).
 app.use("/uploads", express.static(UPLOADS_DIR, { maxAge: "7d" }));
