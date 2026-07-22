@@ -124,6 +124,9 @@
   button.btn,button.ghost,button.danger,button.okbtn{border-radius:8px;padding:9px 12px;font-size:.82rem;font-weight:700}button.btn{background:var(--acc);color:#fff}button.btn:hover{background:var(--acc2)}button.ghost{background:var(--panel);color:var(--acc);border-color:var(--line)}button.ghost:hover{background:var(--panel2);border-color:#cfc8bd}button.danger{background:var(--panel);color:var(--bad);border-color:#f1c8c5}button.okbtn{background:var(--ok);color:#fff}
   .toolbar{gap:8px;margin-bottom:14px}.toolbar .btn,.toolbar .ghost{flex:0 0 auto}table{min-width:640px;font-size:.84rem}th{padding:11px 14px;background:var(--panel2);color:#716b65;font-size:.68rem;font-weight:800}td{padding:11px 14px;border-bottom-color:var(--line)}tbody tr:last-child td{border-bottom:0}tr:hover td{background:var(--panel2)}
   .empty-state{display:flex;align-items:center;justify-content:center;gap:12px;padding:28px 20px;color:var(--mut);text-align:left}.empty-state svg{width:22px;height:22px;color:var(--ok)}.empty-state strong{display:block;color:var(--ink);font-size:.88rem}.empty-state span{display:block;margin-top:2px;font-size:.8rem}
+  a.btn,a.ghost{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:9px 12px;font-size:.82rem;font-weight:700;text-decoration:none;border:1px solid transparent}
+  a.btn{background:var(--acc);color:#fff}a.btn:hover{background:var(--acc2)}
+  a.ghost{background:var(--panel);color:var(--acc);border-color:var(--line)}a.ghost:hover{background:var(--panel2)}
   .ui-icon{display:inline-block;width:1em;height:1em;vertical-align:-.14em;stroke-width:2}.brand-logo .ui-icon{width:20px;height:20px}.mpill>.ui-icon{margin-right:6px}.btn .ui-icon,.ghost .ui-icon,.danger .ui-icon,.okbtn .ui-icon,.hint .ui-icon,.card h3 .ui-icon{margin-right:6px}.card-error{display:flex;align-items:center;gap:9px;padding:16px;color:var(--bad)}
   dialog{background:var(--panel);color:var(--ink);border-color:var(--line);border-radius:12px}dialog::backdrop{background:rgba(12,18,20,.58);backdrop-filter:blur(2px)}.modal-h{padding:18px 20px}.modal-b{padding:20px}.modal-f{position:sticky;bottom:0;background:var(--panel);padding:14px 20px}
   html[data-theme="dark"]{--bg:#1b2527;--panel:#202b2d;--panel2:#253133;--line:#394749;--ink:#f3f6f4;--mut:#b3bebb;--acc:#73aeba;--acc2:#8bc0c9;--acc-soft:#293d40;--ok:#65c99a;--ok-soft:#1d352b;--warn:#e2ae5b;--warn-soft:#382f1e;--bad:#ef8587;--bad-soft:#3a2528;--blue:#79b2ce;--chip:#253133;--shadow:0 14px 34px rgba(0,0,0,.38)}html[data-theme="dark"] header .mpill,html[data-theme="dark"] .card,html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea,html[data-theme="dark"] button.hub-select-trigger,html[data-theme="dark"] .hub-select-menu,html[data-theme="dark"] dialog{background:var(--panel);border-color:var(--line);color:var(--ink)}html[data-theme="dark"] select{background-image:none}html[data-theme="dark"] .brand-sub,html[data-theme="dark"] nav button,html[data-theme="dark"] label,html[data-theme="dark"] .stat .l,html[data-theme="dark"] th{color:var(--mut)}html[data-theme="dark"] button.ghost{background:var(--panel);color:#c5dde1}html[data-theme="dark"] button.danger{background:var(--panel)}html[data-theme="dark"] button.hub-select-option:hover,html[data-theme="dark"] button.hub-select-option.selected{background:var(--acc-soft);color:#c8e4e8}
@@ -774,15 +777,51 @@ async function loadInvList(){
     var chips=jobs.map(function(j){var s=jobStatus(j);return '<span class="jc" title="'+esc(s)+'"><span class="dot dot-'+esc(s)+'"></span>'+esc((j.scope||'Job')+(j.lot?' · '+j.lot:''))+'</span>';}).join('');
     var pillCls=inv.status==='payment_received'?'jst-payment_received':'jst-confirmed';
     var pillLbl=inv.status==='payment_received'?'Payment received':'Confirmed';
-    return '<div class="invrow"><div class="top">'+
+    return '<div class="invrow" style="cursor:pointer" onclick="openInvDetail(\''+esc(inv.id)+'\')"><div class="top">'+
       '<b>'+esc(inv.invoice_no||'(no number)')+'</b>'+
       '<span class="muted">'+esc(inv.client||'')+(inv.mall?' · '+esc(inv.mall):'')+'</span>'+
       '<span class="amt">'+(inv.amount!=null?rm(inv.amount):'')+'</span>'+
-      '<span class="jst '+pillCls+'" style="cursor:pointer" title="Tap to toggle" onclick="toggleInvStatus(\''+esc(inv.id)+'\',\''+esc(inv.status)+'\')">'+pillLbl+'</span>'+
-      (inv.file_url?'<a href="'+esc(inv.file_url)+'" target="_blank" rel="noopener">'+ico('paperclip')+'file</a>':'')+
+      '<span class="jst '+pillCls+'" style="cursor:pointer" title="Tap to toggle" onclick="event.stopPropagation();toggleInvStatus(\''+esc(inv.id)+'\',\''+esc(inv.status)+'\')">'+pillLbl+'</span>'+
+      (inv.file_url?'<span class="muted">'+ico('paperclip')+'file</span>':'')+
     '</div>'+(chips?'<div class="jchips">'+chips+'</div>':'')+'</div>';
   }).join('');
   if(window.lucide)window.lucide.createIcons();
+}
+
+/* invoice detail — extracted fields + in-window view of the stored original + download */
+async function openInvDetail(id){
+  var r=await sb.from('ja_invoices').select('*').eq('id',id).single();
+  if(r.error||!r.data){toast('Invoice not found','bad');return;}
+  var inv=r.data;
+  var jr=await sb.from('ja_jobs').select('id,scope,lot,date,shift,job_status,worker_names,lorry_details').eq('invoice_id',id).limit(50);
+  var jobs=jr.data||[];
+  var isPdf=/\.pdf(\?|$)/i.test(inv.file_url||'');
+  var viewer='';
+  if(inv.file_url){
+    viewer = isPdf
+      ? '<iframe src="'+esc(inv.file_url)+'" style="width:100%;height:56vh;border:1px solid var(--line);border-radius:10px;background:#fff"></iframe>'
+      : '<img src="'+esc(inv.file_url)+'" style="max-width:100%;max-height:56vh;border:1px solid var(--line);border-radius:10px" alt="invoice">';
+  } else {
+    viewer='<div class="empty-state">'+ico('file-x')+'<div><strong>No file stored</strong><span>This invoice was entered without an upload.</span></div></div>';
+  }
+  var jobRows=jobs.map(function(j){var s=jobStatus(j);
+    return '<tr><td>'+esc(j.scope||'Job')+'</td><td>'+esc(j.lot||'—')+'</td><td>'+esc(j.date?String(j.date).slice(0,10):'no date')+'</td>'+
+      '<td><span class="jc"><span class="dot dot-'+esc(s)+'"></span>'+esc(s)+'</span></td></tr>';}).join('');
+  var body =
+    '<div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px">'+
+      dRow('Invoice no', inv.invoice_no)+dRow('Client', inv.client)+dRow('Mall / site', inv.mall)+
+      dRow('Amount', inv.amount!=null?rm(inv.amount):'—')+dRow('SST', inv.sst!=null?rm(inv.sst):'—')+
+      dRow('Status', inv.status==='payment_received'?'Payment received':'Confirmed')+
+      dRow('Uploaded by', inv.uploaded_by)+dRow('Uploaded', String(inv.created_at||'').slice(0,16))+
+    '</div>'+
+    (jobs.length?'<table style="min-width:0;margin-bottom:14px"><thead><tr><th>Job</th><th>Lot</th><th>Date</th><th>Status</th></tr></thead><tbody>'+jobRows+'</tbody></table>':'')+
+    viewer+
+    (inv.file_url?'<div style="display:flex;gap:10px;margin-top:12px">'+
+      '<a class="btn" href="'+esc(inv.file_url)+'" download>'+ico('download')+' Download '+(isPdf?'PDF':'file')+'</a>'+
+      '<a class="btn ghost" href="'+esc(inv.file_url)+'" target="_blank" rel="noopener">'+ico('external-link')+' Open in new tab</a>'+
+    '</div>':'');
+  openModal(esc(inv.invoice_no||'Invoice'), body, '');
+  function dRow(k,v){return '<div style="min-width:130px"><div class="muted" style="font-size:.72rem;letter-spacing:.04em;text-transform:uppercase">'+esc(k)+'</div><div style="font-weight:700">'+esc(v||'—')+'</div></div>';}
 }
 async function toggleInvStatus(id,cur){
   var next=cur==='payment_received'?'confirmed':'payment_received';
