@@ -143,9 +143,37 @@
   .card-actions { display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap; }
 
   /* DISPATCH */
-  .disp-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
-  .disp-cols { display: grid; grid-template-columns: 1fr 360px; gap: 18px; align-items: start; }
-  @media (max-width: 980px) { .disp-cols { grid-template-columns: 1fr; } }
+  .disp-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; margin-bottom: 16px; }
+  .disp-section { margin-bottom: 26px; }
+  .disp-section-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .disp-section-head h3 { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.02em; }
+  .disp-section-head .help { flex: 1; }
+  .lane-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; align-items: start; margin-bottom: 14px; }
+  .lane-card { margin-bottom: 0; }
+  .lane-card h3 { font-size: 0.95rem; }
+  .lane-count { font-size: 0.74rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--surface-2); color: var(--text-dim); white-space: nowrap; }
+  .lane-count.over { background: var(--amber-soft); color: var(--amber); }
+  .lane-driver { display: flex; gap: 6px; align-items: center; margin-top: 9px; }
+  .lane-driver .hub-select { flex: 1; min-width: 0; }
+  .lane-jobs { list-style: none; margin-top: 9px; }
+  .lane-jobs li { display: flex; align-items: center; gap: 7px; padding: 8px 0; border-top: 1px solid var(--border); font-size: 0.86rem; }
+  .lane-jobs li .jtxt { flex: 1; min-width: 0; cursor: pointer; }
+  .lane-seq { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: 0.74rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+  .icon-btn { flex: 0 0 auto; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); border-radius: 7px; width: 26px; height: 26px; font-size: 0.8rem; line-height: 1; cursor: pointer; padding: 0; }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .icon-btn.danger:hover { border-color: var(--red); color: var(--red); }
+  .icon-btn:disabled { opacity: 0.35; cursor: default; }
+  .lane-workers { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--border); }
+  .wchip { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 600; padding: 3px 6px 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+  .wchip button { background: none; border: none; color: inherit; cursor: pointer; font-size: 0.85rem; line-height: 1; padding: 0 2px; opacity: 0.7; }
+  .wchip button:hover { opacity: 1; }
+  .disp-pools { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+  .disp-pools h4 { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 8px; }
+  .pool-chip { font-size: 0.8rem; font-weight: 600; padding: 5px 12px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); cursor: pointer; font-family: inherit; }
+  .pool-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .lane-pick-btn { display: block; width: 100%; text-align: left; margin-bottom: 8px; padding: 12px 14px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+  .lane-pick-btn:hover { border-color: var(--accent); color: var(--accent); }
+  @media (max-width: 980px) { .lane-grid { grid-template-columns: 1fr; } .disp-pools { grid-template-columns: 1fr; } }
   .team-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px 16px; margin-bottom: 14px; }
   .team-card h3 { font-size: 1rem; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .crew-line { color: var(--text-dim); font-size: 0.84rem; margin: 8px 0; }
@@ -877,8 +905,8 @@
     <div class="tab-panel" id="panel-dispatch">
       <div class="panel-head">
         <div>
-          <div class="panel-title">Tonight's Dispatch</div>
-          <div class="panel-sub">Pick the date, load that day's scheduled jobs (night shifts first), drop them into teams with a running order, then generate the WhatsApp message for the HG Operation group.</div>
+          <div class="panel-title">Dispatch Command</div>
+          <div class="panel-sub">All-day manpower board. Every lane is a workplace — a real lorry (plate + driver), 🏭 Factory, or 🚶 own transport. Drop jobs and workers onto lanes, set the driving order, then generate the WhatsApp message for the HG Operation group.</div>
         </div>
       </div>
 
@@ -892,17 +920,7 @@
 
       <div class="tool-snapshot" id="dispSummary"></div>
       <div id="dispNotReady"></div>
-
-      <div class="disp-cols">
-        <div>
-          <h3 style="font-size:0.95rem;margin-bottom:10px;">Teams for <span id="dispDateLabel">—</span></h3>
-          <div id="teamsWrap"></div>
-        </div>
-        <div>
-          <h3 style="font-size:0.95rem;margin-bottom:10px;">Unassigned pool</h3>
-          <div class="pool-box" id="poolBox"></div>
-        </div>
-      </div>
+      <div id="dispSections"></div>
     </div>
 
     <!-- ALARMS (computed client-side from the joined ja_jobs + ja_job_readiness set) -->
@@ -945,16 +963,15 @@
       <div class="panel-head">
         <div>
           <div class="panel-title">Settings</div>
-          <div class="panel-sub">Manage readiness rules, team limits, and recipients for the daily alarm email.</div>
+          <div class="panel-sub">Manage readiness rules, lorry limits, and recipients for the daily alarm email.</div>
         </div>
       </div>
       <div class="settings-work-unit">
         <div class="form-grid">
           <div class="form-field"><label>Permit lead days</label><input type="number" id="cfgPermitLeadDays"><div class="help">Working days a permit needs before install. Drives the alarm.</div></div>
           <div class="form-field"><label>At-risk window (days)</label><input type="number" id="cfgAtRiskDays"><div class="help">Install within N days + not ready → AMBER.</div></div>
-          <div class="form-field"><label>Max teams / night</label><input type="number" id="cfgMaxTeams"></div>
-          <div class="form-field"><label>Max jobs / team</label><input type="number" id="cfgMaxJobsPerTeam"></div>
-          <div class="form-field"><label>Max workers / team</label><input type="number" id="cfgMaxWorkersPerTeam"></div>
+          <div class="form-field"><label>Max jobs per lorry</label><input type="number" id="cfgMaxJobsPerTeam"></div>
+          <div class="form-field"><label>Max workers per lorry</label><input type="number" id="cfgMaxWorkersPerTeam"></div>
           <div class="form-field full"><label>Daily email recipients</label><input type="text" id="cfgEmailRecipients" placeholder="a@hggroup.com.my, b@hggroup.com.my"><div class="help">Comma-separated. Gets the morning permit-alarm + at-risk digest.</div></div>
         </div>
         <div style="margin-top:18px;"><button class="btn btn-primary" onclick="saveSettings()">Save settings</button></div>
@@ -996,10 +1013,17 @@
 <div class="modal" id="mMsg"><div class="modal-card">
   <div class="modal-head"><h2>WhatsApp message — HG Operation group</h2><button class="x-btn" onclick="closeModal('mMsg')">&times;</button></div>
   <div class="modal-body"><textarea class="out-area" id="msgArea" readonly></textarea></div>
-  <div class="modal-foot"><div style="margin-left:auto;display:flex;gap:10px;">
+  <div class="modal-foot"><div style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;">
     <button class="btn btn-ghost" onclick="closeModal('mMsg')">Close</button>
+    <button class="btn btn-ghost" onclick="openWa()">Open WhatsApp</button>
     <button class="btn btn-primary" onclick="copyMsg()">Copy</button>
   </div></div>
+</div></div>
+
+<!-- LANE PICKER (tap a worker chip → choose a lane) -->
+<div class="modal" id="mLane"><div class="modal-card" style="max-width:420px;">
+  <div class="modal-head"><h2 id="lanePickTitle">Send to lane</h2><button class="x-btn" onclick="closeModal('mLane')">&times;</button></div>
+  <div class="modal-body" id="lanePickBody"></div>
 </div></div>
 
 <datalist id="clientsList"></datalist>
@@ -1053,7 +1077,7 @@
   let DATA = null;                       // { config, supervisors, lorries, audit }
   let JOBS = [];                         // ja_jobs rows inside the readiness window (raw snake_case)
   let READY = {};                        // job_id -> ja_job_readiness row
-  let DISP = { date: '', jobs: [], ready: {} }; // dispatch-tab working set (own fetch — any date)
+  let DISP = { date: '', jobs: [], ready: {}, loads: [] }; // dispatch-tab working set (own fetch — any date)
   let MASTERS = { clients: [], malls: [] };
   let currentJob = null;                 // ja_jobs row open in the modal
   let MODAL_MODE = 'gates';              // 'gates' (edit readiness) | 'add' (new ja_jobs row)
@@ -1110,14 +1134,15 @@
   async function fetchAll() {
     const from = (document.getElementById('rFrom').value || addDays(todayKL(), -7));
     const to   = (document.getElementById('rTo').value   || addDays(todayKL(), 21));
-    const [jobsQ, cfgQ, supQ, lorQ, audQ] = await Promise.all([
+    const [jobsQ, cfgQ, supQ, lorQ, audQ, wkQ] = await Promise.all([
       sb.from('ja_jobs').select('*').gte('date', from).lte('date', to).order('date').limit(500),
       sb.from('dsp_config').select('*'),
       sb.from('ja_supervisors').select('*').order('name'),
       sb.from('ja_lorries').select('*').order('id'),
       sb.from('ja_audit_log').select('*').order('ts', { ascending: false }).limit(60),
+      sb.from('ja_workers').select('id,name,team').order('name').limit(500),
     ]);
-    const err = jobsQ.error || cfgQ.error || supQ.error || lorQ.error || audQ.error;
+    const err = jobsQ.error || cfgQ.error || supQ.error || lorQ.error || audQ.error || wkQ.error;
     if (err) throw err;
     const config = {};
     (cfgQ.data || []).forEach(r => { if (r.key) config[String(r.key).trim()] = String(r.value == null ? '' : r.value); });
@@ -1132,6 +1157,7 @@
     return {
       currentUser: myEmail(), today: todayKL(), config: config,
       supervisors: supQ.data || [], lorries: lorQ.data || [], audit: audQ.data || [],
+      workers: wkQ.data || [],
     };
   }
 
@@ -1378,7 +1404,7 @@
       chips += chip(g.material, 'Material');
     }
     const wn = workerCount(j);
-    const teamTag = (r && r.team_no) ? ' · <span style="color:var(--blue);">Team ' + esc(r.team_no) + (r.dispatch_date ? ' · ' + esc(String(r.dispatch_date).slice(0,10)) : '') + '</span>' : '';
+    const teamTag = (r && r.lorry_id) ? ' · <span style="color:var(--blue);">' + esc(laneLabel(String(r.lorry_id))) + '</span>' : '';
     return '<div class="job-card ' + (v.status === 'none' ? '' : v.status) + '" onclick="openJobModal(\'' + esc(j.id) + '\')">' +
       '<div class="job-top"><div>' +
         '<div class="job-title">' + esc(j.mall || '(no mall)') + ' · ' + esc(j.lot || '(no lot)') + '</div>' +
@@ -1551,104 +1577,312 @@
     reload('Job added — visible in Job Arrangement too.');
   }
 
-  /* ---------- DISPATCH (night loading keyed to the real ja_jobs schedule) ---------- */
+  /* ---------- DISPATCH COMMAND (lane-based: lorries + 🏭 Factory + 🚶 no-lorry) ----------
+     A lane is a WORKPLACE for one shift section (day/night) of one date:
+       · a real lorry (ja_lorries.id) with a plate + driver + driving order, or
+       · the 'FACTORY' sentinel (no lorry), or the 'NO_LORRY' sentinel (own transport).
+     One ja_dispatch_loads row per lane (UNIQUE date+shift_group+lorry_id) carries the
+     driver + worker crew. Jobs point at their lane via ja_job_readiness.lorry_id (+ seq).
+     ONE-RECORD RULE: while a job sits on ≥1 lane, the lane drives the ja_jobs row's
+     lorry_ids / lorry_details / worker_ids / worker_names. When a job leaves its last
+     lane, lorry fields revert to empty and worker fields are left untouched. */
+  const LANE_FACTORY = 'FACTORY', LANE_NOLORRY = 'NO_LORRY';
+  const SECTIONS = [
+    { key: 'day',   icon: '☀',  label: 'DAY' },
+    { key: 'night', icon: '🌙', label: 'NIGHT' },
+  ];
+
   function onDispDate() { currentDispatchDate = document.getElementById('dispDate').value; loadDispatch(); }
 
   async function loadDispatch() {
     const d = currentDispatchDate;
-    DISP = { date: d, jobs: [], ready: {} };
+    DISP = { date: d, jobs: [], ready: {}, loads: [] };
     if (!d) { renderDispatch(); return; }
-    const r = await sb.from('ja_jobs').select('*').eq('date', d).order('shift').limit(200);
-    if (r.error) { toast(r.error.message, true); return; }
-    DISP.jobs = (r.data || []).map(j => { j.date = String(j.date || '').slice(0, 10); return j; });
+    const [jr, lr] = await Promise.all([
+      sb.from('ja_jobs').select('*').eq('date', d).order('shift').limit(200),
+      sb.from('ja_dispatch_loads').select('*').eq('dispatch_date', d).order('lorry_id'),
+    ]);
+    if (jr.error) { toast(jr.error.message, true); return; }
+    if (lr.error) { toast(lr.error.message, true); return; }
+    DISP.jobs = (jr.data || []).map(j => { j.date = String(j.date || '').slice(0, 10); return j; });
+    DISP.loads = lr.data || [];
     const ids = DISP.jobs.map(j => j.id);
     if (ids.length) {
       const rq = await sb.from('ja_job_readiness').select('*').in('job_id', ids);
       if (rq.error) { toast(rq.error.message, true); return; }
       (rq.data || []).forEach(row => { DISP.ready[row.job_id] = row; });
     }
-    renderDispatch();
-  }
-
-  function dispSorted() {
-    // night shifts first, then time, then mall
-    return DISP.jobs.slice().sort((a, b) => {
-      const na = shiftGroup(a.shift) === 'Night' ? 0 : 1;
-      const nb = shiftGroup(b.shift) === 'Night' ? 0 : 1;
-      return na - nb || String(timeShort(a.time)).localeCompare(String(timeShort(b.time))) || String(a.mall || '').localeCompare(String(b.mall || ''));
+    // keep the Readiness-tab mirrors fresh (sync-back edits ja_jobs rows)
+    let touched = false;
+    DISP.jobs.forEach(j => {
+      const i = JOBS.findIndex(x => String(x.id) === String(j.id));
+      if (i >= 0) { JOBS[i] = j; touched = true; }
+      if (DISP.ready[j.id]) READY[j.id] = DISP.ready[j.id];
+      else if (READY[j.id]) { delete READY[j.id]; touched = true; }
     });
+    renderDispatch();
+    if (touched) renderReadiness();
   }
 
-  function teamSelectHtml(j) {
-    const max = Number((DATA && DATA.config.maxTeams) || 12);
-    const r = DISP.ready[j.id];
-    const cur = r ? String(r.team_no || '') : '';
-    let o = '<option value="">Unassigned</option>';
-    for (let i = 1; i <= max; i++) o += '<option value="' + i + '"' + (cur === String(i) ? ' selected' : '') + '>Team ' + i + '</option>';
-    return '<select class="mini-select" onchange="assignTeam(\'' + esc(j.id) + '\', this.value)" onclick="event.stopPropagation()">' + o + '</select>';
+  /* ----- lane helpers ----- */
+  function sectionOf(j) { return shiftGroup(j.shift) === 'Night' ? 'night' : 'day'; }
+  function lorryById(id) { return ((DATA && DATA.lorries) || []).find(l => String(l.id) === String(id)); }
+  function supById(id) { return ((DATA && DATA.supervisors) || []).find(s => String(s.id) === String(id)); }
+  function workerName(id) { const w = ((DATA && DATA.workers) || []).find(x => String(x.id) === String(id)); return w ? w.name : id; }
+  function isSentinel(laneId) { return laneId === LANE_FACTORY || laneId === LANE_NOLORRY; }
+  function laneLabel(laneId) {
+    if (laneId === LANE_FACTORY) return '🏭 Factory';
+    if (laneId === LANE_NOLORRY) return '🚶 No lorry / own transport';
+    const l = lorryById(laneId);
+    return '🚚 ' + (l ? (l.id + ' · ' + l.plate) : laneId);
   }
-  function seqInputHtml(j) {
-    const r = DISP.ready[j.id] || {};
-    return '<input type="number" min="1" class="mini-select" style="width:64px;" title="Running order" placeholder="#" value="' + esc(r.seq == null ? '' : r.seq) + '" onclick="event.stopPropagation()" onchange="setSeq(\'' + esc(j.id) + '\', this.value)">';
+  function loadsOf(section) { return (DISP.loads || []).filter(l => l.shift_group === section); }
+  function findLoad(section, laneId) { return (DISP.loads || []).find(l => l.shift_group === section && String(l.lorry_id) === String(laneId)); }
+  function loadWorkers(l) { return (parseJSON_(l && l.worker_ids, []) || []).slice(); }
+  function jobLane(j) { const r = DISP.ready[j.id]; return (r && r.lorry_id) ? String(r.lorry_id) : ''; }
+  function sectionJobs(section) { return DISP.jobs.filter(j => sectionOf(j) === section); }
+  function laneJobs(section, laneId) {
+    return sectionJobs(section).filter(j => jobLane(j) === String(laneId))
+      .sort((a, b) => ((Number((DISP.ready[a.id] || {}).seq) || 999) - (Number((DISP.ready[b.id] || {}).seq) || 999)) ||
+        String(timeShort(a.time)).localeCompare(String(timeShort(b.time))));
   }
+  function laneIdsOf(section) {
+    // lanes = load rows + any lane a job already points at (defensive) + Factory always in DAY
+    const set = {};
+    loadsOf(section).forEach(l => { set[String(l.lorry_id)] = 1; });
+    sectionJobs(section).forEach(j => { const ln = jobLane(j); if (ln) set[ln] = 1; });
+    if (section === 'day') set[LANE_FACTORY] = 1;
+    const rank = x => x === LANE_FACTORY ? 0 : (x === LANE_NOLORRY ? 2 : 1);
+    return Object.keys(set).sort((a, b) => rank(a) - rank(b) || String(a).localeCompare(String(b)));
+  }
+  function laneOptions(section) {
+    const out = [{ id: LANE_FACTORY, label: '🏭 Factory', extra: '' }, { id: LANE_NOLORRY, label: '🚶 No lorry / own transport', extra: '' }];
+    laneIdsOf(section).forEach(id => {
+      if (isSentinel(id)) return;
+      const l = findLoad(section, id);
+      out.push({ id: id, label: laneLabel(id), extra: (l && l.driver_name) ? l.driver_name : '' });
+    });
+    return out;
+  }
+  function jobRef(j) { return [j.mall, j.lot].filter(Boolean).join(' · ') || j.scope || j.client || j.id; }
 
-  async function assignTeam(jobId, val) {
-    const d = DISP.date;
-    if (!d) { toast('Pick a dispatch date first.', true); return; }
-    const j = DISP.jobs.find(x => String(x.id) === String(jobId));
-    const r = DISP.ready[jobId];
-    const teamNo = (val === '' || val == null) ? '' : String(val);
-    if (teamNo) {
-      const max = Number(DATA.config.maxJobsPerTeam || 5);
-      const count = DISP.jobs.filter(x => x.id !== jobId && DISP.ready[x.id] && String(DISP.ready[x.id].team_no) === teamNo).length;
-      if (count >= max && !confirm('Team ' + teamNo + ' already has ' + count + ' job(s) (max ' + max + '). Assign anyway?')) { renderDispatch(); return; }
+  /* ensure the lane's ja_dispatch_loads row exists (UNIQUE key: insert may clash → refetch) */
+  async function ensureLoad(section, laneId) {
+    let l = findLoad(section, laneId);
+    if (l) return l;
+    const row = { dispatch_date: DISP.date, shift_group: section, lorry_id: String(laneId),
+      driver_id: '', driver_name: '', worker_ids: [], notes: '', updated_by: myEmail() };
+    if (!isSentinel(laneId)) {
+      const lo = lorryById(laneId);
+      if (lo && lo.usual_driver_id) {
+        row.driver_id = lo.usual_driver_id;
+        row.driver_name = lo.usual_driver_name || (supById(lo.usual_driver_id) || {}).name || '';
+      }
     }
-    const patch = {
-      team_no: teamNo,
-      dispatch_date: teamNo ? d : null,
-      seq: teamNo ? ((r && r.seq) || null) : null,
-      updated_by: myEmail(),
-    };
+    const ins = await sb.from('ja_dispatch_loads').insert(row);
+    const q = await sb.from('ja_dispatch_loads').select('*')
+      .eq('dispatch_date', DISP.date).eq('shift_group', section).eq('lorry_id', String(laneId)).limit(1);
+    if (q.error || !(q.data || []).length) throw (ins.error || q.error || { message: 'Lane row not found after insert' });
+    l = q.data[0];
+    DISP.loads.push(l);
+    return l;
+  }
+
+  /* ----- SYNC-BACK: the one-record rule ----- */
+  function laneCrewForJob(j) {
+    // union of worker_ids across ALL lanes carrying this job (normally exactly one)
+    const ln = jobLane(j);
+    if (!ln) return null; // job on no lane → lanes stop driving its worker fields
+    const seen = {}, out = [];
+    (DISP.loads || []).forEach(l => {
+      if (String(l.lorry_id) !== ln || l.shift_group !== sectionOf(j)) return;
+      loadWorkers(l).forEach(id => { if (!seen[id]) { seen[id] = 1; out.push(id); } });
+    });
+    return out;
+  }
+  async function syncJobRecord(j) {
+    const ln = jobLane(j);
+    const patch = { updated_at: sqlNow() };
+    if (!ln) { patch.lorry_ids = []; patch.lorry_details = ''; } // left every lane → revert lorry fields, keep worker fields
+    else if (ln === LANE_FACTORY) { patch.lorry_ids = []; patch.lorry_details = 'Factory (no lorry)'; }
+    else if (ln === LANE_NOLORRY) { patch.lorry_ids = []; patch.lorry_details = 'Own transport'; }
+    else {
+      const lo = lorryById(ln), l = findLoad(sectionOf(j), ln);
+      const dn = (l && l.driver_name) ? String(l.driver_name).trim() : '';
+      patch.lorry_ids = [ln];
+      patch.lorry_details = (lo ? lo.plate : ln) + (dn ? ' (' + dn + ')' : '');
+    }
+    if (ln) {
+      const crew = laneCrewForJob(j) || [];
+      patch.worker_ids = crew;
+      patch.worker_names = crew.map(workerName).join(', ');
+    }
+    const r = await sb.from('ja_jobs').update(patch).eq('id', j.id);
+    if (r.error) { toast('Job sync failed: ' + r.error.message, true); return; }
+    Object.assign(j, patch);
+  }
+  async function syncLane(section, laneId) {
+    for (const j of laneJobs(section, laneId)) await syncJobRecord(j);
+  }
+
+  /* ----- job ↔ lane ----- */
+  async function assignJobLane(jobId, laneId) {
+    const j = DISP.jobs.find(x => String(x.id) === String(jobId));
+    if (!j) return;
+    if (!laneId) { renderDispatch(); return; }
+    const section = sectionOf(j);
+    if (!isSentinel(laneId)) {
+      const max = Number((DATA && DATA.config.maxJobsPerTeam) || 5);
+      const count = laneJobs(section, laneId).length;
+      if (count >= max && !confirm(laneLabel(laneId) + ' already has ' + count + ' job(s) (max ' + max + '). Assign anyway?')) { renderDispatch(); return; }
+    }
+    try { await ensureLoad(section, laneId); } catch (e) { toast(e.message || String(e), true); return; }
+    const seq = laneJobs(section, laneId).reduce((m, x) => Math.max(m, Number((DISP.ready[x.id] || {}).seq) || 0), 0) + 1;
+    const r = DISP.ready[jobId];
+    const patch = { lorry_id: String(laneId), seq: seq, updated_by: myEmail() };
     let res;
     if (r) res = await sb.from('ja_job_readiness').update(patch).eq('job_id', jobId);
-    else { res = await sb.from('ja_job_readiness').insert(Object.assign({ job_id: jobId }, patch)); }
+    else res = await sb.from('ja_job_readiness').insert(Object.assign({ job_id: jobId }, patch));
     if (res.error) { toast(res.error.message, true); return; }
-    await audit('Dispatch assign', d + ' · ' + [j && j.mall, j && j.lot].filter(Boolean).join(' · ') + (teamNo ? ' → Team ' + teamNo : ' unassigned'));
+    DISP.ready[jobId] = Object.assign(r || { job_id: jobId }, patch);
+    await syncJobRecord(j);
+    await audit('Dispatch assign', DISP.date + ' · ' + jobRef(j) + ' → ' + laneLabel(laneId));
     await loadDispatch();
-    if (READY[jobId] || JOBS.some(x => String(x.id) === String(jobId))) {
-      if (DISP.ready[jobId]) READY[jobId] = DISP.ready[jobId]; else delete READY[jobId];
-      renderReadiness();
+  }
+  async function unassignJobLane(jobId) {
+    const j = DISP.jobs.find(x => String(x.id) === String(jobId));
+    const r = DISP.ready[jobId];
+    if (!j || !r || !r.lorry_id) return;
+    const fromLane = String(r.lorry_id);
+    const res = await sb.from('ja_job_readiness').update({ lorry_id: '', seq: null, updated_by: myEmail() }).eq('job_id', jobId);
+    if (res.error) { toast(res.error.message, true); return; }
+    r.lorry_id = ''; r.seq = null;
+    await syncJobRecord(j); // reverts lorry fields; worker fields stay as-is (no lane drives them now)
+    await audit('Dispatch unassign', DISP.date + ' · ' + jobRef(j) + ' ← ' + laneLabel(fromLane));
+    await loadDispatch();
+  }
+  async function moveJobSeq(jobId, dir) {
+    const j = DISP.jobs.find(x => String(x.id) === String(jobId));
+    if (!j) return;
+    const section = sectionOf(j), laneId = jobLane(j);
+    const list = laneJobs(section, laneId);
+    const i = list.findIndex(x => String(x.id) === String(jobId));
+    const k = i + dir;
+    if (i < 0 || k < 0 || k >= list.length) return;
+    const tmp = list[i]; list[i] = list[k]; list[k] = tmp;
+    for (let n = 0; n < list.length; n++) {
+      const rr = DISP.ready[list[n].id];
+      if (!rr || Number(rr.seq) === n + 1) continue;
+      const res = await sb.from('ja_job_readiness').update({ seq: n + 1, updated_by: myEmail() }).eq('job_id', list[n].id);
+      if (res.error) { toast(res.error.message, true); return; }
+      rr.seq = n + 1;
     }
+    await audit('Dispatch reorder', DISP.date + ' · ' + laneLabel(laneId) + ' · ' + jobRef(j) + (dir < 0 ? ' moved up' : ' moved down'));
+    renderDispatch();
   }
 
-  async function setSeq(jobId, val) {
-    const r = DISP.ready[jobId];
-    if (!r) { toast('Assign a team first.', true); return; }
-    const seq = (val === '' || val == null) ? null : Number(val);
-    const res = await sb.from('ja_job_readiness').update({ seq: seq, updated_by: myEmail() }).eq('job_id', jobId);
-    if (res.error) { toast(res.error.message, true); return; }
-    r.seq = seq;
+  /* ----- lane management ----- */
+  async function addLane(section, laneId, sel) {
+    if (sel) sel.value = '';
+    if (!laneId) return;
+    if (!DISP.date) { toast('Pick a dispatch date first.', true); return; }
+    try { await ensureLoad(section, laneId); } catch (e) { toast(e.message || String(e), true); return; }
+    await audit('Dispatch lane added', DISP.date + ' · ' + section.toUpperCase() + ' · ' + laneLabel(laneId));
     renderDispatch();
+  }
+  async function removeLane(section, laneId) {
+    const l = findLoad(section, laneId);
+    if (!l) { renderDispatch(); return; }
+    if (laneJobs(section, laneId).length || loadWorkers(l).length) { toast('Empty the lane first (jobs + workers).', true); return; }
+    const res = await sb.from('ja_dispatch_loads').delete().eq('id', l.id);
+    if (res.error) { toast(res.error.message, true); return; }
+    DISP.loads = DISP.loads.filter(x => x !== l);
+    await audit('Dispatch lane removed', DISP.date + ' · ' + section.toUpperCase() + ' · ' + laneLabel(laneId));
+    renderDispatch();
+  }
+  async function setLaneDriver(section, laneId, driverId) {
+    let l;
+    try { l = await ensureLoad(section, laneId); } catch (e) { toast(e.message || String(e), true); return; }
+    const name = driverId ? ((supById(driverId) || {}).name || driverId) : '';
+    const res = await sb.from('ja_dispatch_loads').update({ driver_id: driverId || '', driver_name: name, updated_by: myEmail() }).eq('id', l.id);
+    if (res.error) { toast(res.error.message, true); return; }
+    l.driver_id = driverId || ''; l.driver_name = name;
+    await syncLane(section, laneId); // refresh "plate (driver)" on this lane's jobs
+    await audit('Dispatch driver change', DISP.date + ' · ' + laneLabel(laneId) + ' → ' + (name || 'no driver'));
+    renderDispatch();
+  }
+  async function setUsualDriver(laneId, section) {
+    const l = findLoad(section, laneId);
+    if (!l || !l.driver_id) { toast('Pick a driver first.', true); return; }
+    const res = await sb.from('ja_lorries').update({ usual_driver_id: l.driver_id, usual_driver_name: l.driver_name || '' }).eq('id', laneId);
+    if (res.error) { toast(res.error.message, true); return; }
+    const lo = lorryById(laneId);
+    if (lo) { lo.usual_driver_id = l.driver_id; lo.usual_driver_name = l.driver_name || ''; }
+    await audit('Lorry usual driver set', laneId + ' → ' + (l.driver_name || l.driver_id));
+    toast((l.driver_name || l.driver_id) + ' saved as usual driver for ' + laneId + '.');
+  }
+
+  /* ----- workers ↔ lane ----- */
+  async function addWorkerToLane(section, laneId, workerId) {
+    closeModal('mLane');
+    let l;
+    try { l = await ensureLoad(section, laneId); } catch (e) { toast(e.message || String(e), true); return; }
+    const ids = loadWorkers(l);
+    if (ids.indexOf(workerId) >= 0) { toast(workerName(workerId) + ' is already on that lane.', true); return; }
+    ids.push(workerId);
+    const res = await sb.from('ja_dispatch_loads').update({ worker_ids: ids, updated_by: myEmail() }).eq('id', l.id);
+    if (res.error) { toast(res.error.message, true); return; }
+    l.worker_ids = ids;
+    await syncLane(section, laneId);
+    await audit('Dispatch worker assign', DISP.date + ' · ' + workerName(workerId) + ' → ' + section.toUpperCase() + ' ' + laneLabel(laneId));
+    renderDispatch();
+  }
+  async function removeWorkerFromLane(section, laneId, workerId) {
+    const l = findLoad(section, laneId);
+    if (!l) return;
+    const ids = loadWorkers(l).filter(x => String(x) !== String(workerId));
+    const res = await sb.from('ja_dispatch_loads').update({ worker_ids: ids, updated_by: myEmail() }).eq('id', l.id);
+    if (res.error) { toast(res.error.message, true); return; }
+    l.worker_ids = ids;
+    await syncLane(section, laneId);
+    await audit('Dispatch worker unassign', DISP.date + ' · ' + workerName(workerId) + ' ← ' + section.toUpperCase() + ' ' + laneLabel(laneId));
+    renderDispatch();
+  }
+  function pickLaneForWorker(section, workerId) {
+    document.getElementById('lanePickTitle').textContent = 'Send ' + workerName(workerId) + ' to…';
+    document.getElementById('lanePickBody').innerHTML = laneOptions(section).map(o =>
+      '<button type="button" class="lane-pick-btn" onclick="addWorkerToLane(\'' + section + '\',\'' + esc(o.id) + '\',\'' + esc(workerId) + '\')">' + esc(o.label) +
+      (o.extra ? ' <small style="color:var(--text-dim);font-weight:500;">' + esc(o.extra) + '</small>' : '') + '</button>'
+    ).join('');
+    openModal('mLane');
+  }
+  function filterWorkerPool(inp, section) {
+    const q = String(inp.value || '').toLowerCase();
+    document.querySelectorAll('#allwk-' + section + ' > span').forEach(sp => {
+      sp.style.display = (!q || sp.dataset.nm.indexOf(q) >= 0) ? '' : 'none';
+    });
   }
 
   function renderDispatch() {
     if (!DATA) return;
     const date = DISP.date;
-    document.getElementById('dispDateLabel').textContent = date ? prettyDate(date) : '—';
-    const jobs = dispSorted();
-    const assigned = jobs.filter(j => DISP.ready[j.id] && DISP.ready[j.id].team_no);
-    const pool = jobs.filter(j => !(DISP.ready[j.id] && DISP.ready[j.id].team_no));
-    const night = jobs.filter(j => shiftGroup(j.shift) === 'Night');
-    const teams = {};
-    assigned.forEach(j => { const n = String(DISP.ready[j.id].team_no); (teams[n] = teams[n] || []).push(j); });
-    const nums = Object.keys(teams).sort((a, b) => Number(a) - Number(b));
+    const jobs = DISP.jobs || [];
+    const dayJobs = jobs.filter(j => sectionOf(j) === 'day');
+    const nightJobs = jobs.filter(j => sectionOf(j) === 'night');
+    const allocated = jobs.filter(j => jobLane(j)).length;
+    const lorriesOut = {};
+    (DISP.loads || []).forEach(l => {
+      if (isSentinel(l.lorry_id)) return;
+      if (loadWorkers(l).length || laneJobs(l.shift_group, l.lorry_id).length) lorriesOut[String(l.lorry_id)] = 1;
+    });
 
-    document.getElementById('dispSummary').innerHTML = toolSnapshot('Dispatch Snapshot',
-      card('info', 'Jobs on date', jobs.length) +
-      card('info', 'Night shift', night.length) +
-      card('ok', 'Assigned', assigned.length) +
-      card('warn', 'Unassigned', pool.length) +
-      card('info', 'Teams', nums.length)
+    document.getElementById('dispSummary').innerHTML = toolSnapshot('Dispatch Snapshot' + (date ? ' · ' + prettyDate(date) : ''),
+      card('info', 'Jobs', jobs.length) +
+      card('info', '☀ Day', dayJobs.length) +
+      card('info', '🌙 Night', nightJobs.length) +
+      card('ok', 'Allocated', allocated) +
+      card('warn', 'Unassigned', jobs.length - allocated) +
+      card('info', 'Lorries out', Object.keys(lorriesOut).length)
     );
 
     // scheduled but not ready — verdict from the SHARED engine over this date's join
@@ -1659,68 +1893,152 @@
       notReady.map(x => '<div class="row" style="border-color:rgba(245,158,11,0.25);"><b>' + esc(x.j.mall || '?') + ' · ' + esc(x.j.lot || '?') + '</b> — missing: ' + esc((x.v.missing || []).join(', ')) + '</div>').join('') + '</div>'
     ) : '';
 
-    const max = Number(DATA.config.maxJobsPerTeam || 5);
-    const li = (j, i) => {
-      const wn = workerCount(j);
-      return '<li>' + seqInputHtml(j) + '<span class="jtxt">' + (i + 1) + '. ' +
-        [timeShort(j.time), j.scope || j.title, j.mall, j.lot ? 'Lot ' + j.lot : ''].filter(Boolean).map(esc).join(' · ') +
-        '<br><small style="color:var(--text-dim);">SV: ' + esc(j.supervisor_names || '—') + ' · ' + wn + ' worker' + (wn === 1 ? '' : 's') + ' · ' + esc(shiftLabel(j.shift)) + '</small></span>' +
-        teamSelectHtml(j) + '</li>';
-    };
-
-    document.getElementById('teamsWrap').innerHTML = nums.length ? nums.map(n => {
-      const list = teams[n].slice().sort((a, b) =>
-        ((Number(DISP.ready[a.id].seq) || 999) - (Number(DISP.ready[b.id].seq) || 999)) ||
-        String(timeShort(a.time)).localeCompare(String(timeShort(b.time))));
-      const over = list.length > max;
-      return '<div class="team-card"><h3>Team ' + n + '</h3>' +
-        '<ul class="team-jobs">' + list.map(li).join('') + '</ul>' +
-        '<div class="team-count' + (over ? ' over' : '') + '">' + list.length + ' / ' + max + ' jobs</div>' +
-      '</div>';
-    }).join('') : '<div class="empty">No teams loaded for this date yet. Pick a team on any job in the pool.</div>';
-
-    document.getElementById('poolBox').innerHTML = pool.length
-      ? pool.map(j => {
-          const wn = workerCount(j);
-          return '<div class="pool-row"><span class="ptxt"><b>' + esc(j.mall || '?') + '</b> · ' + esc(j.lot || '—') +
-            '<br><small style="color:var(--text-dim);">' + [timeShort(j.time), j.scope || j.title, shiftLabel(j.shift)].filter(Boolean).map(esc).join(' · ') +
-            ' · SV: ' + esc(j.supervisor_names || '—') + ' · ' + wn + ' worker' + (wn === 1 ? '' : 's') + '</small></span>' + teamSelectHtml(j) + '</div>';
-        }).join('')
-      : (jobs.length ? '<div class="empty" style="padding:24px;">Every job on this date is loaded into a team.</div>'
-                     : '<div class="empty" style="padding:24px;">No jobs scheduled on this date.<br><small>Add one via + Add Job or in Job Arrangement.</small></div>');
+    document.getElementById('dispSections').innerHTML = date
+      ? SECTIONS.map(sectionHtml).join('')
+      : '<div class="empty">Pick a dispatch date to load the board.</div>';
   }
 
-  /* WhatsApp message — same roster style as the Job Arrangement tool */
-  function buildMessage(date) {
-    const jobs = dispSorted();
-    const teams = {};
-    const un = [];
-    jobs.forEach(j => {
-      const r = DISP.ready[j.id];
-      if (r && r.team_no) (teams[String(r.team_no)] = teams[String(r.team_no)] || []).push(j);
-      else un.push(j);
-    });
-    const nums = Object.keys(teams).sort((a, b) => Number(a) - Number(b));
-    let total = 0;
-    const lines = ['*HG Dispatch — ' + prettyDate(date) + '*'];
-    const jobLines = (j, i) => {
-      const wn = workerCount(j);
-      lines.push((i + 1) + '. ' + [timeShort(j.time), j.scope || j.title, j.mall, j.lot ? 'Lot ' + j.lot : ''].filter(Boolean).join(' · '));
-      lines.push('   SV: ' + (j.supervisor_names || '—') + ' · ' + wn + ' worker' + (wn === 1 ? '' : 's'));
-    };
-    nums.forEach(n => {
-      const list = teams[n].slice().sort((a, b) =>
-        ((Number(DISP.ready[a.id].seq) || 999) - (Number(DISP.ready[b.id].seq) || 999)) ||
-        String(timeShort(a.time)).localeCompare(String(timeShort(b.time))));
-      lines.push('', '*TEAM ' + n + '*');
-      list.forEach((j, i) => { jobLines(j, i); total++; });
-    });
-    if (un.length) {
-      lines.push('', '*UNASSIGNED*');
-      un.forEach((j, i) => jobLines(j, i));
+  function sectionHtml(s) {
+    const section = s.key;
+    const jobs = sectionJobs(section);
+    const lanes = laneIdsOf(section);
+    const unassigned = jobs.filter(j => !jobLane(j));
+    const allocated = jobs.length - unassigned.length;
+
+    const active = {}; lanes.forEach(id => { if (!isSentinel(id)) active[id] = 1; });
+    const addable = (DATA.lorries || []).filter(l => !active[String(l.id)]);
+    const addSel = addable.length
+      ? '<select class="mini-select" onchange="addLane(\'' + section + '\', this.value, this)">' +
+          '<option value="">＋ Add lorry</option>' +
+          addable.map(l => '<option value="' + esc(l.id) + '">' + esc(l.id + ' · ' + l.plate) + '</option>').join('') +
+        '</select>'
+      : '';
+
+    return '<div class="disp-section"><div class="disp-section-head">' +
+      '<h3>' + s.icon + ' ' + s.label + '</h3>' +
+      '<span class="help">' + jobs.length + ' job' + (jobs.length === 1 ? '' : 's') + ' · ' + allocated + ' allocated</span>' +
+      addSel + '</div>' +
+      (lanes.length ? '<div class="lane-grid">' + lanes.map(id => laneCardHtml(section, id)).join('') + '</div>' : '') +
+      '<div class="disp-pools">' +
+        '<div class="pool-box"><h4>Unassigned jobs (' + unassigned.length + ')</h4>' +
+          (unassigned.length ? unassigned.map(j => poolJobHtml(section, j)).join('')
+            : (jobs.length ? '<div class="empty" style="padding:20px;">Every ' + s.label.toLowerCase() + ' job is on a lane.</div>'
+                           : '<div class="empty" style="padding:20px;">No ' + s.label.toLowerCase() + ' jobs on this date.</div>')) +
+        '</div>' +
+        workerPoolHtml(section, jobs) +
+      '</div></div>';
+  }
+
+  function laneCardHtml(section, laneId) {
+    const l = findLoad(section, laneId);
+    const jobsIn = laneJobs(section, laneId);
+    const crew = loadWorkers(l);
+    const maxW = Number((DATA.config.maxWorkersPerTeam) || 5);
+    const sentinel = isSentinel(laneId);
+    const over = !sentinel && crew.length > maxW;
+    const canRemove = l && !jobsIn.length && !crew.length && !(section === 'day' && laneId === LANE_FACTORY);
+    const head = '<h3><span style="min-width:0;overflow-wrap:anywhere;">' + esc(laneLabel(laneId)) + '</span>' +
+      '<span style="display:inline-flex;align-items:center;gap:6px;">' +
+      '<span class="lane-count' + (over ? ' over' : '') + '">' + crew.length + (sentinel ? ' worker' + (crew.length === 1 ? '' : 's') : ' / ' + maxW + ' workers') + '</span>' +
+      (canRemove ? '<button class="icon-btn danger" title="Remove lane" onclick="removeLane(\'' + section + '\',\'' + esc(laneId) + '\')">✕</button>' : '') +
+      '</span></h3>';
+    let driver = '';
+    if (!sentinel) {
+      const cur = l ? String(l.driver_id || '') : String((lorryById(laneId) || {}).usual_driver_id || '');
+      driver = '<div class="lane-driver">' +
+        '<select class="mini-select" onchange="setLaneDriver(\'' + section + '\',\'' + esc(laneId) + '\', this.value)">' +
+          '<option value="">— driver —</option>' +
+          (DATA.supervisors || []).map(sv => '<option value="' + esc(sv.id) + '"' + (String(sv.id) === cur ? ' selected' : '') + '>' + esc(sv.name) + '</option>').join('') +
+        '</select>' +
+        '<button class="icon-btn" style="width:auto;padding:0 8px;height:32px;font-size:0.76rem;white-space:nowrap;" title="Save as this lorry&#39;s usual driver" onclick="setUsualDriver(\'' + esc(laneId) + '\',\'' + section + '\')">☆ set usual</button>' +
+      '</div>';
     }
-    lines.push('', 'Total: ' + nums.length + ' team(s), ' + total + ' assigned job(s)' + (un.length ? ', ' + un.length + ' unassigned' : ''));
-    return { text: lines.join('\n'), teams: nums.length, jobs: total + un.length };
+    const jobsHtml = jobsIn.length ? '<ul class="lane-jobs">' + jobsIn.map((j, i) =>
+      '<li><span class="lane-seq">' + (i + 1) + '</span>' +
+        '<span class="jtxt" onclick="openJobModal(\'' + esc(j.id) + '\')">' +
+          [timeShort(j.time), j.scope || j.title, j.mall, j.lot ? 'Lot ' + j.lot : ''].filter(Boolean).map(esc).join(' · ') + '</span>' +
+        '<button class="icon-btn" ' + (i === 0 ? 'disabled ' : '') + 'title="Earlier stop" onclick="moveJobSeq(\'' + esc(j.id) + '\', -1)">↑</button>' +
+        '<button class="icon-btn" ' + (i === jobsIn.length - 1 ? 'disabled ' : '') + 'title="Later stop" onclick="moveJobSeq(\'' + esc(j.id) + '\', 1)">↓</button>' +
+        '<button class="icon-btn danger" title="Unassign job" onclick="unassignJobLane(\'' + esc(j.id) + '\')">✕</button></li>'
+    ).join('') + '</ul>' : '<div class="help" style="margin-top:9px;">No jobs on this lane yet.</div>';
+    const crewHtml = '<div class="lane-workers">' + (crew.length ? crew.map(id =>
+      '<span class="wchip">' + esc(workerName(id)) + '<button title="Remove" onclick="removeWorkerFromLane(\'' + section + '\',\'' + esc(laneId) + '\',\'' + esc(id) + '\')">✕</button></span>').join('')
+      : '<span class="help">No workers yet — tap a name in the worker pool.</span>') + '</div>';
+    return '<div class="team-card lane-card">' + head + driver + jobsHtml + crewHtml + '</div>';
+  }
+
+  function poolJobHtml(section, j) {
+    const wn = workerCount(j);
+    return '<div class="pool-row"><span class="ptxt" style="cursor:pointer;" onclick="openJobModal(\'' + esc(j.id) + '\')"><b>' + esc(j.mall || j.scope || j.title || '?') + '</b>' + (j.lot ? ' · ' + esc(j.lot) : '') +
+      '<br><small style="color:var(--text-dim);">' + [timeShort(j.time), j.scope || j.title, shiftLabel(j.shift)].filter(Boolean).map(esc).join(' · ') +
+      ' · SV: ' + esc(j.supervisor_names || '—') + ' · ' + wn + ' worker' + (wn === 1 ? '' : 's') + '</small></span>' +
+      '<select class="mini-select" onchange="assignJobLane(\'' + esc(j.id) + '\', this.value)">' +
+        '<option value="">Lane…</option>' +
+        laneOptions(section).map(o => '<option value="' + esc(o.id) + '">' + esc(o.label + (o.extra ? ' (' + o.extra + ')' : '')) + '</option>').join('') +
+      '</select></div>';
+  }
+
+  function workerPoolHtml(section, jobs) {
+    const laned = {};
+    loadsOf(section).forEach(l => loadWorkers(l).forEach(id => { laned[id] = 1; }));
+    // this shift's crew = union of worker_ids across the section's jobs, minus already-laned
+    const seen = {}, crewIds = [];
+    jobs.forEach(j => (parseJSON_(j.worker_ids, []) || []).forEach(id => {
+      if (!seen[id]) { seen[id] = 1; if (!laned[id]) crewIds.push(id); }
+    }));
+    crewIds.sort((a, b) => String(workerName(a)).localeCompare(String(workerName(b))));
+    const chip = id => '<button type="button" class="pool-chip" onclick="pickLaneForWorker(\'' + section + '\',\'' + esc(id) + '\')">' + esc(workerName(id)) + '</button>';
+    const all = (DATA.workers || []).filter(w => !laned[w.id]);
+    return '<div class="pool-box"><h4>Worker pool</h4>' +
+      '<div class="help" style="margin-bottom:6px;">This shift&#39;s crew — tap a name, pick a lane.</div>' +
+      '<div class="chips" style="margin:0 0 10px;">' + (crewIds.length ? crewIds.map(chip).join('') : '<span class="help">Everyone from this shift&#39;s jobs is on a lane.</span>') + '</div>' +
+      '<details><summary style="cursor:pointer;font-size:0.82rem;color:var(--text-dim);font-weight:700;">All workers (' + all.length + ')</summary>' +
+        '<input type="search" placeholder="Search workers…" style="width:100%;margin:8px 0;" oninput="filterWorkerPool(this, \'' + section + '\')">' +
+        '<div class="chips" id="allwk-' + section + '" style="margin:0;">' + all.map(w => '<span data-nm="' + esc(String(w.name).toLowerCase()) + '">' + chip(w.id) + '</span>').join('') + '</div>' +
+      '</details></div>';
+  }
+
+  /* WhatsApp message — whole-day lane roster for the HG Operation group */
+  function buildMessage(date) {
+    const lines = ['*HG Dispatch — ' + prettyDate(date) + '*'];
+    let total = 0, allocated = 0, unTotal = 0;
+    const stop = (j, i) => {
+      lines.push((i + 1) + '. ' + [timeShort(j.time), j.scope || j.title, j.mall, j.lot ? 'Lot ' + j.lot : ''].filter(Boolean).join(' · '));
+    };
+    SECTIONS.forEach(s => {
+      const jobs = sectionJobs(s.key);
+      const hasCrew = loadsOf(s.key).some(l => loadWorkers(l).length);
+      if (!jobs.length && !hasCrew) return;
+      lines.push('', '*' + s.icon + ' ' + s.label + '*');
+      laneIdsOf(s.key).forEach(laneId => {
+        const l = findLoad(s.key, laneId);
+        const jl = laneJobs(s.key, laneId);
+        const crew = loadWorkers(l);
+        if (!jl.length && !crew.length) return;
+        let title;
+        if (laneId === LANE_FACTORY) title = '*🏭 FACTORY*';
+        else if (laneId === LANE_NOLORRY) title = '*🚶 NO LORRY / OWN TRANSPORT*';
+        else {
+          const lo = lorryById(laneId);
+          title = '*' + laneId + ' · ' + (lo ? lo.plate : laneId) + ((l && l.driver_name) ? ' (' + l.driver_name + ')' : '') + '*';
+        }
+        lines.push('', title);
+        jl.forEach((j, i) => { stop(j, i); allocated++; total++; });
+        lines.push('Workers (' + crew.length + '): ' + (crew.length ? crew.map(workerName).join(', ') : '—'));
+      });
+      const un = jobs.filter(j => !jobLane(j));
+      if (un.length) {
+        lines.push('', '*UNASSIGNED — ' + s.label + ' (' + un.length + ')*');
+        un.forEach((j, i) => { stop(j, i); total++; unTotal++; });
+      }
+    });
+    const lorriesOut = {};
+    (DISP.loads || []).forEach(l => {
+      if (!isSentinel(l.lorry_id) && (loadWorkers(l).length || laneJobs(l.shift_group, l.lorry_id).length)) lorriesOut[String(l.lorry_id)] = 1;
+    });
+    const nLor = Object.keys(lorriesOut).length;
+    lines.push('', 'Total: ' + total + ' job(s) · ' + allocated + ' allocated · ' + unTotal + ' unassigned · ' + nLor + (nLor === 1 ? ' lorry' : ' lorries') + ' out');
+    return { text: lines.join('\n'), jobs: total };
   }
   function openDispatchMsg() {
     if (!currentDispatchDate) { toast('Pick a dispatch date first.', true); return; }
@@ -1728,6 +2046,10 @@
     if (!m.jobs) { toast('No jobs scheduled on this date.', true); return; }
     document.getElementById('msgArea').value = m.text;
     openModal('mMsg');
+  }
+  function openWa() {
+    const ta = document.getElementById('msgArea');
+    window.open('https://wa.me/?text=' + encodeURIComponent(ta.value), '_blank');
   }
   function copyMsg() {
     const ta = document.getElementById('msgArea');
@@ -1802,7 +2124,6 @@
     const c = DATA.config;
     document.getElementById('cfgPermitLeadDays').value = c.permitLeadDays || 3;
     document.getElementById('cfgAtRiskDays').value = c.atRiskDays || 3;
-    document.getElementById('cfgMaxTeams').value = c.maxTeams || 12;
     document.getElementById('cfgMaxJobsPerTeam').value = c.maxJobsPerTeam || 5;
     document.getElementById('cfgMaxWorkersPerTeam').value = c.maxWorkersPerTeam || 5;
     document.getElementById('cfgEmailRecipients').value = c.emailRecipients || '';
@@ -1811,7 +2132,6 @@
     const p = {
       permitLeadDays: document.getElementById('cfgPermitLeadDays').value,
       atRiskDays: document.getElementById('cfgAtRiskDays').value,
-      maxTeams: document.getElementById('cfgMaxTeams').value,
       maxJobsPerTeam: document.getElementById('cfgMaxJobsPerTeam').value,
       maxWorkersPerTeam: document.getElementById('cfgMaxWorkersPerTeam').value,
       emailRecipients: document.getElementById('cfgEmailRecipients').value,
@@ -1865,7 +2185,7 @@
         'Permit by': r.permit_by || '', 'Permit status': r.permit_status || '',
         'Permit approved': String(r.permit_approved_at || '').slice(0, 10),
         'Material ready': r.material_ready || '', 'Material notes': r.material_notes || '',
-        'Dispatch date': String(r.dispatch_date || '').slice(0, 10), 'Team': r.team_no || '', 'Seq': r.seq || '',
+        'Dispatch date': String(r.dispatch_date || '').slice(0, 10), 'Lane': r.lorry_id || '', 'Seq': r.seq || '',
         'Gate notes': r.notes || '', 'Updated by': r.updated_by || '',
       };
     })), 'Jobs');
