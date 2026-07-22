@@ -546,7 +546,7 @@ async function mngAdd(kind,selId){
 async function mngSave(kind,selId,id){
   var name=(el('mng-'+id).value||'').trim();
   if(!name){toast('Name cannot be empty.','bad');return;}
-  var r = await sb.from(tableFor(kind)).update({name:name,updated_at:new Date().toISOString()}).eq('id',id);
+  var r = await sb.from(tableFor(kind)).update({name:name,updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')}).eq('id',id);
   if(r.error){toast(r.error.message,'bad');return;}
   await audit('vis.'+kind+'.update', name);
   toast('Saved','ok'); mngAfter(kind,selId);
@@ -976,8 +976,8 @@ async function moveStatus(id,status){
   if(status==='APPROVED' && !confirm('Confirm client approved — give B the PROCEED to print?'))return;
   var j=DB.jobs.find(function(x){return x.id===id;});
   if(!j){toast('Job not found.','bad');return;}
-  var upd={ status:status, updated_at:new Date().toISOString() };
-  if(status==='APPROVED'){ upd.proceed_by=DB.currentUser; upd.proceed_at=new Date().toISOString(); }
+  var upd={ status:status, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
+  if(status==='APPROVED'){ upd.proceed_by=DB.currentUser; upd.proceed_at=new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' '); }
   if(status==='COMPLETED' && !j.completedDate) upd.completed_date=todayISO();
   if(note) upd.notes=(j.notes?j.notes+'\n':'')+'['+status+'] '+note;
   var r=await sb.from('vis_jobs').update(upd).eq('id',id);
@@ -1004,7 +1004,7 @@ function photoUpload(id){
         paths.push(await uploadFile(stamp+'-'+(i+1)+'-'+safeName(fs[i].name), fs[i]));
       }
       var remark=val('cp-remark');
-      var upd={ photo_paths:paths, status:'COMPLETED', updated_at:new Date().toISOString() };
+      var upd={ photo_paths:paths, status:'COMPLETED', updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
       if(!j.completedDate) upd.completed_date=todayISO();
       if(remark) upd.notes=(j.notes?j.notes+'\n':'')+'[COMPLETED] '+remark;
       var r=await sb.from('vis_jobs').update(upd).eq('id',id);
@@ -1068,7 +1068,7 @@ function rateForm(r){
       rate_per_sqft:round2(val('r-rate')), install_rate:round2(val('r-inst')),
       package_rate:round2(val('r-pkg')), min_charge:round2(val('r-min')),
       effective_from:val('r-eff')||null, notes:val('r-notes').trim(),
-      updated_by:DB.currentUser, updated_at:new Date().toISOString()
+      updated_by:DB.currentUser, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')
     };
     var q = e ? await sb.from('vis_rates').update(obj).eq('id',r.id)
               : await sb.from('vis_rates').insert(obj);
@@ -1239,7 +1239,7 @@ function workerForm(w){
         cidb_no:val('w-cidbno').trim(), cidb_expiry:val('w-cidbexp')||null,
         wah_no:val('w-wahno').trim(), wah_expiry:val('w-wahexp')||null,
         doc_type:val('w-doctype').trim(), doc_no:val('w-docno').trim(), doc_expiry:val('w-docexp')||null,
-        notes:val('w-notes').trim(), updated_by:DB.currentUser, updated_at:new Date().toISOString() };
+        notes:val('w-notes').trim(), updated_by:DB.currentUser, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
       var base='workers/'+safeName(obj.name)+'/'+Date.now();
       var f;
       f=dzFiles('w-ic')[0];   if(f){ obj.ic_file_path  =await uploadFile(base+'-ic-'+safeName(f.name), f);   obj.ic_file_url=''; }
@@ -1481,7 +1481,7 @@ async function editInv(id){ try{ invForm(await getInvoice(id)); }catch(e){toast(
 async function invStatus(id,status){
   var note=''; if(status==='disputed')note=prompt('Dispute note (what to query with B)?')||'';
   var inv=DB.invoices.find(function(x){return x.id===id;});
-  var upd={status:status, updated_at:new Date().toISOString()};
+  var upd={status:status, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')};
   if(note&&inv) upd.recon_note=(inv.reconNote?inv.reconNote+' | ':'')+'['+status+'] '+note+' ('+DB.currentUser+')';
   var r=await sb.from('vis_invoices').update(upd).eq('id',id);
   if(r.error){toast(r.error.message,'bad');return;}

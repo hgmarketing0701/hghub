@@ -791,7 +791,7 @@ async function crudSave(table, obj){
     if(d.num && d.num.indexOf(col)>=0) v = (v===''||v==null) ? null : Number(v);
     payload[col] = v;
   });
-  if(d.upd){ payload.updated_by = userEmail(); payload.updated_at = new Date().toISOString(); }
+  if(d.upd){ payload.updated_by = userEmail(); payload.updated_at = new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' '); }
   var r, id;
   if(obj.ID){
     r = await sb.from(d.t).update(payload).eq('id', obj.ID);
@@ -2020,7 +2020,7 @@ async function mrSet(id,status){
   try {
     var upd = { status:status,
                 quote_sent_on: (status==='Quotation Sent') ? todayISO() : null,
-                updated_by:userEmail(), updated_at:new Date().toISOString() };
+                updated_by:userEmail(), updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
     var r = await sb.from('mp_measure_requests').update(upd).eq('id', id);
     if(r.error) throw r.error;
     await audit('STATUS MeasureRequests', String(id).slice(0,8)+' → '+status);

@@ -858,7 +858,7 @@ const App=(function(){
   async function setStatus(id,st){
     const q=state.quotes.find(x=>x.id===id);
     busy(true);
-    const r=await sb.from('hrd_quotes').update({status:st,updated_by:me(),updated_at:new Date().toISOString()}).eq('id',id);
+    const r=await sb.from('hrd_quotes').update({status:st,updated_by:me(),updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')}).eq('id',id);
     if(r.error){busy(false);showErr(r.error.message);return;}
     await logAudit('HRD STATUS Quote',(q?q.quoteNo:String(id).slice(0,8))+' → '+st);
     busy(false);

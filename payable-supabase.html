@@ -294,7 +294,7 @@ function signIn(){
 }
 function signOut(){sb.auth.signOut().then(function(){location.reload();});}
 async function audit(action,recordId,details){
-  try{await sb.from('ap_audit_log').insert({timestamp:new Date().toISOString(),user_email:DB.currentUser||'',action:String(action||''),record_id:String(recordId||''),details:String(details||'')});}catch(e){}
+  try{await sb.from('ap_audit_log').insert({timestamp:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' '),user_email:DB.currentUser||'',action:String(action||''),record_id:String(recordId||''),details:String(details||'')});}catch(e){}
 }
 function ico(name){return '<i class="ui-icon" data-lucide="'+name+'" aria-hidden="true"></i>';}
 
@@ -644,7 +644,7 @@ async function saveRequest(btn,id){
     var uploaded=[];
     for(var i=0;i<NEWFILES.length;i++){uploaded.push(await uploadAttachment(newId,NEWFILES[i].file,NEWFILES[i].docType));}
     var attachments=KEPT.concat(uploaded);
-    var now=new Date().toISOString();
+    var now=new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ');
     var meName=actorName(DB.currentUser);
     var base={
       requestor:val('f-req'),department:val('f-dept'),project:val('f-project'),payee:payee,category:val('f-cat')||'Other',
@@ -727,7 +727,7 @@ function act(id,status){
   var r=byId(DB.requests,id);if(!r)return;
   var remarks=prompt('Remarks for "'+status+'" (optional):',r.approverRemarks||'');
   if(remarks===null)return;
-  var now=new Date().toISOString();var meName=actorName(DB.currentUser);
+  var now=new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ');var meName=actorName(DB.currentUser);
   var patch={status:status,updated_at:now,approver_remarks:remarks||r.approverRemarks||'',last_action:status,last_action_by:meName};
   if(status==='Approved'||status==='On Hold'||status==='Rejected'){patch.approved_by=DB.currentUser;patch.approval_date=r.approvalDate||today();}
   if(status==='Rejected')patch.outstanding=0;
@@ -753,7 +753,7 @@ function payForm(id){
 function doPay(btn,id){
   var r=byId(DB.requests,id);if(!r)return;
   var paid=num_(val('p-amount'));
-  var now=new Date().toISOString();var meName=actorName(DB.currentUser);
+  var now=new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ');var meName=actorName(DB.currentUser);
   var patch={status:'Paid',approved_by:r.approvedBy||DB.currentUser,approval_date:r.approvalDate||today(),
     payment_release_date:val('p-date')||today(),payment_method:val('p-method'),paid_amount:paid,
     outstanding:round2_(r.totalAmount-paid),approver_remarks:val('p-remarks')||r.approverRemarks||'',
@@ -767,7 +767,7 @@ function doPay(btn,id){
 }
 function toggleInfotech(id,keyed){
   var r=byId(DB.requests,id);
-  var now=new Date().toISOString();var meName=actorName(DB.currentUser);
+  var now=new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ');var meName=actorName(DB.currentUser);
   sb.from('ap_payment_requests').update({infotech_keyed:keyed?'Yes':'No',updated_at:now,last_action:'Infotech '+(keyed?'keyed':'un-keyed'),last_action_by:meName}).eq('id',id).then(function(res){
     if(res.error){toast(res.error.message,'bad');return;}
     audit('infotech',id,'keyed='+(keyed?'Yes':'No'));

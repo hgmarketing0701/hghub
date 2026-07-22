@@ -2967,11 +2967,11 @@ async function sbSave(table, type, rec, auditDetail) {
   const row = recToRow(rec, FIELDS[table]);
   let r;
   if (rec.id) {
-    if (!NO_UPDATED_META.has(table)) { row.updated_at = new Date().toISOString(); row.updated_by = myEmail(); }
+    if (!NO_UPDATED_META.has(table)) { row.updated_at = new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' '); row.updated_by = myEmail(); }
     r = await sb.from(table).update(row).eq('id', rec.id).select().single();
   } else {
     row.created_by = myEmail();
-    if (!NO_UPDATED_META.has(table)) { row.updated_at = new Date().toISOString(); row.updated_by = myEmail(); }
+    if (!NO_UPDATED_META.has(table)) { row.updated_at = new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' '); row.updated_by = myEmail(); }
     r = await sb.from(table).insert(row).select().single();
   }
   if (r.error) throw new Error(r.error.message);
@@ -3171,7 +3171,7 @@ const API = {
       if (ids.includes(String(id))) {
         const newIds = ids.filter(x => x !== String(id)).join('|');
         const ur = await sb.from('pl_subcon_charges')
-          .update({ job_scope_ids: newIds, updated_at: new Date().toISOString(), updated_by: myEmail() })
+          .update({ job_scope_ids: newIds, updated_at: new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' '), updated_by: myEmail() })
           .eq('id', c.id);
         if (ur.error) throw new Error(ur.error.message);
         c.jobScopeIds = newIds;

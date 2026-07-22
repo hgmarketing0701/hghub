@@ -1095,7 +1095,7 @@ async function saveWorker(){
   var obj={ full_name:el('weName').value.trim(), ic_number:el('weIc').value.trim(), passport_number:el('wePassport').value.trim(),
     nationality:el('weNationality').value.trim(), division_id:el('weDivision').value||null, position:el('wePosition').value.trim(),
     phone:el('wePhone').value.trim(), photo_url:el('wePhoto').value.trim(), status:el('weStatus').value,
-    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+    updated_by:SESSION.user.email, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   if(!obj.full_name){ showMsg('weMsg','Name is required.', false); return; }
   var btn=el('weSave'); btn.disabled=true; btn.textContent='Saving…';
   var r;
@@ -1164,7 +1164,7 @@ async function saveDocument(){
   var obj={ worker_id:workerId, doc_type:el('deDocType').value, doc_subtype:el('deDocSubtype').value.trim(),
     doc_number:el('deDocNumber').value.trim(), issue_date:el('deIssueDate').value||null, expiry_date:el('deExpiryDate').value||null,
     issuing_authority:el('deIssuingAuthority').value.trim(), file_url:el('deFileUrl').value.trim(), notes:el('deNotes').value.trim(),
-    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+    updated_by:SESSION.user.email, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   if(!obj.worker_id || !obj.doc_type){ showMsg('deMsg','Worker and document type required.', false); return; }
   var btn=el('deSave'); btn.disabled=true; btn.textContent='Saving…';
   var r;
@@ -1389,7 +1389,7 @@ async function saveForm(){
     version:el('feVersion').value.trim(), last_verified_date:el('feLastVerified').value||null, file_url:el('feFileUrl').value.trim(),
     contact_info:el('feContact').value.trim(), lead_time:el('feLeadTime').value.trim(),
     requirements:el('feRequirements').value.trim(), notes:el('feNotes').value.trim(),
-    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+    updated_by:SESSION.user.email, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   if(!obj.mall_name){ showMsg('feMsg','Mall / building name required.', false); return; }
   if(!obj.form_name){ showMsg('feMsg','Form name required.', false); return; }
   var btn=el('feSave'); btn.disabled=true; btn.textContent='Saving…';

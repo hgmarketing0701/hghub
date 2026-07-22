@@ -704,7 +704,7 @@ async function saveRentalForm(existing){
       items_description:val('f-items'), remarks:val('f-remarks'),
       photos_url:val('f-photos'), photo_paths:photoPaths, agreement_path:agreementPath,
       handled_by:val('f-handled')||EMAIL,
-      updated_by:EMAIL, updated_at:new Date().toISOString()
+      updated_by:EMAIL, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')
     };
     var r;
     if(id){
@@ -789,7 +789,7 @@ async function rRenew(id,cur){
   var r0=DB.rentals.filter(function(x){return x.id===id;})[0];
   if(!/^\d{4}-\d{2}-\d{2}$/.test(nd)){toast('Use format YYYY-MM-DD','bad');return;}
   if(r0&&r0.endDate&&nd<=r0.endDate){toast('New end date must be after current end date.','bad');return;}
-  var r=await sb.from('str_rentals').update({end_date:nd,status:'Active',notice1_sent:'',notice2_sent:'',updated_by:EMAIL,updated_at:new Date().toISOString()}).eq('id',id);
+  var r=await sb.from('str_rentals').update({end_date:nd,status:'Active',notice1_sent:'',notice2_sent:'',updated_by:EMAIL,updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')}).eq('id',id);
   if(r.error){toast(r.error.message,'bad');return;}
   await audit('RENEW Rental','Lot '+(r0?r0.lotId:id)+' extended to '+nd);
   await reloadAll();closeModal();toast('Renewed','ok');
@@ -800,7 +800,7 @@ async function rAction(id,kind){
     refund:'Refund the security deposit to the client. Remarks:'}[kind];
   var rem=prompt(msg);if(rem===null)return;
   var r0=DB.rentals.filter(function(x){return x.id===id;})[0];if(!r0)return;
-  var upd={updated_by:EMAIL,updated_at:new Date().toISOString()};
+  var upd={updated_by:EMAIL,updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')};
   var action='';
   if(kind==='refund'){
     upd.deposit_status='Refunded';
@@ -921,7 +921,7 @@ async function saveInvoiceForm(existing){
     var rec={inv_no:invNo,rental_id:val('iv-rental')||null,lot_id:val('iv-lot'),client_company:val('iv-co'),
       inv_date:val('iv-date'),due_date:val('iv-due')||null,period_from:val('iv-pfrom')||null,period_to:val('iv-pto')||null,
       description:val('iv-desc'),amount:amount,sst_enabled:sstEnabled,sst_amount:sstAmount,total:total,
-      file_path:filePath,notes:val('iv-notes'),updated_at:new Date().toISOString()};
+      file_path:filePath,notes:val('iv-notes'),updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')};
     var r;
     if(id){r=await sb.from('str_invoices').update(rec).eq('id',id);}
     else{rec.status='';rec.created_by=EMAIL;r=await sb.from('str_invoices').insert(rec);}
@@ -989,7 +989,7 @@ async function voidInvoice(id){
   var i=DB.invoices.filter(function(x){return x.id===id;})[0];if(!i)return;
   var pays=DB.payments.filter(function(p){return p.invoiceId===id;});
   if(pays.length){toast('Invoice has payments recorded — remove payments before voiding.','bad');return;}
-  var r=await sb.from('str_invoices').update({status:'Void',notes:(i.notes?i.notes+' | ':'')+'VOID: '+(reason||''),updated_at:new Date().toISOString()}).eq('id',id);
+  var r=await sb.from('str_invoices').update({status:'Void',notes:(i.notes?i.notes+' | ':'')+'VOID: '+(reason||''),updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')}).eq('id',id);
   if(r.error){toast(r.error.message,'bad');return;}
   await audit('VOID Invoice',i.invNo+' :: '+(reason||''));
   await reloadAll();closeModal();toast('Voided','ok');
@@ -1057,7 +1057,7 @@ function lotForm(l){
     var w=Number(val('lt-w'))||0,d=Number(val('lt-d'))||0;
     var rec={id:val('lt-id'),zone:val('lt-zone'),floor:val('lt-floor'),type:val('lt-type')||'Standard',
       lockset:val('lt-lock'),width_mm:w,depth_mm:d,area_sqm:(w&&d)?round2(w*d/1e6):null,
-      notes:val('lt-notes'),updated_at:new Date().toISOString()};
+      notes:val('lt-notes'),updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')};
     var r=await sb.from('str_lots').upsert(rec);   // same as GAS saveLot (create or update)
     if(r.error){toast(r.error.message,'bad');return;}
     await audit((e?'UPDATE':'CREATE')+' Lot',rec.id+' · '+rec.zone+' / '+rec.lockset);

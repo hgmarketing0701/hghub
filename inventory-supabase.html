@@ -915,7 +915,7 @@ async function saveMaterial(){
   var name=el('mfName').value.trim(); if(!name){ showMsgEl('mfMsg','Name required.',false); return; }
   var id=el('mfId').value;
   var obj={ name:name, unit:el('mfUnit').value.trim()||'pc', category:el('mfCat').value.trim(),
-    low_stock_threshold:parseFloat(el('mfLow').value)||0, photo_url:(_photos['matPhoto']||[])[0]||'', updated_by:myEmail(), updated_at:new Date().toISOString() };
+    low_stock_threshold:parseFloat(el('mfLow').value)||0, photo_url:(_photos['matPhoto']||[])[0]||'', updated_by:myEmail(), updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   var r;
   if(id){ r=await sb.from('inv_materials').update(obj).eq('id',id); }
   else { obj.created_by=myEmail(); r=await sb.from('inv_materials').insert(obj); }
@@ -969,7 +969,7 @@ async function saveSupplier(){
   var id=el('sfId').value;
   var obj={ name:name, supplier_type:el('sfType').value, contact_person:el('sfPerson').value.trim(),
     contact:el('sfContact').value.trim(), category:el('sfCat').value.trim(), notes:el('sfNotes').value.trim(),
-    updated_by:myEmail(), updated_at:new Date().toISOString() };
+    updated_by:myEmail(), updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   var r; if(id){ r=await sb.from('inv_suppliers').update(obj).eq('id',id); } else { obj.created_by=myEmail(); r=await sb.from('inv_suppliers').insert(obj); }
   if(r.error){ showMsgEl('sfMsg', r.error.message, false); return; }
   await audit((id?'UPDATE':'CREATE')+' Supplier', name);
@@ -1029,7 +1029,7 @@ async function saveQuotation(){
   var id=el('qfId').value, qty=el('qfQty').value;
   var obj={ item_type:el('qfType').value, material_id:mat, supplier_id:sup, rate:rate,
     qty_offered:(qty===''?null:parseFloat(qty)), valid_until:el('qfValid').value||null, source:el('qfSource').value,
-    notes:el('qfNotes').value.trim(), screenshot_url:(_photos['qShot']||[])[0]||'', updated_by:myEmail(), updated_at:new Date().toISOString() };
+    notes:el('qfNotes').value.trim(), screenshot_url:(_photos['qShot']||[])[0]||'', updated_by:myEmail(), updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   var r; if(id){ r=await sb.from('inv_quotations').update(obj).eq('id',id); } else { obj.created_by=myEmail(); r=await sb.from('inv_quotations').insert(obj); }
   if(r.error){ showMsgEl('qfMsg', r.error.message, false); return; }
   await audit((id?'UPDATE':'CREATE')+' Quotation', matName(mat)+'/'+supName(sup));
@@ -1084,7 +1084,7 @@ async function saveTool(){
   var id=el('tfId').value;
   var obj={ name:name, brand:el('tfBrand').value.trim(), category:el('tfCat').value.trim(), unit:el('tfUnit').value.trim()||'pc',
     total_qty:parseFloat(el('tfQty').value)||0, serial_number:el('tfSerial').value.trim(), notes:el('tfNotes').value.trim(),
-    photo_url:(_photos['toolPhoto']||[])[0]||'', updated_by:myEmail(), updated_at:new Date().toISOString() };
+    photo_url:(_photos['toolPhoto']||[])[0]||'', updated_by:myEmail(), updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   var r; if(id){ r=await sb.from('inv_tools').update(obj).eq('id',id); } else { obj.created_by=myEmail(); r=await sb.from('inv_tools').insert(obj); }
   if(r.error){ showMsgEl('tfMsg', r.error.message, false); return; }
   await audit((id?'UPDATE':'CREATE')+' Tool', name);
@@ -1446,7 +1446,7 @@ async function saveCount(){
   if(isNaN(counted)||counted<0){ showMsgEl('cfMsg','Counted qty must be 0 or higher.',false); return; }
   var sys=parseFloat(el('cfSys').value)||0, id=el('cfId').value;
   var obj={ count_date:el('cfDate').value||today(), item_type:el('cfType').value, item_id:itemId, system_qty:sys, counted_qty:counted,
-    variance:counted-sys, reason:el('cfReason').value, notes:el('cfNotes').value.trim(), photo_url:(_photos['cntPhoto']||[])[0]||'', updated_by:myEmail(), updated_at:new Date().toISOString() };
+    variance:counted-sys, reason:el('cfReason').value, notes:el('cfNotes').value.trim(), photo_url:(_photos['cntPhoto']||[])[0]||'', updated_by:myEmail(), updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   var r; if(id){ r=await sb.from('inv_stock_counts').update(obj).eq('id',id); } else { obj.created_by=myEmail(); r=await sb.from('inv_stock_counts').insert(obj); }
   if(r.error){ showMsgEl('cfMsg', r.error.message, false); return; }
   await audit((id?'UPDATE':'CREATE')+' StockCount', itemName(obj.item_type,itemId)+' variance '+obj.variance);
@@ -1526,7 +1526,7 @@ async function saveReturn(){
   var rq=Number(el('rfQty').value); if(isNaN(rq)||rq<0){ showMsgEl('rfMsg','Invalid returned qty.',false); return; }
   var cond=el('rfCond').value;
   var obj={ returned_date:el('rfDate').value||today(), returned_qty:rq, returned_condition:cond,
-    returned_notes:el('rfNotes').value.trim(), returned_photo_url:(_photos['retPhoto']||[])[0]||'', updated_by:myEmail(), updated_at:new Date().toISOString() };
+    returned_notes:el('rfNotes').value.trim(), returned_photo_url:(_photos['retPhoto']||[])[0]||'', updated_by:myEmail(), updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   var r=await sb.from('inv_tool_assignments').update(obj).eq('id',id);
   if(r.error){ showMsgEl('rfMsg', r.error.message, false); return; }
   await audit('UPDATE Assignment', 'Returned '+toolName(a.toolId)+' '+rq+'/'+a.qty+' ['+cond+']');
@@ -1601,7 +1601,7 @@ async function saveRepairReturn(){
   var id=el('rrId').value, r=state.repairs.find(function(x){return x.id===id;});
   var rq=Number(el('rrQty').value); if(isNaN(rq)||rq<0){ showMsgEl('rrMsg','Invalid returned qty.',false); return; }
   var obj={ status:'RETURNED', returned_date:el('rrDate').value||today(), returned_qty:rq,
-    returned_notes:el('rrNotes').value.trim(), returned_photo_url:(_photos['repRet']||[])[0]||'', updated_by:myEmail(), updated_at:new Date().toISOString() };
+    returned_notes:el('rrNotes').value.trim(), returned_photo_url:(_photos['repRet']||[])[0]||'', updated_by:myEmail(), updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   var res=await sb.from('inv_repairs').update(obj).eq('id',id);
   if(res.error){ showMsgEl('rrMsg', res.error.message, false); return; }
   await audit('UPDATE Repair', 'Returned '+toolName(r.toolId)+' '+rq+'/'+r.qty);

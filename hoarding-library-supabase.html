@@ -691,7 +691,7 @@ async function saveRecord(btn){
     if(EDIT_ID){
       r=await sb.from('hlib_records').update(payload).eq('id',EDIT_ID);
     }else{
-      payload.id=uid();payload.created_at=new Date().toISOString();
+      payload.id=uid();payload.created_at=new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ');
       r=await sb.from('hlib_records').insert([payload]);
     }
     if(r.error)throw r.error;

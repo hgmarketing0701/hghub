@@ -1539,7 +1539,7 @@ async function savePrice(){
     min_qty:parseFloat(el('pf_minqty').value)||0, min_charge:parseFloat(el('pf_mincharge').value)||0,
     price_mall:parseFloat(el('pf_pm').value)||0, price_contractor:parseFloat(el('pf_pc').value)||0,
     price_tenant:parseFloat(el('pf_pt').value)||0, sort:parseInt(el('pf_sort').value)||1,
-    notes:el('pf_notes').value.trim(), updated_by:SESSION.user.email, updated_at:new Date().toISOString()
+    notes:el('pf_notes').value.trim(), updated_by:SESSION.user.email, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')
   };
   if(!obj.service || !obj.sub_scope || !obj.item){ showMsg('pbMsg','Service, sub-scope and item are required.', false); return; }
   var id = el('pf_id').value, r;

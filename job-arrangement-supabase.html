@@ -392,9 +392,9 @@ function unbusy(btn){if(btn&&btn.dataset.html){btn.disabled=false;btn.innerHTML=
 function ico(name){return '<i class="ui-icon" data-lucide="'+name+'" aria-hidden="true"></i>';}
 function byId(arr,id){return arr.filter(function(x){return x.id===id;})[0];}
 function esNow(){
-  // MySQL DATETIME rejects ISO '...T...Z' strings in strict mode — use 'YYYY-MM-DD HH:MM:SS'
-  var d=new Date(), p=function(n){return String(n).padStart(2,'0');};
-  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+  // MySQL DATETIME rejects ISO '...T...Z' strings in strict mode — use 'YYYY-MM-DD HH:MM:SS'.
+  // Fixed +8h so the stamp is Asia/Kuala_Lumpur regardless of the browser's timezone (matches NOW() server-side).
+  return new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ');
 }
 function todayISO(){var d=new Date();var p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
 function addDays(iso,n){var d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);var p=function(x){return('0'+x).slice(-2);};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}

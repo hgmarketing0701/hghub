@@ -464,7 +464,7 @@ function opt(v,label,sel){ return '<option value="'+esc(v)+'"'+(sel===v?' select
 function field(label,inner,hint){ return '<div style="flex:1;min-width:150px"><label>'+label+'</label>'+inner+(hint?'<div class="hint">'+hint+'</div>':'')+'</div>'; }
 function kv(k,v){ return '<tr><td>'+esc(k)+'</td><td>'+v+'</td></tr>'; }
 function todayISO_(){ var d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
-function nowIso_(){ return new Date().toISOString(); }
+function nowIso_(){ return new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' '); }
 function dateOnly(d){ return d? String(d).slice(0,10):''; }
 function daysBetween_(a,b){ if(!a||!b) return null; return Math.round((new Date(b)-new Date(a))/86400000); }
 function addDays_(d,n){ var x=new Date(d); x.setDate(x.getDate()+Number(n||0)); return x.toISOString().slice(0,10); }

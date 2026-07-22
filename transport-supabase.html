@@ -700,7 +700,7 @@ function quickClient(){
     '<button class="ghost" onclick="closeModal2()">Cancel</button><button class="btn" onclick="saveQuickClient(this)">Add client</button>');
 }
 async function saveClientRow(p){
-  var now=new Date().toISOString();
+  var now=new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ');
   var obj={company:p.company,reg_no:p.regNo||'',pic:p.pic||'',contact:p.contact||'',email:p.email||'',address:p.address||'',notes:p.notes||'',updated_at:now};
   var r;
   if(p.id){r=await sb.from('trn_clients').update(obj).eq('id',p.id).select().single();}
@@ -779,7 +779,7 @@ function cancelEng(id){
   if(!confirm('Cancel this engagement? Jobs stay on record but the engagement is marked cancelled.'))return;
   var r=prompt('Reason (optional):')||'';
   var e=byId(DB.engagements,id);var remarks=(e&&e.remarks?e.remarks+' | ':'')+r;
-  sb.from('trn_engagements').update({status:'Cancelled',remarks:remarks,updated_by:DB.currentUser,updated_at:new Date().toISOString()}).eq('id',id).then(function(res){if(res.error){toast(res.error.message,'bad');return;}audit('STATUS','Engagement',e?e.ref:id,'Cancelled'+(r?' :: '+r:''));reload().then(function(){closeModal();toast('Engagement cancelled.','ok');});});
+  sb.from('trn_engagements').update({status:'Cancelled',remarks:remarks,updated_by:DB.currentUser,updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')}).eq('id',id).then(function(res){if(res.error){toast(res.error.message,'bad');return;}audit('STATUS','Engagement',e?e.ref:id,'Cancelled'+(r?' :: '+r:''));reload().then(function(){closeModal();toast('Engagement cancelled.','ok');});});
 }
 
 /* ===================== JOB FORM ===================== */
@@ -940,11 +940,11 @@ function jobMenu(id){
 }
 function setJob(id,s){
   var j=byId(DB.jobs,id);
-  sb.from('trn_jobs').update({status:s,updated_by:DB.currentUser,updated_at:new Date().toISOString()}).eq('id',id).then(function(r){if(r.error){toast(r.error.message,'bad');return;}audit('STATUS','Job',(j?j.engagementRef+'/'+j.service:id),s);reload().then(function(){closeModal2();if(j)openEngagement(j.engagementId);toast('Status → '+s,'ok');});});
+  sb.from('trn_jobs').update({status:s,updated_by:DB.currentUser,updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')}).eq('id',id).then(function(r){if(r.error){toast(r.error.message,'bad');return;}audit('STATUS','Job',(j?j.engagementRef+'/'+j.service:id),s);reload().then(function(){closeModal2();if(j)openEngagement(j.engagementId);toast('Status → '+s,'ok');});});
 }
 function doCollect(id){
   var when=(prompt('Collection date/time (YYYY-MM-DD HH:MM), blank = now:')||'').replace('T',' ')||fmtDT(new Date());
-  var j=byId(DB.jobs,id);var upd={collect_datetime:when,updated_by:DB.currentUser,updated_at:new Date().toISOString()};
+  var j=byId(DB.jobs,id);var upd={collect_datetime:when,updated_by:DB.currentUser,updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')};
   if(j&&JOB_OPEN_STATUSES.indexOf(j.status)>=0)upd.status='Completed';
   sb.from('trn_jobs').update(upd).eq('id',id).then(function(r){if(r.error){toast(r.error.message,'bad');return;}audit('BIN_COLLECT','Job',(j?j.engagementRef+'/Bin '+j.binNo:id),when);reload().then(function(){closeModal2();if(j)openEngagement(j.engagementId);toast('Bin marked collected.','ok');});});
 }
@@ -963,7 +963,7 @@ function saveTip(btn,id){
   if(!val('tp-landfill'))return toast('Landfill required.','bad');
   if(!(Number(val('tp-tons'))>=0))return toast('Enter weight in tons.','bad');
   var j=byId(DB.jobs,id);
-  var upd={tipping_date:val('tp-date'),landfill:val('tp-landfill'),weight_tons:num_(val('tp-tons')),tip_fee:num_(val('tp-fee')),updated_by:DB.currentUser,updated_at:new Date().toISOString()};
+  var upd={tipping_date:val('tp-date'),landfill:val('tp-landfill'),weight_tons:num_(val('tp-tons')),tip_fee:num_(val('tp-fee')),updated_by:DB.currentUser,updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')};
   if(j&&JOB_OPEN_STATUSES.indexOf(j.status)>=0)upd.status='Completed';
   var fi=gel('tp-file');
   busy(btn);
@@ -1314,7 +1314,7 @@ function saveWorkerUI(btn,id){
   var dup=DB.workers.filter(function(w){return w.name.toLowerCase()===name.toLowerCase()&&w.id!==id;});
   if(dup.length)return toast('Worker "'+name+'" already exists.','bad');
   var pt=val('w-paytype')==='Monthly'?'Monthly':'Per-shift';
-  var obj={name:name,phone:val('w-phone'),role:val('w-role'),pay_type:pt,day_rate:num_(val('w-day')),night_rate:num_(val('w-night')),monthly_salary:num_(val('w-sal')),active:val('w-active')==='Yes',notes:val('w-notes'),updated_at:new Date().toISOString()};
+  var obj={name:name,phone:val('w-phone'),role:val('w-role'),pay_type:pt,day_rate:num_(val('w-day')),night_rate:num_(val('w-night')),monthly_salary:num_(val('w-sal')),active:val('w-active')==='Yes',notes:val('w-notes'),updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')};
   busy(btn);
   var q=id?sb.from('trn_workers').update(obj).eq('id',id):sb.from('trn_workers').insert(obj);
   q.then(function(r){if(r.error){unbusy(btn);toast(r.error.message,'bad');return;}audit(id?'UPDATE':'CREATE','Worker','',name);reload().then(function(){closeModal();toast('Worker saved.','ok');});});
@@ -1357,7 +1357,7 @@ function saveLorryUI(btn,id){
   var plate=val('l-plate');
   var dup=DB.lorries.filter(function(l){return l.plateNo.toLowerCase()===plate.toLowerCase()&&l.id!==id;});
   if(dup.length)return toast('Lorry '+plate+' already exists.','bad');
-  var obj={plate_no:plate,code:val('l-code'),type:val('l-type'),capacity:val('l-cap'),category:val('l-cat')==='outsource'?'outsource':'in-house',active:val('l-active')==='Yes',notes:val('l-notes'),updated_at:new Date().toISOString()};
+  var obj={plate_no:plate,code:val('l-code'),type:val('l-type'),capacity:val('l-cap'),category:val('l-cat')==='outsource'?'outsource':'in-house',active:val('l-active')==='Yes',notes:val('l-notes'),updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')};
   busy(btn);
   var q=id?sb.from('trn_lorries').update(obj).eq('id',id):sb.from('trn_lorries').insert(obj);
   q.then(function(r){if(r.error){unbusy(btn);toast(r.error.message,'bad');return;}audit(id?'UPDATE':'CREATE','Lorry',plate,obj.category);reload().then(function(){closeModal();toast('Lorry saved.','ok');});});
@@ -1409,7 +1409,7 @@ function saveBinUI(btn,id){
   var no=val('b-no');
   var dup=DB.bins.filter(function(b){return b.binNo.toLowerCase()===no.toLowerCase()&&b.id!==id;});
   if(dup.length)return toast('Bin number '+no+' already exists.','bad');
-  var obj={bin_no:no,swcorp_reg:val('b-reg'),size:val('b-size'),status:val('b-status'),notes:val('b-notes'),updated_at:new Date().toISOString()};
+  var obj={bin_no:no,swcorp_reg:val('b-reg'),size:val('b-size'),status:val('b-status'),notes:val('b-notes'),updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')};
   busy(btn);
   var q=id?sb.from('trn_bins').update(obj).eq('id',id):sb.from('trn_bins').insert(obj);
   q.then(function(r){if(r.error){unbusy(btn);toast(r.error.message,'bad');return;}audit(id?'UPDATE':'CREATE','Bin',no,obj.size);reload().then(function(){closeModal();toast('Bin saved.','ok');});});
@@ -1605,7 +1605,7 @@ function saveRateUI(btn,id){
   var code=val('r-code').toUpperCase();
   var dup=DB.rates.filter(function(r){return r.code.toLowerCase()===code.toLowerCase()&&r.id!==id;});
   if(dup.length)return toast('Rate code '+code+' already exists.','bad');
-  var obj={service:val('r-svc'),code:code,label:val('r-label'),unit:val('r-unit')||'per unit',rate:round2_(val('r-rate')),active:val('r-active')==='Yes',updated_at:new Date().toISOString()};
+  var obj={service:val('r-svc'),code:code,label:val('r-label'),unit:val('r-unit')||'per unit',rate:round2_(val('r-rate')),active:val('r-active')==='Yes',updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ')};
   busy(btn);
   var q=id?sb.from('trn_rates').update(obj).eq('id',id):sb.from('trn_rates').insert(obj);
   q.then(function(r){if(r.error){unbusy(btn);toast(r.error.message,'bad');return;}audit(id?'UPDATE':'CREATE','Rate',code,money_(obj.rate));reload().then(function(){closeModal();toast('Rate saved.','ok');});});

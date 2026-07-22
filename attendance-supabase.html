@@ -452,7 +452,7 @@ async function saveRec(id){
     }else{
       patch.id=Date.now()+'_'+Math.random().toString(36).slice(2,8);
       patch.keyed_by=email;
-      patch.added_at=new Date().toISOString();
+      patch.added_at=new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ');
       patch.file_name=f?f.name:'manual entry';
       patch.file_key='manual|'+patch.id;
       var ins=await sb.from('att_records').insert(patch);

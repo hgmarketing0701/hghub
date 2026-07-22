@@ -741,7 +741,7 @@ async function saveLorry(){
   var card=getIdList('lf_card');
   var rec={ plate:plate, vehicle_code:el('lf_code').value.trim(), model:el('lf_model').value.trim(),
     year:num(el('lf_year').value), vehicle_type:el('lf_type').value, active:el('lf_active').checked,
-    notes:el('lf_notes').value.trim(), vehicle_card_path:card[0]||'', updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+    notes:el('lf_notes').value.trim(), vehicle_card_path:card[0]||'', updated_by:SESSION.user.email, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   showLoading('Saving…');
   var r = id ? await sb.from('lry_vehicles').update(rec).eq('id',id) : await sb.from('lry_vehicles').insert(Object.assign({created_by:SESSION.user.email},rec));
   hideLoading();
@@ -793,7 +793,7 @@ async function saveFuel(){
   var rec={ date:date, plate:plate, odometer:num(el('ff_odo').value), litres:num(el('ff_litres').value),
     amount_rm:amt, station:el('ff_station').value.trim(), paid_by:el('ff_paidby').value, driver:el('ff_driver').value.trim(),
     notes:el('ff_notes').value.trim(), pump_photo_path:pump[0]||'', receipt_photo_path:rcpt[0]||'',
-    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+    updated_by:SESSION.user.email, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   showLoading('Saving…');
   var r = id ? await sb.from('lry_fuel_logs').update(rec).eq('id',id) : await sb.from('lry_fuel_logs').insert(Object.assign({created_by:SESSION.user.email},rec));
   hideLoading();
@@ -843,7 +843,7 @@ async function saveToll(){
   var rec={ date:date, plate:plate, type:type, amount_rm:amt, location:el('tf_location').value.trim(),
     paid_by:el('tf_paidby').value, driver:el('tf_driver').value.trim(), job_ref:el('tf_jobref').value.trim(),
     duration:el('tf_duration').value.trim(), notes:el('tf_notes').value.trim(), receipt_photo_path:rcpt[0]||'',
-    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+    updated_by:SESSION.user.email, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   showLoading('Saving…');
   var r = id ? await sb.from('lry_toll_park_logs').update(rec).eq('id',id) : await sb.from('lry_toll_park_logs').insert(Object.assign({created_by:SESSION.user.email},rec));
   hideLoading();
@@ -998,14 +998,14 @@ async function saveCompliance(){
     agency_charges_rm:num(el('cf_agencyc').value), notes:el('cf_notes').value.trim(), prev_id:prevId,
     main_doc_paths:getIdList('cf_main'), receipt_paths:getIdList('cf_receipt'),
     agent_invoice_paths:getIdList('cf_agentinv'), payment_slip_paths:getIdList('cf_slip'),
-    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+    updated_by:SESSION.user.email, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   showLoading('Saving…');
   var r, newId;
   if(id){ r=await sb.from('lry_compliance_logs').update(rec).eq('id',id); }
   else { var ins=await sb.from('lry_compliance_logs').insert(Object.assign({created_by:SESSION.user.email},rec)).select('id').single(); r=ins; newId=ins.data&&ins.data.id; }
   if(!r.error && prevId){
     // mark the previous entry renewed + link
-    await sb.from('lry_compliance_logs').update({ status:'renewed', renewed_by_id:newId||'', updated_by:SESSION.user.email, updated_at:new Date().toISOString() }).eq('id',prevId);
+    await sb.from('lry_compliance_logs').update({ status:'renewed', renewed_by_id:newId||'', updated_by:SESSION.user.email, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') }).eq('id',prevId);
   }
   hideLoading();
   if(r.error){ showMsg('cfMsg',r.error.message,false); return; }
@@ -1074,7 +1074,7 @@ async function saveDriver(){
     emergency_contact_name:el('df_ecname').value.trim(), emergency_contact_phone:el('df_ecphone').value.trim(),
     notes:el('df_notes').value.trim(), photo_path:photo[0]||'',
     license_doc_paths:getIdList('df_licdoc'), ic_doc_paths:getIdList('df_icdoc'),
-    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+    updated_by:SESSION.user.email, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   showLoading('Saving…');
   var r = id ? await sb.from('lry_drivers').update(rec).eq('id',id) : await sb.from('lry_drivers').insert(Object.assign({created_by:SESSION.user.email},rec));
   hideLoading();
@@ -1146,7 +1146,7 @@ async function saveSummon(){
     responsible_party:el('sf_resp').value, paid_rm:num(el('sf_paid').value), paid_date:el('sf_paiddate').value||null,
     payment_ref:el('sf_ref').value.trim(), notes:el('sf_notes').value.trim(),
     summon_copy_paths:getIdList('sf_copy'), payment_proof_paths:getIdList('sf_proof'),
-    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+    updated_by:SESSION.user.email, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   showLoading('Saving…');
   var r = id ? await sb.from('lry_summon_logs').update(rec).eq('id',id) : await sb.from('lry_summon_logs').insert(Object.assign({created_by:SESSION.user.email},rec));
   hideLoading();
@@ -1265,7 +1265,7 @@ async function saveIncident(){
     incident_photo_paths:getIdList('if_photos'), police_report_paths:getIdList('if_policedocs'),
     quotation_paths:getIdList('if_quotes'), compensation_paid_paths:getIdList('if_comppaidp'),
     compensation_received_paths:getIdList('if_comprecvp'),
-    updated_by:SESSION.user.email, updated_at:new Date().toISOString() };
+    updated_by:SESSION.user.email, updated_at:new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ') };
   showLoading('Saving…');
   var r = id ? await sb.from('lry_incident_logs').update(rec).eq('id',id) : await sb.from('lry_incident_logs').insert(Object.assign({created_by:SESSION.user.email},rec));
   hideLoading();

@@ -673,7 +673,7 @@ async function saveReport(btn){
     if(EDIT_ID){
       r=await sb.from('jcr_reports').update(payload).eq('id',EDIT_ID).select().single();
     }else{
-      payload.submitted_at=new Date().toISOString();
+      payload.submitted_at=new Date(Date.now()+8*3600*1000).toISOString().slice(0,19).replace('T',' ');
       payload.submitted_by=CURRENT_USER;
       payload.pdf_report='';   /* browser-print replaces the old Drive PDF */
       r=await sb.from('jcr_reports').insert(payload).select().single();

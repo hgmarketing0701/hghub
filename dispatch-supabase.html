@@ -1180,7 +1180,7 @@
 
   /* audit — same append-only ja_audit_log the Job Arrangement tool writes.
      ts must be MySQL DATETIME format — ISO strings with 'Z' are rejected. */
-  function sqlNow() { return new Date().toISOString().slice(0, 19).replace('T', ' '); }
+  function sqlNow() { return new Date(Date.now()+8*3600*1000).toISOString().slice(0, 19).replace('T', ' '); }
   async function audit(action, details) {
     try {
       const r = await sb.from('ja_audit_log').insert({ ts: sqlNow(), user_email: myEmail(), action: action, details: String(details == null ? '' : details) });
