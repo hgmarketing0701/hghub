@@ -1004,8 +1004,8 @@ function renderDay(){
       if(!jobs.length&&key!=='FACTORY'&&!JD.loads.some(function(x){return x.lorry_id===key&&x.shift_group===group;}))return;
       var drv=key!=='FACTORY'&&key!=='NO_LORRY'?laneDriver(key,group):'';
       var crew=crewOf(jobs);
-      html+='<div class="lane"><div class="lane-h"><b>'+laneLabel(key)+'</b>'+(drv?'<span class="drv">'+esc(drv)+'</span>':'')+
-        '<span class="tag" style="margin-left:auto">'+jobs.length+' job'+(jobs.length===1?'':'s')+'</span></div>'+
+      html+='<div class="lane"><div class="lane-h" style="cursor:pointer" title="Tap to set driver, crew & jobs for this lane" onclick="openLaneEd(\''+esc(key)+'\',\''+group+'\')"><b>'+laneLabel(key)+'</b>'+(drv?'<span class="drv">'+esc(drv)+'</span>':'')+
+        '<span class="tag" style="margin-left:auto">'+ico('pencil')+' '+jobs.length+' job'+(jobs.length===1?'':'s')+'</span></div>'+
         (crew.length?'<div class="lane-crew">'+crew.map(function(n){return '<span class="crew-chip">'+esc(n)+'</span>';}).join('')+'</div>':'')+
         '<div class="lane-jobs">'+(jobs.map(function(j){return jcardHtml(j,true);}).join('')||'<div class="hint">No jobs loaded on this lane yet — tap a job below and pick this lane.</div>')+'</div></div>';
     });
@@ -1076,6 +1076,106 @@ async function saveLorryLane(group,btn){
   if(r.error){toast(r.error.message,'bad');return;}
   audit('Lane added',JD.date+' '+group+' · '+lorryId+(drv?' ('+drv.name+')':''));
   closeModal2();loadDay();toast('Lane added.','ok');
+}
+
+/* ---- LANE editor: crew follows the lorry; jobs loaded here inherit the crew ----
+   Not hardcoded: crew is a PRE-FILL — it fills jobs that have no workers yet
+   (or all jobs when 'overwrite' is ticked); per-job manual add stays in the job editor. */
+var LN={key:'',group:'',sel:{}};
+function openLaneEd(key,group){
+  LN.key=key;LN.group=group;LN.sel={};
+  var load=JD.loads.filter(function(x){return x.lorry_id===key&&x.shift_group===group;})[0];
+  ((load&&parseJSON_(load.worker_ids,[]))||[]).forEach(function(w){LN.sel[w]=1;});
+  if(!Object.keys(LN.sel).length){ /* no saved crew yet — start from what's already on its jobs */
+    jobsInLane(group,key).forEach(function(j){(parseJSON_(j.worker_ids,[])||[]).forEach(function(w){LN.sel[w]=1;});});
+  }
+  var isLorry=key!=='FACTORY'&&key!=='NO_LORRY';
+  var drvs=M.supervisors.map(function(s){return {v:s.id,l:s.name};});
+  var curDrvId=(load&&load.driver_id)||((byId(M.lorries,key)||{}).usual_driver_id)||'';
+  var candidates=jobsInLane(group,key).concat(JD.jobs.filter(function(j){return shiftGroup(j.shift)===group&&!laneKeyOf(j);}));
+  var inLaneNow={};jobsInLane(group,key).forEach(function(j){inLaneNow[j.id]=1;});
+  var jobsHtml=candidates.map(function(j){
+    var wn=(parseJSON_(j.worker_ids,[])||[]).length;
+    return '<label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:7px 9px;border:1px solid var(--line);border-radius:8px">'+
+      '<input type="checkbox" data-ln-job="'+esc(j.id)+'"'+(inLaneNow[j.id]?' checked':'')+' style="width:auto;min-height:0">'+
+      '<span style="flex:1">'+esc(j.scope||j.title||'Job')+' · '+esc([j.mall,j.lot?'Lot '+j.lot:'',hhmm(j.time)].filter(Boolean).join(' · '))+(wn?' · '+wn+'w':'')+'</span></label>';
+  }).join('')||'<div class="hint">No jobs in this shift yet.</div>';
+  var body=
+    (isLorry?field('Driver','<select id="ln-driver">'+selOpts(drvs,curDrvId,'— pick driver —')+'</select>'):'')+
+    '<label style="margin-top:10px">Crew — workers who follow this '+(key==='FACTORY'?'factory team':(key==='NO_LORRY'?'group':'lorry'))+'</label>'+
+    '<input id="ln-filter" placeholder="Filter workers…" oninput="lnRenderChips()" style="margin-bottom:6px">'+
+    '<div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="ghost sm" onclick="LN.sel={};lnRenderChips()">Clear</button></div>'+
+    '<div class="chipwrap scrolly" id="ln-chips"></div><div class="selcount" id="ln-count"></div>'+
+    '<label style="margin-top:14px">Jobs on this lane</label>'+
+    '<div class="scrolly" style="max-height:180px;display:flex;flex-direction:column;gap:6px">'+jobsHtml+'</div>'+
+    '<label style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer"><input type="checkbox" id="ln-apply" style="width:auto;min-height:0"> Overwrite every job\'s workers with this crew (unticked = crew only pre-fills jobs that have none)</label>';
+  openModal(laneLabel(key)+' — '+(group==='day'?'☀ Day':'🌙 Night'),body,
+    '<button class="ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveLaneEd(this)">'+ico('save')+' Save lane</button>');
+  lnRenderChips();
+}
+function lnRenderChips(){
+  var el=gel('ln-chips');if(!el)return;
+  var f=val('ln-filter').toLowerCase();
+  var list=M.workers.filter(function(w){return !f||String(w.name).toLowerCase().indexOf(f)>=0||String(w.team||'').toLowerCase().indexOf(f)>=0;});
+  el.innerHTML=list.map(function(w){return '<button type="button" class="mchip'+(LN.sel[w.id]?' on':'')+'" onclick="lnToggle(\''+esc(w.id)+'\',this)">'+esc(w.name)+'</button>';}).join('')||'<span class="hint">No match.</span>';
+  lnCount();
+}
+function lnToggle(id,btn){
+  if(LN.sel[id])delete LN.sel[id];else LN.sel[id]=1;
+  if(btn)btn.classList.toggle('on',!!LN.sel[id]);
+  lnCount();
+}
+function lnCount(){var c=gel('ln-count');if(c)c.textContent=Object.keys(LN.sel).length+' / '+M.workers.length+' selected';}
+async function saveLaneEd(btn){
+  var key=LN.key,group=LN.group;
+  var crewIds=M.workers.filter(function(w){return LN.sel[w.id];}).map(function(w){return w.id;});
+  var crewNames=crewIds.map(function(id){var w=byId(M.workers,id);return w?w.name:id;}).join(', ');
+  var overwrite=gel('ln-apply')&&gel('ln-apply').checked;
+  var isLorry=key!=='FACTORY'&&key!=='NO_LORRY';
+  var driverId=isLorry?val('ln-driver'):'';
+  var drv=byId(M.supervisors,driverId);
+  busy(btn);
+  try{
+    var load=JD.loads.filter(function(x){return x.lorry_id===key&&x.shift_group===group;})[0];
+    if(load){
+      var r0=await sb.from('ja_dispatch_loads').update({driver_id:driverId||'',driver_name:drv?drv.name:'',worker_ids:crewIds,updated_by:CUR_EMAIL}).eq('id',load.id);
+      if(r0.error)throw r0.error;
+    }else{
+      var r0b=await sb.from('ja_dispatch_loads').insert({dispatch_date:JD.date,shift_group:group,lorry_id:key,driver_id:driverId||'',driver_name:drv?drv.name:'',worker_ids:crewIds,updated_by:CUR_EMAIL});
+      if(r0b.error)throw r0b.error;
+    }
+    var lorryDetails = key==='FACTORY'?'Factory (no lorry)':(key==='NO_LORRY'?'Own transport':(function(){var l=byId(M.lorries,key);return l?(l.plate+' ('+((drv&&drv.name)||'no driver')+')'):key;})());
+    var checked={};document.querySelectorAll('[data-ln-job]').forEach(function(cb){checked[cb.getAttribute('data-ln-job')]=cb.checked;});
+    var mx=0;jobsInLane(group,key).forEach(function(j){var r=JD.rd[j.id];if(r)mx=Math.max(mx,num_(r.seq));});
+    for(var jid in checked){
+      var j=byId(JD.jobs,jid);if(!j)continue;
+      var inLane=laneKeyOf(j)===key;
+      if(checked[jid]){
+        var patch={updated_at:sqlNow()};
+        if(!inLane){
+          patch.lorry_ids=isLorry?[key]:[];patch.lorry_details=lorryDetails;patch.job_status='arranged';
+          mx+=1;
+          var ru=await sb.from('ja_job_readiness').upsert({job_id:jid,lorry_id:key,seq:mx,updated_at:sqlNow(),updated_by:CUR_EMAIL});
+          if(ru.error)throw ru.error;
+        }else{
+          patch.lorry_details=lorryDetails; /* refresh driver name on existing lane jobs */
+        }
+        var jw=parseJSON_(j.worker_ids,[])||[];
+        if(overwrite||!jw.length){patch.worker_ids=crewIds;patch.worker_names=crewNames;}
+        var rj=await sb.from('ja_jobs').update(patch).eq('id',jid);
+        if(rj.error)throw rj.error;
+      }else if(inLane){
+        var rr=await sb.from('ja_job_readiness').upsert({job_id:jid,lorry_id:'',seq:null,updated_at:sqlNow(),updated_by:CUR_EMAIL});
+        if(rr.error)throw rr.error;
+        var rj2=await sb.from('ja_jobs').update({lorry_ids:[],lorry_details:'',updated_at:sqlNow()}).eq('id',jid);
+        if(rj2.error)throw rj2.error;
+      }
+    }
+    audit('Lane saved',JD.date+' '+group+' · '+key+' · crew '+crewIds.length+' · driver '+(drv?drv.name:'—'));
+    toast('Lane saved — crew pre-filled onto its jobs.','ok');
+    closeModal();loadDay();
+  }catch(e){toast(e.message||'Save failed','bad');}
+  unbusy(btn);
 }
 
 /* ---- JOB-FIRST editor ---- */
