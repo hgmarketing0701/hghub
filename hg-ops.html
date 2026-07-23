@@ -801,15 +801,37 @@ async function openInvDetail(id){
   var jobs=jr.data||[];
   // serve through the sniffing route — correct content-type even for legacy
   // files stored without an extension (old uploads truncated '.pdf' off)
-  var viewUrl = inv.file_url ? String(inv.file_url).replace(/^\/uploads\//, '/api/files/view/') : '';
+  var viewUrl='';
+  if(inv.file_url){
+    var mm=String(inv.file_url).match(/^\/uploads\/([^\/]+)\/(.+)$/);
+    viewUrl = mm ? '/api/files/view?b='+encodeURIComponent(mm[1])+'&p='+encodeURIComponent(mm[2]) : inv.file_url;
+  }
   var viewer='';
   if(viewUrl){
     viewer = '<iframe src="'+esc(viewUrl)+'" style="width:100%;height:56vh;border:1px solid var(--line);border-radius:10px;background:#fff"></iframe>';
   } else {
     viewer='<div class="empty-state">'+ico('file-x')+'<div><strong>No file stored</strong><span>This invoice was entered without an upload.</span></div></div>';
   }
+  // the invoice AS IT READS — line items captured by the AI (new uploads store them in ai_json)
+  var aj=inv.ai_json; if(typeof aj==='string'){try{aj=JSON.parse(aj);}catch(e){aj=null;}}
+  var items=(aj&&Array.isArray(aj.line_items))?aj.line_items:[];
+  var itemsHtml='';
+  if(items.length){
+    itemsHtml='<h3 style="margin:4px 0 8px">Invoice items</h3>'+
+      '<table style="min-width:0;margin-bottom:14px"><thead><tr><th>No</th><th>Item &amp; description</th><th class="right">Qty (unit)</th><th class="right">Tax</th><th class="right">Price (RM)</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+
+      items.map(function(it,ix){return '<tr><td>'+esc(it.no!=null?it.no:ix+1)+'</td>'+
+        '<td style="max-width:320px;white-space:normal">'+esc(it.description||'')+'</td>'+
+        '<td class="right">'+esc(it.qty!=null?it.qty:'')+(it.unit?' /'+esc(it.unit):'')+'</td>'+
+        '<td class="right">'+(it.tax_pct!=null?esc(it.tax_pct)+'%':'—')+'</td>'+
+        '<td class="right">'+(it.unit_price!=null?rm(it.unit_price):'—')+'</td>'+
+        '<td class="right">'+(it.amount!=null?rm(it.amount):'—')+'</td></tr>';}).join('')+
+      '</tbody></table>';
+  }
   var jobRows=jobs.map(function(j){var s=jobStatus(j);
-    return '<tr><td>'+esc(j.scope||'Job')+'</td><td style="max-width:280px;white-space:normal">'+esc(j.notes||'—')+'</td><td>'+esc(j.lot||'—')+'</td><td>'+esc(j.date?String(j.date).slice(0,10):'no date')+'</td>'+
+    var dv=j.date?String(j.date).slice(0,10):'';
+    return '<tr><td>'+esc(j.scope||'Job')+'</td><td style="max-width:280px;white-space:normal">'+esc(j.notes||'—')+'</td><td>'+esc(j.lot||'—')+'</td>'+
+      '<td style="white-space:nowrap"><input type="date" id="invd-'+esc(j.id)+'" value="'+esc(dv)+'" style="width:140px"> '+
+      '<button class="ghost sm" onclick="setJobDateFromInv(\''+esc(j.id)+'\',\''+esc(inv.id)+'\')">Set</button></td>'+
       '<td><span class="jc"><span class="dot dot-'+esc(s)+'"></span>'+esc(s)+'</span></td></tr>';}).join('');
   var body =
     '<div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px">'+
@@ -818,15 +840,28 @@ async function openInvDetail(id){
       dRow('Status', inv.status==='payment_received'?'Payment received':'Confirmed')+
       dRow('Uploaded by', inv.uploaded_by)+dRow('Uploaded', String(inv.created_at||'').slice(0,16))+
     '</div>'+
-    (jobs.length?'<table style="min-width:0;margin-bottom:14px"><thead><tr><th>Job</th><th>Description (from invoice)</th><th>Lot</th><th>Date</th><th>Status</th></tr></thead><tbody>'+jobRows+'</tbody></table>':'')+
+    itemsHtml+
+    (jobs.length?'<h3 style="margin:4px 0 8px">Jobs from this invoice</h3><table style="min-width:0;margin-bottom:14px"><thead><tr><th>Job</th><th>Description (from invoice)</th><th>Lot</th><th>Installation date</th><th>Status</th></tr></thead><tbody>'+jobRows+'</tbody></table>':'')+
     viewer+
     (viewUrl?'<div style="display:flex;gap:10px;margin-top:12px">'+
-      '<a class="btn" href="'+esc(viewUrl)+'?dl=1">'+ico('download')+' Download PDF</a>'+
+      '<a class="btn" href="'+esc(viewUrl+(viewUrl.indexOf('?')>-1?'&':'?')+'dl=1')+'">'+ico('download')+' Download PDF</a>'+
       '<a class="ghost" href="'+esc(viewUrl)+'" target="_blank" rel="noopener">'+ico('external-link')+' Open in new tab</a>'+
     '</div>':'');
   openModal(esc(inv.invoice_no||'Invoice'), body, '');
   function dRow(k,v){return '<div style="min-width:130px"><div class="muted" style="font-size:.72rem;letter-spacing:.04em;text-transform:uppercase">'+esc(k)+'</div><div style="font-weight:700">'+esc(v||'—')+'</div></div>';}
 }
+/* set a job's installation date straight from the invoice detail */
+async function setJobDateFromInv(jobId,invId){
+  var el=gel('invd-'+jobId);
+  var d=el?el.value:'';
+  if(!d){toast('Pick a date first','bad');return;}
+  var r=await sb.from('ja_jobs').update({date:d,updated_at:sqlNow()}).eq('id',jobId);
+  if(r.error){toast(r.error.message,'bad');return;}
+  audit('Job date set',jobId+' → '+d);
+  toast('Installation date set — job is on the '+d+' board.','ok');
+  openInvDetail(invId);loadInvList();
+}
+
 async function toggleInvStatus(id,cur){
   var next=cur==='payment_received'?'confirmed':'payment_received';
   var r=await sb.from('ja_invoices').update({status:next}).eq('id',id);

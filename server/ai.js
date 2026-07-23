@@ -160,7 +160,9 @@ router.post("/invoice-read", invUpload.single("file"), async (req, res) => {
         { text:
           "This is a confirmed customer invoice/PO for HG (Malaysian contractor-support: hoarding, visual print, scaffold, reinstatement, fit-out). " +
           "Extract JSON exactly in this shape: {\"invoice_no\":string,\"client\":string,\"mall\":string,\"amount\":number|null,\"sst\":number|null," +
+          "\"line_items\":[{\"no\":number,\"description\":string,\"qty\":number|null,\"unit\":string,\"tax_pct\":number|null,\"unit_price\":number|null,\"amount\":number|null}]," +
           "\"jobs\":[{\"lot\":string,\"description\":string,\"suggested_scope\":string}]}. " +
+          "line_items[] = the invoice's item table COPIED FAITHFULLY row by row (description incl. measurements/notes condensed, qty, unit like sqft/set/meter, tax %, unit price, line amount) — this preserves how the invoice actually reads. " +
           "jobs[] = one entry per DISTINCT SITE VISIT / physical work, NOT per invoice line item. " +
           "Line items that are parts of the same installation — e.g. hoarding panels + swing door + counterweight + skirting — " +
           "are ONE job: lot = ALL its lot numbers combined exactly as written (e.g. 'G8, G9 & G10'), " +

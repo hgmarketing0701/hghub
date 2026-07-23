@@ -60,10 +60,10 @@ const SNIFF = [
   { sig: [0xff, 0xd8, 0xff], mime: "image/jpeg", ext: ".jpg" },
   { sig: [0x52, 0x49, 0x46, 0x46], mime: "image/webp", ext: ".webp" }        // RIFF
 ];
-router.get(/^\/view\/([^/]+)\/(.+)$/, (req, res) => {
+router.get("/view", (req, res) => {   // /api/files/view?b=<bucket>&p=<path> (+&dl=1)
   try {
-    const bucket = req.params[0];
-    const rel = safeRel(req.params[1]);
+    const bucket = String(req.query.b || "");
+    const rel = safeRel(req.query.p);
     if (!BUCKETS.has(bucket) || !rel) return res.status(404).end();
     const abs = path.join(UPLOADS_DIR, bucket, rel);
     if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) return res.status(404).end();
