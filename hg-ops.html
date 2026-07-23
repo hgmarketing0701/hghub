@@ -117,7 +117,7 @@
   body{font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}#app{padding:26px 28px 0}
   header{position:static;padding:0 0 20px;margin:0 0 18px;background:transparent;border-bottom:1px solid var(--line);gap:14px}body.embedded header{display:none}.brand-block{gap:9px}.brand-logo{width:24px;height:24px;padding:0;background:transparent;border-radius:0;color:var(--acc);font-size:0}.brand-logo svg{width:20px;height:20px;stroke-width:2.1}.brand-name{display:flex;align-items:center;gap:10px;color:var(--ink);font-size:1.05rem;font-weight:800}.brand-sub{font-size:13px;line-height:17px;color:var(--mut);margin-top:3px}.tool-live{display:inline-flex;align-items:center;height:21px;padding:0 9px;border-radius:999px;background:#edf8f3;color:var(--ok);font-size:.64rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}header .mpill{background:var(--panel);border-color:var(--line);border-radius:999px;color:var(--mut);padding:8px 12px}header .mpill strong{color:var(--acc)}header .mpill button{color:var(--warn)}
   nav{position:static;top:auto;gap:26px;flex-wrap:nowrap;overflow-x:auto;padding:0;margin:0 0 26px;background:transparent;border-bottom:1px solid var(--line);scrollbar-width:none}nav::-webkit-scrollbar{display:none}nav button{flex:0 0 auto;padding:0 0 12px;border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;color:#716b65;font-size:.78rem;font-weight:800;white-space:nowrap}nav button:hover:not(.active){background:transparent;border-color:transparent;color:var(--acc)}nav button.active{background:transparent;color:var(--acc);border-color:var(--acc)}
-  main{max-width:none;margin:0;padding:0 0 72px}.view>h2{font-size:1.45rem;letter-spacing:-.03em;margin:0 0 16px}.view>h2::after{display:block;margin-top:4px;color:#716b65;font-size:.9rem;font-weight:500;letter-spacing:0}#v-home>h2::after{content:"Today at a glance — every number clicks through."}#v-inv>h2::after{content:"Drop a confirmed invoice. AI reads it, you confirm, jobs are born."}#v-jobs>h2::after{content:"Arrange the day — lanes, crews, proof. Tap a job to staff it."}#v-wages>h2::after{content:"Monthly wages from attendance × state rates. Tap a worker to drill in."}
+  main{max-width:none;margin:0;padding:0 0 72px}.view>h2{font-size:1.45rem;letter-spacing:-.03em;margin:0 0 16px}.view>h2::after{display:block;margin-top:4px;color:#716b65;font-size:.9rem;font-weight:500;letter-spacing:0}#v-home>h2::after{content:"Today at a glance — every number clicks through."}#v-inv>h2::after{content:"Drop a confirmed invoice. AI reads it, you confirm, jobs are born."}#v-jobs>h2::after{content:"Arrange the day — lanes, crews, proof. Tap a job to staff it."}#v-wages>h2::after{content:"Monthly wages from attendance × state rates. Tap a worker to drill in."}#v-att>h2::after{content:"Who clocked, when, with proof — selfie, server time, GPS. Cartrack cross-checks the lorries."}
   h3{color:var(--ink);font-size:.9rem;text-transform:none;letter-spacing:-.01em;font-weight:800;margin:18px 0 8px}.card{background:var(--panel);border-color:var(--line);border-radius:var(--radius);padding:18px;margin-bottom:12px;box-shadow:none}.card:has(>table){padding:0;overflow-x:auto}.card:has(>h3+table)>h3{margin:0;padding:16px;border-bottom:1px solid var(--line)}
   .row.tool-snapshot{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;margin:0 0 12px!important;padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}.row.tool-snapshot .stat{min-width:0;min-height:78px;padding:6px 16px;border:0;border-right:1px solid var(--line);border-radius:0;background:transparent}.row.tool-snapshot .stat:last-child{border-right:0}.stat:hover{border-color:var(--line)}.stat:hover .n{color:var(--acc2)}.stat .l{min-height:18px;line-height:18px;color:#716b65;font-size:.66rem;font-weight:800;white-space:nowrap}.stat .n{font-size:1.35rem;line-height:36px;color:var(--acc);font-variant-numeric:tabular-nums;white-space:nowrap}
   label{color:#716b65;font-size:.72rem;font-weight:800;margin:10px 0 5px}input,select,textarea{min-height:42px;background:var(--panel);border-color:#ded8cf;color:var(--ink);border-radius:8px;font-size:.88rem}input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(20,61,74,.08)}select{appearance:none;-webkit-appearance:none;padding-right:42px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23143d4a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:14px}
@@ -361,6 +361,7 @@
   <div class="view active" id="v-home"></div>
   <div class="view" id="v-inv"></div>
   <div class="view" id="v-jobs"></div>
+  <div class="view" id="v-att"></div>
   <div class="view" id="v-wages"></div>
 </main>
 </div>
@@ -484,8 +485,8 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
 
 /* ===================== STATE ===================== */
 var M={workers:[],supervisors:[],lorries:[],malls:[],clients:[],scopeFactory:[],scopeOnsite:[],states:[],stateMap:{},mallStates:{},roster:null};
-var TABS=[['home','Home'],['inv','Invoices'],['jobs','Job Arrangement'],['wages','Wages']];
-var TAB_ICONS={home:'house',inv:'receipt-text',jobs:'calendar-clock',wages:'banknote'};
+var TABS=[['home','Home'],['inv','Invoices'],['jobs','Job Arrangement'],['att','Attendance'],['wages','Wages']];
+var TAB_ICONS={home:'house',inv:'receipt-text',jobs:'calendar-clock',att:'alarm-clock',wages:'banknote'};
 
 function shiftGroup(s){return String(s||'').toLowerCase().indexOf('night')===0?'night':'day';}
 function jobStatus(j){return (j&&j.job_status)||'confirmed';} /* '' legacy renders as confirmed */
@@ -562,6 +563,7 @@ function show(t){document.querySelectorAll('nav button').forEach(function(b){b.c
   if(t==='home')renderHome();
   if(t==='inv')renderInv();
   if(t==='jobs')renderJobs();
+  if(t==='att')renderAtt();
   if(t==='wages')renderWages();
   window.scrollTo(0,0);}
 function goJobs(date,openBacklog){
@@ -598,6 +600,12 @@ async function renderHome(){
   var unassigned=jobs.filter(function(j){return jobStatus(j)!=='completed'&&!((rd[j.id]||{}).lorry_id);}).length;
   var alarms=jobs.filter(function(j){return window.hgReadiness&&hgReadiness.of(j,rd[j.id]||null).permitAlarm;});
   HOME_COMPS=comps;
+  var attRes=await Promise.all([
+    sb.from('ja_attendance_log').select('worker_id,clock_in,clock_out').eq('date',day),
+    IS_ADMIN?sb.from('ja_clock_events').select('id').in('face_verdict',['mismatch','unclear']).limit(100):Promise.resolve({data:[]})
+  ]);
+  var clockedNow=(attRes[0].data||[]).filter(function(a){return a.clock_in&&!a.clock_out;}).length;
+  var attRevN=(attRes[1].data||[]).length;
   var html='<h2>Home</h2>';
   if(afterCutoff())html+='<div class="amber-banner">'+ico('moon')+'<span>Past 23:00 — lorries have left the factory. Counters show <b>'+esc(fmtNice(day))+'</b>.</span></div>';
   html+='<div class="row tool-snapshot">'+
@@ -607,6 +615,8 @@ async function renderHome(){
     stat(nightN,'🌙 Night','', "goJobs('"+day+"')")+
     stat(completed,'✅ Completed',completed?'ok':'', "goJobs('"+day+"')")+
     stat(unassigned,'Unassigned',unassigned?'bad':'', "goJobs('"+day+"')")+
+    stat(clockedNow,'⏱ Clocked in now','', "show('att')")+
+    stat(attRevN,'Face review',attRevN?'bad':'', "show('att')")+
   '</div>';
   if(alarms.length)html+='<div class="alarmline" onclick="goJobs(\''+day+'\')">'+ico('siren')+'<span><b>'+alarms.length+' permit alarm'+(alarms.length===1?'':'s')+'</b> — '+esc(alarms.slice(0,3).map(function(j){return (j.mall||'')+(j.lot?' '+j.lot:'');}).join(' · '))+(alarms.length>3?' +'+(alarms.length-3)+' more':'')+'</span></div>';
   html+='<div class="card"><h3>'+ico('camera')+'Latest completions</h3>';
@@ -1495,6 +1505,274 @@ async function waDay(btn){
 }
 
 /* ============================================================
+   TAB · ATTENDANCE — who clocked, with proof; Cartrack cross-check
+   ============================================================ */
+var AT={date:null,events:[],att:[],jobs:[],vlog:[],queue:[]};
+
+function attSpan(ci,co){ /* legacy wrap rule: m=out-in; if(m<0)m+=1440 */
+  if(!ci||!co)return '';
+  var a=ci.split(':'),b=co.split(':');
+  var m=(parseInt(b[0],10)*60+parseInt(b[1],10))-(parseInt(a[0],10)*60+parseInt(a[1],10));
+  if(m<0)m+=1440;
+  return Math.floor(m/60)+'h '+(m%60)+'m';
+}
+function renderAtt(){
+  var v=gel('v-att');
+  v.innerHTML='<h2>Attendance</h2>'+
+    '<div class="toolbar" style="display:flex;align-items:center;flex-wrap:wrap">'+
+      '<input type="date" id="at-date" value="'+esc(AT.date||opDay())+'" onchange="AT.date=this.value;loadAtt()" style="width:170px">'+
+      '<span class="spacer" style="flex:1"></span>'+
+      (IS_ADMIN?'<button class="ghost" onclick="attLinksCard()">'+ico('qr-code')+' Clock links</button>':'')+
+      '<button class="ghost" onclick="gel(\'ct-file\').click()">'+ico('upload')+' Import Cartrack</button>'+
+      '<input type="file" id="ct-file" accept=".xlsx,.xls" style="display:none" onchange="ctImport(this.files[0]);this.value=\'\'">'+
+    '</div>'+
+    '<div id="at-queue"></div>'+
+    '<div class="row tool-snapshot" id="at-stats"></div>'+
+    '<div class="card" id="at-table"><span class="spin"></span> Loading…</div>'+
+    '<div id="at-cross"></div>';
+  if(window.lucide)window.lucide.createIcons();
+  loadAtt();
+}
+async function loadAtt(){
+  var date=AT.date||opDay();AT.date=date;
+  var res=await Promise.all([
+    sb.from('ja_clock_events').select('*').eq('op_date',date).order('ts'),
+    sb.from('ja_attendance_log').select('*').eq('date',date),
+    sb.from('ja_jobs').select('id,scope,mall,shift,worker_ids,lorry_ids').eq('date',date).limit(400),
+    sb.from('ja_vehicle_log').select('*').eq('date',date),
+    IS_ADMIN?sb.from('ja_clock_events').select('*').in('face_verdict',['mismatch','unclear']).order('ts',{ascending:false}).limit(100):Promise.resolve({data:[]})
+  ]);
+  AT.events=res[0].data||[];AT.att=res[1].data||[];AT.jobs=res[2].data||[];AT.vlog=res[3].data||[];AT.queue=res[4].data||[];
+  renderAttQueue();renderAttTable();renderAttCross();
+  if(window.lucide)window.lucide.createIcons();
+}
+function attFaceChip(v){
+  if(v==='match'||v==='approved')return '<span class="jc"><span class="dot dot-completed"></span>'+(v==='approved'?'approved':'match')+'</span>';
+  if(v==='mismatch'||v==='unclear')return '<span class="jc"><span class="dot dot-arranged"></span>review</span>';
+  if(v==='pending')return '<span class="jc"><span class="dot"></span>pending</span>';
+  return '—';
+}
+function renderAttTable(){
+  var el=gel('at-table');if(!el)return;
+  /* union: one row per worker PER SHIFT-CATEGORY (a man can do day AND night the
+     same date — both must show), plus dispatched workers with no punches */
+  var byW={};
+  function slot(wid,name,cat){var k=wid+'|'+cat;
+    if(!byW[k])byW[k]={id:wid,name:name,cat:cat,att:[],ev:[],dispatched:false};
+    return byW[k];}
+  AT.att.forEach(function(a){slot(a.worker_id,a.worker_name,a.category||'day').att.push(a);});
+  AT.events.forEach(function(e){slot(e.worker_id,e.worker_name,e.category||'day').ev.push(e);});
+  AT.jobs.forEach(function(j){var cat=shiftGroup(j.shift)==='night'?'night':'day';
+    (parseJSON_(j.worker_ids,[])||[]).forEach(function(w){
+      var wk=byId(M.workers,w);
+      /* mark dispatched on the matching category slot; create it only if the
+         worker has no slot at all that date (avoid duplicate ghost rows) */
+      var k=w+'|'+cat;
+      if(byW[k])byW[k].dispatched=true;
+      else if(!Object.keys(byW).some(function(x){return x.indexOf(w+'|')===0;}))
+        slot(w,wk?wk.name:w,cat).dispatched=true;
+    });});
+  var rows=Object.keys(byW).map(function(k){return byW[k];}).sort(function(a,b){return String(a.name).localeCompare(String(b.name))||String(a.cat).localeCompare(String(b.cat));});
+  var nBoth=0,nOne=0,nMiss=0,nClocked=0;
+  var html=rows.map(function(r){
+    var a=r.att[0]||{};var ci=a.clock_in||'',co=a.clock_out||'';
+    var evIn=r.ev.filter(function(e){return e.kind==='in'&&e.face_verdict!=='voided';})[0];
+    var evOut=r.ev.filter(function(e){return e.kind==='out'&&e.face_verdict!=='voided';}).slice(-1)[0];
+    if(ci||co)nClocked++;
+    if(ci&&co)nBoth++;else if(ci||co)nOne++;
+    var missing=r.dispatched&&!ci&&!co;
+    if(missing)nMiss++;
+    function cell(t,ev){
+      if(!t&&!ev)return '<td class="muted">—</td>';
+      var thumb=ev&&ev.selfie_url?'<img src="'+esc(ev.selfie_url)+'" style="width:34px;height:34px;object-fit:cover;border-radius:7px;vertical-align:middle;margin-left:7px;cursor:pointer" onclick="attPhoto('+ev.id+')">':'';
+      return '<td><b>'+esc(t||String(ev.ts||'').slice(11,16))+'</b>'+thumb+'</td>';
+    }
+    var gps=evIn&&evIn.gps_lat?'<a href="https://maps.google.com/?q='+evIn.gps_lat+','+evIn.gps_lng+'" target="_blank" rel="noopener">📍 map</a>':'<span class="muted">no GPS</span>';
+    var face=(evIn||evOut)?attFaceChip((evIn||evOut).face_verdict):'—';
+    return '<tr'+(missing?' style="opacity:.55"':'')+'>'+
+      '<td><b>'+esc(r.name)+'</b>'+(missing?' <span class="muted">· expected — not clocked</span>':'')+'</td>'+
+      '<td>'+esc(a.category||r.cat||'')+'</td>'+
+      cell(ci,evIn)+cell(co,evOut)+
+      '<td>'+(attSpan(ci,co)||'<span class="muted">—</span>')+'</td>'+
+      '<td>'+face+'</td><td>'+gps+'</td>'+
+      '<td>'+(ci&&co?'✓':'')+'</td></tr>';
+  }).join('');
+  gel('at-stats').innerHTML=
+    stat(nClocked,'CLOCKED')+stat(nBoth,'BOTH PUNCHES')+stat(nOne,'ONE PUNCH')+
+    stat(nMiss,'EXPECTED, NOT CLOCKED')+stat(AT.queue.length,'TO REVIEW')+
+    stat(AT.vlog.length,'LORRY LOGS');
+  el.innerHTML=rows.length
+    ? '<table style="min-width:760px"><thead><tr><th>Worker</th><th>Shift</th><th>IN</th><th>OUT</th><th>Hours</th><th>Face</th><th>GPS</th><th>Pay ✓</th></tr></thead><tbody>'+html+'</tbody></table>'
+    : '<div class="empty-state">'+ico('alarm-clock-off')+'<div><strong>No punches or dispatched crews on '+esc(fmtNice(AT.date))+'</strong><span>Workers clock in from their personal links.</span></div></div>';
+}
+function attPhoto(evId){
+  var e=AT.events.filter(function(x){return x.id===evId;})[0]||AT.queue.filter(function(x){return x.id===evId;})[0];
+  if(!e)return;
+  openModal2(esc(e.worker_name)+' — clock '+esc(e.kind),
+    '<img src="'+esc(e.selfie_url)+'" style="max-width:100%;border-radius:10px">'+
+    '<div class="hint" style="margin-top:8px">'+esc(String(e.ts))+' · '+esc(e.category)+' shift'+
+    (e.gps_lat?' · <a href="https://maps.google.com/?q='+e.gps_lat+','+e.gps_lng+'" target="_blank" rel="noopener">📍 '+e.gps_lat+','+e.gps_lng+' (±'+esc(e.gps_acc||'?')+'m)</a>':' · no GPS')+
+    (e.face_notes?'<br>AI: '+esc(e.face_notes):'')+'</div>',
+    '<button class="ghost" onclick="closeModal2()">Close</button>');
+}
+function renderAttQueue(){
+  var el=gel('at-queue');if(!el)return;
+  if(!IS_ADMIN||!AT.queue.length){el.innerHTML='';attNavBadge(0);return;}
+  attNavBadge(AT.queue.length);
+  el.innerHTML='<div class="card" style="border-left:3px solid var(--warn,#f59e0b);margin-bottom:14px"><h3>'+ico('shield-alert')+' Face check review ('+AT.queue.length+')</h3>'+
+    AT.queue.map(function(e){
+      return '<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)">'+
+        '<img src="'+esc(e.selfie_url)+'" style="width:44px;height:44px;object-fit:cover;border-radius:8px;cursor:pointer" onclick="attPhoto('+e.id+')">'+
+        '<div style="flex:1"><b>'+esc(e.worker_name)+'</b> · '+esc(String(e.op_date).slice(0,10))+' '+esc(String(e.ts).slice(11,16))+' '+esc(e.kind)+
+        '<div class="muted" style="font-size:.8rem">'+esc(e.face_notes||e.face_verdict)+'</div></div>'+
+        '<button class="okbtn sm" onclick="attReview('+e.id+',\'approve\')">Approve</button>'+
+        '<button class="danger sm" onclick="attReview('+e.id+',\'reject\')">Reject</button></div>';
+    }).join('')+'</div>';
+}
+function attNavBadge(n){
+  var b=document.querySelector('#nav button[data-t="att"] .nm');
+  if(b)b.textContent='Attendance'+(n?' ('+n+')':'');
+}
+async function attReview(id,action){
+  if(action==='reject'&&!confirm('Reject this punch? The attendance times will be recomputed without it.'))return;
+  var r=await fetch('/api/clock/review',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({event_id:id,action:action})});
+  var j=await r.json();
+  if(j.error){toast(j.error.message,'bad');return;}
+  toast(action==='approve'?'Approved.':'Rejected — times recomputed.','ok');
+  loadAtt();
+}
+async function attLinksCard(){
+  var r=await fetch('/api/clock/links',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:'{}'});
+  var j=await r.json();
+  if(j.error){toast(j.error.message,'bad');return;}
+  var links=j.data||[];
+  var rowsH=links.map(function(l){
+    var full=location.origin+l.url;
+    return '<tr><td>'+esc(l.name)+'</td><td><button class="ghost sm" onclick="navigator.clipboard.writeText(\''+esc(full)+'\');toast(\'Copied.\',\'ok\')">Copy link</button></td></tr>';
+  }).join('');
+  openModal('Worker clock links',
+    '<div class="hint" style="margin-bottom:8px">'+ico('info')+' WhatsApp each worker their personal link ONCE — it stays valid. Rotate if a link leaks.</div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:10px">'+
+      '<button class="ghost sm" onclick="attCopyAll()">Copy ALL (WhatsApp format)</button>'+
+      '<button class="ghost sm" onclick="attPrintLinks()">Print sheet</button>'+
+      '<button class="danger sm" onclick="attRotate()">Rotate all</button></div>'+
+    '<div class="scrolly" style="max-height:320px"><table style="min-width:0"><tbody>'+rowsH+'</tbody></table></div>',
+    '<button class="ghost" onclick="closeModal()">Close</button>');
+  AT._links=links;
+}
+function attCopyAll(){
+  var t=(AT._links||[]).map(function(l){return l.name+': '+location.origin+l.url;}).join('\n');
+  navigator.clipboard.writeText(t);toast('All links copied — paste into WhatsApp.','ok');
+}
+function attRotate(){
+  if(!confirm('Rotate ALL links? Every worker needs the new link.'))return;
+  fetch('/api/clock/links',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:'{"rotate":true}'})
+    .then(function(r){return r.json();}).then(function(){toast('Rotated.','ok');closeModal();attLinksCard();});
+}
+function attPrintLinks(){
+  var w=window.open('','_blank');
+  w.document.write('<html><head><title>HG clock links</title><style>body{font-family:sans-serif}div{border:1px solid #ccc;border-radius:8px;padding:14px;margin:8px;display:inline-block;width:290px}b{font-size:1.05rem}p{font-size:.7rem;word-break:break-all;color:#333}</style></head><body>'+
+    (AT._links||[]).map(function(l){return '<div><b>'+esc(l.name)+'</b><p>'+esc(location.origin+l.url)+'</p></div>';}).join('')+'</body></html>');
+  w.document.close();w.print();
+}
+/* ---- Cartrack import (legacy Summary Travel Report parser) ---- */
+async function ctImport(file){
+  if(!file)return;
+  try{
+    var buf=await file.arrayBuffer();
+    var wb=XLSX.read(buf,{type:'array',cellDates:false});
+    var rows=null;
+    for(var si=0;si<wb.SheetNames.length;si++){
+      var rr=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[si]],{header:1,raw:true,defval:''});
+      var flat=JSON.stringify(rr.slice(0,80)).toUpperCase();
+      if(/SUMMARY TRAVEL|SUMMARY TRIP/.test(wb.SheetNames[si].toUpperCase())||flat.indexOf('SUMMARY TRAVEL REPORT')>-1||(flat.indexOf('TRIP DISTANCE')>-1&&flat.indexOf('TRIP DURATION')>-1)){rows=rr;break;}
+      if(!rows)rows=rr; /* fallback: first sheet */
+    }
+    /* find header row containing REGISTRATION + START TIME (legacy findHeaderRow) */
+    var hi=-1,hdr=null;
+    for(var i=0;i<Math.min(rows.length,80);i++){
+      var up=rows[i].map(function(c){return String(c).toUpperCase();});
+      if(up.some(function(c){return c.indexOf('REGISTRATION')>-1;})&&up.some(function(c){return c.indexOf('START TIME')>-1||c==='START';})){hi=i;hdr=up;break;}
+    }
+    if(hi<0){toast('Not a Cartrack Summary Travel Report — header row not found.','bad');return;}
+    function col(){for(var a=0;a<arguments.length;a++){for(var c=0;c<hdr.length;c++)if(hdr[c].indexOf(arguments[a])>-1)return c;}return -1;}
+    var cReg=col('REGISTRATION'),cStart=col('START TIME','START'),cEnd=col('END TIME','END');
+    function exDate(v){
+      if(v==null||v==='')return null;
+      if(typeof v==='number')return new Date(Math.round((v-25569)*86400000)); /* serial: face value lives in UTC getters */
+      var d=new Date(String(v).replace(' ','T')+'Z'); /* string: treat as face value too (UTC) — never the browser TZ */
+      return isNaN(d)?null:d;
+    }
+    function plateNorm(s){return String(s).toUpperCase().replace(/[^A-Z0-9]/g,'');}
+    var lorryByPlate={};M.lorries.forEach(function(l){lorryByPlate[plateNorm(l.plate)]=l.id;});
+    /* group trips per lorry per op-date */
+    var groups={},skipped=[];
+    for(var r2=hi+1;r2<rows.length;r2++){
+      var row=rows[r2];var reg=String(row[cReg]||'').trim();
+      if(!reg||/TOTAL/i.test(reg))continue;
+      var st=exDate(row[cStart]),en=exDate(row[cEnd]);
+      if(!st)continue;
+      var lid=lorryByPlate[plateNorm(reg)];
+      if(!lid){if(skipped.indexOf(reg)<0)skipped.push(reg);continue;}
+      /* op-date convention (same as attendance): a trip starting before 06:00
+         belongs to the PREVIOUS day's run — so a night convoy's return leg at
+         02:20 groups into the same lorry-night, not a new day */
+      var opD=new Date(st.getTime());
+      if(opD.getUTCHours()<6)opD=new Date(opD.getTime()-86400000);
+      var dISO=opD.getUTCFullYear()+'-'+String(opD.getUTCMonth()+1).padStart(2,'0')+'-'+String(opD.getUTCDate()).padStart(2,'0');
+      var hm=function(d){return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');};
+      var key=lid+'|'+dISO;
+      var g=groups[key]=groups[key]||{lorry_id:lid,date:dISO,trips:[],first:st,last:en||st};
+      g.trips.push({s:hm(st),e:en?hm(en):'',reg:reg});
+      if(st<g.first)g.first=st;
+      if(en&&en>g.last)g.last=en;
+    }
+    var ups=[];
+    Object.keys(groups).forEach(function(k){
+      var g=groups[k];
+      var shift=(g.first.getUTCHours()>=18||g.first.getUTCHours()<6)?'night':'day';
+      var nd=g.last.toISOString().slice(0,10)!==g.date?1:0; /* returned after the op-date */
+      var hm=function(d){return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');};
+      ups.push({id:('vl_'+g.lorry_id+'_'+g.date+'_'+shift).replace(/\s+/g,'_'),date:g.date,lorry_id:g.lorry_id,shift:shift,
+        depart_hg:hm(g.first),return_hg:hm(g.last),next_day_return:nd,notes:'Cartrack import',
+        trip_details:JSON.stringify(g.trips),created_at:sqlNow(),created_by:CUR_EMAIL});
+    });
+    if(!ups.length){toast('No matching lorry trips found.'+(skipped.length?' Unknown plates: '+skipped.join(', '):''),'bad');return;}
+    var r3=await sb.from('ja_vehicle_log').upsert(ups);
+    if(r3.error){toast(r3.error.message,'bad');return;}
+    audit('Cartrack import',file.name+' · '+ups.length+' lorry-day rows'+(skipped.length?' · skipped plates: '+skipped.join(','):''));
+    toast(ups.length+' lorry-day record'+(ups.length===1?'':'s')+' imported.'+(skipped.length?' Skipped unknown plates: '+skipped.join(', '):''),'ok');
+    loadAtt();
+  }catch(e){toast('Import failed: '+(e.message||e),'bad');}
+}
+function renderAttCross(){
+  var el=gel('at-cross');if(!el)return;
+  if(!AT.vlog.length){el.innerHTML='';return;}
+  var html=AT.vlog.map(function(v){
+    var l=byId(M.lorries,v.lorry_id);
+    /* crew = workers on that lorry's jobs that date */
+    var crewIds={};
+    AT.jobs.forEach(function(j){if((parseJSON_(j.lorry_ids,[])||[]).indexOf(v.lorry_id)>-1)(parseJSON_(j.worker_ids,[])||[]).forEach(function(w){crewIds[w]=1;});});
+    var spans=AT.att.filter(function(a){return crewIds[a.worker_id];});
+    var firstIn=spans.map(function(a){return a.clock_in;}).filter(Boolean).sort()[0]||'';
+    var lastOut=spans.map(function(a){return a.clock_out;}).filter(Boolean).sort().slice(-1)[0]||'';
+    function mins(t){if(!t)return null;var p=t.split(':');return parseInt(p[0],10)*60+parseInt(p[1],10);}
+    var flag='';
+    if(firstIn&&v.depart_hg!=null&&v.depart_hg!==''){
+      var d=Math.abs(mins(firstIn)-mins(v.depart_hg));if(d>720)d=1440-d;
+      if(d>45)flag='⚠ crew first IN '+firstIn+' vs lorry depart '+v.depart_hg+' — '+d+' min gap';
+    }
+    return '<div style="display:flex;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)">'+
+      '<b>🚛 '+esc(l?(l.id+' · '+l.plate):v.lorry_id)+'</b>'+
+      '<span>'+esc(v.shift)+' · depart '+esc(v.depart_hg||'—')+' → return '+esc(v.return_hg||'—')+(v.next_day_return?' (+1d)':'')+'</span>'+
+      '<span class="muted">crew: '+Object.keys(crewIds).length+' · clocked '+(firstIn||'—')+' → '+(lastOut||'—')+'</span>'+
+      (flag?'<span style="color:var(--warn,#b45309);font-weight:700">'+esc(flag)+'</span>':'<span style="color:var(--ok,#15803d)">✓</span>')+
+    '</div>';
+  }).join('');
+  el.innerHTML='<div class="card" style="margin-top:14px"><h3>'+ico('route')+' Cartrack cross-check — '+esc(fmtNice(AT.date))+'</h3>'+html+'</div>';
+}
+
+/* ============================================================
    TAB 4 · WAGES
    ============================================================ */
 var WG={month:null,att:[],jobs:[],adjs:[],rows:[],byWorker:{},cur:null};
@@ -1590,7 +1868,10 @@ async function drillWorker(key){
   var rows=b.rows.slice().sort(function(a,c){return a.date.localeCompare(c.date);});
   var sum=0;
   var dayRows=rows.map(function(rw){sum=round2_(sum+rw.final);
-    return '<tr><td>'+esc(rw.date)+'</td><td>'+esc(rw.mall||'—')+'</td><td>'+esc(rw.scope||'—')+'</td><td>'+esc(rw.shift||rw.cat)+'</td><td>'+esc(rw.state)+'</td>'+
+    var attRow=WG.att.filter(function(a){return String(a.worker_id)===String(b.workerId)&&String(a.date).slice(0,10)===rw.date&&String(a.category||'day')===String(rw.cat||'day');})[0];
+    var hrs=attRow?attSpan(attRow.clock_in,attRow.clock_out):'';
+    return '<tr><td>'+esc(rw.date)+'</td><td>'+esc(rw.mall||'—')+'</td><td>'+esc(rw.scope||'—')+'</td><td>'+esc(rw.shift||rw.cat)+'</td>'+
+      '<td>'+(hrs?esc(hrs):'<span class="muted">—</span>')+'</td><td>'+esc(rw.state)+'</td>'+
       '<td class="right">'+(rw.adj?'<b>'+money_(rw.final)+'</b> <span class="tag">adj</span>':money_(rw.final))+'</td></tr>';
   }).join('');
   var adjs=WG.adjs.filter(function(a){return String(a.worker_id)===String(b.workerId)||String(a.worker_name||'').toLowerCase()===b.name.toLowerCase();});
@@ -1609,8 +1890,8 @@ async function drillWorker(key){
   }
   el.innerHTML='<div class="card drill">'+prof+
     '<h3>'+esc(WG.month)+' — day by day</h3>'+
-    '<table style="min-width:0"><thead><tr><th>Date</th><th>Mall / Factory</th><th>Scope</th><th>Shift</th><th>State</th><th class="right">RM</th></tr></thead><tbody>'+dayRows+
-    '<tr><td colspan="5"><b>Total</b></td><td class="right"><b>'+money_(sum)+'</b></td></tr></tbody></table>'+
+    '<table style="min-width:0"><thead><tr><th>Date</th><th>Mall / Factory</th><th>Scope</th><th>Shift</th><th>Hours</th><th>State</th><th class="right">RM</th></tr></thead><tbody>'+dayRows+
+    '<tr><td colspan="6"><b>Total</b></td><td class="right"><b>'+money_(sum)+'</b></td></tr></tbody></table>'+
     adjHtml+adjForm+'</div>';
   initHubSelects(el);syncHubSelects(el);
   if(window.lucide)window.lucide.createIcons();

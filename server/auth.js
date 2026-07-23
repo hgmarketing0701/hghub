@@ -49,15 +49,17 @@ function requireAdmin(req, res, next) {
 const router = express.Router();
 
 router.post("/login", async (req, res) => {
-  const email = String(req.body.email || "").trim().toLowerCase();
-  const password = String(req.body.password || "");
-  if (!email || !password) return res.status(400).json({ error: { message: "Email and password required" } });
-  const [rows] = await pool.query("SELECT * FROM users WHERE email = ? AND active = 1", [email]);
-  const user = rows[0];
-  const ok = user && (await bcrypt.compare(password, user.password_hash));
-  if (!ok) return res.status(401).json({ error: { message: "Wrong email or password" } });
-  res.cookie(COOKIE, sign(user), cookieOpts());
-  res.json({ data: { user: publicUser(user) } });
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const password = String(req.body.password || "");
+    if (!email || !password) return res.status(400).json({ error: { message: "Email and password required" } });
+    const [rows] = await pool.query("SELECT * FROM users WHERE email = ? AND active = 1", [email]);
+    const user = rows[0];
+    const ok = user && (await bcrypt.compare(password, user.password_hash));
+    if (!ok) return res.status(401).json({ error: { message: "Wrong email or password" } });
+    res.cookie(COOKIE, sign(user), cookieOpts());
+    res.json({ data: { user: publicUser(user) } });
+  } catch (e) { res.status(500).json({ error: { message: "Login failed: " + e.message } }); }
 });
 
 router.post("/logout", (req, res) => {
@@ -66,14 +68,16 @@ router.post("/logout", (req, res) => {
 });
 
 router.get("/session", requireAuth, async (req, res) => {
-  // refreshed role check — admin revocation takes effect without waiting for JWT expiry
-  const [rows] = await pool.query("SELECT id, email, name, role, active FROM users WHERE id = ?", [req.user.sub]);
-  const u = rows[0];
-  if (!u || !u.active) {
-    res.clearCookie(COOKIE, { path: "/" });
-    return res.status(401).json({ error: { message: "Account disabled" } });
-  }
-  res.json({ data: { user: publicUser(u) } });
+  try {
+    // refreshed role check — admin revocation takes effect without waiting for JWT expiry
+    const [rows] = await pool.query("SELECT id, email, name, role, active FROM users WHERE id = ?", [req.user.sub]);
+    const u = rows[0];
+    if (!u || !u.active) {
+      res.clearCookie(COOKIE, { path: "/" });
+      return res.status(401).json({ error: { message: "Account disabled" } });
+    }
+    res.json({ data: { user: publicUser(u) } });
+  } catch (e) { res.status(500).json({ error: { message: e.message } }); }
 });
 
 // -- admin user management (replaces the allowed_users Team-access UI) -----

@@ -38,6 +38,8 @@ const tableRules = {
   // HG Ops: invoices staff-visible; proof tables are written by the server-side
   // /proof route only — generic CRUD read-only-ish (no client deletes of evidence)
   ja_invoices: { read: "staff", write: "staff" },
+  ja_clock_events: { read: "staff", write: "admin" },   // written by the /clock server route
+  ja_clock_tokens: { deny: true },                       // managed via /api/clock/links only
   ja_job_completions: { read: "staff", write: "admin" },
   ja_proof_tokens: { deny: true },
 

@@ -12,6 +12,12 @@ const { router: aiRouter } = require("./ai");
 const { router: cronRouter } = require("./cron");
 const { router: mastersRouter } = require("./masters");
 const { router: proofRouter, mintRouter: proofMintRouter } = require("./proof");
+const { router: clockRouter, adminRouter: clockAdminRouter } = require("./clock");
+
+// safety net: a transient DB error inside any async route must NEVER kill the
+// whole company app (Node exits on unhandled rejections by default)
+process.on("unhandledRejection", (err) => { console.error("[hg-api] unhandled rejection:", err); });
+process.on("uncaughtException", (err) => { console.error("[hg-api] uncaught exception:", err); });
 
 const app = express();
 app.disable("x-powered-by");
@@ -42,6 +48,8 @@ app.use("/api/cron", cronRouter);
 app.use("/api/masters", mastersRouter);
 app.use("/api/proof-mint", proofMintRouter);   // auth'd: mint a completion link
 app.use("/proof", proofRouter);                 // NO auth: token-gated site uploads
+app.use("/clock", clockRouter);                 // NO auth: token-gated worker self-clock
+app.use("/api/clock", clockAdminRouter);        // admin: links + review
 
 // uploaded files (same-origin static).
 app.use("/uploads", express.static(UPLOADS_DIR, { maxAge: "7d" }));
