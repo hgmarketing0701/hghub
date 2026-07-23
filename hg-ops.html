@@ -94,9 +94,11 @@
   .modal-h .x{margin-left:auto;background:none;border:none;color:var(--mut);font-size:22px;cursor:pointer}
   .modal-b{padding:18px;max-height:76vh;overflow:auto}
   .modal-f{display:flex;gap:8px;justify-content:flex-end;padding:14px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
-  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000;border:1px solid var(--line);
-    padding:11px 18px;border-radius:10px;z-index:100;display:none;max-width:90%}
-  #toast.bad{border-color:var(--bad)}#toast.ok{border-color:var(--ok)}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1c2430;color:#fff;
+    border:1px solid rgba(255,255,255,0.14);box-shadow:0 8px 24px rgba(0,0,0,0.35);font-weight:700;
+    padding:12px 20px;border-radius:11px;z-index:100;display:none;max-width:90%}
+  #toast.bad{background:#7f1d1d;border-color:#fca5a5}
+  #toast.ok{background:#14532d;border-color:#86efac}
   .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--mut);border-top-color:var(--acc);border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px}
   @keyframes s{to{transform:rotate(360deg)}}
   /* gates */
