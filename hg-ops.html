@@ -794,7 +794,8 @@ async function loadInvList(){
 }
 
 /* invoice detail — extracted fields + in-window view of the stored original + download */
-async function openInvDetail(id){
+var IVD=null; /* invoice-detail edit state */
+async function openInvDetail(id,edit){
   var r=await sb.from('ja_invoices').select('*').eq('id',id).single();
   if(r.error||!r.data){toast('Invoice not found','bad');return;}
   var inv=r.data;
@@ -816,8 +817,16 @@ async function openInvDetail(id){
   // the invoice AS IT READS — line items captured by the AI (new uploads store them in ai_json)
   var aj=inv.ai_json; if(typeof aj==='string'){try{aj=JSON.parse(aj);}catch(e){aj=null;}}
   var items=(aj&&Array.isArray(aj.line_items))?aj.line_items:[];
+  IVD={inv:inv,jobs:jobs,aj:aj||{}};
+  edit=!!edit;
   var itemsHtml='';
-  if(items.length){
+  if(edit){
+    itemsHtml='<h3 style="margin:4px 0 8px">Invoice items <span class="muted" style="font-weight:400">(correct anything the AI misread)</span></h3>'+
+      '<table style="min-width:0;margin-bottom:8px"><thead><tr><th>No</th><th>Item &amp; description</th><th>Qty</th><th>Unit</th><th>Tax %</th><th>Price</th><th>Amount</th><th></th></tr></thead><tbody id="ivd-items">'+
+      (items.length?items.map(ivdItemRow).join(''):ivdItemRow({},0))+
+      '</tbody></table>'+
+      '<button class="ghost sm" onclick="ivdAddItem()" style="margin-bottom:14px">'+ico('plus')+' Add item</button>';
+  }else if(items.length){
     itemsHtml='<h3 style="margin:4px 0 8px">Invoice items</h3>'+
       '<table style="min-width:0;margin-bottom:14px"><thead><tr><th>No</th><th>Item &amp; description</th><th class="right">Qty (unit)</th><th class="right">Tax</th><th class="right">Price (RM)</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+
       items.map(function(it,ix){return '<tr><td>'+esc(it.no!=null?it.no:ix+1)+'</td>'+
@@ -830,26 +839,100 @@ async function openInvDetail(id){
   }
   var jobRows=jobs.map(function(j){var s=jobStatus(j);
     var dv=j.date?String(j.date).slice(0,10):'';
-    return '<tr><td>'+esc(j.scope||'Job')+'</td><td style="max-width:280px;white-space:normal">'+esc(j.notes||'—')+'</td><td>'+esc(j.lot||'—')+'</td>'+
+    var descCell = edit
+      ? '<td style="max-width:280px"><textarea id="ivd-job-notes-'+esc(j.id)+'" rows="3" style="min-height:0;width:100%">'+esc(j.notes||'')+'</textarea></td>'
+      : '<td style="max-width:280px;white-space:normal">'+esc(j.notes||'—')+'</td>';
+    var lotCell = edit
+      ? '<td><input id="ivd-job-lot-'+esc(j.id)+'" value="'+esc(j.lot||'')+'" style="width:120px"></td>'
+      : '<td>'+esc(j.lot||'—')+'</td>';
+    return '<tr><td>'+esc(j.scope||'Job')+'</td>'+descCell+lotCell+
       '<td style="white-space:nowrap"><input type="date" id="invd-'+esc(j.id)+'" value="'+esc(dv)+'" style="width:140px"> '+
-      '<button class="ghost sm" onclick="setJobDateFromInv(\''+esc(j.id)+'\',\''+esc(inv.id)+'\')">Set</button></td>'+
+      (edit?'':'<button class="ghost sm" onclick="setJobDateFromInv(\''+esc(j.id)+'\',\''+esc(inv.id)+'\')">Set</button>')+'</td>'+
       '<td><span class="jc"><span class="dot dot-'+esc(s)+'"></span>'+esc(s)+'</span></td></tr>';}).join('');
-  var body =
-    '<div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px">'+
+  var headerHtml = edit
+    ? '<div class="row" style="margin-bottom:4px">'+
+        field('Invoice no','<input id="ivd-no" value="'+esc(inv.invoice_no||'')+'">')+
+        field('Client','<input id="ivd-client" value="'+esc(inv.client||'')+'" list="ivdClientDl">')+
+        field('Mall / site','<input id="ivd-mall" value="'+esc(inv.mall||'')+'" list="ivdMallDl">')+
+      '</div><div class="row" style="margin-bottom:10px">'+
+        field('Amount (RM)','<input id="ivd-amount" type="number" step="0.01" value="'+esc(inv.amount!=null?inv.amount:'')+'">')+
+        field('SST (RM)','<input id="ivd-sst" type="number" step="0.01" value="'+esc(inv.sst!=null?inv.sst:'')+'">')+
+      '</div><datalist id="ivdClientDl">'+M.clients.map(function(c){return '<option value="'+esc(c)+'">';}).join('')+'</datalist>'+
+      '<datalist id="ivdMallDl">'+M.malls.map(function(m2){return '<option value="'+esc(m2.name||m2)+'">';}).join('')+'</datalist>'
+    : '<div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px">'+
       dRow('Invoice no', inv.invoice_no)+dRow('Client', inv.client)+dRow('Mall / site', inv.mall)+
       dRow('Amount', inv.amount!=null?rm(inv.amount):'—')+dRow('SST', inv.sst!=null?rm(inv.sst):'—')+
       dRow('Status', inv.status==='payment_received'?'Payment received':'Confirmed')+
       dRow('Uploaded by', inv.uploaded_by)+dRow('Uploaded', String(inv.created_at||'').slice(0,16))+
-    '</div>'+
-    itemsHtml+
+    '</div>';
+  var body = headerHtml + itemsHtml +
     (jobs.length?'<h3 style="margin:4px 0 8px">Jobs from this invoice</h3><table style="min-width:0;margin-bottom:14px"><thead><tr><th>Job</th><th>Description (from invoice)</th><th>Lot</th><th>Installation date</th><th>Status</th></tr></thead><tbody>'+jobRows+'</tbody></table>':'')+
     viewer+
-    (viewUrl?'<div style="display:flex;gap:10px;margin-top:12px">'+
+    (viewUrl&&!edit?'<div style="display:flex;gap:10px;margin-top:12px">'+
       '<a class="btn" href="'+esc(viewUrl+(viewUrl.indexOf('?')>-1?'&':'?')+'dl=1')+'">'+ico('download')+' Download PDF</a>'+
       '<a class="ghost" href="'+esc(viewUrl)+'" target="_blank" rel="noopener">'+ico('external-link')+' Open in new tab</a>'+
     '</div>':'');
-  openModal(esc(inv.invoice_no||'Invoice'), body, '');
+  var foot = edit
+    ? '<button class="ghost" onclick="openInvDetail(\''+esc(id)+'\')">Cancel</button><button class="btn" onclick="saveInvDetail(this)">'+ico('save')+' Save corrections</button>'
+    : '<button class="ghost" onclick="openInvDetail(\''+esc(id)+'\',true)">'+ico('pencil')+' Edit details</button>';
+  openModal(esc(inv.invoice_no||'Invoice'), body, foot);
   function dRow(k,v){return '<div style="min-width:130px"><div class="muted" style="font-size:.72rem;letter-spacing:.04em;text-transform:uppercase">'+esc(k)+'</div><div style="font-weight:700">'+esc(v||'—')+'</div></div>';}
+}
+function ivdItemRow(it,ix){
+  it=it||{};
+  return '<tr data-ivd-row>'+
+    '<td style="width:34px">'+((it.no!=null?it.no:'')||'')+'</td>'+
+    '<td><textarea data-f="description" rows="2" style="min-height:0;width:100%;min-width:200px">'+esc(it.description||'')+'</textarea></td>'+
+    '<td><input data-f="qty" type="number" step="any" value="'+esc(it.qty!=null?it.qty:'')+'" style="width:80px"></td>'+
+    '<td><input data-f="unit" value="'+esc(it.unit||'')+'" style="width:70px"></td>'+
+    '<td><input data-f="tax_pct" type="number" step="any" value="'+esc(it.tax_pct!=null?it.tax_pct:'')+'" style="width:64px"></td>'+
+    '<td><input data-f="unit_price" type="number" step="0.01" value="'+esc(it.unit_price!=null?it.unit_price:'')+'" style="width:90px"></td>'+
+    '<td><input data-f="amount" type="number" step="0.01" value="'+esc(it.amount!=null?it.amount:'')+'" style="width:100px"></td>'+
+    '<td><button class="ghost sm" title="Remove item" onclick="this.closest(\'tr\').remove()">✕</button></td>'+
+  '</tr>';
+}
+function ivdAddItem(){
+  var tb=gel('ivd-items');if(!tb)return;
+  tb.insertAdjacentHTML('beforeend', ivdItemRow({}, tb.children.length));
+}
+async function saveInvDetail(btn){
+  if(!IVD||!IVD.inv)return;
+  var inv=IVD.inv;
+  busy(btn);
+  try{
+    var num=function(id){var v=val(id);return v===''?null:parseFloat(v);};
+    var items=[];
+    document.querySelectorAll('[data-ivd-row]').forEach(function(tr,ix){
+      var g=function(f){var el=tr.querySelector('[data-f="'+f+'"]');return el?el.value:'';};
+      var desc=g('description').trim();
+      var row={no:ix+1,description:desc,
+        qty:g('qty')===''?null:parseFloat(g('qty')),unit:g('unit').trim(),
+        tax_pct:g('tax_pct')===''?null:parseFloat(g('tax_pct')),
+        unit_price:g('unit_price')===''?null:parseFloat(g('unit_price')),
+        amount:g('amount')===''?null:parseFloat(g('amount'))};
+      if(desc||row.amount!=null||row.qty!=null)items.push(row);
+    });
+    var aj=IVD.aj||{};aj.line_items=items;
+    var patch={invoice_no:val('ivd-no').trim(),client:val('ivd-client').trim(),mall:val('ivd-mall').trim(),
+      amount:num('ivd-amount'),sst:num('ivd-sst'),ai_json:aj,updated_at:sqlNow()};
+    var r=await sb.from('ja_invoices').update(patch).eq('id',inv.id);
+    if(r.error)throw r.error;
+    for(var i=0;i<IVD.jobs.length;i++){
+      var j=IVD.jobs[i];
+      var nEl=gel('ivd-job-notes-'+j.id),lEl=gel('ivd-job-lot-'+j.id),dEl=gel('invd-'+j.id);
+      var jp={};
+      if(nEl&&nEl.value!==String(j.notes||''))jp.notes=nEl.value;
+      if(lEl&&lEl.value!==String(j.lot||''))jp.lot=lEl.value;
+      if(dEl&&dEl.value&&dEl.value!==String(j.date||'').slice(0,10))jp.date=dEl.value;
+      if(Object.keys(jp).length){jp.updated_at=sqlNow();
+        var rj=await sb.from('ja_jobs').update(jp).eq('id',j.id);
+        if(rj.error)throw rj.error;}
+    }
+    audit('Invoice corrected',(patch.invoice_no||inv.id)+' · '+items.length+' item(s)');
+    toast('Corrections saved.','ok');
+    openInvDetail(inv.id);loadInvList();
+  }catch(e){toast(e.message||'Save failed','bad');}
+  unbusy(btn);
 }
 /* set a job's installation date straight from the invoice detail */
 async function setJobDateFromInv(jobId,invId){
